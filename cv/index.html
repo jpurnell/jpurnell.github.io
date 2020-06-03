@@ -12,9 +12,16 @@ last_update: 2020-06-03
 {% for line in site.data.cv.summary %} {{ line }} {% endfor %}
 
 <p>Experience</p>
-{% for employer in site.data.cv.employers %} {% for project in employer.projects
+{% for employer in site.data.cv.employers %} 
+< a href="{{ employer.websiteURL }}" title="{{ employer.name }}">{{ employer.name }}</a>
+{% for project in employer.projects
 %} {{ project.position }} <br />
-{{ project.project}} {% endfor %} {% endfor %}
+< a href="{{ project.website }}" title="{{ project.project }}">{{ project.project }}</a> 
+{% for highlight in project.highlights %}
+<ul class="posts">
+	<li>{{ highlight }</li>
+	{% endfor %}
+{% endfor %} {% endfor %}
 
 <p>Social</p>
 <ul class="posts">
