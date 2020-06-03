@@ -1,6 +1,7 @@
 ---
 layout: default
 title: NOMA issues statement on Racial Injustice
+kicker: Even the architects are stepping up
 date: 2020-06-02
 ---
 
