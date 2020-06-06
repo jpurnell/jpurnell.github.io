@@ -15,4 +15,10 @@ width=70%/>
 
 <!-- </a> -->
 
+<img
+	src="https://dysoncomms.widen.net/content/2xhhn45wrm/jpeg/N526Hangar?w=1280&x.app=portals&x.portal_shortcode=ekj4cenp"
+	alt="Dyson Battery Electric Vehicle"
+	width="70%"
+  /><br>
+
 _[The space that captures you, the place where you lose the sense of time, the atmosphere that makes you calm, it's Vineria, wine cellar in the central part of Old Tbilisi. From a chaotic, busy street we suddenly get into the space that is completely isolated from the city, street, people, noise and creates its own world.](https://www.archdaily.com/939746/vineria-wine-cellar-ns-studio)_
