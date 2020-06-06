@@ -6,18 +6,9 @@ kicker: gorgeous
 tags: cellars, architecture, design
 ---
 
-<!-- <a href="https://www.archdaily.com/939746/vineria-wine-cellar-ns-studio"> -->
-
-<img 
-src="https://images.adsttc.com/media/images/5ebf/418a/b357/6510/6b00/0933/large_jpg/FI.jpg?1589592444" 
-alt="Incredible wine cellar in T'bilisi, Georgia" 
-width=70%/>
-
-<!-- </a> -->
-
 <img
-	src="https://dysoncomms.widen.net/content/2xhhn45wrm/jpeg/N526Hangar?w=1280&x.app=portals&x.portal_shortcode=ekj4cenp"
-	alt="Dyson Battery Electric Vehicle"
+	src="https://images.adsttc.com/media/images/5ebf/418a/b357/6510/6b00/0933/large_jpg/FI.jpg?1589592444"
+	alt="Incredible wine cellar in T'bilisi, Georgia"
 	width="70%"
   /><br>
 
