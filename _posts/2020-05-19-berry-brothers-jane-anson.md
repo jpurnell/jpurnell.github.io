@@ -3,7 +3,7 @@ layout: post
 date: 2020-05-19
 title: Berry Brothers interviews Jane Anson
 kicker: The author of Inside Bordeaux
-tags: interview, berry brothers, jane anson, bordeaux
+tags: interview "berry brothers" "jane anson" bordeaux
 header: https://blog.bbr.com/wp-content/uploads/2020/05/Bordeaux-2015_Jason-Lowe_St-Emilion_03.jpg
 header_alt: The view out across the rooftops of St Emilion. Photograph by Jason Lowe
 ---
