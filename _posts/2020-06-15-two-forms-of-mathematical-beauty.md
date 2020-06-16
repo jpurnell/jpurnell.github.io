@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: post
 title: The Two Forms of Mathematical Beauty
 kicker: Quanta takes a look at the generic and the exceptional
 header: https://d2r55xnwy6nx47.cloudfront.net/uploads/2020/06/Math-Beauty_2880x1220_Lede_HPA.jpg
