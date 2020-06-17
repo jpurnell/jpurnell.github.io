@@ -1,8 +1,7 @@
 ---
 layout: post
 title: NOMA issues statement on Racial Injustice
-tag: "black lives matter"
-tags: architecture
+tags: architecture blm
 kicker: Even the architects are stepping up
 date: 2020-06-02
 ---
