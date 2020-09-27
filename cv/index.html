@@ -5,11 +5,13 @@ last_update: 2020-06-03
 ---
 
 <h1>{{ page.title }}</h1>
+<!-- Contact -->
 <p>
   <h2>Contact</h2>
-  <!-- <p>{{ site.data.cv.basics.phone}}</p> -->
+  <p>{{ site.data.cv.basics.email}}</p>
 </p>
 
+<!-- Summary -->
 <p>
   <h2>
     Summary
@@ -17,84 +19,101 @@ last_update: 2020-06-03
   {% for line in site.data.cv.summary %} {{ line }} {% endfor %}
 </p>
 
+<!-- Experience -->
 <p>
   <h2>
     Experience
   </h2>
 {% for employer in site.data.cv.employers %}
   <h3><a href="{{ employer.websiteURL }}" title="{{ employer.name }}">{{ employer.name }}</a></h3>
-  {% for project in employer.projects %} 
-  <a href="{{ project.website }}" title="{{ project.project }}">{{ project.project }}</a><br />
-  <em>{{ project.position }}</em>
-  <ul>
-  {% for highlight in project.highlights %}
-    <li>{{ highlight }}</li>
+    {% for project in employer.projects %} 
+      <a href="{{ project.website }}" title="{{ project.project }}">{{ project.project }}</a><br />
+      <em>{{ project.position }}</em>
+      <ul>
+      {% for highlight in project.highlights %}
+        <li>{{ highlight }}</li>
+      {% endfor %}
+      </ul>
     {% endfor %}
-  </ul>
+{% endfor %}
 </p>
-{% endfor %}
-{% endfor %}
 
+<!-- Volunteer -->
 <p>
   <h2>
     Volunteer Work
   </h2>
-{% for volunteer in site.data.cv.volunteering %}
-  <h3>
-    <a href="{{ volunteer.website }}" title="{{ volunteer.organization }}">{{ volunteer.organization }}</a>
-  </h3>
-  {{ volunteer.position }}
-  <ul>
-  	{% for highlight in volunteer.highlights %}
-  	<li>{{ highlight }}</li>
-  	{% endfor %}
-  </ul>
+  {% for volunteer in site.data.cv.volunteering %}
+    <h3>
+      <a href="{{ volunteer.website }}" title="{{ volunteer.organization }}">{{ volunteer.organization }}</a>
+    </h3>
+    {{ volunteer.position }}
+    <ul>
+    	{% for highlight in volunteer.highlights %}
+      	<li>{{ highlight }}</li>
+    	{% endfor %}
+    </ul>
+  {% endfor %}
 </p>
-{% endfor %}
 
+<!-- Publications -->
 <p>
   <h2>
     Projects and Publications
   </h2>
-{% for publication in site.data.cv.publications %}
-  <h3>
-    <a href="{{ publication.url }}" title="{{ publication.name}}">{{ publication.name }}</a>
-  </h3>
-  <ul>
-  	{% for highlight in publication.highlights %}
-  	<li>{{ highlight }}</li>
-  	{% endfor %}
-  </ul>
-</p>
-{% endfor %}
-
-<p><h3>Education</h3>
-{% for edu in site.data.cv.education %}
-  <h2>{{ edu.institution }}</h2>
-  <h3>{{ edu.studyType }} {{ edu.area }} {{ edu.endDate | date: "%Y" }}</h3>
-  <ul>
-  {% for course in edu.courses %}
-  <li>{{ course }}</li>
+  {% for publication in site.data.cv.publications %}
+    <h3>
+      <a href="{{ publication.url }}" title="{{ publication.name}}">{{ publication.name }}</a>
+    </h3>
+    <ul>
+    	{% for highlight in publication.highlights %}
+      	<li>{{ highlight }}</li>
+    	{% endfor %}
+    </ul>
   {% endfor %}
-  </ul>
 </p>
-{% endfor %}
 
-<p><h3>Social</h3>
+<!-- Education -->
+<p>
+  <h2>
+    Education
+  </h2>
+  {% for edu in site.data.cv.education %}
+    <h3>
+      {{ edu.institution }}
+    </h3>
+    <h4>
+      {{ edu.studyType }} {{ edu.area }} {{ edu.endDate | date: "%Y" }}
+    </h4>
+    <ul>
+      {% for course in edu.courses %}
+        <li>{{ course }}</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+</p>
+
+<!-- Social -->
+<p>
+  <h2>
+    Social
+  </h2>
     <ul class="posts">
       {% for profile in site.data.cv.basics.socialProfiles %}
-      <a href="{{ profile.url }}" title="{{ profile.network }}">{{ profile.network }}</a>
+        <a href="{{ profile.url }}" title="{{ profile.network }}">{{ profile.network }}</a>
       {% endfor %}
     </ul>
 </p>
 
-<p><h3>Skills</h3>
+<!-- Skills -->
+<p>
+  <h2>
+    Skills
+  </h2>
   <ul class="posts">
-  {% for skill in site.data.cv.skills %}
-  <a href="{{ skill.name }}" title="{{ skill.level }}"> {{ skill.name }} | </a>
-  {% endfor %}
+    {% for skill in site.data.cv.skills %}
+      <a href="{{ skill.name }}" title="{{ skill.level }}"> {{ skill.name }}</a> | 
+    {% endfor %}
   </ul>
-<!-- </ul> -->
+
 </p>
-
-
