@@ -1,11 +1,11 @@
 ---
 layout: post
-title: Are we living at the "Hinge of History"
-kicker: We have more control of our destiny than ever. Is that good?
-tags: future, nuclear, AI, artificial intelligence
-header: https://ychef.files.bbci.co.uk/1280x720/p08s8zzw.webp
-header_alt: Climber
-date: 2020-10-01
+title: Have we reached "Peak Populism?"
+kicker: A wave of authoritarian disasters could lead to their decline
+tags: future, politics, populism
+header: https://cdn.theatlantic.com/thumbor/Z6kGVL3PkUuiDQ0IXx6iZs3_Dwg=/0x0:4800x2700/1952x1098/media/img/mt/2021/07/populism_is_fading/original.jpg
+header_alt: Flags of Populism
+date: 2021-07-07
 ---
 
-[BBC Future looks at a curious moment in which we have more control over the direction of humanity, and could make choices in the next 100 years that critically affect the human population for many, many generations.](https://www.bbc.com/future/article/20200923-the-hinge-of-history-long-termism-and-existential-risk)
+[Yascha Mounk](https://www.theatlantic.com/author/yascha-mounk/) with an optimistic take on the rise of populism over the last decade or so. Is it waning? We can only hope. Hungary and France will offer near-term tests. [The Atlantic](https://www.theatlantic.com/ideas/archive/2021/07/peak-populism/619368/)
