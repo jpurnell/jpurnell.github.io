@@ -10,4 +10,4 @@ date: 2021-07-07
 
 [Yascha Mounk](https://www.theatlantic.com/author/yascha-mounk/) with an optimistic take on the rise of populism over the last decade or so. Is it waning? We can only hope. Hungary and France will offer near-term tests. 
 
-[The Atlantic](https://www.theatlantic.com/ideas/archive/2021/07/peak-populism/619368/)
+\[[The Atlantic]\](https://www.theatlantic.com/ideas/archive/2021/07/peak-populism/619368/)
