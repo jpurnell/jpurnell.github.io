@@ -33,7 +33,7 @@
 		  subscribe to all the feeds listed below.
 		</p>
 		<ul>
-		  <xsl:apply-templates select="body/outline"/>
+		  <xsl:apply-templates select="body/outline/outline"/>
 		</ul>
 	  </body>
 	</html>
