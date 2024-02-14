@@ -14,7 +14,7 @@
 				font-size: 0.85em;
 				  margin: 60px auto;
 				  width: 90%; 
-			    line-height: 1.2; 
+			    line-height: 1.4; 
 			    font-size: 1.15em; 
 			} 
 			body { 
@@ -22,6 +22,28 @@
 				  font-size: 0.85em;
 				  margin: 60px auto;
 				  width: 90%;
+			}
+			a {
+			  text-decoration: none;
+			  color: #000;
+			}
+			
+			a:hover {
+			  text-decoration: underline;
+			  color: #333;
+			}
+			@media (prefers-color-scheme: dark) {
+			  body,
+			  html {
+				background-color: #333;
+				color: #ccc;
+			  }
+			
+			  a,
+			  a:hover,
+			  .meta {
+				color: #ccc;
+			  }
 			}
 			  </style>
 	  </head>
