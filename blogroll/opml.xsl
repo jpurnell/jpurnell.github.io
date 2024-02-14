@@ -11,11 +11,10 @@
 			html { 
 				max-width: 800px; 
 			    font-family: "Helvetica", system-ui, "Arial", "Sans-Serif";
-				font-size: 0.85em;
 				  margin: 60px auto;
 				  width: 90%; 
-			    line-height: 1.4; 
-			    font-size: 1.15em; 
+			    line-height: 1.15; 
+			    font-size: 0.85em; 
 			} 
 			body { 
 				font-family: "Helvetica", system-ui, "Arial", "Sans-Serif";
