@@ -87,7 +87,7 @@ struct cv: StaticPage {
 				// Social
 			Group {
 				Text("Social").class("sectionHeader")
-				Group { SocialLinks() }.padding()
+				Group { SocialLinks() }.padding(.horizontal)
 			}.class("noPrint")
 //			
 
