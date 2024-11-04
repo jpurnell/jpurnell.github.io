@@ -80,16 +80,16 @@ struct cv: StaticPage {
 					}
 				}
 			}
-			
+				// Skills
+			Text("Skills").class("sectionHeader")
+			Text(cv.skills.map{($0.name.hint(text: "\($0.level)\n\($0.keywords.map({word in word}).joined(separator: " | "))"))}.joined(separator: " | "))
+		}
 				// Social
 			Group {
 				Text("Social").class("sectionHeader")
 				Group { SocialLinks() }.padding()
 			}.class("noPrint")
 //			
-				// Skills
-			Text("Skills").class("sectionHeader")
-			Text(cv.skills.map{($0.name.hint(text: "\($0.level)\n\($0.keywords.map({word in word}).joined(separator: " | "))"))}.joined(separator: " | "))
-		}
+
 	}
 }
