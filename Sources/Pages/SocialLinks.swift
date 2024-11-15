@@ -23,7 +23,7 @@ public struct SocialLinks: Component {
 					, target: link.link)
 				.role(.secondary)
 				.target(.newWindow)
-				.relationship(.noOpener, .noReferrer)
+				.relationship(.me)
 			}.class("column").frame(width: 40, height: 40)
 		}
 	}
