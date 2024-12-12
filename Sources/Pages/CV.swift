@@ -12,7 +12,7 @@ struct cv: StaticPage {
 			
 				// Summary Section
 			Text("Summary").class("sectionHeader")
-			Text(cv.summary.map({$0}).joined(separator: " "))
+			Text(cv.summaries.filter({$0.summaryType == .cv}).first?.summary.joined(separator: "\n") ?? "")
 			
 				// Experience Section
 			Text("Experience").class("sectionHeader")

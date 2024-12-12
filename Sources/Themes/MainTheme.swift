@@ -5,6 +5,7 @@ struct MyTheme: Theme {
     func render(page: Page, context: PublishingContext) -> HTML {
         HTML {
 			Head(for: page, in: context) {
+				MetaTag(name: "description", content: PersonalSite().description)
 				MetaTag(name: "fediverse:creator", content: "@jpurnell@mastodon.social")
 				Script(code: """
 	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
