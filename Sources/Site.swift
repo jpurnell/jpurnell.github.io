@@ -33,6 +33,7 @@ struct PersonalSite: Site {
 	var pages: [any StaticPage] {
 		About()
 		cv()
+		Portfolio()
 	}
 	
 	var layouts: [any ContentPage] {

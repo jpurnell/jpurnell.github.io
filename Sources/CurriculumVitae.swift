@@ -7,15 +7,35 @@
 
 import Foundation
 
+enum SummaryType: String, Codable {
+	case cv
+	case resume
+	case website
+}
+
 struct CurriculumVitae: Codable {
 	let basics: Basics
-	let summary: [String]
+	let summaries: [Summary]
 	let skills: [Skill]
 	let id: UUID
 	let publications: [Publication]
 	let employers: [Employer]
 	let education: [Education]
 	let volunteering: [VolunteerRole]
+}
+
+struct Images: Codable {
+	let imageType: String
+	let image: String
+	let imageDescription: String
+}
+
+struct Summary: Codable {
+	let priority: Int
+	let summaryType: SummaryType
+	let summary: [String]
+	var wordCount: Int { return summary.joined(separator: "\n").split{ !$0.isLetter}.count }
+	var charCount: Int { return summary.joined(separator: "\n").count }
 }
 
 struct Basics: Codable {
@@ -84,6 +104,7 @@ struct Project: Codable {
 	let position: String?
 	let project: String
 	let highlights: [String]
+	let skill: [Skill]?
 	var startDate: Date? {
 		guard let startDateString else { return nil }
 		let df = DateFormatter()

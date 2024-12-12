@@ -16,7 +16,7 @@ public struct SiteFooter: Component {
     public func body(context: PublishingContext) -> [any PageElement] {
 		NavigationBar {
 			for link in footerLinks {
-				Link(link.title, target: link.url)
+				Link(link.title, target: link.url).relationship(.me)
 			}
 		}
 		.navigationItemAlignment(.default)
