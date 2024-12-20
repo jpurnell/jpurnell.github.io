@@ -7,7 +7,7 @@ struct cv: StaticPage {
 	func body(context: PublishingContext) -> [BlockElement] {
 		if let cv = context.decode(resource: "cv.json", as: CurriculumVitae.self) {
 			Text {
-				Link(cv.basics.fullName, target: "mailto:morals.tech.0x@icloud.com?subject=[CV Inquiry]")
+				Link(cv.basics.name, target: "mailto:morals.tech.0x@icloud.com?subject=[CV Inquiry]")
 			}.class("mainTitle")
 			
 				// Summary Section
@@ -16,18 +16,18 @@ struct cv: StaticPage {
 			
 				// Experience Section
 			Text("Experience").class("sectionHeader")
-			for employer in cv.employers {
+			for employer in cv.work {
 				Text {
-					Link(employer.name, target: employer.websiteURL ?? "#")
+					Link(employer.name, target: employer.url ?? "#")
 				}.class("institution")
-				for project in employer.projects {
+				for position in employer.positions {
 					Text {
-						Link(project.project, target: project.website ?? "#")
+						Link(position.project, target: position.url ?? "#")
 					}.class("project")
-					Text(project.position ?? "PROJECT ROLE").class("role")
-					Text("\(formatDates(project.startDateString!, end: project.endDateString))").class("role")
+					Text(position.position ?? "PROJECT ROLE").class("role")
+					Text("\(formatDates(position.startDate!, end: position.endDate))").class("role")
 					List {
-						for highlight in project.highlights {
+						for highlight in position.highlights {
 							Text(highlight).margin(.none)
 						}
 					}
@@ -36,16 +36,16 @@ struct cv: StaticPage {
 			
 				// Volunteer Section
 			Text("Volunteer").class("sectionHeader")
-			for volunteeer in cv.volunteering {
+			for volunteeer in cv.volunteer {
 				Text {
-					Link(volunteeer.organization, target: volunteeer.website)
+					Link(volunteeer.organization, target: volunteeer.url)
 				}.class("institution")
-				for project in volunteeer.projects?.sorted(by: {$0.startDate ?? .distantFuture > $1.startDate ?? .distantPast}) ?? [] {
-					Text(project.project ?? "Organization").class("project")
-					Text(project.position ?? "VOLUNTEER POSITION").class("role")
-					Text("\(formatDates(project.startDateString!, end: project.endDateString))").class("role")
+				for position in volunteeer.positions?.sorted(by: {$0.start ?? .distantFuture > $1.start ?? .distantPast}) ?? [] {
+					Text(position.project ?? "Organization").class("project")
+					Text(position.position ?? "VOLUNTEER POSITION").class("role")
+					Text("\(formatDates(position.startDate!, end: position.endDate))").class("role")
 					List {
-						for highlight in project.highlights {
+						for highlight in position.highlights {
 							Text(highlight).margin(.none)
 						}
 					}
@@ -68,12 +68,12 @@ struct cv: StaticPage {
 			
 				// Education
 			Text("Education").class("sectionHeader")
-			for education in cv.education.sorted(by: {getDate($0.startDateString ?? "") > getDate($1.startDateString ?? "") }) {
+			for education in cv.education.sorted(by: {getDate($0.startDate ?? "") > getDate($1.startDate ?? "") }) {
 				Text {
-					Link(education.institution, target: education.institution.isEmpty ? "" : education.website)
+					Link(education.institution, target: education.institution.isEmpty ? "" : education.url)
 				}.class("institution").margin(.none)
 				Text("\(education.studyType), \(education.area)").class("project")
-				Text(getYear(education.endDateString!)).class("role")
+				Text(getYear(education.endDate!)).class("role")
 				List {
 					for course in education.courses {
 						Text(course).margin(.none)
@@ -89,7 +89,5 @@ struct cv: StaticPage {
 				Text("Social").class("sectionHeader")
 				Group { SocialLinks() }.padding(.horizontal)
 			}.class("noPrint")
-//			
-
 	}
 }

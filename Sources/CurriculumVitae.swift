@@ -14,14 +14,14 @@ enum SummaryType: String, Codable {
 }
 
 struct CurriculumVitae: Codable {
+	let id: UUID
 	let basics: Basics
 	let summaries: [Summary]
 	let skills: [Skill]
-	let id: UUID
 	let publications: [Publication]
-	let employers: [Employer]
+	let work: [Employer]
 	let education: [Education]
-	let volunteering: [VolunteerRole]
+	let volunteer: [VolunteerRole]
 }
 
 struct Images: Codable {
@@ -46,10 +46,10 @@ struct Basics: Codable {
 	let picture: String?
 	let phone: String
 	let email: String
-	let website: String
+	let url: String
 	let location: Location
 	let socialProfiles: [SocialProfile]
-	var fullName: String { "\(firstName) \(lastName)" }
+	var name: String { "\(firstName) \(lastName)" }
 }
 
 struct Location: Codable {
@@ -76,10 +76,10 @@ struct Skill: Codable {
 
 struct Employer: Codable {
 	let location: Location
-	let endDateString: String?
-	let startDateString: String?
-	let websiteURL: String?
-	let projects: [Project]
+	let endDate: String?
+	let startDate: String?
+	let url: String?
+	let positions: [Position]
 	var id: UUID = UUID()
 	let name: String
 	let position: String?
@@ -94,51 +94,51 @@ struct Publication: Codable {
 	let url: String
 }
 
-struct Project: Codable {
+struct Position: Codable {
 	let location: Location
 	var id: UUID = UUID()
-	let website: String?
+	let url: String?
 	let name: String?
-	let endDateString: String?
-	let startDateString: String?
+	let endDate: String?
+	let startDate: String?
 	let position: String?
 	let project: String
 	let highlights: [String]
 	let skill: [Skill]?
-	var startDate: Date? {
-		guard let startDateString else { return nil }
+	var start: Date? {
+		guard let startDate else { return nil }
 		let df = DateFormatter()
 		df.dateFormat = "yyyy-MM-dd"
-		return df.date(from: startDateString)
+		return df.date(from: startDate)
 	}
 }
 
 struct Education: Codable {
 	let location: Location
 	let area: String
-	let endDateString: String?
+	let endDate: String?
 	let studyType: String
 	var id: UUID
-	let startDateString: String?
-	let website: String
+	let startDate: String?
+	let url: String
 	let institution: String
 	let gpa: String?
 	let courses: [String]
-	let roles: [Project]?
+	let positions: [Position]?
 	let recognition: [String]?
 }
 
 struct VolunteerRole: Codable {
 	let location: Location
-	let website: String
-	let endDateString: String?
+	let url: String
+	let endDate: String?
 	var id: UUID = UUID()
 	let organization: String
-	let projects: [Project]?
+	let positions: [Position]?
 	var startDate: Date? {
-		return projects?.sorted(by: { $0.startDate ?? .distantPast < $1.startDate ?? .distantFuture }).first?.startDate
+		return positions?.sorted(by: { $0.start ?? .distantPast < $1.start ?? .distantFuture }).first?.start
 	}
-	var startDateString: String? {
+	var start: String? {
 		guard let date = startDate else { return nil }
 		let df = DateFormatter()
 		df.dateFormat = "yyyy-MM-dd"
