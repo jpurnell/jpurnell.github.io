@@ -34,12 +34,12 @@ struct PersonalSite: Site {
 		About()
 		cv()
 		Portfolio()
-		Sharing()
+		Projects()
 	}
 	
 	var layouts: [any ContentPage] {
 		AboutLayout()
-		SharingLayout()
+		ProjectLayout()
 	}
 }
 

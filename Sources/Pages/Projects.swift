@@ -1,13 +1,13 @@
 import Foundation
 import Ignite
 
-struct Sharing: StaticPage {
-    var title = "Sharing"
+struct Projects: StaticPage {
+    var title = "Projects"
 
     func body(context: PublishingContext) -> [BlockElement] {
-		Text("Sharing").font(.title1).class("mainTitle")
+		Text("Projects").font(.title1).class("mainTitle")
 		List {
-			for content in context.allContent.filter({$0.tags.contains("sharing")}) {
+			for content in context.allContent.filter({$0.tags.contains("project")}) {
 				Text {
 					Link(content.metadata["title"] as! String, target: content.path)
 				}.font(.title2).fontWeight(.semibold).class("subTitle")
