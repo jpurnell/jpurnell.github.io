@@ -94,6 +94,18 @@ struct Publication: Codable {
 	let url: String
 }
 
+struct Story: Codable {
+	var id: UUID = UUID()
+	let title: String
+	let summary: String
+	let situation: String
+	let task: String
+	let action: String
+	let result: String
+	let tags: [String]
+	let used: Bool
+}
+
 struct Position: Codable {
 	let location: Location
 	var id: UUID = UUID()
@@ -104,6 +116,7 @@ struct Position: Codable {
 	let position: String?
 	let project: String
 	let highlights: [String]
+	let stories: [Story]?
 	let skill: [Skill]?
 	var start: Date? {
 		guard let startDate else { return nil }
