@@ -1,7 +1,7 @@
 import Foundation
 import Ignite
 
-struct NeXT: StaticPage {
+struct next: StaticPage {
     var title = "NeXT"
 
     func body(context: PublishingContext) -> [BlockElement] {

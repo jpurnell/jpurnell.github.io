@@ -18,7 +18,7 @@ public struct SiteHeader: Component {
 			Link("Home", target: "/")
 			Link("About", target: About())
 			Link("CV", target: cv())
-			Link("NeXT", target: NeXT())
+			Link("NeXT", target: next())
 			Link(tumblr.title, target: tumblr.url)
 		}
 		.navigationItemAlignment(.default)

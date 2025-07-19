@@ -35,7 +35,7 @@ struct PersonalSite: Site {
 		cv()
 		Portfolio()
 		Projects()
-		NeXT()
+		next()
 	}
 	
 	var layouts: [any ContentPage] {
