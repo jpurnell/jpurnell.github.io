@@ -14,7 +14,7 @@ enum SummaryType: String, Codable {
 }
 
 struct CurriculumVitae: Codable {
-	let id: UUID
+	let id: UUID?
 	let basics: Basics
 	let summaries: [Summary]
 	let skills: [Skill]
@@ -39,7 +39,7 @@ struct Summary: Codable {
 }
 
 struct Basics: Codable {
-	let id: UUID
+	let id: UUID?
 	let label: String?
 	let firstName: String
 	let lastName: String
@@ -62,13 +62,13 @@ struct Location: Codable {
 
 struct SocialProfile: Codable {
 	let username: String
-	var id: UUID = UUID()
+	var id: UUID? = UUID()
 	let url: String
 	let network: String
 }
 
 struct Skill: Codable {
-	var id: UUID = UUID()
+	var id: UUID? = UUID()
 	let level: String
 	let name: String
 	let keywords: [String]
@@ -80,13 +80,13 @@ struct Employer: Codable {
 	let startDate: String?
 	let url: String?
 	let positions: [Position]
-	var id: UUID = UUID()
+	var id: UUID? = UUID()
 	let name: String
 	let position: String?
 }
 
 struct Publication: Codable {
-	var id: UUID = UUID()
+	var id: UUID? = UUID()
 	let releaseDate: String
 	let highlights: [String]
 	let name: String
@@ -95,7 +95,7 @@ struct Publication: Codable {
 }
 
 struct Story: Codable {
-	var id: UUID = UUID()
+	var id: UUID? = UUID()
 	let title: String
 	let summary: String
 	let situation: String
@@ -108,7 +108,7 @@ struct Story: Codable {
 
 struct Position: Codable {
 	let location: Location
-	var id: UUID = UUID()
+	var id: UUID? = UUID()
 	let url: String?
 	let name: String?
 	let endDate: String?
@@ -131,7 +131,7 @@ struct Education: Codable {
 	let area: String
 	let endDate: String?
 	let studyType: String
-	var id: UUID
+	var id: UUID?
 	let startDate: String?
 	let url: String
 	let institution: String
@@ -145,7 +145,7 @@ struct VolunteerRole: Codable {
 	let location: Location
 	let url: String
 	let endDate: String?
-	var id: UUID = UUID()
+	var id: UUID? = UUID()
 	let organization: String
 	let positions: [Position]?
 	var startDate: Date? {
