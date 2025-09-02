@@ -6,14 +6,14 @@ struct cv: StaticPage {
 	
 	func body(context: PublishingContext) -> [BlockElement] {
 		
-		if let cv = context.decode(resource: "cv.json", as: CurriculumVitae.self) {
+		if let cv = context.decode(resource: "cnncv.json", as: CurriculumVitae.self) {
 			Text {
-				Link(cv.basics.name, target: "mailto:morals.tech.0x@icloud.com?subject=[CV Inquiry]")
+				Link(cv.basics?.name ?? "Justin Purnell", target: "mailto:morals.tech.0x@icloud.com?subject=[CV Inquiry]")
 			}.class("mainTitle")
 			
 			// MARK: -- Summary
 			sectionHeader("Summary")
-			Text(cv.summaries.filter({$0.summaryType == .cv}).first?.summary.joined(separator: "\n") ?? "")
+			Text(cv.summaries?.filter({$0.summaryType == .cv}).first?.summary.joined(separator: "\n") ?? "")
 			
 			// MARK: -- Experience
 			sectionHeader("Experience")

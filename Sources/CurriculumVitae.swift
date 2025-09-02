@@ -15,8 +15,8 @@ enum SummaryType: String, Codable {
 
 struct CurriculumVitae: Codable {
 	let id: UUID?
-	let basics: Basics
-	let summaries: [Summary]
+	let basics: Basics?
+	let summaries: [Summary]?
 	let skills: [Skill]
 	let publications: [Publication]
 	let work: [Employer]
