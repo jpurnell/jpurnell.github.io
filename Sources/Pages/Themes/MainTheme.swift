@@ -25,7 +25,7 @@ struct MyTheme: Theme {
 				}
 				.width(.max)
 				SiteFooter()
-//				Text(Date().asISO8601)
+				Script(file: "/js/theme-toggle.js")
 			}
         }
     }

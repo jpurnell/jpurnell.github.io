@@ -20,5 +20,6 @@ let mastodon: offsiteLink = offsiteLink(title: "mastodon", url: "https://mastodo
 let radio: offsiteLink = offsiteLink(title: "radio", url: "https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f")
 let rss: offsiteLink = offsiteLink(title: "rss", url: "http://blog.justinpurnell.com/rss")
 let tumblr: offsiteLink = offsiteLink(title: "Blog", url: "http://blog.justinpurnell.com")
+let theme: offsiteLink = offsiteLink(title: "theme", url: "")
 
-let footerLinks: [offsiteLink] = [email, calendar, github, bsky, mastodon, radio, rss]
+let footerLinks: [offsiteLink] = [email, calendar, github, bsky, mastodon, radio, rss, theme]
