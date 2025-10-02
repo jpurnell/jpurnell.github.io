@@ -28,11 +28,11 @@ struct cv: StaticPage {
 			
 			// MARK: -- Volunteer
 			sectionHeader("Volunteer")
-			for volunteeer in cv.volunteer {
+			for volunteer in cv.volunteer {
 				Text {
-					Link(volunteeer.organization, target: volunteeer.url)
-				}.class("institution").id(volunteeer.organization)
-				for position in volunteeer.positions?.sorted(by: {$0.start ?? .distantFuture > $1.start ?? .distantPast}) ?? [] {
+					Link(volunteer.organization, target: volunteer.url)
+				}.class("institution").id(volunteer.organization)
+				for position in volunteer.positions?.sorted(by: {$0.start ?? .distantFuture > $1.start ?? .distantPast}) ?? [] {
 					positionSummary(position)
 				}
 			}
