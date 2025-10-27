@@ -2,7 +2,7 @@
 layout: AboutLayout
 tags: Justin Purnell, about
 image: /images/photos/standard_500x500.jpg
-imageDescription: Photo of Justin
+imageDescription: A photo of Justin by Ari Scott
 title: About
 link:
 date: 2007-07-23 00:00

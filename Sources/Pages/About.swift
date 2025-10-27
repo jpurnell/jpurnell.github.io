@@ -9,7 +9,7 @@ struct About: StaticPage {
 		for content in context.allContent.filter({$0.title == "about-Justin"}) {
 			Image(content.image ?? "default", description: (content.metadata["imageDescription"] as! String))
 				.resizable()
-				.frame(width: "130px", height:  "130px")
+				.frame(width: "150px", height:  "150px")
 				.style("float: left", "margin-right: 1%", "margin-bottom: 1%")
 			Text(content.body).frame(width: "70%", maxWidth: "800px")
 		}
