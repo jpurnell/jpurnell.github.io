@@ -7,6 +7,7 @@ struct MyTheme: Theme {
 			Head(for: page, in: context) {
 				MetaTag(name: "description", content: PersonalSite().description)
 				MetaTag(name: "fediverse:creator", content: "@jpurnell@mastodon.social")
+				MetaTag(name: "tags", content: PersonalSite().keywords.map({$0}).joined(separator: ", "))
 				Script(code: """
 	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

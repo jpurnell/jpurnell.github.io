@@ -18,7 +18,8 @@ struct PersonalSite: Site {
     var name = "Justin Purnell"
     var titleSuffix = ""
 	var url = URL(string: "https://www.justinpurnell.com")!
-	var description = "Official Homepage for Justin Purnell"
+	var description = "Product Executive (GS, UCB, NBCU) specializing in AI, digital re-platforming (70+ sites), and high-growth strategy. Expert in Swift development and consensus leadership."
+	var keywords: [String] = ["Product Manager", "Strategy", "Product Leader", "Goldman Sachs", "NBCUniversal", "Hotels at Home", "AI", "LLM", "Digital Transformation", "e-commerce", "Swift", "Consensus Leadership", "Leadership", "Agile", "DevOps", "Continuous Integration", "Continuous Deployment", "Cloud", "Data Science", "Machine Learning", "Python", "JavaScript", "Front-end", "Back-end", "Full-stack", "Responsive Design", "Accessibility", "SEO", "Content Strategy", "User Experience", "User Interface", "Design", "Agile", "Product Strategy","Technical Strategy"]
 	var language: Locale.Language = .init(identifier: "en-US")
 
     var builtInIconsEnabled = true
