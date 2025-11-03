@@ -7,6 +7,14 @@ struct cv: StaticPage {
 	func body(context: PublishingContext) -> [BlockElement] {
 		
 		if let cv = context.decode(resource: "cv.json", as: CurriculumVitae.self) {
+			NavigationBar {
+				Link("Experience", target: "#Experience")
+				Link("Volunteer", target: "#Volunteer")
+				Link("Projects & Publications", target: "#Projects & Publications")
+				Link("Education", target: "#Education")
+				Link("Skills", target: "#Skills")
+				Link("Social", target: "#Social")
+			}.class("noPrint")
 			Text {
 				Link(cv.basics.name, target: "mailto:morals.tech.0x@icloud.com?subject=[CV Inquiry]")
 			}.class("mainTitle")
