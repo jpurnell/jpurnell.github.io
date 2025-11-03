@@ -5,7 +5,15 @@ struct MyTheme: Theme {
     func render(page: Page, context: PublishingContext) -> HTML {
         HTML {
 			Head(for: page, in: context) {
-				MetaTag(name: "description", content: PersonalSite().description)
+
+				if let cv = context.decode(resource: "cv.json", as: CurriculumVitae.self) {
+					let summaryArray = cv.summaries.sorted(by: {$0.priority}).filter({$0.summaryType == .cv })
+					let summary = summaryArray[3].summary.joined(separator: ", ")
+					MetaTag(name: "description", content: summary)
+				} else {
+					MetaTag(name: "description", content: PersonalSite().description)
+				}
+				
 				MetaTag(name: "fediverse:creator", content: "@jpurnell@mastodon.social")
 				MetaTag(name: "tags", content: PersonalSite().keywords.map({$0}).joined(separator: ", "))
 				Script(code: """
