@@ -21,7 +21,7 @@ struct cv: StaticPage {
 			
 			// MARK: -- Summary
 			sectionHeader("Summary")
-			Text(cv.summaries.filter({$0.summaryType == .cv}).first?.summary.joined(separator: "\n") ?? "")
+			Text(cv.summaries.sorted(by: {$0.priority}).filter({$0.summaryType == .cv}).first?.summary.joined(separator: "\n") ?? "")
 			
 			// MARK: -- Experience
 			sectionHeader("Experience")
