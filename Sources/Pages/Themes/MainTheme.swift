@@ -8,7 +8,7 @@ struct MyTheme: Theme {
 
 				if let cv = context.decode(resource: "cv.json", as: CurriculumVitae.self) {
 					let summaryArray = cv.summaries.sorted(by: {$0.priority}).filter({$0.summaryType == .cv })
-					let summary = summaryArray[3].summary.joined(separator: ", ")
+					let summary = summaryArray[3].summary.joined(separator: "\n")
 					MetaTag(name: "description", content: summary)
 				} else {
 					MetaTag(name: "description", content: PersonalSite().description)
