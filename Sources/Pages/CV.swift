@@ -22,14 +22,16 @@ struct cv: StaticPage {
 			// MARK: -- Summary
 			sectionHeader("Summary")
 			let summaryArray = cv.summaries.sorted(by: {$0.priority}).filter({$0.summaryType == .cv })
-			let summary = summaryArray.first!
+			let summary = summaryArray.last!
 			Text(markdown: summary.summary[0])
 				.class("mainText")
 			List {
-				for i in 1..<summary.summary.count {
+				for i in 1..<summary.summary.count - 1 {
 					Text(markdown: summary.summary[i])
 				}
 			}
+			Text(markdown: summary.summary.last!)
+				.class("mainText")
 			
 			// MARK: -- Experience
 			sectionHeader("Experience")
