@@ -12,6 +12,9 @@ struct About: StaticPage {
 				.frame(width: "150px", height:  "150px")
 				.style("float: left", "margin-right: 1%", "margin-bottom: 1%")
 			Text(content.body).frame(width: "70%", maxWidth: "800px")
+			Embed(youTubeID: "FzUEUGZC-GY", title: "The Hybrid Professional").aspectRatio(.r16x9)
+			Divider()
+			Embed(youTubeID: "5cIvq3CDAOA", title: "A Blueprint for Impact").aspectRatio(.r16x9)
 		}
 	}
 }
