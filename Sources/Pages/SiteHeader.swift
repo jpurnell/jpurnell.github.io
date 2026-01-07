@@ -17,11 +17,9 @@ public struct SiteHeader: Component {
 		NavigationBar {
 			Link("Home", target: "/")
 			Link("About", target: About())
-//			Link("Blog", target: Blog())
 			Link("CV", target: cv())
-			Link("NeXT", target: next())
-			Link(tumblr.title, target: tumblr.url)
 			Link("BusinessMath", target: BusinessMath())
+			Link("NeXT", target: next())
 		}
 		.navigationItemAlignment(.default)
 		.navigationBarStyle(.default)
