@@ -25,7 +25,10 @@ struct PersonalSite: Site {
     var builtInIconsEnabled = true
 	var feedConfiguration = RSS()
 	var robotsConfiguration = Robots()
-	
+	var syntaxHighlighters: [SyntaxHighlighter] {
+		[.swift, .python, .javaScript, .yaml, .bash, .markdown, .sql]
+	}
+
     var author = "Justin Purnell"
 
     var homePage = Home()
@@ -33,6 +36,7 @@ struct PersonalSite: Site {
 	
 	var pages: [any StaticPage] {
 		About()
+		BusinessMath()
 		cv()
 		Portfolio()
 		Projects()
@@ -42,6 +46,7 @@ struct PersonalSite: Site {
 	var layouts: [any ContentPage] {
 		AboutLayout()
 		ProjectLayout()
+		BlogPostLayout()
 	}
 }
 
