@@ -37,7 +37,7 @@ struct cv: StaticPage {
 			sectionHeader("Experience")
 			for employer in cv.work {
 				Text {
-					Link(employer.name, target: employer.url ?? "#")
+					Link(employer.name, target: employer.url ?? "#").target(.blank)
 				}.class("institution").id(employer.name)
 				for position in employer.positions {
 					positionSummary(position)
@@ -48,7 +48,7 @@ struct cv: StaticPage {
 			sectionHeader("Volunteer")
 			for volunteer in cv.volunteer {
 				Text {
-					Link(volunteer.organization, target: volunteer.url)
+					Link(volunteer.organization, target: volunteer.url).target(.blank)
 				}.class("institution").id(volunteer.organization)
 				for position in volunteer.positions?.sorted(by: {$0.start ?? .distantFuture > $1.start ?? .distantPast}) ?? [] {
 					positionSummary(position)
@@ -59,8 +59,8 @@ struct cv: StaticPage {
 			sectionHeader("Projects & Publications")
 			for publication in cv.publications.sorted(by: {$0.releaseDate > $1.releaseDate}) {
 				Text {
-					Link(publication.name, target: publication.url).class("institution")
-					Link(Text("\(publication.publisher ?? "") \((publication.publisher == nil || publication.releaseDate.isEmpty) ? "" : " - ") \(formatDate(publication.releaseDate))"), target: publication.url).class("role")
+					Link(publication.name, target: publication.url).class("institution").target(.blank)
+					Link(Text("\(publication.publisher ?? "") \((publication.publisher == nil || publication.releaseDate.isEmpty) ? "" : " - ") \(formatDate(publication.releaseDate))"), target: publication.url).class("role").target(.blank)
 				}.style("margin-bottom: 0rem")
 				List {
 					for highlight in publication.highlights {
@@ -73,7 +73,7 @@ struct cv: StaticPage {
 			sectionHeader("Education")
 			for education in cv.education.sorted(by: {getDate($0.startDate ?? "") > getDate($1.startDate ?? "") }) {
 				Text {
-					Link(education.institution, target: education.institution.isEmpty ? "" : education.url)
+					Link(education.institution, target: education.institution.isEmpty ? "" : education.url).target(.blank)
 				}.class("institution").margin(.none)
 				Text("\(education.studyType), \(education.area)").class("project")
 				Text(getYear(education.endDate!)).class("role")
@@ -105,7 +105,7 @@ extension cv {
 	func positionSummary(_ position: Position) -> Group {
 		return Group {
 			Text {
-				Link(position.project, target: position.url ?? "#")
+				Link(position.project, target: position.url ?? "#").target(.blank)
 			}.class("project")
 			Text(position.position ?? "PROJECT ROLE").class("role").id(position.position ?? "#")
 			Text("\(formatDates(position.startDate!, end: position.endDate))").class("role")
