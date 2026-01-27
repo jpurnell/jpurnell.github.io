@@ -196,21 +196,126 @@ let janMonth = Period.month(year: 2025, month: 1)
 let febMonth = janMonth + 1  // → February 2025
 ```
 
-<!------->
-<!---->
-<!--## Try It Yourself-->
-<!---->
-<!--Download the playground and experiment:-->
-<!---->
-<!--```-->
-<!--→ Download: Week01/TimeSeries.playground-->
-<!--→ Full API Reference: BusinessMath Docs – Time Series Analysis-->
-<!--```-->
-<!---->
-<!--**Modifications to try**:-->
-<!--1. Create a time series for quarterly revenue and subdivide to monthly-->
-<!--2. Calculate the distance between two periods in different years-->
-<!--3. Build a time series from Q1 2024 to Q4 2025 (8 quarters)-->
+---
+
+## Try It Yourself
+
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+// Create periods at different granularities
+let jan2025 = Period.month(year: 2025, month: 1)
+let q1_2025 = Period.quarter(year: 2025, quarter: 1)
+let fy2025 = Period.year(2025)
+let today = Period.day(Date())
+
+// Period arithmetic
+let feb2025 = jan2025 + 1          // Next month
+let dec2024 = jan2025 - 1          // Previous month
+let yearRange = jan2025...jan2025 + 11  // 12 months
+
+// Distance between periods
+//let months = try jan2025.distance(to: Period.month(year: 2025, month: 6))
+//print("Months: \(months)")  // Output: 5
+
+let period = Period.month(year: 2025, month: 3)
+
+// Get boundary dates
+let start = period.startDate  // March 1, 2025 00:00:00
+let end = period.endDate      // March 31, 2025 23:59:59
+
+// Built-in label
+let label = period.label      // "2025-03"
+
+// Custom formatting
+let formatter = DateFormatter()
+formatter.dateFormat = "MMMM yyyy"
+let formatted = period.formatted(using: formatter)
+print(formatted)  // Output: "March 2025"
+
+	// Year to quarters
+	let year = Period.year(2025)
+	let quarters = year.quarters()
+	// Result: [Q1 2025, Q2 2025, Q3 2025, Q4 2025]
+
+	// Year to months
+	let months = year.months()
+	// Result: [Jan 2025, Feb 2025, ..., Dec 2025]
+
+	// Quarter to months
+	let q1 = Period.quarter(year: 2025, quarter: 1)
+	let q1Months = q1.months()
+	// Result: [Jan 2025, Feb 2025, Mar 2025]
+
+	// Month to days (leap year aware)
+	let feb2024 = Period.month(year: 2024, month: 2)
+	let days = feb2024.days()
+	// Result: [Feb 1, Feb 2, ..., Feb 29]  (2024 is a leap year)
+
+	// From parallel arrays
+	let periods = [
+		Period.month(year: 2025, month: 1),
+		Period.month(year: 2025, month: 2),
+		Period.month(year: 2025, month: 3)
+	]
+	let revenue: [Double] = [100_000, 120_000, 115_000]
+
+	let ts = TimeSeries(periods: periods, values: revenue)
+
+	// From dictionary
+	let data: [Period: Double] = [
+		Period.month(year: 2025, month: 1): 100_000,
+		Period.month(year: 2025, month: 2): 120_000,
+		Period.month(year: 2025, month: 3): 115_000
+	]
+	let ts2 = TimeSeries(data: data)
+
+	// Access by period
+	if let janRevenue = ts[periods[0]] {
+		print("January: $\(janRevenue.formatted(.number))")
+	}
+
+
+	// Iterate over period-value pairs
+	for (period, value) in zip(periods, ts) {
+		print("\(period.label): \(ts[period]!.currency())")
+	}
+	// Output:
+	// 2025-01: $100,000
+	// 2025-02: $120,000
+	// 2025-03: $115,000
+
+	// Get all values as array
+	let values = ts.valuesArray  // [100000.0, 120000.0, 115000.0]
+
+	// Get all periods
+	let allPeriods = ts.periods  // [Jan 2025, Feb 2025, Mar 2025]
+
+	// Monthly revenue data
+	let monthlyRevenue = TimeSeries(
+		periods: (1...12).map { Period.month(year: 2024, month: $0) },
+		values: [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]
+	)
+
+	// Group into quarters
+	let q1Monthss = Period.quarter(year: 2024, quarter: 1).months()
+	let q1Revenue = q1Monthss.compactMap { monthlyRevenue[$0] }.reduce(0, +)
+	print("Q1 Revenue: \(q1Revenue.currency(0))")  // $315K
+
+```
+</details>
+
+
+→ Full API Reference: [**BusinessMath Docs – Time Series Analysis**](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md)
+
+
+**Modifications to try**:
+1. Create a time series for quarterly revenue and subdivide to monthly
+2. Calculate the distance between two periods in different years
+3. Build a time series from Q1 2024 to Q4 2025 (8 quarters)
 
 ---
 

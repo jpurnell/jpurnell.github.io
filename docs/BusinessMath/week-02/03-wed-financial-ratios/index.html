@@ -7,7 +7,7 @@
 	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
 	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Financial Ratios & Metrics Guide</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">10 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 7 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to calculate and interpret profitability ratios (ROA, ROE, ROIC)</li><li>Using efficiency ratios to measure asset utilization</li><li>Assessing liquidity and solvency for financial health</li><li>Applying DuPont analysis to decompose ROE</li><li>Using credit metrics like Altman Z-Score and Piotroski F-Score</li></ul><hr /><h2>The Problem</h2><p>Analyzing financial statements requires calculating dozens of ratios across five categories: profitability, efficiency, liquidity, solvency, and valuation. Each ratio has a specific formula, interpretation guidelines, and industry benchmarks.</p><p>Doing this manually is tedious and error-prone. Spreadsheets help, but lack type safety and composability. You need to:</p><ul><li>Calculate ratios consistently across periods</li><li>Track trends over time</li><li>Compare companies on equal footing</li><li>Assess financial health with composite scores</li></ul><p><strong>BusinessMath offers a systematic way to compute, track, and interpret financial metrics programmatically.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive ratio analysis functions that work with <code>IncomeStatement</code> and <code>BalanceSheet</code> data structures, returning results as <code>TimeSeries</code> for trend analysis.</p><h3>Setup: Creating Financial Statements</h3><p>First, let’s create sample financial statements for a fictional SaaS company “TechCo”:</p><pre><code class="language-swift">// Define company and periods
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Financial Ratios & Metrics Guide</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">14 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 7 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to calculate and interpret profitability ratios (ROA, ROE, ROIC)</li><li>Using efficiency ratios to measure asset utilization</li><li>Assessing liquidity and solvency for financial health</li><li>Applying DuPont analysis to decompose ROE</li><li>Using credit metrics like Altman Z-Score and Piotroski F-Score</li></ul><hr /><h2>The Problem</h2><p>Analyzing financial statements requires calculating dozens of ratios across five categories: profitability, efficiency, liquidity, solvency, and valuation. Each ratio has a specific formula, interpretation guidelines, and industry benchmarks.</p><p>Doing this manually is tedious and error-prone. Spreadsheets help, but lack type safety and composability. You need to:</p><ul><li>Calculate ratios consistently across periods</li><li>Track trends over time</li><li>Compare companies on equal footing</li><li>Assess financial health with composite scores</li></ul><p><strong>BusinessMath offers a systematic way to compute, track, and interpret financial metrics programmatically.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive ratio analysis functions that work with <code>IncomeStatement</code> and <code>BalanceSheet</code> data structures, returning results as <code>TimeSeries</code> for trend analysis.</p><h3>Setup: Creating Financial Statements</h3><p>First, let’s create sample financial statements for a fictional SaaS company “TechCo”:</p><pre><code class="language-swift">// Define company and periods
 let entity = Entity(id: "TECH", primaryType: .ticker, name: "TechCo Inc.")
 let periods = [
 	Period.quarter(year: 2025, quarter: 1),
@@ -352,8 +352,316 @@ let q1_roe = profitability.roe[q1]!
 let q2_roe = profitability.roe[q2]!
 let qoq_growth = ((q2_roe - q1_roe) / q1_roe)
 print("\nQ2 ROE growth vs Q1: \(qoq_growth.percent())")
-</code></pre><h3>Industry Benchmarks</h3><p>Typical ranges vary by industry:</p><p><strong>Technology</strong>:</p><ul><li>Gross Margin: 60-80%</li><li>ROE: 15-30%</li><li>D/E: 0.1-0.5 (low leverage)</li><li>Asset Turnover: 0.5-1.0</li></ul><p><strong>Retail</strong>:</p><ul><li>Gross Margin: 25-40%</li><li>ROE: 15-25%</li><li>D/E: 0.5-1.5</li><li>Asset Turnover: 2.0-4.0 (high)</li></ul><p><strong>Financial Services</strong>:</p><ul><li>Net Margin: 15-25%</li><li>ROE: 10-15%</li><li>D/E: 5.0-10.0 (high leverage)</li><li>Equity Multiplier: 10-20x</li></ul><hr /><h2>Try It Yourself</h2><p>Try the code in a playground and experiment:</p><pre><code>→ Full API Reference: BusinessMath Docs – 2.2 Financial Ratios
-</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Compare profitability ratios for two companies</li><li>Track liquidity trends over multiple quarters</li><li>Perform DuPont analysis to identify ROE drivers</li></ol><hr /><h2>Real-World Application</h2><p>Investment analysts use financial ratios for every stock evaluation:</p><ul><li><strong>Profitability screening</strong>: ROE > 15%, ROIC > WACC</li><li><strong>Safety checks</strong>: Current Ratio > 1.5, Z-Score > 2.99</li><li><strong>Efficiency comparisons</strong>: Compare DSO across industry peers</li><li><strong>Valuation</strong>: Low P/E + high Piotroski F-Score = potential value</li></ul><p>BusinessMath makes these calculations systematic, repeatable, and type-safe.</p><hr /><h3>📝 Development Note</h3><p>During development, we debated whether to return individual ratios (separate functions for each) or composite structs (one function returning all profitability ratios).</p><p><strong>The composite approach won</strong> because real-world analysis requires calculating many related ratios simultaneously. Calling 7 separate functions for profitability analysis was tedious and led to code duplication.</p><p>But we kept individual functions available too:</p><pre><code class="language-swift">// Composite (most common)
+</code></pre><h3>Industry Benchmarks</h3><p>Typical ranges vary by industry:</p><p><strong>Technology</strong>:</p><ul><li>Gross Margin: 60-80%</li><li>ROE: 15-30%</li><li>D/E: 0.1-0.5 (low leverage)</li><li>Asset Turnover: 0.5-1.0</li></ul><p><strong>Retail</strong>:</p><ul><li>Gross Margin: 25-40%</li><li>ROE: 15-25%</li><li>D/E: 0.5-1.5</li><li>Asset Turnover: 2.0-4.0 (high)</li></ul><p><strong>Financial Services</strong>:</p><ul><li>Net Margin: 15-25%</li><li>ROE: 10-15%</li><li>D/E: 5.0-10.0 (high leverage)</li><li>Equity Multiplier: 10-20x</li></ul><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+
+// Define company and periods
+let entity = Entity(id: "TECH", primaryType: .ticker, name: "TechCo Inc.")
+let periods = [
+	Period.quarter(year: 2025, quarter: 1),
+	Period.quarter(year: 2025, quarter: 2),
+	Period.quarter(year: 2025, quarter: 3),
+	Period.quarter(year: 2025, quarter: 4)
+]
+
+// Convenient period references
+let q1 = periods[0]
+let q2 = periods[1]
+let q3 = periods[2]
+let q4 = periods[3]
+
+// Create Income Statement
+// Revenue: $5M → $6M over the year (20% growth)
+let revenueSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [5_000_000, 5_300_000, 5_600_000, 6_000_000]
+)
+let revenueAccount = try Account(
+	entity: entity,
+	name: "Subscription Revenue",
+	incomeStatementRole: .serviceRevenue,
+	timeSeries: revenueSeries
+)
+
+// COGS: 30% of revenue
+let cogsSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [1_500_000, 1_590_000, 1_680_000, 1_800_000]
+)
+let cogsAccount = try Account(
+	entity: entity,
+	name: "Cost of Goods Sold",
+	incomeStatementRole: .costOfGoodsSold,
+	timeSeries: cogsSeries
+)
+
+// Operating Expenses: R&D + S&M + G&A
+let opexSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [2_000_000, 2_100_000, 2_150_000, 2_200_000]
+)
+let opexAccount = try Account(
+	entity: entity,
+	name: "Operating Expenses",
+	incomeStatementRole: .operatingExpenseOther,
+	timeSeries: opexSeries
+)
+
+// Interest expense
+let interestSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [100_000, 95_000, 90_000, 85_000]
+)
+let interestAccount = try Account(
+	entity: entity,
+	name: "Interest Expense",
+	incomeStatementRole: .interestExpense,
+	timeSeries: interestSeries
+)
+
+let incomeStatement = try IncomeStatement(
+	entity: entity,
+	periods: periods,
+	accounts: [revenueAccount, cogsAccount, opexAccount, interestAccount]
+)
+
+// Create Balance Sheet
+// Current Assets
+let cashSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [3_000_000, 3_500_000, 4_000_000, 4_500_000]
+)
+let cashAccount = try Account(
+	entity: entity,
+	name: "Cash",
+	balanceSheetRole: .cashAndEquivalents,
+	timeSeries: cashSeries
+)
+
+let receivablesSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [1_200_000, 1_300_000, 1_400_000, 1_500_000]
+)
+let receivablesAccount = try Account(
+	entity: entity,
+	name: "Accounts Receivable",
+	balanceSheetRole: .accountsReceivable,  // Required for receivables turnover
+	timeSeries: receivablesSeries
+)
+
+// Inventory (needed for inventory turnover)
+let inventorySeries = TimeSeries<Double>(
+	periods: periods,
+	values: [500_000, 520_000, 540_000, 560_000]
+)
+let inventoryAccount = try Account(
+	entity: entity,
+	name: "Inventory",
+	balanceSheetRole: .inventory,  // Required for inventory turnover
+	timeSeries: inventorySeries
+)
+
+// Fixed Assets
+let ppeSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [2_000_000, 2_050_000, 2_100_000, 2_150_000]
+)
+let ppeAccount = try Account(
+	entity: entity,
+	name: "Property & Equipment",
+	balanceSheetRole: .propertyPlantEquipment,
+	timeSeries: ppeSeries
+)
+
+// Current Liabilities
+let payablesSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [800_000, 850_000, 900_000, 950_000]
+)
+let payablesAccount = try Account(
+	entity: entity,
+	name: "Accounts Payable",
+	balanceSheetRole: .accountsPayable,  // Required for days payable outstanding
+	timeSeries: payablesSeries
+)
+
+// Long-term Debt
+let debtSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [2_000_000, 1_900_000, 1_800_000, 1_700_000]
+)
+let debtAccount = try Account(
+	entity: entity,
+	name: "Long-term Debt",
+	balanceSheetRole: .longTermDebt,
+	timeSeries: debtSeries
+)
+
+// Equity (balancing to Assets = Liabilities + Equity)
+// Adjusted for inventory: Assets now include $500K+ inventory each quarter
+let equitySeries = TimeSeries<Double>(
+	periods: periods,
+	values: [3_900_000, 4_620_000, 5_340_000, 6_060_000]
+)
+let equityAccount = try Account(
+	entity: entity,
+	name: "Shareholders Equity",
+	balanceSheetRole: .commonStock,
+	timeSeries: equitySeries
+)
+
+let balanceSheet = try BalanceSheet(
+	entity: entity,
+	periods: periods,
+	accounts: [cashAccount, receivablesAccount, inventoryAccount, ppeAccount, payablesAccount, debtAccount, equityAccount]
+)
+
+// Market data for valuation metrics
+let marketPrice = 45.00  // $45 per share
+let sharesOutstanding = 200_000.0  // 200K shares outstanding
+
+// Cash flow statement (for Piotroski F-Score)
+let operatingCashFlowSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [1_500_000, 1_600_000, 1_700_000, 1_900_000]
+)
+let cashFlowAccount = try Account(
+	entity: entity,
+	name: "Operating Cash Flow",
+	cashFlowRole: .otherOperatingActivities,  // Use cashFlowRole for cash flow accounts
+	timeSeries: operatingCashFlowSeries
+)
+
+let cashFlowStatement = try CashFlowStatement(
+	entity: entity,
+	periods: periods,
+	accounts: [cashFlowAccount]
+)
+
+// Get all profitability ratios at once
+let profitability = profitabilityRatios(
+	incomeStatement: incomeStatement,
+	balanceSheet: balanceSheet
+)
+
+print("=== Profitability Analysis ===")
+print("Gross Margin: \(profitability.grossMargin[q2]!.percent(1))")
+print("Operating Margin: \(profitability.operatingMargin[q2]!.percent(1))")
+print("Net Margin: \(profitability.netMargin[q2]!.percent(1))")
+print("EBITDA Margin: \(profitability.ebitdaMargin[q2]!.percent(1))")
+print("ROA: \(profitability.roa[q2]!.percent(1))")
+print("ROE: \(profitability.roe[q2]!.percent(1))")
+print("ROIC: \(profitability.roic[q2]!.percent(1))")
+
+let efficiency = efficiencyRatios(
+	incomeStatement: incomeStatement,
+	balanceSheet: balanceSheet
+)
+
+print("\n=== Efficiency Analysis ===")
+print("Asset Turnover: \(efficiency.assetTurnover[q2]!.number(2))")
+print("Inventory Turnover: \(efficiency.inventoryTurnover![q2]!.number(1))")
+print("Receivables Turnover: \(efficiency.receivablesTurnover![q2]!.number(1))")
+print("Days Sales Outstanding: \(efficiency.daysSalesOutstanding![q2]!.number(1)) days")
+print("Days Inventory Outstanding: \(efficiency.daysInventoryOutstanding![q2]!.number(1)) days")
+print("Days Payable Outstanding: \(efficiency.daysPayableOutstanding![q2]!.number(1)) days")
+
+// Cash Conversion Cycle
+let ccc = efficiency.cashConversionCycle![q2]!
+print("Cash Conversion Cycle: \(ccc.number(1)) days")
+
+
+let liquidity = liquidityRatios(balanceSheet: balanceSheet)
+
+print("\n=== Liquidity Analysis ===")
+print("Current Ratio: \(liquidity.currentRatio[q2]!.number(1))")
+print("Quick Ratio: \(liquidity.quickRatio[q2]!.number(1))")
+print("Cash Ratio: \(liquidity.cashRatio[q2]!.number(1))")
+print("Working Capital: \(liquidity.workingCapital[q2]!.currency(0))")
+
+// Assess liquidity health
+let currentRatio = liquidity.currentRatio[q2]!
+if currentRatio < 1.0 {
+	print("⚠️  Warning: Current ratio < 1.0 indicates potential liquidity issues")
+} else if currentRatio > 3.0 {
+	print("ℹ️  Note: High current ratio may indicate inefficient use of assets")
+} else {
+	print("✓ Current ratio in healthy range")
+}
+
+
+// Calculate solvency ratios using the convenience API
+// Principal payments are automatically derived from period-over-period debt reduction
+let solvency = solvencyRatios(
+	incomeStatement: incomeStatement,
+	balanceSheet: balanceSheet,
+	debtAccount: debtAccount,        // Automatically calculates principal payments
+	interestAccount: interestAccount  // from balance sheet changes
+)
+
+print("\n=== Solvency Analysis ===")
+print("Debt-to-Equity: \(solvency.debtToEquity[q2]!.number(2))")
+print("Debt-to-Assets: \(solvency.debtToAssets[q2]!.number(2))")
+print("Equity Ratio: \(solvency.equityRatio[q2]!.number(2))")
+print("Interest Coverage: \(solvency.interestCoverage![q2]!.number(1))x")
+print("Debt Service Coverage: \(solvency.debtServiceCoverage![q2]!.number(1))x")
+
+// 3-Way DuPont Analysis
+let dupont = dupontAnalysis(
+	incomeStatement: incomeStatement,
+	balanceSheet: balanceSheet
+)
+
+print("\n=== 3-Way DuPont Analysis ===")
+print("ROE = Net Margin × Asset Turnover × Equity Multiplier\n")
+print("Net Margin: \(dupont.netMargin[q1]!.percent())")
+print("Asset Turnover: \(dupont.assetTurnover[q1]!.number(1))x")
+print("Equity Multiplier: \(dupont.equityMultiplier[q1]!.number(1))x")
+print("ROE: \(dupont.roe[q1]!.percent(1))")
+
+// Verify the formula
+let calculated = dupont.netMargin[q1]! *
+				 dupont.assetTurnover[q1]! *
+				 dupont.equityMultiplier[q1]!
+print("\nVerification: \(calculated.percent()) ≈ \(dupont.roe[q1]!.percent())")
+
+// Assess leverage
+let debtToEquity = solvency.debtToEquity[q2]!
+if debtToEquity > 2.0 {
+	print("⚠️  High leverage - company relies heavily on debt")
+} else if debtToEquity < 0.5 {
+	print("ℹ️  Conservative capital structure - may be underlevered")
+} else {
+	print("✓ Balanced capital structure")
+}
+
+// Check interest coverage
+let interestCoverage = solvency.interestCoverage?[q2]! ?? 0.0
+if interestCoverage < 2.0 {
+	print("⚠️  Low interest coverage - may struggle to pay interest")
+} else if interestCoverage > 5.0 {
+	print("✓ Strong interest coverage")
+}
+
+	// Analyze trends across quarters
+	print("\n=== Profitability Trends ===")
+	print("Period       ROE      ROA    Net Margin")
+	for period in periods {
+		let roe = profitability.roe[period]!
+		let roa = profitability.roa[period]!
+		let margin = profitability.netMargin[period]!
+		print("\(period.label.padding(toLength: 7, withPad: " ", startingAt: 0)) \(roe.percent(1).paddingLeft(toLength: 8)) \(roa.percent(1).paddingLeft(toLength: 8)) \(margin.percent(1).paddingLeft(toLength: 12))")
+	}
+
+	// Calculate quarter-over-quarter growth
+	let q1_roe = profitability.roe[q1]!
+	let q2_roe = profitability.roe[q2]!
+	let qoq_growth = ((q2_roe - q1_roe) / q1_roe)
+	print("\nQ2 ROE growth vs Q1: \(qoq_growth.percent())")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md"><strong>BusinessMath Docs – 2.2 Financial Ratios</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Compare profitability ratios for two companies</li><li>Track liquidity trends over multiple quarters</li><li>Perform DuPont analysis to identify ROE drivers</li></ol><hr /><h2>Real-World Application</h2><p>Investment analysts use financial ratios for every stock evaluation:</p><ul><li><strong>Profitability screening</strong>: ROE > 15%, ROIC > WACC</li><li><strong>Safety checks</strong>: Current Ratio > 1.5, Z-Score > 2.99</li><li><strong>Efficiency comparisons</strong>: Compare DSO across industry peers</li><li><strong>Valuation</strong>: Low P/E + high Piotroski F-Score = potential value</li></ul><p>BusinessMath makes these calculations systematic, repeatable, and type-safe.</p><hr /><h3>📝 Development Note</h3><p>During development, we debated whether to return individual ratios (separate functions for each) or composite structs (one function returning all profitability ratios).</p><p><strong>The composite approach won</strong> because real-world analysis requires calculating many related ratios simultaneously. Calling 7 separate functions for profitability analysis was tedious and led to code duplication.</p><p>But we kept individual functions available too:</p><pre><code class="language-swift">// Composite (most common)
 let all = profitabilityRatios(incomeStatement: is, balanceSheet: bs)
 
 // Individual (when you only need one)

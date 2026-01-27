@@ -19,13 +19,6 @@ struct BusinessMath: StaticPage {
 			Divider()
 			Text(content.body).frame(width: "70%", maxWidth: "800px")
 		}
-		// Page title
-//		Group {
-//			Text("BusinessMath")
-//				.font(.title1)
-//				.class("mainTitle")
-//			Text("BusinessMath is a comprehensive open-source Swift package for financial modeling, statistical analysis, simulation, and optimization. It is designed to be user-friendly and extensible, making it suitable for a wide range of financial professionals and researchers. Read more about how to use it and how we built it here.")
-//		}
 
 		// Filter controls section
 		Section {
@@ -169,7 +162,7 @@ struct BusinessMath: StaticPage {
 	/// Generate the list of blog posts with data attributes
 	private func generateBlogPostsList(context: PublishingContext) -> Group {
 		let blogPosts = getBlogPosts(context: context)
-			.sorted(by: { $0.date > $1.date })  // Newest first, using built-in date property
+			.sorted(by: { $0.date < $1.date })  // Newest first, using built-in date property
 
 		return Group {
 //			List {

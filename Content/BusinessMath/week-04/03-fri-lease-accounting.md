@@ -416,11 +416,201 @@ Discount: $102,955.86 (16.2%)
 
 ## Try It Yourself
 
-Copy these to an Xcode playground and experiment:
+<details>
+<summary>Click to expand full playground code</summary>
 
+```swift
+import BusinessMath
+
+// Office lease: quarterly payments for 1 year
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let periods = [q1, q1 + 1, q1 + 2, q1 + 3]
+
+let payments = TimeSeries(
+	periods: periods,
+	values: [25_000.0, 25_000.0, 25_000.0, 25_000.0]
+)
+
+// Create lease with 6% annual discount rate (incremental borrowing rate)
+let lease = Lease(
+	payments: payments,
+	discountRate: 0.06
+)
+
+// Calculate present value (lease liability)
+let liability = lease.presentValue()
+print("Initial lease liability: \(liability.currency(0))")  // ~$96,360
+
+// Calculate right-of-use asset (initially equals liability)
+let rouAsset = lease.rightOfUseAsset()
+print("ROU asset: \(rouAsset.currency(0))")  // $96,360
+
+
+let schedule = lease.liabilitySchedule()
+
+print("=== Lease Liability Schedule ===")
+print("Period\t\tBeginning\tPayment\t\tInterest\tPrincipal\tEnding")
+print("------\t\t---------\t-------\t\t--------\t---------\t------")
+
+for (i, period) in periods.enumerated() {
+	// Beginning balance
+	let beginning = i == 0 ? liability : schedule[periods[i-1]]!
+
+	// Payment
+	let payment = payments[period]!
+
+	// Interest expense (Beginning × quarterly rate)
+	let interest = lease.interestExpense(period: period)
+
+	// Principal reduction
+	let principal = lease.principalReduction(period: period)
+
+	// Ending balance
+	let ending = schedule[period]!
+
+	print("\(period.label)\(beginning.currency(0).paddingLeft(toLength: 14))\(payment.currency(0).paddingLeft(toLength: 10))\(interest.currency(0).paddingLeft(toLength: 13))\(principal.currency(0).paddingLeft(toLength: 13))\(ending.currency(0).paddingLeft(toLength: 9))")
+}
+
+print("\nTotal payments: \((payments.reduce(0, +)).currency(0))")
+print("Total interest: \((lease.totalInterest()).currency(0))")
+
+let leaseWithCosts = Lease(
+	payments: payments,
+	discountRate: 0.06,
+	initialDirectCosts: 5_000.0,    // Legal fees, broker commissions
+	prepaidAmount: 10_000.0          // First month rent + security deposit
+)
+
+let liability_wc = leaseWithCosts.presentValue()       // PV of payments only
+let rouAsset_wc = leaseWithCosts.rightOfUseAsset()    // PV + costs + prepayments
+
+print("=== Initial Recognition with Costs ===")
+print("Lease liability: \(liability_wc.currency(0))")   // $96,360
+print("ROU asset: \(rouAsset_wc.currency(0))")          // $111,360
+print("\nDifference: \((rouAsset_wc - liability_wc).currency(0))")  // $15,000 (costs + prepayment)
+
+
+print("\n=== ROU Asset Depreciation ===")
+
+// Quarterly depreciation (straight-line over 4 quarters)
+let depreciation = leaseWithCosts.depreciation(period: q1)
+print("Quarterly depreciation: \(depreciation.currency(0))")  // $111,454 ÷ 4 = $27,864
+
+// Track carrying value each quarter
+for (i, period) in periods.enumerated() {
+	let carryingValue = leaseWithCosts.carryingValue(period: period)
+	let quarterNum = i + 1
+	print("Q\(quarterNum) carrying value: \(carryingValue.currency(0))")
+}
+
+print("\n=== Total P&L Impact by Quarter ===")
+print("Quarter\tInterest\tDepreciation\tTotal Expense")
+print("-------\t--------\t------------\t-------------")
+
+var totalInterest = 0.0
+var totalDepreciation = 0.0
+
+for (i, period) in periods.enumerated() {
+	let interest = leaseWithCosts.interestExpense(period: period)
+	let depreciation = leaseWithCosts.depreciation(period: period)
+	let total = interest + depreciation
+
+	totalInterest += interest
+	totalDepreciation += depreciation
+
+	let quarterNum = i + 1
+	print("\(period.label)\(interest.currency(0).paddingLeft(toLength: 9))\(depreciation.currency(0).paddingLeft(toLength: 16))\(total.currency(0).paddingLeft(toLength: 17))")
+}
+
+print("\n Total:\(totalInterest.currency(0).paddingLeft(toLength: 9))\(totalDepreciation.currency(0).paddingLeft(toLength: 16))\((totalInterest + totalDepreciation).currency(0).paddingLeft(toLength: 17))")
+
+print("\n** Note: Expense is front-loaded due to higher interest in early periods")
+
+let shortTermLease = Lease(
+	payments: payments,  // 4 quarterly payments = 12 months
+	discountRate: 0.06,
+	leaseTerm: .months(12)
+)
+
+if shortTermLease.isShortTerm {
+	print("\n✓ Qualifies for short-term exemption")
+	print("Can expense payments as incurred without capitalizing")
+
+	// No balance sheet impact
+	let rouAsset = shortTermLease.rightOfUseAsset()  // Returns 0
+	print("ROU asset: \(rouAsset.currency())")
+} else {
+	print("Must capitalize lease")
+}
+
+	// Small equipment lease
+	let lowValueLease = Lease(
+		payments: payments,
+		discountRate: 0.06,
+		underlyingAssetValue: 4_500.0  // Below $5K threshold
+	)
+
+	if lowValueLease.isLowValue {
+		print("\n✓ Qualifies for low-value exemption")
+		print("Underlying asset value: \(lowValueLease.underlyingAssetValue!.currency())")
+		print("Can expense payments as incurred")
+	}
+
+print("\n=== Impact of Discount Rate ===")
+
+// Conservative rate (lower discount = higher PV)
+let lowRate = Lease(payments: payments, discountRate: 0.04)
+
+// Market rate
+let marketRate = Lease(payments: payments, discountRate: 0.06)
+
+// Riskier rate (higher discount = lower PV)
+let highRate = Lease(payments: payments, discountRate: 0.10)
+
+print("At 4% rate: \(lowRate.presentValue().currency())")
+print("At 6% rate: \(marketRate.presentValue().currency())")
+print("At 10% rate: \(highRate.presentValue().currency())")
+
+let difference = lowRate.presentValue() - highRate.presentValue()
+print("\nDifference between 4% and 10%: \(difference.currency())")
+
+	// 5-year office lease with 3% annual escalation
+	let startDate = Period.quarter(year: 2025, quarter: 1)
+	let fiveYearPeriods = (0..<20).map { startDate + $0 }  // 20 quarters
+
+	// Generate escalating payments
+	var escalatingPayments: [Double] = []
+	let baseRent = 30_000.0
+
+	for i in 0..<20 {
+		let yearIndex = i / 4  // Which year (0-4)
+		let escalatedRent = baseRent * pow(1.03, Double(yearIndex))
+		escalatingPayments.append(escalatedRent)
+	}
+
+	let paymentSeries = TimeSeries(periods: fiveYearPeriods, values: escalatingPayments)
+
+	let longTermLease = Lease(
+		payments: paymentSeries,
+		discountRate: 0.068,  // 6.8% IBR
+		initialDirectCosts: 15_000.0,
+		prepaidAmount: 30_000.0
+	)
+
+	let liability_ep = longTermLease.presentValue()
+	let rouAsset_ep = longTermLease.rightOfUseAsset()
+
+	print("\n=== 5-Year Office Lease ===")
+	print("Base quarterly rent: \(baseRent.currency())")
+	print("Total payments (nominal): \(paymentSeries.reduce(0, +).currency())")
+	print("Present value: \(liability_ep.currency())")
+	print("ROU asset: \(rouAsset_ep.currency())")
+	print("\nDiscount: \((paymentSeries.reduce(0, +) - liability_ep).currency()) (\((1 - liability_ep / paymentSeries.reduce(0, +)).percent(1)))")
 ```
-→ Full API Reference: BusinessMath Docs – 3.6 Lease Accounting
-```
+</details>
+
+→ Full API Reference: [**BusinessMath Docs – 3.6 Lease Accounting**](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.6-LeaseAccountingGuide.md)
+
 
 **Modifications to try**:
 1. Model your company's actual office lease

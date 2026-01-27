@@ -391,12 +391,217 @@ for i in 0..<portfolioVaRs.count {
 
 ## Try It Yourself
 
-Add this code to an Xcode playground and experiment:
+[**S&P Returns Data**](../../../data/SPData.swift) (add to the /Sources file of your playground)
 
-[S&P Returns Data](../../../data/SPData.swift) (add to the /Sources file of your playground)
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+// Pre-defined stress scenarios
+var allScenarios = [
+    StressScenario<Double>.recession,      // Moderate economic downturn
+    StressScenario<Double>.crisis,         // Severe financial crisis
+    StressScenario<Double>.supplyShock     // Supply chain disruption
+]
+
+// Examine scenario parameters
+for scenario in allScenarios {
+    print("\(scenario.name):")
+    print("  Description: \(scenario.description)")
+    print("  Shocks:")
+    for (driver, shock) in scenario.shocks {
+        let pct = shock * 100
+        print("    \(driver): \(pct > 0 ? "+" : "")\(pct)%")
+    }
+}
+
+// Pandemic scenario
+let pandemic = StressScenario(
+    name: "Global Pandemic",
+    description: "Extended lockdowns and remote work transition",
+    shocks: [
+        "Revenue": -0.35,           // -35% revenue
+        "RemoteWorkCosts": 0.20,    // +20% IT/remote costs
+        "TravelExpenses": -0.80,    // -80% travel
+        "RealEstateCosts": -0.15    // -15% office costs
+    ]
+)
+allScenarios.append(pandemic)
+
+// Regulatory change scenario
+let regulation = StressScenario(
+    name: "New Regulation",
+    description: "Stricter compliance requirements",
+    shocks: [
+        "ComplianceCosts": 0.50,    // +50% compliance
+        "Revenue": -0.05,           // -5% from restrictions
+        "OperatingMargin": -0.03    // -3% margin compression
+    ]
+)
+allScenarios.append(regulation)
+
+let stressTest = StressTest(scenarios: allScenarios)
+
+struct FinancialMetrics {
+    var revenue: Double
+    var costs: Double
+    var npv: Double
+}
+
+let baseline = FinancialMetrics(
+    revenue: 10_000_000,
+    costs: 7_000_000,
+    npv: 5_000_000
+)
+
+for scenario in stressTest.scenarios {
+    // Apply shocks
+    var stressed = baseline
+
+    if let revenueShock = scenario.shocks["Revenue"] {
+        stressed.revenue *= (1 + revenueShock)
+    }
+
+    if let cogsShock = scenario.shocks["COGS"] {
+        stressed.costs *= (1 + cogsShock)
+    }
+
+    let stressedNPV = stressed.revenue - stressed.costs
+    let impact = stressedNPV - baseline.npv
+    let impactPct = (impact / baseline.npv)
+
+    print("\n\(scenario.name):")
+    print("  Baseline NPV: \(baseline.npv.currency())")
+    print("  Stressed NPV: \(stressedNPV.currency())")
+    print("  Impact: \(impact.currency()) (\(impactPct.percent()))")
+}
+
+// Portfolio returns (historical daily returns) come from Sources: spReturns: [Double]
+let periods: [Period] = (0..<spReturns.count).map { idx in
+    Period.day(Date().addingTimeInterval(Double(idx) * 86_400))
+}
+let timeSeries: TimeSeries<Double> = TimeSeries(periods: periods, values: spReturns)
+
+let riskMetrics = ComprehensiveRiskMetrics(
+    returns: timeSeries,
+    riskFreeRate: 0.02 / 250  // 2% annual = 0.008% daily
+)
+print("Value at Risk:")
+print("  95% VaR: \(riskMetrics.var95.percent())")
+print("  99% VaR: \(riskMetrics.var99.percent())")
+
+// Interpret: "95% confidence we won't lose more than X% in a day"
+let portfolioValue = 1_000_000.0
+let var95Loss = abs(riskMetrics.var95) * portfolioValue
+
+print("\nFor \(portfolioValue.currency(0)) portfolio:")
+print("  95% 1-day VaR: \(var95Loss.currency())")
+print("  Meaning: 95% confident daily loss won't exceed \(var95Loss.currency())")
+
+print("\nConditional VaR (Expected Shortfall):")
+print("  CVaR (95%): \(riskMetrics.cvar95.percent())")
+print("  Tail Risk Ratio: \(riskMetrics.tailRisk.number())")
+
+// CVaR is the expected loss if we're in the worst 5%
+let cvarLoss = abs(riskMetrics.cvar95) * portfolioValue
+print("  If in worst 5% of days, expect to lose: \(cvarLoss.currency())")
+
+
+print("\nComprehensive Risk Profile:")
+print(riskMetrics.description)
+
+let drawdown = riskMetrics.maxDrawdown
+
+print("\nDrawdown Analysis:")
+print("  Maximum drawdown: \(drawdown.percent())")
+
+if drawdown < 0.10 {
+	print("  Risk level: Low")
+} else if drawdown < 0.20 {
+	print("  Risk level: Moderate")
+} else {
+	print("  Risk level: High")
+}
+
+print("\nRisk-Adjusted Returns:")
+print("  Sharpe Ratio: \(riskMetrics.sharpeRatio.number(3))")
+print("    (return per unit of total volatility)")
+
+print("  Sortino Ratio: \(riskMetrics.sortinoRatio.number(3))")
+print("    (return per unit of downside volatility)")
+
+// Sortino > Sharpe indicates asymmetric returns (positive skew)
+if riskMetrics.sortinoRatio > riskMetrics.sharpeRatio {
+	print("  Portfolio has limited downside with upside potential")
+}
+
+print("\nTail Statistics:")
+print("  Skewness: \(riskMetrics.skewness.number(2))")
+
+if riskMetrics.skewness < -0.5 {
+	print("    Negative skew: More frequent small gains, rare large losses")
+	print("    Risk: Fat left tail")
+} else if riskMetrics.skewness > 0.5 {
+	print("    Positive skew: More frequent small losses, rare large gains")
+	print("    Risk: Fat right tail")
+} else {
+	print("    Roughly symmetric distribution")
+}
+
+print("  Excess Kurtosis: \(riskMetrics.kurtosis.number(2))")
+
+if riskMetrics.kurtosis > 1.0 {
+	print("    Fat tails: More extreme events than normal distribution")
+	print("    Risk: Higher probability of large moves")
+}
+
+	// Three portfolios with individual VaRs
+	let portfolioVaRs = [100_000.0, 150_000.0, 200_000.0]
+
+	// Correlation matrix
+	let correlations = [
+		[1.0, 0.6, 0.4],
+		[0.6, 1.0, 0.5],
+		[0.4, 0.5, 1.0]
+	]
+
+	// Aggregate VaR using variance-covariance method
+	let aggregatedVaR = RiskAggregator<Double>.aggregateVaR(
+		individualVaRs: portfolioVaRs,
+		correlations: correlations
+	)
+
+	let simpleSum = portfolioVaRs.reduce(0, +)
+	let diversificationBenefit = simpleSum - aggregatedVaR
+
+	print("VaR Aggregation:")
+	print("  Portfolio A VaR: \(portfolioVaRs[0].currency())")
+	print("  Portfolio B VaR: \(portfolioVaRs[1].currency())")
+	print("  Portfolio C VaR: \(portfolioVaRs[2].currency())")
+	print("  Simple sum: \(simpleSum.currency())")
+	print("  Aggregated VaR: \(aggregatedVaR.currency())")
+	print("  Diversification benefit: \(diversificationBenefit.currency())")
+
+for i in 0..<portfolioVaRs.count {
+	let marginal = RiskAggregator<Double>.marginalVaR(
+		entity: i,
+		individualVaRs: portfolioVaRs,
+		correlations: correlations
+	)
+
+	print("\nPortfolio \(["A", "B", "C"][i]):")
+	print("  Individual VaR: \(portfolioVaRs[i].currency())")
+	print("  Marginal VaR: \(marginal.currency())")
+	print("  Risk contribution: \((marginal / aggregatedVaR).percent())")
+}
+
 ```
-→ Full API Reference: BusinessMath Docs – 2.3 Risk Analytics
-```
+</details>
+
+
+→ Full API Reference: [**BusinessMath Docs – 2.3 Risk Analytics**](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md)
 
 **Modifications to try**:
 1. Create custom stress scenarios for your industry
