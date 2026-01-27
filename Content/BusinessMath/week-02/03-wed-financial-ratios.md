@@ -1,14 +1,14 @@
 ---
 layout: BlogPostLayout
 title: Financial Ratios & Metrics Guide
-date: 2026-01-15 13:00
+date: 2026-01-14 13:00
 series: BusinessMath Quarterly Series
 week: 2
 post: 3
 docc_source: "2.2-FinancialRatiosGuide.md"
 playground: "Week02/FinancialRatios.playground"
 tags: businessmath, swift, financial-ratios, profitability, liquidity, solvency
-published: false
+published: true
 ---
 
 # Financial Ratios & Metrics Guide
@@ -37,7 +37,7 @@ Doing this manually is tedious and error-prone. Spreadsheets help, but lack type
 - Compare companies on equal footing
 - Assess financial health with composite scores
 
-**You need a systematic way to compute, track, and interpret financial metrics programmatically.**
+**BusinessMath offers a systematic way to compute, track, and interpret financial metrics programmatically.**
 
 ---
 
@@ -362,11 +362,11 @@ let solvency = solvencyRatios(
 )
 
 print("\n=== Solvency Analysis ===")
-print("Debt-to-Equity: \(solvency.debtToEquity[q1]!)")
-print("Debt-to-Assets: \(solvency.debtToAssets[q1]!)")
-print("Equity Ratio: \(solvency.equityRatio[q1]!)")
-print("Interest Coverage: \(solvency.interestCoverage[q1]!)x")
-print("Debt Service Coverage: \(solvency.debtServiceCoverage[q1]!)x")
+print("Debt-to-Equity: \(solvency.debtToEquity[q2]!.number(2))")
+print("Debt-to-Assets: \(solvency.debtToAssets[q2]!.number(2))")
+print("Equity Ratio: \(solvency.equityRatio[q2]!.number(2))")
+print("Interest Coverage: \(solvency.interestCoverage![q2]!.number(1))x")
+print("Debt Service Coverage: \(solvency.debtServiceCoverage![q2]!.number(1))x")
 
 // Assess leverage
 let debtToEquity = solvency.debtToEquity[q1]!
@@ -408,16 +408,16 @@ let dupont = dupontAnalysis(
 
 print("\n=== 3-Way DuPont Analysis ===")
 print("ROE = Net Margin × Asset Turnover × Equity Multiplier\n")
-print("Net Margin: \(dupont.netMargin[q1]! * 100)%")
-print("Asset Turnover: \(dupont.assetTurnover[q1]!)")
-print("Equity Multiplier: \(dupont.equityMultiplier[q1]!)")
-print("ROE: \(dupont.roe[q1]! * 100)%")
+print("Net Margin: \(dupont.netMargin[q1]!.percent())")
+print("Asset Turnover: \(dupont.assetTurnover[q1]!.number(1))x")
+print("Equity Multiplier: \(dupont.equityMultiplier[q1]!.number(1))x")
+print("ROE: \(dupont.roe[q1]!.percent(1))")
 
 // Verify the formula
 let calculated = dupont.netMargin[q1]! *
-                 dupont.assetTurnover[q1]! *
-                 dupont.equityMultiplier[q1]!
-print("\nVerification: \(calculated * 100)% ≈ \(dupont.roe[q1]! * 100)%")
+				 dupont.assetTurnover[q1]! *
+				 dupont.equityMultiplier[q1]!
+print("\nVerification: \(calculated.percent()) ≈ \(dupont.roe[q1]!.percent())")
 ```
 
 **ROE can be high due to**:
@@ -502,19 +502,14 @@ for period in periods {
     let roa = profitability.roa[period]!
     let margin = profitability.netMargin[period]!
 
-    print(String(format: "%-12@     %5.1f%%  %5.1f%%  %5.1f%%",
-        String(describing: period),
-        roe * 100,
-        roa * 100,
-        margin * 100
-    ))
+	print("\(period.label.padding(toLength: 7, withPad: " ", startingAt: 0)) \(roe.percent(1).paddingLeft(toLength: 8)) \(roa.percent(1).paddingLeft(toLength: 8)) \(margin.percent(1).paddingLeft(toLength: 12))")
 }
 
 // Calculate quarter-over-quarter growth
 let q1_roe = profitability.roe[q1]!
 let q2_roe = profitability.roe[q2]!
-let qoq_growth = ((q2_roe - q1_roe) / q1_roe) * 100
-print("\nQ2 ROE growth vs Q1: \(qoq_growth)%")
+let qoq_growth = ((q2_roe - q1_roe) / q1_roe)
+print("\nQ2 ROE growth vs Q1: \(qoq_growth.percent())")
 ```
 
 ### Industry Benchmarks
@@ -543,10 +538,9 @@ Typical ranges vary by industry:
 
 ## Try It Yourself
 
-Download the playground and experiment:
+Try the code in a playground and experiment:
 
 ```
-→ Download: Week02/FinancialRatios.playground
 → Full API Reference: BusinessMath Docs – 2.2 Financial Ratios
 ```
 
@@ -588,7 +582,7 @@ let roe = returnOnEquity(incomeStatement: is, balanceSheet: bs)
 
 **The lesson**: Provide both convenience (composite) and precision (individual). Let users choose based on their needs.
 
-**Related Methodology**: [The Master Plan](../week-03/02-tue-master-plan.md) (Week 3) - Managing API surface area
+**Related Methodology**: [The Master Plan (Week 3) - Managing API surface area](../week-03/02-tue-master-plan.md)
 
 ---
 

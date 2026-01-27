@@ -7,8 +7,8 @@ week: 1
 post: 2
 journey_source: "Week 3 from BusinessMath_Blog.md"
 category: "methodology"
-tags: ai-collaboration, tdd, testing, red-green-refactor
-published: false
+tags: ai-collaboration, tdd, testing, red-green-refactor, development journey
+published: true
 ---
 
 # Test-First Development with AI
@@ -21,7 +21,7 @@ published: false
 
 When we began implementing BusinessMath's TVM (Time Value of Money) functions, we faced a fundamental question: How do we ensure AI-generated code is correct?
 
-We were building a financial library where errors cost real money. A bug in present value calculation could lead to bad retirement planning. An error in IRR could result in misallocated capital. The stakes were high.
+When you set out to build a financial library, errors can cost real money. A bug in present value calculation could lead to bad retirement planning. An error in IRR could result in misallocated capital.
 
 We needed a way to specify exactly what we wanted and verify that we got it.
 
@@ -29,28 +29,26 @@ We needed a way to specify exactly what we wanted and verify that we got it.
 
 ## The Challenge
 
-AI is incredibly powerful at generating code, but it has a dangerous tendency: it produces code that *looks* reasonable but may be subtly wrong.
+We're all coming around to the idea that AI is incredibly powerful at generating code, but we've all also heard of it's dangerous tendency to "hallucinate." Code can *look* reasonable but may be subtly wrong.
 
 **The symptoms we encountered**:
-- AI would confidently implement simple interest when we needed compound interest
+- AI might confidently implement simple interest when we needed compound interest
 - Generic type constraints would be almost correct but not quite right
 - Edge cases (zero rate, negative periods) would be silently mishandled
 
-The traditional approach—write code, then write tests—was backwards for AI collaboration. By the time we wrote tests, we'd already invested in understanding and debugging the AI's output.
-
-**We needed a better way.**
+A traditional approach—write code, then write tests—simply doesn't make sense for AI collaboration. If we did it that way, by the time we got around to writing tests, we'd already be invested in understanding and debugging the AI's output. We needed a better way.
 
 ---
 
 ## The Solution
 
-We adopted strict **test-first development** with a specific workflow designed for AI collaboration:
+Instead, we adopted a strict **test-first development** with a specific workflow designed for AI collaboration:
 
 ### The RED-GREEN-REFACTOR Cycle
 
 **1. RED - Write a Failing Test**
 
-Before asking AI for any implementation, write the test that specifies exactly what you want:
+Before asking AI for any implementation, we wrote tests that specified exactly what wanted:
 
 ```swift
 @Test("Future value compounds correctly")
@@ -156,7 +154,7 @@ Test failed. We saw the error instantly. Corrected the prompt. Next attempt used
 
 **3. Generic Implementations Validated**
 
-Writing tests for multiple types ensured generics worked:
+We used the Swift Numerics as our only real dependency, but it allowed us to work generically over and "Real" number. Writing tests for multiple types ensured generics worked:
 
 ```swift
 @Test("Future value works with Double")
@@ -180,7 +178,7 @@ Both passed. Generic implementation validated.
 
 **1. Vague Tests**
 
-Initially, we wrote tests like:
+A test has to be specific to be useful. A test-driven approach therefore works best when you have domain expertise and can give concrete guidance:
 
 ```swift
 @Test("Present value works")
@@ -190,18 +188,18 @@ func testPV() {
 }
 ```
 
-AI generated code that passed but was wrong. The test didn't specify the *correct* value, just that it was positive.
+AI would generate code here that passes, but wouldn't necessarily be write. Just specifying that the value be positive won't ensure that it is the *correct* value.
 
 **Fix**: Always test against known, calculated values.
 
 **2. Missing Edge Cases**
 
-We'd write tests for normal cases but forget edge cases:
+Just getting the right value is great, but you also have to think through and test against edge cases:
 - What if rate is zero?
 - What if periods is negative?
 - What if present value is negative?
 
-AI happily implemented code that crashed or returned nonsense for these inputs.
+AI would happily implement code that crashed or returned nonsense for these inputs.
 
 **Fix**: Enumerate edge cases explicitly. Write tests for them all.
 
@@ -222,9 +220,9 @@ func testFVNegativePeriods() {
 
 ---
 
-## The Insight
+## Key Takeaway
 
-Test-first development transforms AI from a code generator into a **specification executor**.
+We're not in a place to just trust AI to do what you're thinking. But by specifying test-first development, you can use AI not as a code generator, but instead into a **specification executor**.
 
 **Without tests first**: "Implement present value calculation" → AI guesses what you mean → You debug AI's interpretation
 
@@ -271,7 +269,7 @@ Test-first development transforms AI from a code generator into a **specificatio
 This practice is demonstrated in the following technical posts:
 
 **Technical Examples**:
-- **Getting Started** (Monday): Shows `presentValue` implemented test-first
+- [**Getting Started** (Monday)](../01-mon-getting-started): Shows `presentValue` implemented test-first
 - **Time Series Foundation** (Wednesday): Period arithmetic validated with tests
 - **Time Value of Money** (Week 1 Friday case study): Multiple TVM functions integrated
 
@@ -299,18 +297,13 @@ This practice is demonstrated in the following technical posts:
 
 ## Further Reading
 
-**From the 40-week journey**:
-- Week 3: Original test-first development story
-- Week 6: Coding standards that tests enforce
-- Week 19: When tests pass but code is wrong (the Monte Carlo bug)
-
 **Technical foundation**:
 - Swift Testing framework documentation
 - `#expect` vs `XCTAssert` differences
 
 **Tools mentioned**:
-- Swift Testing: Modern testing framework for Swift
-- swift-numerics: Generic numeric protocols (`Real`, `ElementaryFunctions`)
+- [Swift Testing](https://developer.apple.com/xcode/swift-testing/): Modern testing framework for Swift
+- [Swift Numerics](https://www.swift.org/blog/numerics/): Generic numeric protocols (`Real`, `ElementaryFunctions`)
 
 ---
 

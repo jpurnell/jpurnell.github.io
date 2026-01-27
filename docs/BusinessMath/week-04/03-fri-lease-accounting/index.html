@@ -1,0 +1,240 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 15 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Lease Accounting with IFRS 16 / ASC 842</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-04/03-fri-lease-accounting" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Lease Accounting with IFRS 16 / ASC 842"><meta property="twitter:title" content="Lease Accounting with IFRS 16 / ASC 842"><meta property="og:description" content="Lease Accounting with IFRS 16 / ASC 842"><meta name="twitter:description" content="Lease Accounting with IFRS 16 / ASC 842"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-04/03-fri-lease-accounting"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Lease Accounting with IFRS 16 / ASC 842</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">10 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 15 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Calculating lease liabilities as present value of future payments</li><li>Modeling right-of-use (ROU) assets with initial direct costs</li><li>Generating amortization schedules with interest and principal breakdown</li><li>Computing depreciation expense for ROU assets</li><li>Applying short-term and low-value lease exemptions</li><li>Understanding discount rate selection (implicit rate vs. IBR)</li></ul><hr /><h2>The Problem</h2><p>In 2019, new lease accounting standards (IFRS 16 and ASC 842) fundamentally changed how companies report leases. <strong>Most leases must now be capitalized on the balance sheet</strong>, creating:</p><ul><li><strong>Lease Liability</strong>: Present value of future lease payments</li><li><strong>Right-of-Use Asset</strong>: Asset representing the right to use the leased property</li></ul><p>This affects nearly every business with operating leases (office space, equipment, vehicles). CFOs need to:</p><ul><li>Calculate present value of multi-year payment streams</li><li>Track liability amortization (interest + principal)</li><li>Depreciate ROU assets over the lease term</li><li>Determine which leases qualify for exemptions</li><li>Generate disclosure schedules for auditors</li></ul><p><strong>Manual lease accounting in spreadsheets is error-prone and doesn’t scale when you have dozens or hundreds of leases.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides the <code>Lease</code> type with comprehensive tools for lease liability calculation, ROU asset modeling, amortization schedules, and expense tracking.</p><h3>Basic Lease Recognition</h3><p>Calculate the initial lease liability and ROU asset:</p><pre><code class="language-swift">import BusinessMath
+
+// Office lease: quarterly payments for 1 year
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let periods = [q1, q1 + 1, q1 + 2, q1 + 3]
+
+let payments = TimeSeries(
+    periods: periods,
+    values: [25_000.0, 25_000.0, 25_000.0, 25_000.0]
+)
+
+// Create lease with 6% annual discount rate (incremental borrowing rate)
+let lease = Lease(
+    payments: payments,
+    discountRate: 0.06
+)
+
+// Calculate present value (lease liability)
+let liability = lease.presentValue()
+print("Initial lease liability: \(liability.currency())")  // ~$96,360
+
+// Calculate right-of-use asset (initially equals liability)
+let rouAsset = lease.rightOfUseAsset()
+print("ROU asset: \(rouAsset.currency())")  // $96,360
+</code></pre><p><strong>Output:</strong></p><pre><code>Initial lease liability: $96,360
+ROU asset: $96,360
+</code></pre><p><strong>The calculation</strong>: Four $25,000 payments discounted at 6% annual (1.5% quarterly) = $96,360 present value.</p><hr /><h3>Lease Liability Amortization Schedule</h3><p>Generate a complete amortization schedule showing how the liability decreases each period:</p><pre><code class="language-swift">let schedule = lease.liabilitySchedule()
+
+print("=== Lease Liability Schedule ===")
+print("Period\t\tBeginning\tPayment\t\tInterest\tPrincipal\tEnding")
+print("------\t\t---------\t-------\t\t--------\t---------\t------")
+
+for (i, period) in periods.enumerated() {
+    // Beginning balance
+    let beginning = i == 0 ? liability : schedule[periods[i-1]]!
+
+    // Payment
+    let payment = payments[period]!
+
+    // Interest expense (Beginning × quarterly rate)
+    let interest = lease.interestExpense(period: period)
+
+    // Principal reduction
+    let principal = lease.principalReduction(period: period)
+
+    // Ending balance
+    let ending = schedule[period]!
+
+	print("\(period.label)\(beginning.currency(0).paddingLeft(toLength: 14))\(payment.currency(0).paddingLeft(toLength: 10))\(interest.currency(0).paddingLeft(toLength: 13))\(principal.currency(0).paddingLeft(toLength: 13))\(ending.currency(0).paddingLeft(toLength: 9))")
+}
+
+print("\nTotal payments: \((payments.reduce(0, +)).currency(0))")
+print("Total interest: \((lease.totalInterest()).currency(0))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Lease Liability Schedule ===
+Period		Beginning	Payment		Interest	Principal	Ending
+------		---------	-------		--------	---------	------
+2025-Q1       $96,360   $25,000       $1,445      $23,555  $96,360
+2025-Q2       $96,360   $25,000       $1,092      $23,908  $48,897
+2025-Q3       $48,897   $25,000         $733      $24,267  $24,631
+2025-Q4       $24,631   $25,000         $369      $24,631       $0
+
+Total payments: $100,000
+Total interest: $3,640
+</code></pre><p><strong>The insight</strong>: Interest expense decreases each period as the liability balance declines (front-loaded interest).</p><hr /><h3>Including Initial Direct Costs and Prepayments</h3><p>Many leases include upfront costs that increase the ROU asset:</p><pre><code class="language-swift">let leaseWithCosts = Lease(
+    payments: payments,
+    discountRate: 0.06,
+    initialDirectCosts: 5_000.0,    // Legal fees, broker commissions
+    prepaidAmount: 10_000.0          // First month rent + security deposit
+)
+
+let liability = leaseWithCosts.presentValue()       // PV of payments only
+let rouAsset = leaseWithCosts.rightOfUseAsset()    // PV + costs + prepayments
+
+print("=== Initial Recognition with Costs ===")
+print("Lease liability: \(liability.currency())")   // $96,454
+print("ROU asset: \(rouAsset.currency())")          // $111,454
+print("\nDifference: \((rouAsset - liability).currency())")  // $15,000 (costs + prepayment)
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Initial Recognition with Costs ===
+Lease liability: $96,360
+ROU asset: $111,360
+
+Difference: $15,000
+</code></pre><p><strong>The accounting</strong>: Liability = PV of future payments. Asset = Liability + upfront costs + prepayments.</p><hr /><h3>Depreciation of ROU Asset</h3><p>ROU assets are depreciated straight-line over the lease term:</p><pre><code class="language-swift">print("\n=== ROU Asset Depreciation ===")
+
+// Quarterly depreciation (straight-line over 4 quarters)
+let depreciation = leaseWithCosts.depreciation(period: q1)
+print("Quarterly depreciation: \(depreciation.currency())")  // $111,454 ÷ 4 = $27,864
+
+// Track carrying value each quarter
+for (i, period) in periods.enumerated() {
+    let carryingValue = leaseWithCosts.carryingValue(period: period)
+    let quarterNum = i + 1
+    print("Q\(quarterNum) carrying value: \(carryingValue.currency())")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>=== ROU Asset Depreciation ===
+Quarterly depreciation: $27,840
+Q1 carrying value: $83,520
+Q2 carrying value: $55,680
+Q3 carrying value: $27,840
+Q4 carrying value: $0
+</code></pre><p><strong>The pattern</strong>: ROU asset decreases linearly by $27,864 each quarter until fully depreciated.</p><hr /><h3>Complete Income Statement Impact</h3><p>Each period has two expenses: interest and depreciation:</p><pre><code class="language-swift">print("\n=== Total P&L Impact by Quarter ===")
+print("Quarter\tInterest\tDepreciation\tTotal Expense")
+print("-------\t--------\t------------\t-------------")
+
+var totalInterest = 0.0
+var totalDepreciation = 0.0
+
+for (i, period) in periods.enumerated() {
+    let interest = leaseWithCosts.interestExpense(period: period)
+    let depreciation = leaseWithCosts.depreciation(period: period)
+    let total = interest + depreciation
+
+    totalInterest += interest
+    totalDepreciation += depreciation
+
+    let quarterNum = i + 1
+    print("Q\(quarterNum)\t\(interest.currency())\t\(depreciation.currency())\t\(total.currency())")
+}
+
+print("\nTotal:\t\(totalInterest.currency())\t\(totalDepreciation.currency())\t\((totalInterest + totalDepreciation).currency())")
+
+print("\n** Note: Expense is front-loaded due to higher interest in early periods")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Total P&L Impact by Quarter ===
+Quarter	Interest	Depreciation	Total Expense
+-------	--------	------------	-------------
+2025-Q1   $1,445         $27,840          $29,285
+2025-Q2   $1,092         $27,840          $28,932
+2025-Q3     $733         $27,840          $28,573
+2025-Q4     $369         $27,840          $28,209
+
+ Total:   $3,640        $111,360         $115,000
+
+** Note: Expense is front-loaded due to higher interest in early periods
+</code></pre><p><strong>The insight</strong>: Total expense ($115k) exceeds cash payments ($100k) because we’re expensing the upfront costs ($15k) over the lease term.</p><hr /><h3>Short-Term Lease Exemption</h3><p>Leases of 12 months or less can be expensed instead of capitalized:</p><pre><code class="language-swift">let shortTermLease = Lease(
+    payments: payments,  // 4 quarterly payments = 12 months
+    discountRate: 0.06,
+    leaseTerm: .months(12)
+)
+
+if shortTermLease.isShortTerm {
+    print("\n✓ Qualifies for short-term exemption")
+    print("Can expense payments as incurred without capitalizing")
+
+    // No balance sheet impact
+    let rouAsset = shortTermLease.rightOfUseAsset()  // Returns 0
+    print("ROU asset: \(rouAsset.currency())")
+} else {
+    print("Must capitalize lease")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>✓ Qualifies for short-term exemption
+Can expense payments as incurred without capitalizing
+ROU asset: $0.00
+</code></pre><p><strong>The rule</strong>: Leases ≤ 12 months can be treated as operating expenses (no capitalization required).</p><hr /><h3>Low-Value Lease Exemption</h3><p>Leases of assets valued under $5,000 can also be expensed:</p><pre><code class="language-swift">// Small equipment lease
+let lowValueLease = Lease(
+    payments: payments,
+    discountRate: 0.06,
+    underlyingAssetValue: 4_500.0  // Below $5K threshold
+)
+
+if lowValueLease.isLowValue {
+    print("\n✓ Qualifies for low-value exemption")
+    print("Underlying asset value: \(lowValueLease.underlyingAssetValue!.currency())")
+    print("Can expense payments as incurred")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>✓ Qualifies for low-value exemption
+Underlying asset value: $4,500.00
+Can expense payments as incurred
+</code></pre><p><strong>The rule</strong>: Assets with fair value < $5,000 when new (e.g., laptops, small office equipment) can be expensed.</p><hr /><h3>Discount Rate Selection</h3><p>The discount rate significantly impacts lease valuation:</p><pre><code class="language-swift">print("\n=== Impact of Discount Rate ===")
+
+// Conservative rate (lower discount = higher PV)
+let lowRate = Lease(payments: payments, discountRate: 0.04)
+
+// Market rate
+let marketRate = Lease(payments: payments, discountRate: 0.06)
+
+// Riskier rate (higher discount = lower PV)
+let highRate = Lease(payments: payments, discountRate: 0.10)
+
+print("At 4% rate: \(lowRate.presentValue().currency())")
+print("At 6% rate: \(marketRate.presentValue().currency())")
+print("At 10% rate: \(highRate.presentValue().currency())")
+
+let difference = lowRate.presentValue() - highRate.presentValue()
+print("\nDifference between 4% and 10%: \(difference.currency())")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Impact of Discount Rate ===
+At 4% rate: $97,549.14
+At 6% rate: $96,359.62
+At 10% rate: $94,049.36
+
+Difference between 4% and 10%: $3,499.78
+</code></pre><p><strong>The insight</strong>: Higher discount rates reduce the present value (and thus the balance sheet liability). Companies often use their incremental borrowing rate (IBR).</p><hr /><h3>Multi-Year Lease with Escalations</h3><p>Real-world leases often have annual rent increases:</p><pre><code class="language-swift">// 5-year office lease with 3% annual escalation
+let startDate = Period.quarter(year: 2025, quarter: 1)
+let fiveYearPeriods = (0..<20).map { startDate + $0 }  // 20 quarters
+
+// Generate escalating payments
+var escalatingPayments: [Double] = []
+let baseRent = 30_000.0
+
+for i in 0..<20 {
+    let yearIndex = i / 4  // Which year (0-4)
+    let escalatedRent = baseRent * pow(1.03, Double(yearIndex))
+    escalatingPayments.append(escalatedRent)
+}
+
+let paymentSeries = TimeSeries(periods: fiveYearPeriods, values: escalatingPayments)
+
+let longTermLease = Lease(
+    payments: paymentSeries,
+    discountRate: 0.068,  // 6.8% IBR
+    initialDirectCosts: 15_000.0,
+    prepaidAmount: 30_000.0
+)
+
+let liability = longTermLease.presentValue()
+let rouAsset = longTermLease.rightOfUseAsset()
+
+print("\n=== 5-Year Office Lease ===")
+print("Base quarterly rent: \(baseRent.currency())")
+print("Total payments (nominal): \(paymentSeries.reduce(0, +).currency())")
+print("Present value: \(liability.currency())")
+print("ROU asset: \(rouAsset.currency())")
+print("\nDiscount: \((paymentSeries.reduce(0, +) - liability).currency()) (\((1 - liability / paymentSeries.reduce(0, +)).percent(1)))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== 5-Year Office Lease ===
+Base quarterly rent: $30,000.00
+Total payments (nominal): $637,096.30
+Present value: $534,140.43
+ROU asset: $579,140.43
+
+Discount: $102,955.86 (16.2%)
+</code></pre><p><strong>The reality</strong>: Over 5 years, the present value is ~24% less than nominal payments due to time value of money.</p><hr /><h2>Try It Yourself</h2><p>Copy these to an Xcode playground and experiment:</p><pre><code>→ Full API Reference: BusinessMath Docs – 3.6 Lease Accounting
+</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Model your company’s actual office lease</li><li>Compare finance lease vs. operating lease treatment</li><li>Analyze lease-vs-buy decisions for equipment</li><li>Model lease modifications (extensions, rent reductions)</li></ol><hr /><h2>Real-World Application</h2><p>Every public company with leases must comply with IFRS 16 / ASC 842:</p><ul><li><strong>Retailers</strong>: Store leases (hundreds or thousands)</li><li><strong>Airlines</strong>: Aircraft leases (multi-billion dollar liabilities)</li><li><strong>Tech companies</strong>: Office space, data centers</li><li><strong>Manufacturing</strong>: Equipment leases</li></ul><p><strong>Example - Delta Air Lines</strong>: Adopted ASC 842 and added $8.5 billion in lease liabilities to the balance sheet. Their debt-to-equity ratio instantly increased from 1.5x to 2.8x.</p><p><strong>CFO use case</strong>: “We have 250 office leases across 30 countries. I need to calculate the total lease liability and ROU asset for our quarterly 10-Q filing, broken down by currency and region.”</p><p>BusinessMath makes this programmatic, auditable, and reproducible.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why the New Lease Accounting Standards?</strong></p><p>Under old rules (IAS 17 / FAS 13), operating leases were off-balance-sheet.</p><p>This meant:</p><ul><li><strong>Hidden leverage</strong>: Airlines had billions in lease obligations not on the balance sheet</li><li><strong>Comparability issues</strong>: Two identical companies with different lease-vs-buy decisions looked completely different financially</li><li><strong>Analyst adjustments</strong>: Every analyst had to manually capitalize operating leases to compare companies</li></ul><p>IFRS 16 / ASC 842 solved this by requiring capitalization of virtually all leases. Now the balance sheet reflects the economic reality: if you have the right to use an asset and an obligation to pay, that’s an asset and liability.</p><p><strong>Trade-off</strong>: More complexity, but greater transparency.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest design decision for lease accounting was: <strong>How much to embed accounting rules in the API vs. leaving flexibility?</strong></p><p><strong>Example dilemma</strong>: Should <code>Lease.rightOfUseAsset()</code> automatically include initial direct costs? Or require the user to add them separately?</p><p>We chose <strong>automatic inclusion</strong> because:</p><ol><li>IFRS 16 / ASC 842 explicitly require it</li><li>Users who forget will have incorrect financials</li><li>Edge cases can override with optional parameters</li></ol><p>But this means the API embeds accounting assumptions. If standards change (e.g., IFRS 17 for insurance), the API must evolve.</p><p><strong>The lesson</strong>: For domain-specific APIs (accounting, tax, legal), embedding rules improves correctness but reduces flexibility. Choose based on your users’ expertise—CPAs benefit from enforced rules; accountants building custom models need flexibility.</p><p><strong>Related Methodology</strong>: <a href="../../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote failing tests for IFRS 16 requirements first, ensuring compliance.</p><hr /><h2>Next Steps</h2><p><strong>Coming up next week</strong>: Week 5 explores loans, investments, and valuation techniques.</p><p><strong>Monday</strong>: Loan Amortization - Building schedules for mortgages, car loans, and term loans.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 4/12</li><li>Posts Published: 15/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements (complete)</li><li>Playgrounds: 14 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, leases, ifrs16, asc842, accounting, right-of-use-assets</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

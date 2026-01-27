@@ -12,13 +12,20 @@ struct BusinessMath: StaticPage {
 	var title = "Blog"
 
 	func body(context: PublishingContext) -> [BlockElement] {
-		// Page title
-		Group {
+		for content in context.allContent.filter({$0.title == "Welcome to BusinessMath: A 12-Week Journey"}) {
 			Text("BusinessMath")
-				.font(.title1)
-				.class("mainTitle")
-			Text("BusinessMath is a comprehensive open-source Swift package for financial modeling, statistical analysis, simulation, and optimization. It is designed to be user-friendly and extensible, making it suitable for a wide range of financial professionals and researchers. Read more about how to use it and how we built it here.")
+							.font(.title1)
+							.class("mainTitle")
+			Divider()
+			Text(content.body).frame(width: "70%", maxWidth: "800px")
 		}
+		// Page title
+//		Group {
+//			Text("BusinessMath")
+//				.font(.title1)
+//				.class("mainTitle")
+//			Text("BusinessMath is a comprehensive open-source Swift package for financial modeling, statistical analysis, simulation, and optimization. It is designed to be user-friendly and extensible, making it suitable for a wide range of financial professionals and researchers. Read more about how to use it and how we built it here.")
+//		}
 
 		// Filter controls section
 		Section {
@@ -38,15 +45,16 @@ struct BusinessMath: StaticPage {
 				Group {
 					generateMonthSidebar(context: context)
 				}
-				.width(2)
-				.class("col-md-2")
+				.width(3)
+				.class("col-md-3")
 				.id("month-sidebar")
 
 				// Main content - Blog posts list
 				Group {
 					generateBlogPostsList(context: context)
 				}
-				.class("col-md-10")
+				.width(9)
+				.class("col-md-9")
 				.id("blog-posts-list")
 			}
 			.class("row")
@@ -164,7 +172,7 @@ struct BusinessMath: StaticPage {
 			.sorted(by: { $0.date > $1.date })  // Newest first, using built-in date property
 
 		return Group {
-			List {
+//			List {
 				for post in blogPosts {
 					Group {
 						// Post title as link
@@ -180,11 +188,18 @@ struct BusinessMath: StaticPage {
 							Text(formatPostDate(post.date))
 								.class("text-muted")
 								.style("font-size: 0.9rem")
+							
+							Group {
+								// Reading time
+								Text("\(post.estimatedReadingMinutes) min read")
+									.class("text-muted")
+									.style("font-size: 0.85rem", "margin-top: 0.5rem")
 
-							if let series = post.metadata["series"] as? String {
-								Text(series)
-									.class("badge", "bg-secondary")
-									.style("margin-left: 0.5rem")
+//								if let series = post.metadata["series"] as? String {
+//									Text(series)
+//										.class("badge", "bg-secondary")
+//										.style("margin-left: 0.5rem")
+//								}
 							}
 						}
 						.style("margin-bottom: 0.5rem")
@@ -201,10 +216,7 @@ struct BusinessMath: StaticPage {
 //							.style("margin-top: 0.5rem")
 //						}
 
-						// Reading time
-//						Text("\(post.estimatedReadingMinutes) min read")
-//							.class("text-muted")
-//							.style("font-size: 0.85rem", "margin-top: 0.5rem")
+						
 					}
 					.class("blog-post-item")
 					.data("date", formatDateForAttribute(post.date))
@@ -212,7 +224,8 @@ struct BusinessMath: StaticPage {
 					.data("month", extractYearMonthFromDate(post.date))
 					.style("margin-bottom: 1.5rem", "padding-bottom: 1rem", "border-bottom: 1px solid #dee2e6")
 				}
-			}.listStyle(.custom(""))
+//			}
+//			.listStyle(.custom("–"))
 		}
 	}
 
@@ -229,6 +242,8 @@ struct BusinessMath: StaticPage {
 		let blogPosts = getBlogPosts(context: context)
 		let monthGroups = groupPostsByMonth(posts: blogPosts)
 		let sortedMonths = monthGroups.keys.sorted(by: >)  // Newest months first
+		
+		if monthGroups.count <= 1 { return Group {} }
 
 		return Group {
 			Text("Archive")
@@ -243,8 +258,8 @@ struct BusinessMath: StaticPage {
 						.class("month-filter", "d-block")
 						.data("month", yearMonth)
 						.style("font-size: 0.75em", "padding: 0.25rem", "text-decoration: none", "list-style: none")
-//				}
-			}
+				}
+//			}
 		}
 		.style("position: sticky", "top: 10px", "border-radius: 0.2rem")
 	}

@@ -1,14 +1,14 @@
 ---
 layout: BlogPostLayout
 title: Documentation as Design
-date: 2026-01-14 13:00
+date: 2026-01-13 13:00
 series: BusinessMath Development Journey
 week: 2
 post: 2
 journey_source: "Week 4 from BusinessMath_Blog.md"
 category: "methodology"
-tags: ai-collaboration, documentation, api-design, docc
-published: false
+tags: ai-collaboration, documentation, api-design, docc, development journey
+published: true
 ---
 
 # Documentation as Design
@@ -112,14 +112,12 @@ After redesigning the API with documentation in mind:
 ///
 /// ## Usage Example
 ///
-/// ```swift
 /// let cashFlows = [-1000, 300, 400, 500]
 /// let irr = try calculateIRR(cashFlows: cashFlows)
 /// print(irr.percent(1)) // "12.5%"
-/// ```
 ///
 /// - Parameter cashFlows: Array of cash flows, starting with initial investment
-/// - Returns: IRR as decimal (0.125 = 12.5%)
+/// - Returns: IRR as Double (0.125 = 12.5%)
 /// - Throws: `FinancialError.convergenceFailure` if doesn't converge
 public func calculateIRR(cashFlows: [Double]) throws -> Double
 ```
@@ -304,12 +302,12 @@ By writing documentation first, you catch these issues **before investing in imp
 This practice is demonstrated throughout the BusinessMath library:
 
 **Technical Examples**:
-- **Data Table Analysis** (Monday): Clear parameter names, typed inputs/outputs
-- **Financial Ratios** (Wednesday): Descriptive function names, documented return types
-- **Risk Analytics** (Friday): Error cases explicitly documented
+- [**Data Table Analysis** (Monday)](../01-mon-data-tables): Clear parameter names, typed inputs/outputs
+- [**Financial Ratios** (Wednesday)](../03-wed-financial-ratios): Descriptive function names, documented return types
+- [**Risk Analytics** (Friday)](../04-fri-risk-analytics): Error cases explicitly documented
 
 **Related Practices**:
-- **Test-First Development** (Week 1 Tuesday): Tests validate documented behavior
+- [**Test-First Development** (Week 1 Tuesday)](../../week-01/02-tue-test-first-development): Tests validate documented behavior
 - **Coding Standards** (Week 5): Forbidden patterns include undocumented public APIs
 
 ---
@@ -340,7 +338,7 @@ This practice is demonstrated throughout the BusinessMath library:
 2. Should every function have an example, or just complex ones?
 3. How do you balance documentation thoroughness with velocity?
 
-**Share your experience**: Have you tried documentation-first development? What did you learn?
+<!--**Share your experience**: Have you tried documentation-first development? What did you learn?-->
 
 ---
 

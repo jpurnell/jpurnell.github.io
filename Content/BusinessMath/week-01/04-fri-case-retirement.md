@@ -9,7 +9,7 @@ topics_combined: ["TVM", "Time Series", "Distributions"]
 docc_tutorials: ["1.2-TimeSeries.md", "1.3-TimeValueOfMoney.md"]
 playground: "CaseStudies/RetirementPlanning.playground"
 tags: businessmath, swift, case-study, retirement, tvm, statistics
-published: false
+published: true
 ---
 
 # Case Study: Retirement Planning Calculator
@@ -145,9 +145,11 @@ Required monthly contribution: $1,015.41
 
 ---
 
-### Part 3: Probability Analysis
+### Part 3: Probability Analysis (Simplified Model)
 
 Now the harder question: Given market volatility, what's the probability Sarah actually reaches $2M?
+
+> **Note**: This simplified analytical approach has limitations (see "What Didn't Work" section). Monte Carlo simulation provides more accurate probability estimates.
 
 ```swift
 print("PART 2: Success Probability Analysis")
@@ -164,19 +166,19 @@ let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
 
 print("Minimum required total return: \(minimumRequiredReturn.percent())")
 
-// Model market returns using normal distribution
-// (Simplification: actual returns are log-normal, but normal is close enough for planning)
+// Model market returns using log-normal distribution
 let expectedTotalReturn = expectedReturn * yearsUntilRetirement
 let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)
 
 // Probability of achieving required return
-let probability = normalCDF(
-    x: minimumRequiredReturn,
+// CDF gives P(X <= x), we want P(X >= minimumRequiredReturn)
+let prob = 1.0 - logNormalCDF(
+    minimumRequiredReturn,
     mean: expectedTotalReturn,
     standardDeviation: totalReturnStdDev
 )
 
-print("Probability of reaching $2M goal: \(probability.percent())")
+print("Probability of reaching $2M goal: \((1.0 - probability).percent())")
 print()
 ```
 
@@ -186,16 +188,18 @@ PART 2: Success Probability Analysis
 Total contributions: $365,548.71
 Total invested: $465,548.71
 Minimum required total return: 329.60%
-Probability of reaching $2M goal: 92.73%
+Probability of reaching $2M goal: [Value depends on calculation - see note below]
 ```
 
-**The answer**: There's an **92.73% probability** Sarah reaches her goal with moderate risk investments.
+**Important Note**: The probability calculation in this simplified example has a methodological issue. It calculates `minimumRequiredReturn = (target - totalInvested) / totalInvested` treating contributions as a lump sum, but the `payment()` function already accounts for monthly compounding. This causes the probability estimates to be unrealistic.
+
+**A better approach** (demonstrated in Week 6's Monte Carlo case study): Simulate 10,000 scenarios where Sarah contributes monthly and returns vary each period according to the volatility. This gives much more realistic probability estimates for retirement planning.
 
 ---
 
 ### Part 4: Scenario Analysis
 
-Let's see how different risk profiles affect required contributions:
+Let's see how different expected returns affect required monthly contributions:
 
 ```swift
 print("PART 3: What-If Scenarios")
@@ -212,42 +216,65 @@ for (name, returnRate, volatility) in scenarios {
     let fvSavings = futureValue(
         presentValue: currentSavings,
         rate: returnRate,
-        periods: yearsUntilRetirement
+        periods: Int(yearsUntilRetirement)
     )
     let gap = targetAmount - fvSavings
-    let monthlyPayment = -payment(  // Negate to get positive contribution
+    let monthlyPayment = -payment(
         presentValue: 0.0,
         futureValue: gap,
         rate: monthlyRate,
         periods: numberOfPayments,
         type: .ordinary
     )
-    	print("  \(name): \(monthlyPayment.currency())/month")
+
+// Calculate success probability using the volatility
+  let totalContrib = monthlyPayment * Double(numberOfPayments)
+  let totalInv = currentSavings + totalContrib
+  let minReturn = (targetAmount - totalInv) / totalInv
+  let expectedTotal = returnRate * yearsUntilRetirement
+  let totalStdDev = volatility * sqrt(yearsUntilRetirement)
+
+// CDF gives P(X <= minReturn), we want P(X >= minReturn)
+	let successProb = 1.0 - logNormalCDF(
+	  minReturn,
+	  mean: expectedTotal,
+	  stdDev: totalStdDev
+  )
+
+	print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0))\(monthlyPayment.currency().paddingLeft(toLength: 15))\(successProb.percent().paddingLeft(toLength: 15))")
 }
-print()
 ```
 
 **Output**:
 ```
 PART 3: What-If Scenarios
+Strategy Comparison (Return vs. Risk):
+Strategy       Monthly Contrib    Success Rate
+---------------------------------------------
 Required monthly contribution by strategy:
-  Conservative: $1,883.80/month
-  Moderate: $1,015.41/month
-  Aggressive: $367.74/month
+Conservative         $1,883.80         97.22%
+Moderate             $1,015.41         86.53%
+Aggressive             $367.74         72.99%
 ```
 
-**The insight**: Lower risk requires higher contributions ($1,436/month conservative vs. $717/month aggressive).
+**The insight**: Lower expected returns require higher monthly contributions. The conservative strategy requires nearly 5x the monthly investment of the aggressive strategy.
+
+> **Note**: The probability calculation code is included in the full playground, but as discussed in "What Didn't Work" below, this simplified analytical approach has methodological issues. Monte Carlo simulation (Week 6) provides more accurate probability estimates for retirement planning.
 
 ---
 
-### Part 4: Key Insights
+### Part 5: Key Insights
 
 ```swift
 print("=== KEY INSIGHTS ===")
 print("1. Current savings will grow to \(futureValueOfCurrentSavings.currency()) by retirement")
-print("2. Need \(requiredMonthlyContribution.currency())/month to reach goal")
-print("3. \(probability.percent()) probability of success with moderate risk")
-print("4. Lower risk = higher required contribution")
+print("2. Need \(requiredMonthlyContribution.currency())/month with 7% expected returns")
+print("3. Risk-return trade-off:")
+print("   - Conservative (5%): \$1,883/month required")
+print("   - Moderate (7%): \$1,015/month required")
+print("   - Aggressive (9%): \$367/month required")
+print("4. Higher expected returns = lower required contributions")
+print("5. For accurate probability analysis, use Monte Carlo simulation (Week 6)")
 print()
 
 print("Try It: Adjust the parameters and re-run!")
@@ -257,9 +284,13 @@ print("Try It: Adjust the parameters and re-run!")
 ```
 === KEY INSIGHTS ===
 1. Current savings will grow to $761,225.50 by retirement
-2. Need $1,015.41/month to reach goal
-3. 92.73% probability of success with moderate risk
-4. Lower risk = higher required contribution
+2. Need $1,015.41/month with 7% expected returns
+3. Risk-return trade-off:
+   - Conservative (5%): $1,883/month required
+   - Moderate (7%): $1,015/month required
+   - Aggressive (9%): $367/month required
+4. Higher expected returns = lower required contributions
+5. For accurate probability analysis, use Monte Carlo simulation (Week 6)
 
 Try It: Adjust the parameters and re-run!
 ```
@@ -310,12 +341,26 @@ Try It: Adjust the parameters and re-run!
 **Initial Challenges**:
 - First version didn't include scenario analysis—added after user feedback
 - Forgot to validate that `currentSavings < targetAmount` (edge case)
-- Initial probability calculation was too simplistic (used point estimate instead of distribution)
+- **Probability calculation methodology is flawed** - treats contributions as lump sum instead of monthly compounding
+
+**The Probability Issue**:
+
+The simplified probability calculation has a fundamental flaw:
+
+```swift
+// This treats totalInvested as a lump sum
+let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
+```
+
+But the `payment()` function already accounts for monthly contributions compounding over time! This mismatch makes the probability estimates unrealistic.
+
+**Why this matters**: When teaching with case studies, it's important to acknowledge limitations. The monthly contribution calculations are accurate, but the probability estimates need Monte Carlo simulation (Week 6) to be reliable.
 
 **Lessons Learned**:
 - Case studies reveal edge cases: What if Sarah already has $3M saved? The calculator should handle it gracefully.
 - Always include scenario analysis—users want "what-if" capabilities
-- Probability requires careful modeling—we consulted financial references to ensure the normal approximation was reasonable
+- Analytical probability calculations for annuities with volatility are complex—Monte Carlo is often more appropriate
+- It's better to acknowledge methodological limitations than to present questionable numbers as authoritative
 
 **From the Development Journey**:
 
@@ -351,12 +396,7 @@ None of these issues appeared in unit tests. All appeared immediately in the cas
 
 ## Try It Yourself
 
-Download the complete playground and experiment:
-
-```
-→ Download: CaseStudies/RetirementPlanning.playground
-→ Complete, runnable code (~150 lines)
-```
+These examples can be executed in an Xcode playground and experiment:
 
 ### Modifications to Try
 
@@ -383,9 +423,9 @@ Download the complete playground and experiment:
 Want to understand the individual components better?
 
 **DocC Tutorials Used**:
-- **Time Series**: [BusinessMath Docs – 1.2](https://link) - Period arithmetic and temporal data
-- **Time Value of Money**: [BusinessMath Docs – 1.3](https://link) - TVM functions (`futureValue`, `payment`)
-- **Statistical Distributions**: [BusinessMath Docs – 2.3](https://link) - `normalCDF` for probability
+- **Time Series**: [BusinessMath Docs – 1.2](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md) - Period arithmetic and temporal data
+- **Time Value of Money**: [BusinessMath Docs – 1.3](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md) - TVM functions (`futureValue`, `payment`)
+- **Statistical Distributions**: [BusinessMath Docs – 2.3](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md) - `normalCDF` for probability
 
 **API References**:
 - `futureValue(presentValue:rate:periods:)`
@@ -496,13 +536,9 @@ print("Minimum required total return: \(minimumRequiredReturn.percent())")
 let expectedTotalReturn = expectedReturn * yearsUntilRetirement
 let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)
 
-let probability = normalCDF(
+// normalCDF gives P(X <= x), we want P(X >= minimumRequiredReturn)
+let probability = 1.0 - normalCDF(
 	x: minimumRequiredReturn,
-	mean: expectedTotalReturn,
-	stdDev: totalReturnStdDev
-)
-let prob = logNormalCDF(
-	minimumRequiredReturn,
 	mean: expectedTotalReturn,
 	stdDev: totalReturnStdDev
 )
@@ -535,17 +571,21 @@ for (name, returnRate, volatility) in scenarios {
 		futureValue: gap,
 		type: .ordinary
 	)
-		
-	print("  \(name): \(monthlyPayment.currency())/month")
+
+	print("  \(name): \(monthlyPayment.currency())/month (\(returnRate.percent()) return, \(volatility.percent()) volatility)")
 }
 print()
 
 // PART 4: Key Insights
 print("=== KEY INSIGHTS ===")
 print("1. Current savings will grow to \(futureValueOfCurrentSavings.currency()) by retirement")
-print("2. Need \(requiredMonthlyContribution.currency())/month to reach goal")
-print("3. \(probability.percent()) probability of success with moderate risk")
-print("4. Lower risk = higher required contribution")
+print("2. Need \(requiredMonthlyContribution.currency())/month with 7% expected returns")
+print("3. Risk-return trade-off:")
+print("   - Conservative (5%): \$1,883/month required")
+print("   - Moderate (7%): \$1,015/month required")
+print("   - Aggressive (9%): \$367/month required")
+print("4. Higher expected returns = lower required contributions")
+print("5. For accurate probability analysis, use Monte Carlo simulation (Week 6)")
 print()
 
 print("Try It: Adjust the parameters and re-run!")

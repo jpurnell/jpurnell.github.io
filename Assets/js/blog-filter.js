@@ -158,13 +158,10 @@
             }
         });
 
-        // Reorder DOM elements
-        const list = container.querySelector('ul');
-        if (list) {
-            posts.forEach(post => {
-                list.appendChild(post);
-            });
-        }
+        // Reorder DOM elements - posts are direct children of container
+        posts.forEach(post => {
+            container.appendChild(post);
+        });
     }
 
     function updateSortButton() {

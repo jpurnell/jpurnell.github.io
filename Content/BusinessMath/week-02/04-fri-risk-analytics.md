@@ -1,14 +1,14 @@
 ---
 layout: BlogPostLayout
 title: Risk Analytics and Stress Testing
-date: 2026-01-17 13:00
+date: 2026-01-16 13:00
 series: BusinessMath Quarterly Series
 week: 2
 post: 4
 docc_source: "2.3-RiskAnalyticsGuide.md"
 playground: "Week02/RiskAnalytics.playground"
 tags: businessmath, swift, risk, var, stress-testing, portfolio
-published: false
+published: true
 ---
 
 # Risk Analytics and Stress Testing
@@ -53,7 +53,7 @@ Evaluate how portfolios perform under adverse scenarios:
 import BusinessMath
 
 // Pre-defined stress scenarios
-let scenarios = [
+var allScenarios = [
     StressScenario<Double>.recession,      // Moderate economic downturn
     StressScenario<Double>.crisis,         // Severe financial crisis
     StressScenario<Double>.supplyShock     // Supply chain disruption
@@ -115,6 +115,8 @@ let pandemic = StressScenario(
     ]
 )
 
+allScenarios.append(pandemic)
+
 // Regulatory change scenario
 let regulation = StressScenario(
     name: "New Regulation",
@@ -125,6 +127,7 @@ let regulation = StressScenario(
         "OperatingMargin": -0.03     // -3% margin compression
     ]
 )
+allScenarios.append(regulation)
 ```
 
 ---
@@ -177,13 +180,15 @@ for scenario in stressTest.scenarios {
 
 VaR measures the maximum loss expected over a time horizon at a given confidence level.
 
+[S&P Returns Data](../../../data/SPData.swift)
+
 ### Calculating VaR from Returns
 
 ```swift
 // Portfolio returns (historical daily returns)
-let spReturns: [Double] = [0.0088, 0.0079, -0.0116, /* ... 250 days ... */]
+let spReturns: [Double] = [0.0088, 0.0079, -0.0116…] //(See file for data)
 
-let periods = (0..<spReturns.count).map {
+let periods = (0...(spReturns.count - 1)).map {
     Period.day(Date().addingTimeInterval(Double($0) * 86400))
 }
 let timeSeries = TimeSeries(periods: periods, values: spReturns)
@@ -237,16 +242,17 @@ print(riskMetrics.description)
 
 **Output:**
 ```
+Comprehensive Risk Profile:
 Comprehensive Risk Metrics:
-  VaR (95%): -2.45%
-  VaR (99%): -3.89%
-  CVaR (95%): -3.12%
-  Max Drawdown: 15.3%
-  Sharpe Ratio: 1.23
-  Sortino Ratio: 1.67
-  Tail Risk: 1.27
-  Skewness: -0.34
-  Kurtosis: 2.1
+  VaR (95%): -1.66%
+  VaR (99%): -4.84%
+  CVaR (95%): -2.76%
+  Max Drawdown: 18.91%
+  Sharpe Ratio: 0.05
+  Sortino Ratio: 0.05
+  Tail Risk: 1.66
+  Skewness: 1.05
+  Kurtosis: 18.53
 ```
 
 ---
@@ -278,10 +284,10 @@ Risk-adjusted return measures:
 
 ```swift
 print("\nRisk-Adjusted Returns:")
-print("  Sharpe Ratio: \(riskMetrics.sharpeRatio)")
+print("  Sharpe Ratio: \(riskMetrics.sharpeRatio.number(3))")
 print("    (return per unit of total volatility)")
 
-print("  Sortino Ratio: \(riskMetrics.sortinoRatio)")
+print("  Sortino Ratio: \(riskMetrics.sortinoRatio.number(3))")
 print("    (return per unit of downside volatility)")
 
 // Sortino > Sharpe indicates asymmetric returns (positive skew)
@@ -385,10 +391,10 @@ for i in 0..<portfolioVaRs.count {
 
 ## Try It Yourself
 
-Download the playground and experiment:
+Add this code to an Xcode playground and experiment:
 
+[S&P Returns Data](../../../data/SPData.swift) (add to the /Sources file of your playground)
 ```
-→ Download: Week02/RiskAnalytics.playground
 → Full API Reference: BusinessMath Docs – 2.3 Risk Analytics
 ```
 
