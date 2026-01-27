@@ -301,12 +301,150 @@ try csv.write(toFile: "loan_payments.csv", atomically: true, encoding: .utf8)
 
 ## Try It Yourself
 
-Download the playground and experiment:
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+// Loan parameters
+let principal = 300_000.0
+let loanTerm = 360  // 30 years monthly
+
+// Test different interest rates
+let rates = Array(stride(from: 0.03, through: 0.07, by: 0.005))
+
+// Create data table
+let paymentTable = DataTable.oneVariable(
+	inputs: rates,
+	calculate: { annualRate in
+		let monthlyRate = annualRate / 12.0
+		return payment(
+			presentValue: principal,
+			rate: monthlyRate,
+			periods: loanTerm,
+			futureValue: 0,
+			type: .ordinary
+		)
+	}
+)
+
+print("Mortgage Payment Sensitivity Analysis")
+print("======================================")
+print("Loan Amount: \(principal.currency())")
+print("Term: 30 years\n")
+
+for (rate, monthlyPayment) in paymentTable {
+	let totalPaid = monthlyPayment * Double(loanTerm)
+	let totalInterest = totalPaid - principal
+
+	print("\(rate.percent(1))\t\t\(monthlyPayment.currency())\t\t\(totalInterest.currency())")
+}
+
+// Business parameters
+let fixedCosts_mortgagePayment = 50_000.0
+let variableCostPerUnit_mortgagePayment = 15.0
+let pricePerUnit_mortgagePayment = 25.0
+
+// Test different sales volumes
+let volumes = Array(stride(from: 1000.0, through: 10000.0, by: 1000.0))
+
+let profitTable = DataTable.oneVariable(
+	inputs: volumes,
+	calculate: { volume in
+		let revenue = pricePerUnit_mortgagePayment * volume
+		let totalCosts = fixedCosts_mortgagePayment + (variableCostPerUnit_mortgagePayment * volume)
+		return revenue - totalCosts
+	}
+)
+
+print("\nBreak-Even Analysis")
+print("Fixed Costs: \(fixedCosts_mortgagePayment.currency())")
+print("Contribution Margin: \((pricePerUnit_mortgagePayment - variableCostPerUnit_mortgagePayment).currency())/unit\n")
+
+for (volume, profit) in profitTable {
+	let status = profit >= 0 ? "✓" : "✗"
+	print("\(volume.number(0).paddingLeft(toLength: 6)) units\t\(profit.currency()) \(status)")
+}
+
+// Calculate exact break-even
+let breakEvenVolume = fixedCosts_mortgagePayment / (pricePerUnit_mortgagePayment - variableCostPerUnit_mortgagePayment)
+print("\nBreak-Even Volume: \(breakEvenVolume.number(0)) units")
+
+	// Fixed business parameters
+	let monthlyFixedCosts = 100_000.0
+	let variableCostPerUnit = 30.0
+
+	// Scenarios to test
+	let pricePoints = [40.0, 45.0, 50.0, 55.0, 60.0]
+	let volumeScenarios = [2000.0, 2500.0, 3000.0, 3500.0, 4000.0]
+
+	// Create two-variable profit matrix
+	let profitMatrix = DataTable<Double, Double>.twoVariable(
+		rowInputs: pricePoints,
+		columnInputs: volumeScenarios,
+		calculate: { price, volume in
+			let revenue = price * volume
+			let totalCosts = monthlyFixedCosts + (variableCostPerUnit * volume)
+			return revenue - totalCosts
+		}
+	)
+
+	// Print formatted results
+	print("\nPricing Strategy Matrix (Monthly Profit)")
+
+	// Option 1: Use built-in formatter (simpler, basic formatting)
+//	 let formatted = DataTable.formatTwoVariable(
+//	     profitMatrix,
+//	     rowInputs: pricePoints,
+//	     columnInputs: volumeScenarios
+//	 )
+//	 print(formatted)
+
+	// Option 2: Custom formatting with currency (shown below)
+var header = "Price".padding(toLength: 10, withPad: " ", startingAt: 0)
+	for volume in volumeScenarios {
+		header += "\(Int(volume))".paddingLeft(toLength: 12)
+	}
+	print(header)
+	print(String(repeating: "=", count: 70))
+
+	for (rowIndex, price) in pricePoints.enumerated() {
+		var rowString = "\(price.currency(0).padding(toLength: 10, withPad: " ", startingAt: 0))"
+		for colIndex in 0..<volumeScenarios.count {
+			let profit = profitMatrix[rowIndex][colIndex]
+			rowString += "\(profit.currency(0).paddingLeft(toLength: 12))"
+		}
+		print(rowString)
+	}
+
+	// Find optimal combination
+	var maxProfit = -Double.infinity
+	var optimalPrice = 0.0
+	var optimalVolume = 0.0
+
+	for (rowIndex, price) in pricePoints.enumerated() {
+		for (colIndex, volume) in volumeScenarios.enumerated() {
+			let profit = profitMatrix[rowIndex][colIndex]
+			if profit > maxProfit {
+				maxProfit = profit
+				optimalPrice = price
+				optimalVolume = volume
+			}
+		}
+	}
+
+	print("\nOptimal Strategy:")
+	print("Price: \(optimalPrice.currency()), Volume: \(optimalVolume.number(0)) units")
+	print("Maximum Monthly Profit: \(maxProfit.currency())")
+
 
 ```
-→ Download: Week02/DataTables.playground
-→ Full API Reference: BusinessMath Docs – 2.1 Data Table Analysis
-```
+</details>
+
+
+→ Full API Reference: [**BusinessMath Docs – 2.1 Data Table Analysis**](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md)
+
 
 **Modifications to try**:
 1. Test loan affordability at different income levels

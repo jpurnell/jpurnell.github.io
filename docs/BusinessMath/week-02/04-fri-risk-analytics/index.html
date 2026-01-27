@@ -7,7 +7,7 @@
 	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
 	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Risk Analytics and Stress Testing</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">8 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 8 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to perform stress testing with pre-defined and custom scenarios</li><li>Calculating Value at Risk (VaR) at different confidence levels</li><li>Computing Conditional VaR (CVaR / Expected Shortfall)</li><li>Using comprehensive risk metrics (Sharpe, Sortino, drawdown)</li><li>Aggregating risk across multiple portfolios with correlations</li></ul><hr /><h2>The Problem</h2><p>Risk management requires quantifying uncertainty. <strong>What’s the worst loss we might face? How would a recession affect our portfolio? Are we properly diversified?</strong></p><p>Traditional risk analysis involves complex calculations:</p><ul><li><strong>VaR (Value at Risk)</strong>: Maximum loss at a confidence level</li><li><strong>Stress testing</strong>: Impact of adverse scenarios</li><li><strong>Drawdown analysis</strong>: Peak-to-trough declines</li><li><strong>Risk aggregation</strong>: Combining correlated risks</li></ul><p>Implementing these correctly requires statistical knowledge, careful handling of distributions, and proper correlation modeling. <strong>You need production-ready risk analytics without reinventing the math.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive risk analytics including stress testing, VaR calculation, and multi-portfolio risk aggregation.</p><h3>Stress Testing</h3><p>Evaluate how portfolios perform under adverse scenarios:</p><pre><code class="language-swift">import BusinessMath
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Risk Analytics and Stress Testing</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">11 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 8 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to perform stress testing with pre-defined and custom scenarios</li><li>Calculating Value at Risk (VaR) at different confidence levels</li><li>Computing Conditional VaR (CVaR / Expected Shortfall)</li><li>Using comprehensive risk metrics (Sharpe, Sortino, drawdown)</li><li>Aggregating risk across multiple portfolios with correlations</li></ul><hr /><h2>The Problem</h2><p>Risk management requires quantifying uncertainty. <strong>What’s the worst loss we might face? How would a recession affect our portfolio? Are we properly diversified?</strong></p><p>Traditional risk analysis involves complex calculations:</p><ul><li><strong>VaR (Value at Risk)</strong>: Maximum loss at a confidence level</li><li><strong>Stress testing</strong>: Impact of adverse scenarios</li><li><strong>Drawdown analysis</strong>: Peak-to-trough declines</li><li><strong>Risk aggregation</strong>: Combining correlated risks</li></ul><p>Implementing these correctly requires statistical knowledge, careful handling of distributions, and proper correlation modeling. <strong>You need production-ready risk analytics without reinventing the math.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive risk analytics including stress testing, VaR calculation, and multi-portfolio risk aggregation.</p><h3>Stress Testing</h3><p>Evaluate how portfolios perform under adverse scenarios:</p><pre><code class="language-swift">import BusinessMath
 
 // Pre-defined stress scenarios
 var allScenarios = [
@@ -231,5 +231,207 @@ print("  Diversification benefit: \(diversificationBenefit.currency())")
     print("  Marginal VaR: \(marginal.currency())")
     print("  Risk contribution: \((marginal / aggregatedVaR).percent())")
 }
-</code></pre><p><strong>Marginal VaR</strong> tells you: “If I added $1 more to this portfolio, how much would total VaR increase?”</p><hr /><h2>Try It Yourself</h2><p>Add this code to an Xcode playground and experiment:</p><p><a href="../../../data/SPData.swift">S&P Returns Data</a> (add to the /Sources file of your playground)</p><pre><code>→ Full API Reference: BusinessMath Docs – 2.3 Risk Analytics
-</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Create custom stress scenarios for your industry</li><li>Calculate VaR and CVaR for different confidence levels</li><li>Compare Sharpe vs Sortino ratios for asymmetric strategies</li></ol><hr /><h2>Real-World Application</h2><p>Risk managers use these tools daily:</p><ul><li><strong>Portfolio VaR</strong>: Regulatory requirement for banks</li><li><strong>Stress testing</strong>: Required by Dodd-Frank, Basel III</li><li><strong>Drawdown analysis</strong>: Hedge fund performance evaluation</li><li><strong>Risk aggregation</strong>: Enterprise-wide risk management</li></ul><p>BusinessMath makes these institutional-grade analytics accessible in 10-20 lines of Swift code.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Both VaR and CVaR?</strong></p><p>VaR answers: “What’s the threshold of the worst 5% of outcomes?”CVaR answers: “When you’re in that worst 5%, how bad does it actually get?”</p><p>Example: Portfolio with VaR₉₅ = -$100k, CVaR₉₅ = -$500k</p><ul><li><strong>VaR says</strong>: 95% of the time, you won’t lose more than $100k</li><li><strong>CVaR says</strong>: But when you do lose more, you lose an average of $500k</li></ul><p><strong>CVaR captures tail risk</strong>—the thing that kills portfolios. VaR alone can be misleading for fat-tailed distributions.</p><p>This distinction matters for crypto, options, and leveraged strategies where tails are fat.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing VaR wasn’t the math—it was choosing which variant to implement. There are three common methods:</p><ol><li><strong>Historical VaR</strong>: Use actual historical percentile</li><li><strong>Parametric VaR</strong>: Assume normal distribution</li><li><strong>Monte Carlo VaR</strong>: Simulate future scenarios</li></ol><p>We chose <strong>Historical VaR</strong> as the default because:</p><ul><li>No distribution assumptions</li><li>Works with any return pattern</li><li>Easy to explain and verify</li></ul><p>But we documented this choice explicitly in both code and DocC, so users know what they’re getting.</p><p><strong>The lesson</strong>: When multiple valid implementations exist, pick one, document it clearly, and make the choice transparent.</p><p><strong>Related Methodology</strong>: <a href="../week-09/02-tue-tests-wrong.md">When Tests Pass But Code Is Wrong</a> (Week 9) - Validating statistical implementations</p><hr /><h2>Next Steps</h2><p><strong>Coming up this week</strong>: Week 3 explores operational models—growth, depreciation, and revenue modeling.</p><p><strong>Case Study</strong>: Week 3 Friday combines depreciation + TVM for capital equipment purchase decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 8/~48</li><li><strong>Week 2 Complete!</strong> ✅</li><li>Topics Covered: Foundation + Analysis Tools</li><li>Playgrounds: 7 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, risk, var, stress-testing, portfolio</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+</code></pre><p><strong>Marginal VaR</strong> tells you: “If I added $1 more to this portfolio, how much would total VaR increase?”</p><hr /><h2>Try It Yourself</h2><p><a href="../../../data/SPData.swift"><strong>S&P Returns Data</strong></a> (add to the /Sources file of your playground)</p><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+
+// Pre-defined stress scenarios
+var allScenarios = [
+    StressScenario<Double>.recession,      // Moderate economic downturn
+    StressScenario<Double>.crisis,         // Severe financial crisis
+    StressScenario<Double>.supplyShock     // Supply chain disruption
+]
+
+// Examine scenario parameters
+for scenario in allScenarios {
+    print("\(scenario.name):")
+    print("  Description: \(scenario.description)")
+    print("  Shocks:")
+    for (driver, shock) in scenario.shocks {
+        let pct = shock * 100
+        print("    \(driver): \(pct > 0 ? "+" : "")\(pct)%")
+    }
+}
+
+// Pandemic scenario
+let pandemic = StressScenario(
+    name: "Global Pandemic",
+    description: "Extended lockdowns and remote work transition",
+    shocks: [
+        "Revenue": -0.35,           // -35% revenue
+        "RemoteWorkCosts": 0.20,    // +20% IT/remote costs
+        "TravelExpenses": -0.80,    // -80% travel
+        "RealEstateCosts": -0.15    // -15% office costs
+    ]
+)
+allScenarios.append(pandemic)
+
+// Regulatory change scenario
+let regulation = StressScenario(
+    name: "New Regulation",
+    description: "Stricter compliance requirements",
+    shocks: [
+        "ComplianceCosts": 0.50,    // +50% compliance
+        "Revenue": -0.05,           // -5% from restrictions
+        "OperatingMargin": -0.03    // -3% margin compression
+    ]
+)
+allScenarios.append(regulation)
+
+let stressTest = StressTest(scenarios: allScenarios)
+
+struct FinancialMetrics {
+    var revenue: Double
+    var costs: Double
+    var npv: Double
+}
+
+let baseline = FinancialMetrics(
+    revenue: 10_000_000,
+    costs: 7_000_000,
+    npv: 5_000_000
+)
+
+for scenario in stressTest.scenarios {
+    // Apply shocks
+    var stressed = baseline
+
+    if let revenueShock = scenario.shocks["Revenue"] {
+        stressed.revenue *= (1 + revenueShock)
+    }
+
+    if let cogsShock = scenario.shocks["COGS"] {
+        stressed.costs *= (1 + cogsShock)
+    }
+
+    let stressedNPV = stressed.revenue - stressed.costs
+    let impact = stressedNPV - baseline.npv
+    let impactPct = (impact / baseline.npv)
+
+    print("\n\(scenario.name):")
+    print("  Baseline NPV: \(baseline.npv.currency())")
+    print("  Stressed NPV: \(stressedNPV.currency())")
+    print("  Impact: \(impact.currency()) (\(impactPct.percent()))")
+}
+
+// Portfolio returns (historical daily returns) come from Sources: spReturns: [Double]
+let periods: [Period] = (0..<spReturns.count).map { idx in
+    Period.day(Date().addingTimeInterval(Double(idx) * 86_400))
+}
+let timeSeries: TimeSeries<Double> = TimeSeries(periods: periods, values: spReturns)
+
+let riskMetrics = ComprehensiveRiskMetrics(
+    returns: timeSeries,
+    riskFreeRate: 0.02 / 250  // 2% annual = 0.008% daily
+)
+print("Value at Risk:")
+print("  95% VaR: \(riskMetrics.var95.percent())")
+print("  99% VaR: \(riskMetrics.var99.percent())")
+
+// Interpret: "95% confidence we won't lose more than X% in a day"
+let portfolioValue = 1_000_000.0
+let var95Loss = abs(riskMetrics.var95) * portfolioValue
+
+print("\nFor \(portfolioValue.currency(0)) portfolio:")
+print("  95% 1-day VaR: \(var95Loss.currency())")
+print("  Meaning: 95% confident daily loss won't exceed \(var95Loss.currency())")
+
+print("\nConditional VaR (Expected Shortfall):")
+print("  CVaR (95%): \(riskMetrics.cvar95.percent())")
+print("  Tail Risk Ratio: \(riskMetrics.tailRisk.number())")
+
+// CVaR is the expected loss if we're in the worst 5%
+let cvarLoss = abs(riskMetrics.cvar95) * portfolioValue
+print("  If in worst 5% of days, expect to lose: \(cvarLoss.currency())")
+
+
+print("\nComprehensive Risk Profile:")
+print(riskMetrics.description)
+
+let drawdown = riskMetrics.maxDrawdown
+
+print("\nDrawdown Analysis:")
+print("  Maximum drawdown: \(drawdown.percent())")
+
+if drawdown < 0.10 {
+	print("  Risk level: Low")
+} else if drawdown < 0.20 {
+	print("  Risk level: Moderate")
+} else {
+	print("  Risk level: High")
+}
+
+print("\nRisk-Adjusted Returns:")
+print("  Sharpe Ratio: \(riskMetrics.sharpeRatio.number(3))")
+print("    (return per unit of total volatility)")
+
+print("  Sortino Ratio: \(riskMetrics.sortinoRatio.number(3))")
+print("    (return per unit of downside volatility)")
+
+// Sortino > Sharpe indicates asymmetric returns (positive skew)
+if riskMetrics.sortinoRatio > riskMetrics.sharpeRatio {
+	print("  Portfolio has limited downside with upside potential")
+}
+
+print("\nTail Statistics:")
+print("  Skewness: \(riskMetrics.skewness.number(2))")
+
+if riskMetrics.skewness < -0.5 {
+	print("    Negative skew: More frequent small gains, rare large losses")
+	print("    Risk: Fat left tail")
+} else if riskMetrics.skewness > 0.5 {
+	print("    Positive skew: More frequent small losses, rare large gains")
+	print("    Risk: Fat right tail")
+} else {
+	print("    Roughly symmetric distribution")
+}
+
+print("  Excess Kurtosis: \(riskMetrics.kurtosis.number(2))")
+
+if riskMetrics.kurtosis > 1.0 {
+	print("    Fat tails: More extreme events than normal distribution")
+	print("    Risk: Higher probability of large moves")
+}
+
+	// Three portfolios with individual VaRs
+	let portfolioVaRs = [100_000.0, 150_000.0, 200_000.0]
+
+	// Correlation matrix
+	let correlations = [
+		[1.0, 0.6, 0.4],
+		[0.6, 1.0, 0.5],
+		[0.4, 0.5, 1.0]
+	]
+
+	// Aggregate VaR using variance-covariance method
+	let aggregatedVaR = RiskAggregator<Double>.aggregateVaR(
+		individualVaRs: portfolioVaRs,
+		correlations: correlations
+	)
+
+	let simpleSum = portfolioVaRs.reduce(0, +)
+	let diversificationBenefit = simpleSum - aggregatedVaR
+
+	print("VaR Aggregation:")
+	print("  Portfolio A VaR: \(portfolioVaRs[0].currency())")
+	print("  Portfolio B VaR: \(portfolioVaRs[1].currency())")
+	print("  Portfolio C VaR: \(portfolioVaRs[2].currency())")
+	print("  Simple sum: \(simpleSum.currency())")
+	print("  Aggregated VaR: \(aggregatedVaR.currency())")
+	print("  Diversification benefit: \(diversificationBenefit.currency())")
+
+for i in 0..<portfolioVaRs.count {
+	let marginal = RiskAggregator<Double>.marginalVaR(
+		entity: i,
+		individualVaRs: portfolioVaRs,
+		correlations: correlations
+	)
+
+	print("\nPortfolio \(["A", "B", "C"][i]):")
+	print("  Individual VaR: \(portfolioVaRs[i].currency())")
+	print("  Marginal VaR: \(marginal.currency())")
+	print("  Risk contribution: \((marginal / aggregatedVaR).percent())")
+}
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md"><strong>BusinessMath Docs – 2.3 Risk Analytics</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Create custom stress scenarios for your industry</li><li>Calculate VaR and CVaR for different confidence levels</li><li>Compare Sharpe vs Sortino ratios for asymmetric strategies</li></ol><hr /><h2>Real-World Application</h2><p>Risk managers use these tools daily:</p><ul><li><strong>Portfolio VaR</strong>: Regulatory requirement for banks</li><li><strong>Stress testing</strong>: Required by Dodd-Frank, Basel III</li><li><strong>Drawdown analysis</strong>: Hedge fund performance evaluation</li><li><strong>Risk aggregation</strong>: Enterprise-wide risk management</li></ul><p>BusinessMath makes these institutional-grade analytics accessible in 10-20 lines of Swift code.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Both VaR and CVaR?</strong></p><p>VaR answers: “What’s the threshold of the worst 5% of outcomes?”CVaR answers: “When you’re in that worst 5%, how bad does it actually get?”</p><p>Example: Portfolio with VaR₉₅ = -$100k, CVaR₉₅ = -$500k</p><ul><li><strong>VaR says</strong>: 95% of the time, you won’t lose more than $100k</li><li><strong>CVaR says</strong>: But when you do lose more, you lose an average of $500k</li></ul><p><strong>CVaR captures tail risk</strong>—the thing that kills portfolios. VaR alone can be misleading for fat-tailed distributions.</p><p>This distinction matters for crypto, options, and leveraged strategies where tails are fat.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing VaR wasn’t the math—it was choosing which variant to implement. There are three common methods:</p><ol><li><strong>Historical VaR</strong>: Use actual historical percentile</li><li><strong>Parametric VaR</strong>: Assume normal distribution</li><li><strong>Monte Carlo VaR</strong>: Simulate future scenarios</li></ol><p>We chose <strong>Historical VaR</strong> as the default because:</p><ul><li>No distribution assumptions</li><li>Works with any return pattern</li><li>Easy to explain and verify</li></ul><p>But we documented this choice explicitly in both code and DocC, so users know what they’re getting.</p><p><strong>The lesson</strong>: When multiple valid implementations exist, pick one, document it clearly, and make the choice transparent.</p><p><strong>Related Methodology</strong>: <a href="../week-09/02-tue-tests-wrong.md">When Tests Pass But Code Is Wrong</a> (Week 9) - Validating statistical implementations</p><hr /><h2>Next Steps</h2><p><strong>Coming up this week</strong>: Week 3 explores operational models—growth, depreciation, and revenue modeling.</p><p><strong>Case Study</strong>: Week 3 Friday combines depreciation + TVM for capital equipment purchase decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 8/~48</li><li><strong>Week 2 Complete!</strong> ✅</li><li>Topics Covered: Foundation + Analysis Tools</li><li>Playgrounds: 7 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, risk, var, stress-testing, portfolio</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

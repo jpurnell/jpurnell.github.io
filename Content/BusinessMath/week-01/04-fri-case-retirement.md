@@ -396,65 +396,6 @@ None of these issues appeared in unit tests. All appeared immediately in the cas
 
 ## Try It Yourself
 
-These examples can be executed in an Xcode playground and experiment:
-
-### Modifications to Try
-
-1. **Change Sarah's age to 45**
-   - How does the required contribution change?
-   - What happens to success probability?
-
-2. **Increase target to $3 million**
-   - Calculate new monthly contribution
-   - How does probability change?
-
-3. **Add a $500/month current contribution**
-   - Modify the calculator to include ongoing contributions
-   - How much does this reduce the required increase?
-
-4. **Model inflation**
-   - Adjust the target amount for 2% annual inflation
-   - How does the "real" retirement goal change?
-
----
-
-## Technical Deep Dives
-
-Want to understand the individual components better?
-
-**DocC Tutorials Used**:
-- **Time Series**: [BusinessMath Docs – 1.2](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md) - Period arithmetic and temporal data
-- **Time Value of Money**: [BusinessMath Docs – 1.3](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md) - TVM functions (`futureValue`, `payment`)
-- **Statistical Distributions**: [BusinessMath Docs – 2.3](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md) - `normalCDF` for probability
-
-**API References**:
-- `futureValue(presentValue:rate:periods:)`
-- `payment(presentValue:futureValue:rate:periods:type:)`
-- `normalCDF(x:mean:standardDeviation:)`
-
----
-
-## Next Steps
-
-**Coming up next**: Week 2 explores analysis tools—data tables, financial ratios, and risk analytics.
-
-**Related Case Studies**:
-- **Case Study #2: Capital Equipment Decision** (Week 3) - Combines depreciation with TVM for capital budgeting
-- **Case Study #4: Portfolio Optimization** (Week 8) - MIDPOINT integration showing all core topics working together
-
----
-
-**Series Progress**:
-- Week: 1/12
-- Posts Published: 4/~48
-- **Case Studies: 1/6 Complete** 🎯
-- Topics Combined: TVM + Time Series + Distributions
-- Playgrounds: 4 available (3 technical + 1 case study)
-
----
-
-## Appendix: Complete Code
-
 <details>
 <summary>Click to expand full playground code</summary>
 
@@ -591,3 +532,59 @@ print()
 print("Try It: Adjust the parameters and re-run!")
 ```
 </details>
+
+
+### Modifications to Try
+
+1. **Change Sarah's age to 45**
+   - How does the required contribution change?
+   - What happens to success probability?
+
+2. **Increase target to $3 million**
+   - Calculate new monthly contribution
+   - How does probability change?
+
+3. **Add a $500/month current contribution**
+   - Modify the calculator to include ongoing contributions
+   - How much does this reduce the required increase?
+
+4. **Model inflation**
+   - Adjust the target amount for 2% annual inflation
+   - How does the "real" retirement goal change?
+
+---
+
+## Technical Deep Dives
+
+Want to understand the individual components better?
+
+**DocC Tutorials Used**:
+- **Time Series**: [BusinessMath Docs – 1.2](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md) - Period arithmetic and temporal data
+- **Time Value of Money**: [BusinessMath Docs – 1.3](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md) - TVM functions (`futureValue`, `payment`)
+- **Statistical Distributions**: [BusinessMath Docs – 2.3](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md) - `normalCDF` for probability
+
+**API References**:
+- `futureValue(presentValue:rate:periods:)`
+- `payment(presentValue:futureValue:rate:periods:type:)`
+- `normalCDF(x:mean:standardDeviation:)`
+
+---
+
+## Next Steps
+
+**Coming up next**: Week 2 explores analysis tools—data tables, financial ratios, and risk analytics.
+
+**Related Case Studies**:
+- **Case Study #2: Capital Equipment Decision** (Week 3) - Combines depreciation with TVM for capital budgeting
+- **Case Study #4: Portfolio Optimization** (Week 8) - MIDPOINT integration showing all core topics working together
+
+---
+
+**Series Progress**:
+- Week: 1/12
+- Posts Published: 4/~48
+- **Case Studies: 1/6 Complete** 🎯
+- Topics Combined: TVM + Time Series + Distributions
+- Playgrounds: 4 available (3 technical + 1 case study)
+
+---

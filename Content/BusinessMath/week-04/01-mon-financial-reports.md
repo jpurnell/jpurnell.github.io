@@ -427,11 +427,273 @@ Margin Expansion (Q1 → Q4):
 
 ## Try It Yourself
 
-Copy this into a playground and experiment:
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+let entity = Entity(
+	id: "ACME",
+	primaryType: .ticker,
+	name: "Acme Corporation"
+)
+
+let periods = (1...4).map { Period.quarter(year: 2025, quarter: $0) }
+
+// Revenue account
+let revenue = try Account(
+	entity: entity,
+	name: "Product Revenue",
+	incomeStatementRole: .revenue,
+	timeSeries: TimeSeries(periods: periods, values: [1_000_000, 1_100_000, 1_200_000, 1_300_000])
+)
+
+// Expense accounts
+let cogs = try Account(
+	entity: entity,
+	name: "Cost of Goods Sold",
+	incomeStatementRole: .costOfGoodsSold,
+	timeSeries: TimeSeries(periods: periods, values: [400_000, 450_000, 480_000, 520_000])
+)
+
+let opex = try Account(
+	entity: entity,
+	name: "Operating Expenses",
+	incomeStatementRole: .operatingExpenseOther,
+	timeSeries: TimeSeries(periods: periods, values: [300_000, 325_000, 350_000, 375_000])
+)
+
+let depreciation = try Account(
+	entity: entity,
+	name: "Depreciation",
+	incomeStatementRole: .depreciationAmortization,
+	timeSeries: TimeSeries(periods: periods, values: [50_000, 50_000, 50_000, 50_000])
+)
+
+let interest = try Account(
+	entity: entity,
+	name: "Interest Expense",
+	incomeStatementRole: .interestExpense,
+	timeSeries: TimeSeries(periods: periods, values: [25_000, 25_000, 25_000, 25_000])
+)
+
+let tax = try Account(
+	entity: entity,
+	name: "Income Tax",
+	incomeStatementRole: .incomeTaxExpense,
+	timeSeries: TimeSeries(periods: periods, values: [47_000, 49_000, 61_000, 68_000])
+)
+
+// Create Income Statement
+let incomeStatement = try IncomeStatement(
+	entity: entity,
+	periods: periods,
+	accounts: [revenue, cogs, opex, depreciation, interest, tax]
+)
+
+// Create Balance Sheet (assets, liabilities, equity)
+let cash = try Account(
+	entity: entity,
+	name: "Cash",
+	balanceSheetRole: .cashAndEquivalents,
+	timeSeries: TimeSeries(periods: periods, values: [500_000, 600_000, 750_000, 900_000])
+)
+
+let receivables = try Account(
+	entity: entity,
+	name: "Receivables",
+	balanceSheetRole: .accountsReceivable,
+	timeSeries: TimeSeries(periods: periods, values: [300_000, 330_000, 360_000, 390_000])
+)
+
+let ppe = try Account(
+	entity: entity,
+	name: "PP&E",
+	balanceSheetRole: .propertyPlantEquipment,
+	timeSeries: TimeSeries(periods: periods, values: [1_000_000, 980_000, 960_000, 940_000])
+)
+
+let payables = try Account(
+	entity: entity,
+	name: "Payables",
+	balanceSheetRole: .accountsPayable,
+	timeSeries: TimeSeries(periods: periods, values: [200_000, 220_000, 240_000, 260_000])
+)
+
+let debt = try Account(
+	entity: entity,
+	name: "Long-Term Debt",
+	balanceSheetRole: .longTermDebt,
+	timeSeries: TimeSeries(periods: periods, values: [500_000, 500_000, 500_000, 500_000])
+)
+
+let equity = try Account(
+	entity: entity,
+	name: "Equity",
+	balanceSheetRole: .retainedEarnings,
+	timeSeries: TimeSeries(periods: periods, values: [1_100_000, 1_190_000, 1_330_000, 1_470_000])
+)
+
+let balanceSheet = try BalanceSheet(
+	entity: entity,
+	periods: periods,
+	accounts: [cash, receivables, ppe, payables, debt, equity]
+)
+
+	// Define operational metrics for each quarter
+	let q1Metrics = OperationalMetrics<Double>(
+		entity: entity,
+		period: periods[0],
+		metrics: [
+			"units_sold": 10_000,
+			"average_price": 100.0,
+			"customer_count": 500,
+			"average_revenue_per_customer": 2_000
+		]
+	)
+
+	let q2Metrics = OperationalMetrics<Double>(
+		entity: entity,
+		period: periods[1],
+		metrics: [
+			"units_sold": 11_000,
+			"average_price": 100.0,
+			"customer_count": 550,
+			"average_revenue_per_customer": 2_000
+		]
+	)
+
+	let q3Metrics = OperationalMetrics<Double>(
+		entity: entity,
+		period: periods[2],
+		metrics: [
+			"units_sold": 12_000,
+			"average_price": 100.0,
+			"customer_count": 600,
+			"average_revenue_per_customer": 2_000
+		]
+	)
+
+	let q4Metrics = OperationalMetrics<Double>(
+		entity: entity,
+		period: periods[3],
+		metrics: [
+			"units_sold": 13_000,
+			"average_price": 100.0,
+			"customer_count": 650,
+			"average_revenue_per_customer": 2_000
+		]
+	)
+
+	let operationalMetrics = [q1Metrics, q2Metrics, q3Metrics, q4Metrics]
+
+let q1Summary = try FinancialPeriodSummary(
+	entity: entity,
+	period: periods[0],
+	incomeStatement: incomeStatement,
+	balanceSheet: balanceSheet,
+	operationalMetrics: q1Metrics
+)
+
+print("=== Q1 2025 Financial Summary ===\n")
+print("Revenue: \(q1Summary.revenue.currency())")
+print("Gross Profit: \(q1Summary.grossProfit.currency())")
+print("EBITDA: \(q1Summary.ebitda.currency())")
+print("EBIT: \(q1Summary.operatingIncome.currency())")
+print("Net Income: \(q1Summary.netIncome.currency())")
+print()
+print("Margins:")
+print("  Gross Margin: \(q1Summary.grossMargin.percent(1))")
+print("  Operating Margin: \(q1Summary.operatingMargin.percent(1))")
+print("  Net Margin: \(q1Summary.netMargin.percent(1))")
+print()
+print("Returns:")
+print("  ROA: \(q1Summary.roa.percent(1))")
+print("  ROE: \(q1Summary.roe.percent(1))")
+print()
+print("Leverage:")
+print("  Debt/Equity: \(q1Summary.debtToEquityRatio.number(2))x")
+print("  Debt/EBITDA: \(q1Summary.debtToEBITDARatio.number(2))x")
+print("  EBIT Interest Coverage: \(q1Summary.interestCoverageRatio!.number(1))x")
+print()
+print("Liquidity:")
+print("  Current Ratio: \(q1Summary.currentRatio.number(2))x")
+
+
+	// Create summaries for all quarters
+	let summaries = try periods.indices.map { index in
+		try FinancialPeriodSummary(
+			entity: entity,
+			period: periods[index],
+			incomeStatement: incomeStatement,
+			balanceSheet: balanceSheet,
+			operationalMetrics: operationalMetrics[index]
+		)
+	}
+
+	// Create multi-period report
+	let report = try MultiPeriodReport(
+		entity: entity,
+		periodSummaries: summaries
+	)
+
+	print("\n=== Acme Corporation - FY2025 Trends ===\n")
+	print("Periods analyzed: \(report.periodCount)")
+
+	// Revenue growth
+	let revenueGrowth = report.revenueGrowth()
+	print("\nRevenue Growth (Q-o-Q):")
+	for (index, growth) in revenueGrowth.enumerated() {
+		let quarter = index + 2  // Q2, Q3, Q4
+		print("  Q\(quarter): \(growth.percent(1))")
+	}
+
+	// EBITDA growth
+	let ebitdaGrowth = report.ebitdaGrowth()
+	print("\nEBITDA Growth (Q-o-Q):")
+	for (index, growth) in ebitdaGrowth.enumerated() {
+		let quarter = index + 2
+		print("  Q\(quarter): \(growth.percent(1))")
+	}
+
+	// Net income growth
+	let netIncomeGrowth = report.netIncomeGrowth()
+	print("\nNet Income Growth (Q-o-Q):")
+	for (index, growth) in netIncomeGrowth.enumerated() {
+		let quarter = index + 2
+		print("  Q\(quarter): \(growth.percent(1))")
+	}
+
+	// Margin trends
+	let grossMargins = report.grossMarginTrend()
+	let operatingMargins = report.operatingMarginTrend()
+	let netMargins = report.netMarginTrend()
+
+	print("\n=== Margin Trend Analysis ===")
+	print("Period\t\tGross\tOperating\t   Net")
+	print("------\t\t-----\t---------\t-------")
+	for i in 0...(periods.count - 1) {
+		let quarter = i + 1
+		print("Q\(quarter)\(grossMargins[i].percent(1).paddingLeft(toLength: 15))\(operatingMargins[i].percent(1).paddingLeft(toLength: 12))\(netMargins[i].percent(1).paddingLeft(toLength: 10))")
+	}
+
+	// Calculate margin expansion (convert from decimal to basis points)
+	// 1 percentage point = 100 basis points, so multiply decimal by 10,000
+	let grossExpansion = (grossMargins[3] - grossMargins[0]) * 10000
+	let operatingExpansion = (operatingMargins[3] - operatingMargins[0]) * 10000
+	let netExpansion = (netMargins[3] - netMargins[0]) * 10000
+
+	print("\nMargin Expansion (Q1 → Q4):")
+	print("  Gross: \(grossExpansion.number(0)) bps")
+	print("  Operating: \(operatingExpansion.number(0)) bps")
+	print("  Net: \(netExpansion.number(0)) bps")
 
 ```
-→ Full API Reference: BusinessMath Docs – 3.4 Financial Reports
-```
+</details>
+
+→ Full API Reference: [**BusinessMath Docs – 3.4 Financial Reports**](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.4-BuildingFinancialReports.md)
+
 
 **Modifications to try**:
 1. Add more operational metrics (customer acquisition cost, LTV)

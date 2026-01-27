@@ -7,7 +7,7 @@
 	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
 	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Data Table Analysis for Sensitivity Testing</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">6 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 5 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to perform Excel-like sensitivity analysis with data tables</li><li>Creating one-variable tables to test single assumptions</li><li>Building two-variable matrices for scenario planning</li><li>Applying data tables to loans, investments, and pricing decisions</li><li>Exporting results for further analysis</li></ul><hr /><h2>The Problem</h2><p>Business decisions often require assumptions about the future. <strong>What if the interest rate rises? What if our sales volume drops? What price maximizes profit?</strong></p><p>Excel’s “What-If Analysis” tools answer these questions by systematically varying inputs and calculating outputs. But building these analyses in code often requires writing custom loops, managing nested arrays, and formatting results manually.</p><p>BusinessMath allows you to explore scenarios programmatically—to test assumptions, find break-even points, and identify optimal strategies—without the complexity of manual iteration.</p><hr /><h2>The Solution</h2><p>BusinessMath provides <strong>Data Tables</strong> that work just like Excel’s sensitivity analysis tools, but with Swift’s type safety and composability.</p><h3>One-Variable Analysis: Loan Payment Sensitivity</h3><p>How much will monthly payments change if interest rates rise?</p><pre><code class="language-swift">import BusinessMath
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Data Table Analysis for Sensitivity Testing</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">8 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 5 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to perform Excel-like sensitivity analysis with data tables</li><li>Creating one-variable tables to test single assumptions</li><li>Building two-variable matrices for scenario planning</li><li>Applying data tables to loans, investments, and pricing decisions</li><li>Exporting results for further analysis</li></ul><hr /><h2>The Problem</h2><p>Business decisions often require assumptions about the future. <strong>What if the interest rate rises? What if our sales volume drops? What price maximizes profit?</strong></p><p>Excel’s “What-If Analysis” tools answer these questions by systematically varying inputs and calculating outputs. But building these analyses in code often requires writing custom loops, managing nested arrays, and formatting results manually.</p><p>BusinessMath allows you to explore scenarios programmatically—to test assumptions, find break-even points, and identify optimal strategies—without the complexity of manual iteration.</p><hr /><h2>The Solution</h2><p>BusinessMath provides <strong>Data Tables</strong> that work just like Excel’s sensitivity analysis tools, but with Swift’s type safety and composability.</p><h3>One-Variable Analysis: Loan Payment Sensitivity</h3><p>How much will monthly payments change if interest rates rise?</p><pre><code class="language-swift">import BusinessMath
 
 // Loan parameters
 let principal = 300_000.0
@@ -201,6 +201,141 @@ Maximum Monthly Profit: $20,000.00
 
 // Write to file
 try csv.write(toFile: "loan_payments.csv", atomically: true, encoding: .utf8)
-</code></pre><hr /><h2>Try It Yourself</h2><p>Download the playground and experiment:</p><pre><code>→ Download: Week02/DataTables.playground
-→ Full API Reference: BusinessMath Docs – 2.1 Data Table Analysis
-</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Test loan affordability at different income levels</li><li>Create an investment NPV matrix with varying growth and discount rates</li><li>Build a product pricing table comparing different cost structures</li></ol><hr /><h2>Real-World Application</h2><p>A CFO analyzing capital equipment purchases needs to understand sensitivity to key assumptions:</p><ul><li><strong>Discount rate sensitivity</strong>: How does NPV change from 8% to 12%?</li><li><strong>Volume assumptions</strong>: What happens if production is 20% lower than expected?</li><li><strong>Price/volume trade-offs</strong>: Which combination maximizes profit?</li></ul><p>Data tables answer all these questions with 10-20 lines of code instead of complex spreadsheets.</p><hr /><h3>📝 Development Note</h3><p>When we first implemented data tables, we assumed users would want highly customized formatting. So we built a complex system with format strings, alignment options, and custom renderers.</p><p>It was too complicated.</p><p>The refactor was brutal: we deleted 300 lines of formatting code and replaced it with two simple functions: <code>toCSV()</code> and <code>formatTwoVariable()</code>. Users could export to CSV for Excel, or get basic console output. That’s it.</p><p><strong>The lesson</strong>: Don’t over-engineer formatting. Users either want raw data (CSV) or basic display (console). Everything in between is complexity they don’t need.</p><p><strong>Related Methodology</strong>: <a href="../week-05/02-tue-coding-standards.md">Coding Standards That Scale</a> (Week 5)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Documentation as Design (Tuesday) - How writing docs before code reveals API flaws early.</p><p><strong>This week</strong>: We’ll explore financial ratios (Wednesday) and risk analytics (Friday) to complete the Analysis Tools topic.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 5/~48</li><li>Topics Covered: Foundation + Analysis Tools (starting)</li><li>Playgrounds: 5 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, data-tables, sensitivity-analysis, what-if</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+</code></pre><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+
+// Loan parameters
+let principal = 300_000.0
+let loanTerm = 360  // 30 years monthly
+
+// Test different interest rates
+let rates = Array(stride(from: 0.03, through: 0.07, by: 0.005))
+
+// Create data table
+let paymentTable = DataTable.oneVariable(
+	inputs: rates,
+	calculate: { annualRate in
+		let monthlyRate = annualRate / 12.0
+		return payment(
+			presentValue: principal,
+			rate: monthlyRate,
+			periods: loanTerm,
+			futureValue: 0,
+			type: .ordinary
+		)
+	}
+)
+
+print("Mortgage Payment Sensitivity Analysis")
+print("======================================")
+print("Loan Amount: \(principal.currency())")
+print("Term: 30 years\n")
+
+for (rate, monthlyPayment) in paymentTable {
+	let totalPaid = monthlyPayment * Double(loanTerm)
+	let totalInterest = totalPaid - principal
+
+	print("\(rate.percent(1))\t\t\(monthlyPayment.currency())\t\t\(totalInterest.currency())")
+}
+
+// Business parameters
+let fixedCosts_mortgagePayment = 50_000.0
+let variableCostPerUnit_mortgagePayment = 15.0
+let pricePerUnit_mortgagePayment = 25.0
+
+// Test different sales volumes
+let volumes = Array(stride(from: 1000.0, through: 10000.0, by: 1000.0))
+
+let profitTable = DataTable.oneVariable(
+	inputs: volumes,
+	calculate: { volume in
+		let revenue = pricePerUnit_mortgagePayment * volume
+		let totalCosts = fixedCosts_mortgagePayment + (variableCostPerUnit_mortgagePayment * volume)
+		return revenue - totalCosts
+	}
+)
+
+print("\nBreak-Even Analysis")
+print("Fixed Costs: \(fixedCosts_mortgagePayment.currency())")
+print("Contribution Margin: \((pricePerUnit_mortgagePayment - variableCostPerUnit_mortgagePayment).currency())/unit\n")
+
+for (volume, profit) in profitTable {
+	let status = profit >= 0 ? "✓" : "✗"
+	print("\(volume.number(0).paddingLeft(toLength: 6)) units\t\(profit.currency()) \(status)")
+}
+
+// Calculate exact break-even
+let breakEvenVolume = fixedCosts_mortgagePayment / (pricePerUnit_mortgagePayment - variableCostPerUnit_mortgagePayment)
+print("\nBreak-Even Volume: \(breakEvenVolume.number(0)) units")
+
+	// Fixed business parameters
+	let monthlyFixedCosts = 100_000.0
+	let variableCostPerUnit = 30.0
+
+	// Scenarios to test
+	let pricePoints = [40.0, 45.0, 50.0, 55.0, 60.0]
+	let volumeScenarios = [2000.0, 2500.0, 3000.0, 3500.0, 4000.0]
+
+	// Create two-variable profit matrix
+	let profitMatrix = DataTable<Double, Double>.twoVariable(
+		rowInputs: pricePoints,
+		columnInputs: volumeScenarios,
+		calculate: { price, volume in
+			let revenue = price * volume
+			let totalCosts = monthlyFixedCosts + (variableCostPerUnit * volume)
+			return revenue - totalCosts
+		}
+	)
+
+	// Print formatted results
+	print("\nPricing Strategy Matrix (Monthly Profit)")
+
+	// Option 1: Use built-in formatter (simpler, basic formatting)
+//	 let formatted = DataTable.formatTwoVariable(
+//	     profitMatrix,
+//	     rowInputs: pricePoints,
+//	     columnInputs: volumeScenarios
+//	 )
+//	 print(formatted)
+
+	// Option 2: Custom formatting with currency (shown below)
+var header = "Price".padding(toLength: 10, withPad: " ", startingAt: 0)
+	for volume in volumeScenarios {
+		header += "\(Int(volume))".paddingLeft(toLength: 12)
+	}
+	print(header)
+	print(String(repeating: "=", count: 70))
+
+	for (rowIndex, price) in pricePoints.enumerated() {
+		var rowString = "\(price.currency(0).padding(toLength: 10, withPad: " ", startingAt: 0))"
+		for colIndex in 0..<volumeScenarios.count {
+			let profit = profitMatrix[rowIndex][colIndex]
+			rowString += "\(profit.currency(0).paddingLeft(toLength: 12))"
+		}
+		print(rowString)
+	}
+
+	// Find optimal combination
+	var maxProfit = -Double.infinity
+	var optimalPrice = 0.0
+	var optimalVolume = 0.0
+
+	for (rowIndex, price) in pricePoints.enumerated() {
+		for (colIndex, volume) in volumeScenarios.enumerated() {
+			let profit = profitMatrix[rowIndex][colIndex]
+			if profit > maxProfit {
+				maxProfit = profit
+				optimalPrice = price
+				optimalVolume = volume
+			}
+		}
+	}
+
+	print("\nOptimal Strategy:")
+	print("Price: \(optimalPrice.currency()), Volume: \(optimalVolume.number(0)) units")
+	print("Maximum Monthly Profit: \(maxProfit.currency())")
+
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md"><strong>BusinessMath Docs – 2.1 Data Table Analysis</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Test loan affordability at different income levels</li><li>Create an investment NPV matrix with varying growth and discount rates</li><li>Build a product pricing table comparing different cost structures</li></ol><hr /><h2>Real-World Application</h2><p>A CFO analyzing capital equipment purchases needs to understand sensitivity to key assumptions:</p><ul><li><strong>Discount rate sensitivity</strong>: How does NPV change from 8% to 12%?</li><li><strong>Volume assumptions</strong>: What happens if production is 20% lower than expected?</li><li><strong>Price/volume trade-offs</strong>: Which combination maximizes profit?</li></ul><p>Data tables answer all these questions with 10-20 lines of code instead of complex spreadsheets.</p><hr /><h3>📝 Development Note</h3><p>When we first implemented data tables, we assumed users would want highly customized formatting. So we built a complex system with format strings, alignment options, and custom renderers.</p><p>It was too complicated.</p><p>The refactor was brutal: we deleted 300 lines of formatting code and replaced it with two simple functions: <code>toCSV()</code> and <code>formatTwoVariable()</code>. Users could export to CSV for Excel, or get basic console output. That’s it.</p><p><strong>The lesson</strong>: Don’t over-engineer formatting. Users either want raw data (CSV) or basic display (console). Everything in between is complexity they don’t need.</p><p><strong>Related Methodology</strong>: <a href="../week-05/02-tue-coding-standards.md">Coding Standards That Scale</a> (Week 5)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Documentation as Design (Tuesday) - How writing docs before code reveals API flaws early.</p><p><strong>This week</strong>: We’ll explore financial ratios (Wednesday) and risk analytics (Friday) to complete the Analysis Tools topic.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 5/~48</li><li>Topics Covered: Foundation + Analysis Tools (starting)</li><li>Playgrounds: 5 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, data-tables, sensitivity-analysis, what-if</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
