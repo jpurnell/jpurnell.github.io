@@ -1,14 +1,14 @@
 ---
 layout: BlogPostLayout
 title: Data Table Analysis for Sensitivity Testing
-date: 2026-01-13 13:00
+date: 2026-01-12 13:00
 series: BusinessMath Quarterly Series
 week: 2
 post: 1
 docc_source: "2.1-DataTableAnalysis.md"
 playground: "Week02/DataTables.playground"
 tags: businessmath, swift, data-tables, sensitivity-analysis, what-if
-published: false
+published: true
 ---
 
 # Data Table Analysis for Sensitivity Testing
@@ -29,11 +29,11 @@ published: false
 
 ## The Problem
 
-Business decisions depend on assumptions. **What if the interest rate rises? What if our sales volume drops? What price maximizes profit?**
+Business decisions often require assumptions about the future. **What if the interest rate rises? What if our sales volume drops? What price maximizes profit?**
 
 Excel's "What-If Analysis" tools answer these questions by systematically varying inputs and calculating outputs. But building these analyses in code often requires writing custom loops, managing nested arrays, and formatting results manually.
 
-You need a way to explore scenarios programmatically—to test assumptions, find break-even points, and identify optimal strategies—without the complexity of manual iteration.
+BusinessMath allows you to explore scenarios programmatically—to test assumptions, find break-even points, and identify optimal strategies—without the complexity of manual iteration.
 
 ---
 
@@ -53,7 +53,7 @@ let principal = 300_000.0
 let loanTerm = 360  // 30 years monthly
 
 // Test different interest rates
-let rates = [0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065, 0.07]
+let rates = Array(stride(from: 0.03, through: 0.07, by: 0.005))
 
 // Create data table
 let paymentTable = DataTable<Double, Double>.oneVariable(
@@ -148,16 +148,18 @@ Break-Even Analysis
 Fixed Costs: $50,000.00
 Contribution Margin: $10.00/unit
 
-1000 units	-$40,000.00 ✗
-2000 units	-$30,000.00 ✗
-3000 units	-$20,000.00 ✗
-4000 units	-$10,000.00 ✗
-5000 units	$0.00 ✓
-6000 units	$10,000.00 ✓
-7000 units	$20,000.00 ✓
-...
+ 1,000 units	($40,000.00) ✗
+ 2,000 units	($30,000.00) ✗
+ 3,000 units	($20,000.00) ✗
+ 4,000 units	($10,000.00) ✗
+ 5,000 units	$0.00 ✓
+ 6,000 units	$10,000.00 ✓
+ 7,000 units	$20,000.00 ✓
+ 8,000 units	$30,000.00 ✓
+ 9,000 units	$40,000.00 ✓
+10,000 units	$50,000.00 ✓
 
-Break-Even Volume: 5000 units
+Break-Even Volume: 5,000 units
 ```
 
 ---
@@ -240,11 +242,11 @@ print("Maximum Monthly Profit: \(maxProfit.currency())")
 Pricing Strategy Matrix (Monthly Profit)
 Price             2000        2500        3000        3500        4000
 ======================================================================
-$40           -$80,000    -$75,000    -$70,000    -$65,000    -$60,000
-$45           -$70,000    -$62,500    -$55,000    -$47,500    -$40,000
-$50           -$60,000    -$50,000    -$40,000    -$30,000    -$20,000
-$55           -$50,000    -$37,500    -$25,000    -$12,500          $0
-$60           -$40,000    -$25,000    -$10,000      $5,000     $20,000
+$40          ($80,000)   ($75,000)   ($70,000)   ($65,000)   ($60,000)
+$45          ($70,000)   ($62,500)   ($55,000)   ($47,500)   ($40,000)
+$50          ($60,000)   ($50,000)   ($40,000)   ($30,000)   ($20,000)
+$55          ($50,000)   ($37,500)   ($25,000)   ($12,500)          $0
+$60          ($40,000)   ($25,000)   ($10,000)      $5,000     $20,000
 
 Optimal Strategy:
 Price: $60.00, Volume: 4,000 units

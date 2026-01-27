@@ -1,0 +1,265 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 11 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Building a Revenue Forecasting Model</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-03/03-thu-revenue-modeling" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Building a Revenue Forecasting Model"><meta property="twitter:title" content="Building a Revenue Forecasting Model"><meta property="og:description" content="Building a Revenue Forecasting Model"><meta name="twitter:description" content="Building a Revenue Forecasting Model"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-03/03-thu-revenue-modeling"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Building a Revenue Forecasting Model</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">"BusinessMath Quarterly Series"</p><p class="blogDateTime" style="margin-left: 1em">9 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 11 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building a complete revenue forecast from historical data</li><li>Extracting and analyzing seasonal patterns</li><li>Fitting trend models to deseasonalized data</li><li>Generating multi-period forecasts with confidence intervals</li><li>Creating scenario analyses (conservative, base, optimistic)</li></ul><hr /><h2>The Problem</h2><p>CFOs and business leaders need revenue forecasts for planning: <strong>How much revenue will we generate next quarter? Next year? What’s the range of likely outcomes?</strong></p><p>Building accurate forecasts requires:</p><ol><li><strong>Understanding historical patterns</strong> (is there seasonal variance?)</li><li><strong>Identifying the underlying trend</strong> (are we growing linearly or exponentially?)</li><li><strong>Projecting forward</strong> (combining trend and seasonality)</li><li><strong>Quantifying uncertainty</strong> (what’s the confidence interval?)</li><li><strong>Scenario planning</strong> (conservative vs. optimistic cases)</li></ol><p>Doing this properly in spreadsheets is tedious and error-prone. <strong>You need a systematic, reproducible forecasting workflow.</strong></p><hr /><h2>The Solution</h2><p>Let’s build a production-ready revenue forecast using BusinessMath, combining growth modeling, seasonality extraction, and trend fitting.</p><h3>Step 1: Prepare Historical Data</h3><p>Start with 2 years of quarterly revenue:</p><pre><code class="language-swift">import BusinessMath
+
+// Define periods (8 quarters: 2023-2024)
+let periods = [
+    Period.quarter(year: 2023, quarter: 1),
+    Period.quarter(year: 2023, quarter: 2),
+    Period.quarter(year: 2023, quarter: 3),
+    Period.quarter(year: 2023, quarter: 4),
+    Period.quarter(year: 2024, quarter: 1),
+    Period.quarter(year: 2024, quarter: 2),
+    Period.quarter(year: 2024, quarter: 3),
+    Period.quarter(year: 2024, quarter: 4)
+]
+
+// Historical revenue (showing both growth and Q4 spike)
+let revenue: [Double] = [
+    800_000,    // Q1 2023
+    850_000,    // Q2 2023
+    820_000,    // Q3 2023
+    1_100_000,  // Q4 2023 (holiday spike)
+    900_000,    // Q1 2024
+    950_000,    // Q2 2024
+    920_000,    // Q3 2024
+    1_250_000   // Q4 2024 (holiday spike + growth)
+]
+
+let historical = TimeSeries(periods: periods, values: revenue)
+
+print("Loaded \(historical.count) quarters of historical data")
+print("Total historical revenue: \(historical.reduce(0, +).currency())")
+</code></pre><p><strong>Output:</strong></p><pre><code>Loaded 8 quarters of historical data
+Total historical revenue: $7,590,000
+</code></pre><hr /><h3>Step 2: Analyze Historical Patterns</h3><p>Before modeling, understand the data:</p><pre><code class="language-swift">// Calculate quarter-over-quarter growth
+let qoqGrowth = historical.growthRate(lag: 1)
+
+print("\nQuarter-over-Quarter Growth:")
+for (i, growth) in qoqGrowth.enumerated() {
+    let period = periods[i + 1]
+    print("\(period.label): \(growth.percent(1))")
+}
+
+// Calculate year-over-year growth
+let yoyGrowth = historical.growthRate(lag: 4)  // 4 quarters = 1 year
+
+print("\nYear-over-Year Growth:")
+for (i, growth) in yoyGrowth.valuesArray.enumerated() {
+    let period = periods[i + 4]
+    print("\(period.label): \(growth.percent(1))")
+}
+
+// Calculate overall CAGR
+let totalYears = 2.0
+let cagrValue = cagr(
+    beginningValue: revenue[0],
+    endingValue: revenue[revenue.count - 1],
+    years: totalYears
+)
+print("\nOverall CAGR: \(cagrValue.percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Quarter-over-Quarter Growth:
+2023-Q2: +6.3%
+2023-Q3: -3.5%
+2023-Q4: +34.1%  ← Holiday spike
+2024-Q1: -18.2%  ← Post-holiday drop
+2024-Q2: +5.6%
+2024-Q3: -3.2%
+2024-Q4: +35.9%  ← Holiday spike again
+
+Year-over-Year Growth:
+2024-Q1: +12.5%
+2024-Q2: +11.8%
+2024-Q3: +12.2%
+2024-Q4: +13.6%
+
+Overall CAGR: 25.0%
+</code></pre><p><strong>The insight</strong>: Q-o-Q growth is volatile (swings from -18% to +36%), but Y-o-Y growth is steady (~12%). This suggests <strong>strong seasonality with underlying growth</strong>.</p><hr /><h3>Step 3: Extract Seasonal Pattern</h3><p>Identify the recurring pattern:</p><pre><code class="language-swift">// Calculate seasonal indices (4 quarters per year)
+let seasonality = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
+
+print("\nSeasonal Indices:")
+let quarters = ["Q1", "Q2", "Q3", "Q4"]
+for (i, index) in seasonality.enumerated() {
+    let pct = (index - 1.0)
+    let direction = pct > 0 ? "above" : "below"
+    print("\(quarters[i]): \(index.number(3)) (\(abs(pct).percent(1)) \(direction) average)")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Seasonal Indices:
+Q1: 0.942 (5.8% below average)
+Q2: 0.968 (3.2% below average)
+Q3: 0.908 (9.2% below average)
+Q4: 1.183 (18.3% above average)  ← Holiday seasonality confirmed!
+</code></pre><p><strong>The pattern</strong>: Q4 is 18% above average (holiday shopping), Q1-Q3 are all below average, with Q3 the lowest (summer slowdown).</p><hr /><h3>Step 4: Deseasonalize the Data</h3><p>Remove seasonal effects to see the underlying trend:</p><pre><code class="language-swift">let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonality)
+
+print("\nDeseasonalized Revenue:")
+print("Original → Deseasonalized")
+for i in 0...(historical.count - 1) {
+    let original = historical.valuesArray[i]
+    let adjusted = deseasonalized.valuesArray[i]
+    let period = periods[i]
+    print("\(period.label): \(original.currency(0)) → \(adjusted.currency(0))")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Deseasonalized Revenue:
+Original → Deseasonalized
+2023-Q1: $800,000 → $849,566
+2023-Q2: $850,000 → $878,143
+2023-Q3: $820,000 → $903,399
+2023-Q4: $1,100,000 → $930,069
+2024-Q1: $900,000 → $955,762
+2024-Q2: $950,000 → $981,454
+2024-Q3: $920,000 → $1,013,570
+2024-Q4: $1,250,000 → $1,056,897
+</code></pre><p><strong>The insight</strong>: After removing seasonality, the revenue trend is smooth and steadily increasing: $850k → $878k → $903k → … → $1,060k.</p><hr /><h3>Step 5: Fit Trend Model</h3><p>Fit a linear trend to the deseasonalized data:</p><pre><code class="language-swift">var linearModel = LinearTrend<Double>()
+try linearModel.fit(to: deseasonalized)
+
+print("\nLinear Trend Model Fitted")
+print("Indicates steady absolute growth per quarter")
+</code></pre><hr /><h3>Step 6: Generate Forecast</h3><p>Project forward and reapply seasonality:</p><pre><code class="language-swift">let forecastPeriods = 4  // Forecast next 4 quarters (2025)
+
+// Step 6a: Project trend forward
+let trendForecast = try linearModel.project(periods: forecastPeriods)
+
+print("\nTrend Forecast (deseasonalized):")
+for (period, value) in zip(trendForecast.periods, trendForecast.valuesArray) {
+    print("\(period.label): \(value.currency(0))")
+}
+
+// Step 6b: Reapply seasonal pattern
+let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonality)
+
+print("\nFinal Forecast (with seasonality):")
+var forecastTotal = 0.0
+for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
+    forecastTotal += value
+    print("\(period.label): \(value.currency(0))")
+}
+
+print("\nForecast Summary:")
+print("Total 2025 revenue: \(forecastTotal.currency(0))")
+print("Average quarterly revenue: \((forecastTotal / 4).currency(0))")
+
+// Compare to 2024
+let revenue2024 = revenue[4...7].reduce(0.0, +)
+let forecastGrowth = (forecastTotal - revenue2024) / revenue2024
+print("Growth vs 2024: \(forecastGrowth.percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Trend Forecast (deseasonalized):
+2025-Q1: $1,074,052
+2025-Q2: $1,102,485
+2025-Q3: $1,130,917
+2025-Q4: $1,159,349
+
+Final Forecast (with seasonality):
+2025-Q1: $1,011,389  ← Deseasonalized × Q1 index (0.942)
+2025-Q2: $1,067,152  ← Deseasonalized × Q2 index (0.968)
+2025-Q3: $1,026,514  ← Deseasonalized × Q3 index (0.908)
+2025-Q4: $1,371,171  ← Deseasonalized × Q4 index (1.183)
+
+Forecast Summary:
+Total 2025 revenue: $4,476,226
+Average quarterly revenue: $1,119,057
+Growth vs 2024: 11.3%
+</code></pre><p><strong>The insight</strong>: The forecast shows continued steady growth (~11%) with the expected Q4 spike.</p><hr /><h3>Step 7: Scenario Analysis</h3><p>Create conservative and optimistic scenarios by adjusting the growth rate:</p><pre><code class="language-swift">print("\nScenario Analysis for 2025:")
+
+// Base case parameters (from the fitted linear model)
+let baseSlope = linearModel.slopeValue!
+let baseIntercept = linearModel.interceptValue!
+
+// Conservative: Reduce growth rate by 50%
+let conservativeSlope = baseSlope * 0.5
+var conservativePeriods: [Period] = []
+var conservativeValues: [Double] = []
+for i in 1...forecastPeriods {
+    let index = Double(deseasonalized.count + i - 1)
+    let trendValue = baseIntercept + conservativeSlope * index
+    conservativePeriods.append(Period.quarter(year: 2025, quarter: i))
+    conservativeValues.append(trendValue)
+}
+let conservativeForecast = TimeSeries(
+    periods: conservativePeriods,
+    values: conservativeValues
+)
+let conservativeSeasonalForecast = try applySeasonal(
+    timeSeries: conservativeForecast,
+    indices: seasonality
+)
+
+// Optimistic: Increase growth rate by 50%
+let optimisticSlope = baseSlope * 1.5
+var optimisticPeriods: [Period] = []
+var optimisticValues: [Double] = []
+for i in 1...forecastPeriods {
+    let index = Double(deseasonalized.count + i - 1)
+    let trendValue = baseIntercept + optimisticSlope * index
+    optimisticPeriods.append(Period.quarter(year: 2025, quarter: i))
+    optimisticValues.append(trendValue)
+}
+let optimisticForecast = TimeSeries(
+    periods: optimisticPeriods,
+    values: optimisticValues
+)
+let optimisticSeasonalForecast = try applySeasonal(
+    timeSeries: optimisticForecast,
+    indices: seasonality
+)
+
+let conservativeTotal = conservativeSeasonalForecast.reduce(0, +)
+let optimisticTotal = optimisticSeasonalForecast.reduce(0, +)
+
+print("Conservative: \(conservativeTotal.currency(0)) (growth dampened 50%)")
+print("Base Case: \(forecastTotal.currency(0))")
+print("Optimistic: \(optimisticTotal.currency(0)) (growth amplified 50%)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Scenario Analysis for 2025:
+Conservative: $3,931,302 (growth dampened 50%)
+Base Case: $4,476,226
+Optimistic: $5,021,150 (growth amplified 50%)
+</code></pre><blockquote><p><strong>Note</strong>: The exact values depend on your fitted model’s slope parameter. Run the playground to see actual results with your data. The key insight is that dampening the growth rate by 50% produces noticeably lower forecasts, while amplifying by 50% produces higher forecasts.</p></blockquote><hr /><h2>Complete Workflow</h2><p>Here’s the end-to-end forecast in one place:</p><pre><code class="language-swift">import BusinessMath
+
+func buildRevenueModel() throws {
+    // 1. Prepare data
+    let periods = (1...8).map { i in
+        let year = 2023 + (i - 1) / 4
+        let quarter = ((i - 1) % 4) + 1
+        return Period.quarter(year: year, quarter: quarter)
+    }
+
+    let revenue: [Double] = [
+        800_000, 850_000, 820_000, 1_100_000,
+        900_000, 950_000, 920_000, 1_250_000
+    ]
+
+    let historical = TimeSeries(periods: periods, values: revenue)
+
+    // 2. Extract seasonality
+    let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
+
+    // 3. Deseasonalize
+    let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
+
+    // 4. Fit trend
+    var model = LinearTrend<Double>()
+    try model.fit(to: deseasonalized)
+
+    // 5. Generate forecast
+    let trendForecast = try model.project(periods: 4)
+    let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
+
+    // 6. Present results
+    print("Revenue Forecast:")
+    for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
+        print("\(period.label): \(value.currency(0))")
+    }
+
+    let total = finalForecast.reduce(0, +)
+    print("Total 2025 forecast: \(total.currency(0))")
+}
+
+try buildRevenueModel()
+</code></pre><hr /><h2>Try It Yourself</h2><p>Copy this to a playground and experiment:</p><pre><code>→ Full API Reference: BusinessMath Docs – 3.3 Revenue Forecasting
+</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Use your company’s historical revenue data</li><li>Try exponential trend instead of linear</li><li>Create monthly forecasts instead of quarterly</li><li>Add confidence intervals to forecasts</li></ol><hr /><h2>Real-World Application</h2><p>Think about using this for annual planning:</p><ul><li><strong>Historical data</strong>: 3 years of monthly MRR</li><li><strong>Seasonality</strong>: Summer slump (July-August), year-end spike (December)</li><li><strong>Trend</strong>: Exponential (consistent % growth)</li><li><strong>Forecast horizon</strong>: 12 months</li><li><strong>Scenarios</strong>: Conservative (5% CAGR), Base (12% CAGR), Optimistic (20% CAGR)</li></ul><p>Rather than saying “we’re growing 10% per month, so we’ll hit $30mm,” it’s far more credible to say: “Our base case projects $24M ARR, with 80% confidence interval of $22M-$26M.”</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Forecast with Scenarios?</strong></p><p>Point forecasts are always wrong. The question is: how wrong?</p><p>Scenarios communicate uncertainty:</p><ul><li><strong>Conservative</strong>: What if growth slows?</li><li><strong>Base</strong>: What if trends continue?</li><li><strong>Optimistic</strong>: What if we accelerate?</li></ul><p>Present all three with probabilities (e.g., 20% / 60% / 20%).</p><p>This is a much more nuanced and thoughful approach, that sets realistic expectations and prepares stakeholders for variance.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing revenue forecasting wasn’t the math—it was deciding how opinionated to be about the workflow.</p><p><strong>Option 1</strong>: Provide primitive functions (<code>seasonalIndices</code>, <code>fit</code>, <code>project</code>) and let users compose them.</p><p><strong>Option 2</strong>: Provide a high-level <code>forecast(historical:periods:)</code> function that does everything automatically.</p><p>We chose <strong>Option 1</strong> because forecasting requires judgment:</p><ul><li>Which trend model? (Linear vs. exponential vs. logistic)</li><li>How much seasonality damping? (Full seasonal pattern vs. muted)</li><li>Confidence intervals? (95% vs. 80%?)</li></ul><p>A fully automated forecast hides these choices, producing results users don’t understand.</p><p><strong>The lesson</strong>: For workflows requiring judgment, provide composable primitives rather than black-box automation.</p><p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - Designing learnable APIs</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: <a href="../04-fri-case-capital-equipment">Capital Equipment Decision (Friday)</a> - Case study combining depreciation + TVM + financial ratios.</p><p><strong>Week 4</strong>: We’ll explore investment analysis and portfolio optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 11/~48</li><li>Topics Covered: Foundation + Analysis + Operational Models (in progress)</li><li>Playgrounds: 10 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, revenue, forecasting, time-series, seasonality</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

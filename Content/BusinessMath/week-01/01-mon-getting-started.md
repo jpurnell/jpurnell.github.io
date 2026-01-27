@@ -8,7 +8,7 @@ post: 1
 docc_source: "1.1-GettingStarted.md"
 playground: "Week01/GettingStarted.playground"
 tags: businessmath, swift, getting-started, tvm, time-series
-published: false
+published: true
 ---
 
 # Getting Started with BusinessMath
@@ -30,9 +30,7 @@ published: false
 
 Financial calculations are everywhere in business: retirement planning, loan amortization, investment analysis, revenue forecasting. But implementing these correctly requires understanding compound interest, time series data structures, and numerical precision—and getting any of it wrong can cost real money.
 
-You need a library that handles the complexity while giving you confidence in the results. You need calculations that work across different numeric types (Double, Float, Decimal) without rewriting code. And you need APIs that are clear enough to understand six months from now.
-
-That's what BusinessMath provides: production-ready financial and temporal calculations with a clean, type-safe Swift API.
+BusinessMath is a library that handles the complexity while giving you confidence in the results. Calculations work across different numeric types (Double, Float) without rewriting code. And the API is ergonomic and clear enough that you can understand it six months from now or pick it up and work with it day-to-day.
 
 ---
 
@@ -167,23 +165,23 @@ let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0
 
 ### 3. Composability
 
-Functions compose naturally. Time series can be transformed, aggregated, and analyzed using familiar Swift patterns.
+Functions compose naturally. Time series can be transformed, aggregated, and analyzed using simple and ergonomic Swift patterns.
 
 ---
-
-## Try It Yourself
-
-Download the playground and experiment:
-
-```
-→ Download: Week01/GettingStarted.playground
-→ Full API Reference: BusinessMath Docs – Getting Started
-```
-
-**Modifications to try**:
-1. Change the interest rate from 10% to 5%—how does PV change?
-2. Calculate monthly loan payments for different principal amounts
-3. Create a time series for your own revenue data
+<!---->
+<!--## Try It Yourself-->
+<!---->
+<!--Download the playground and experiment:-->
+<!---->
+<!--```-->
+<!--→ Download: [Week01/GettingStarted.playground](/playgrounds/01-mon-getting-started.playground)-->
+<!--→ Full API Reference: BusinessMath Docs – Getting Started-->
+<!--```-->
+<!---->
+<!--**Modifications to try**:-->
+<!--1. Change the interest rate from 10% to 5%—how does PV change?-->
+<!--2. Calculate monthly loan payments for different principal amounts-->
+<!--3. Create a time series for your own revenue data-->
 
 ---
 
@@ -205,15 +203,15 @@ The first function (present value) had one test. By the end, we had 247 tests an
 
 **Lesson**: Define "production quality" for your next project before writing any code. Be explicit. Write it down. Reference it in every AI prompt.
 
-**Related Methodology**: [Test-First Development with AI](#) (Tuesday's post)
+**Related Methodology**: [Test-First Development with AI](../02-tue-test-first-development) (Tuesday's post)
 
 ---
 
 ## Next Steps
 
-**Coming up next**: Time Series Foundation (Wednesday) - Deep dive into periods and temporal data structures
+**Coming up next**: [Time Series Foundation (Wednesday)](../03-wed-time-series) - Deep dive into periods and temporal data structures
 
-**This week's capstone**: Case Study #1: Retirement Planning Calculator (Friday) - Combines TVM and statistical distributions to answer "How much do I need to save?"
+**This week's capstone**: [Case Study #1: Retirement Planning Calculator (Friday)](../04-fri-case-retirement) - Combines TVM and statistical distributions to answer "How much do I need to save?"
 
 ---
 

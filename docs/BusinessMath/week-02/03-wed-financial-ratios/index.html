@@ -1,0 +1,361 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 7 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Financial Ratios & Metrics Guide</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-02/03-wed-financial-ratios" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Financial Ratios & Metrics Guide"><meta property="twitter:title" content="Financial Ratios & Metrics Guide"><meta property="og:description" content="Financial Ratios & Metrics Guide"><meta name="twitter:description" content="Financial Ratios & Metrics Guide"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-02/03-wed-financial-ratios"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Financial Ratios & Metrics Guide</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">10 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 7 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to calculate and interpret profitability ratios (ROA, ROE, ROIC)</li><li>Using efficiency ratios to measure asset utilization</li><li>Assessing liquidity and solvency for financial health</li><li>Applying DuPont analysis to decompose ROE</li><li>Using credit metrics like Altman Z-Score and Piotroski F-Score</li></ul><hr /><h2>The Problem</h2><p>Analyzing financial statements requires calculating dozens of ratios across five categories: profitability, efficiency, liquidity, solvency, and valuation. Each ratio has a specific formula, interpretation guidelines, and industry benchmarks.</p><p>Doing this manually is tedious and error-prone. Spreadsheets help, but lack type safety and composability. You need to:</p><ul><li>Calculate ratios consistently across periods</li><li>Track trends over time</li><li>Compare companies on equal footing</li><li>Assess financial health with composite scores</li></ul><p><strong>BusinessMath offers a systematic way to compute, track, and interpret financial metrics programmatically.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive ratio analysis functions that work with <code>IncomeStatement</code> and <code>BalanceSheet</code> data structures, returning results as <code>TimeSeries</code> for trend analysis.</p><h3>Setup: Creating Financial Statements</h3><p>First, let’s create sample financial statements for a fictional SaaS company “TechCo”:</p><pre><code class="language-swift">// Define company and periods
+let entity = Entity(id: "TECH", primaryType: .ticker, name: "TechCo Inc.")
+let periods = [
+	Period.quarter(year: 2025, quarter: 1),
+	Period.quarter(year: 2025, quarter: 2),
+	Period.quarter(year: 2025, quarter: 3),
+	Period.quarter(year: 2025, quarter: 4)
+]
+
+// Convenient period references
+let q1 = periods[0]
+let q2 = periods[1]
+let q3 = periods[2]
+let q4 = periods[3]
+
+// Create Income Statement
+// Revenue: $5M → $6M over the year (20% growth)
+let revenueSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [5_000_000, 5_300_000, 5_600_000, 6_000_000]
+)
+let revenueAccount = try Account(
+	entity: entity,
+	name: "Subscription Revenue",
+	type: .revenue,
+	timeSeries: revenueSeries
+)
+
+// COGS: 30% of revenue
+var cogsMetadata = AccountMetadata()
+cogsMetadata.category = "COGS"
+let cogsSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [1_500_000, 1_590_000, 1_680_000, 1_800_000]
+)
+let cogsAccount = try Account(
+	entity: entity,
+	name: "Cost of Goods Sold",
+	type: .expense,
+	timeSeries: cogsSeries,
+	metadata: cogsMetadata
+)
+
+// Operating Expenses: R&D + S&M + G&A
+var opexMetadata = AccountMetadata()
+opexMetadata.category = "Operating"
+let opexSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [2_000_000, 2_100_000, 2_150_000, 2_200_000]
+)
+let opexAccount = try Account(
+	entity: entity,
+	name: "Operating Expenses",
+	type: .expense,
+	timeSeries: opexSeries,
+	metadata: opexMetadata
+)
+
+// Interest expense
+let interestSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [100_000, 95_000, 90_000, 85_000]
+)
+let interestAccount = try Account(
+	entity: entity,
+	name: "Interest Expense",
+	type: .expense,
+	timeSeries: interestSeries
+)
+
+let incomeStatement = try IncomeStatement(
+	entity: entity,
+	periods: periods,
+	revenueAccounts: [revenueAccount],
+	expenseAccounts: [cogsAccount, opexAccount, interestAccount]
+)
+
+// Create Balance Sheet
+// Current Assets
+var currentAssetMetadata = AccountMetadata()
+currentAssetMetadata.category = "Current"
+
+let cashSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [3_000_000, 3_500_000, 4_000_000, 4_500_000]
+)
+let cashAccount = try Account(
+	entity: entity,
+	name: "Cash",
+	type: .asset,
+	timeSeries: cashSeries,
+	metadata: currentAssetMetadata
+)
+
+let receivablesSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [1_200_000, 1_300_000, 1_400_000, 1_500_000]
+)
+let receivablesAccount = try Account(
+	entity: entity,
+	name: "Accounts Receivable",
+	type: .asset,
+	timeSeries: receivablesSeries,
+	metadata: currentAssetMetadata
+)
+
+// Fixed Assets
+var fixedAssetMetadata = AccountMetadata()
+fixedAssetMetadata.category = "Fixed"
+
+let ppeSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [2_000_000, 2_050_000, 2_100_000, 2_150_000]
+)
+let ppeAccount = try Account(
+	entity: entity,
+	name: "Property & Equipment",
+	type: .asset,
+	timeSeries: ppeSeries,
+	metadata: fixedAssetMetadata
+)
+
+// Current Liabilities
+var currentLiabilityMetadata = AccountMetadata()
+currentLiabilityMetadata.category = "Current"
+
+let payablesSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [800_000, 850_000, 900_000, 950_000]
+)
+let payablesAccount = try Account(
+	entity: entity,
+	name: "Accounts Payable",
+	type: .liability,
+	timeSeries: payablesSeries,
+	metadata: currentLiabilityMetadata
+)
+
+// Long-term Debt
+var longTermLiabilityMetadata = AccountMetadata()
+longTermLiabilityMetadata.category = "Long-term"
+
+let debtSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [2_000_000, 1_900_000, 1_800_000, 1_700_000]
+)
+let debtAccount = try Account(
+	entity: entity,
+	name: "Long-term Debt",
+	type: .liability,
+	timeSeries: debtSeries,
+	metadata: longTermLiabilityMetadata
+)
+
+// Equity (balancing to Assets = Liabilities + Equity)
+let equitySeries = TimeSeries<Double>(
+	periods: periods,
+	values: [3_400_000, 4_100_000, 4_800_000, 5_500_000]
+)
+let equityAccount = try Account(
+	entity: entity,
+	name: "Shareholders Equity",
+	type: .equity,
+	timeSeries: equitySeries
+)
+
+let balanceSheet = try BalanceSheet(
+	entity: entity,
+	periods: periods,
+	assetAccounts: [cashAccount, receivablesAccount, ppeAccount],
+	liabilityAccounts: [payablesAccount, debtAccount],
+	equityAccounts: [equityAccount]
+)
+
+// Market data for valuation metrics
+let marketPrice = 45.00  // $45 per share
+let sharesOutstanding = 200_000.0  // 200K shares outstanding
+
+// Cash flow statement (for Piotroski F-Score)
+let operatingCashFlowSeries = TimeSeries<Double>(
+	periods: periods,
+	values: [1_500_000, 1_600_000, 1_700_000, 1_900_000]
+)
+let cashFlowAccount = try Account(
+	entity: entity,
+	name: "Operating Cash Flow",
+	type: .operating,  // Must use .operating for operating cash flow accounts
+	timeSeries: operatingCashFlowSeries
+)
+
+let cashFlowStatement = try CashFlowStatement(
+	entity: entity,
+	periods: periods,
+	operatingAccounts: [cashFlowAccount],
+	investingAccounts: [],
+	financingAccounts: []
+)
+</code></pre><p><strong>About TechCo’s Financials:</strong></p><ul><li><strong>Revenue</strong>: Growing SaaS company, $5M → $6M quarterly (20% annual growth)</li><li><strong>Gross Margin</strong>: 70% (typical for SaaS: low COGS, high operating leverage)</li><li><strong>Balance Sheet</strong>: Healthy cash position ($3M → $4.5M), paying down debt ($2M → $1.7M)</li><li><strong>Equity</strong>: Growing from retained earnings as company becomes profitable</li></ul><p>The setup defines all variables used in examples below: <code>incomeStatement</code>, <code>balanceSheet</code>, <code>cashFlowStatement</code>, <code>q1</code>-<code>q4</code>, <code>periods</code>, <code>marketPrice</code>, and <code>sharesOutstanding</code>.</p><hr /><h3>Profitability Ratios</h3><p>How efficiently does the company generate profits?</p><pre><code class="language-swift">import BusinessMath
+
+// Get all profitability ratios at once
+let profitability = profitabilityRatios(
+	incomeStatement: incomeStatement,
+	balanceSheet: balanceSheet
+)
+
+print("=== Profitability Analysis ===")
+print("Gross Margin: \(profitability.grossMargin[q1]!.percent(1))")
+print("Operating Margin: \(profitability.operatingMargin[q1]!.percent(1))")
+print("Net Margin: \(profitability.netMargin[q1]!.percent(1))")
+print("EBITDA Margin: \(profitability.ebitdaMargin[q1]!.percent(1))")
+print("ROA: \(profitability.roa[q1]!.percent(1))")
+print("ROE: \(profitability.roe[q1]!.percent(1))")
+print("ROIC: \(profitability.roic[q1]!.percent(1))")
+</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Gross Margin > 40%</strong>: Strong pricing power</li><li><strong>ROA > 5%</strong>: Good asset efficiency (varies by industry)</li><li><strong>ROE > 15%</strong>: Strong returns for shareholders</li><li><strong>ROIC > WACC</strong>: Company creates value</li></ul><hr /><h3>Efficiency Ratios</h3><p>How effectively does the company use its assets?</p><pre><code class="language-swift">let efficiency = efficiencyRatios(
+    incomeStatement: incomeStatement,
+    balanceSheet: balanceSheet
+)
+
+print("\n=== Efficiency Analysis ===")
+print("Asset Turnover: \(efficiency.assetTurnover[q1]!.number(2))")
+print("Inventory Turnover: \(efficiency.inventoryTurnover![q1]!.number(1))")
+print("Receivables Turnover: \(efficiency.receivablesTurnover![q1]!.number(1))")
+print("Days Sales Outstanding: \(efficiency.daysSalesOutstanding![q1]!.number(1)) days")
+print("Days Inventory Outstanding: \(efficiency.daysInventoryOutstanding![q1]!.number(1)) days")
+print("Days Payable Outstanding: \(efficiency.daysPayableOutstanding![q1]!.number(1)) days")
+
+// Cash Conversion Cycle
+let ccc = efficiency.cashConversionCycle![q1]!
+print("Cash Conversion Cycle: \(ccc.number(1)) days")
+</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Higher turnover</strong> = more efficient use of assets</li><li><strong>Lower DSO (Days Sales Outstanding)</strong> = faster cash collection</li><li><strong>Shorter CCC (Cash Conversion Cycle)</strong> = less cash tied up in operations</li><li>Always compare to industry benchmarks</li></ul><hr /><h3>Liquidity Ratios</h3><p>Can the company meet short-term obligations?</p><pre><code class="language-swift">print("\n=== Liquidity Analysis ===")
+print("Current Ratio: \(liquidity.currentRatio[q1]!)")
+print("Quick Ratio: \(liquidity.quickRatio[q1]!)")
+print("Cash Ratio: \(liquidity.cashRatio[q1]!)")
+print("Working Capital: \(liquidity.workingCapital[q1]!.currency(0))")
+
+// Assess liquidity health
+let currentRatio = liquidity.currentRatio[q1]!
+if currentRatio < 1.0 {
+	print("⚠️  Warning: Current ratio < 1.0 indicates potential liquidity issues")
+} else if currentRatio > 3.0 {
+	print("ℹ️  Note: High current ratio may indicate inefficient use of assets")
+} else {
+	print("✓ Current ratio in healthy range")
+}
+</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Current Ratio > 1.5</strong>: Good short-term health</li><li><strong>Quick Ratio > 1.0</strong>: Can pay bills without selling inventory</li><li><strong>Cash Ratio > 0.5</strong>: Strong</li><li><strong>Too high</strong> may indicate poor asset utilization</li></ul><hr /><h3>Solvency Ratios</h3><p>Can the company meet long-term obligations?</p><pre><code class="language-swift">let solvency = solvencyRatios(
+    incomeStatement: incomeStatement,
+    balanceSheet: balanceSheet
+)
+
+print("\n=== Solvency Analysis ===")
+print("Debt-to-Equity: \(solvency.debtToEquity[q2]!.number(2))")
+print("Debt-to-Assets: \(solvency.debtToAssets[q2]!.number(2))")
+print("Equity Ratio: \(solvency.equityRatio[q2]!.number(2))")
+print("Interest Coverage: \(solvency.interestCoverage![q2]!.number(1))x")
+print("Debt Service Coverage: \(solvency.debtServiceCoverage![q2]!.number(1))x")
+
+// Assess leverage
+let debtToEquity = solvency.debtToEquity[q1]!
+if debtToEquity > 2.0 {
+    print("⚠️  High leverage - company relies heavily on debt")
+} else if debtToEquity < 0.5 {
+    print("ℹ️  Conservative capital structure - may be underlevered")
+} else {
+    print("✓ Balanced capital structure")
+}
+
+// Check interest coverage
+let interestCoverage = solvency.interestCoverage[q1]!
+if interestCoverage < 2.0 {
+    print("⚠️  Low interest coverage - may struggle to pay interest")
+} else if interestCoverage > 5.0 {
+    print("✓ Strong interest coverage")
+}
+</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Lower D/E</strong>: Less risky, but may miss growth opportunities</li><li><strong>Higher D/E</strong>: More leverage, higher risk and return potential</li><li><strong>Interest Coverage > 3x</strong>: Generally safe</li><li><strong>Industry context matters</strong> (utilities vs tech)</li></ul><hr /><h3>DuPont Analysis</h3><p>Decompose ROE to understand its drivers:</p><pre><code class="language-swift">// 3-Way DuPont Analysis
+let dupont = dupontAnalysis(
+    incomeStatement: incomeStatement,
+    balanceSheet: balanceSheet
+)
+
+print("\n=== 3-Way DuPont Analysis ===")
+print("ROE = Net Margin × Asset Turnover × Equity Multiplier\n")
+print("Net Margin: \(dupont.netMargin[q1]!.percent())")
+print("Asset Turnover: \(dupont.assetTurnover[q1]!.number(1))x")
+print("Equity Multiplier: \(dupont.equityMultiplier[q1]!.number(1))x")
+print("ROE: \(dupont.roe[q1]!.percent(1))")
+
+// Verify the formula
+let calculated = dupont.netMargin[q1]! *
+				 dupont.assetTurnover[q1]! *
+				 dupont.equityMultiplier[q1]!
+print("\nVerification: \(calculated.percent()) ≈ \(dupont.roe[q1]!.percent())")
+</code></pre><p><strong>ROE can be high due to</strong>:</p><ul><li><strong>High Net Margin</strong>: Pricing power (luxury goods)</li><li><strong>High Asset Turnover</strong>: Efficient operations (retail)</li><li><strong>High Equity Multiplier</strong>: Using leverage (banks)</li></ul><p>DuPont analysis reveals <strong>which factor drives ROE</strong>, helping you understand the business model.</p><hr /><h3>Credit Metrics</h3><p>Assess bankruptcy risk and fundamental strength:</p><pre><code class="language-swift">// Altman Z-Score (bankruptcy prediction)
+let altmanZ = altmanZScore(
+    incomeStatement: incomeStatement,
+    balanceSheet: balanceSheet,
+    marketPrice: marketPrice,
+    sharesOutstanding: sharesOutstanding
+)
+
+print("\n=== Altman Z-Score ===")
+print("Z-Score: \(altmanZ[q1]!)")
+
+let zScore = altmanZ[q1]!
+if zScore > 2.99 {
+    print("✓ Safe zone - low bankruptcy risk")
+} else if zScore > 1.81 {
+    print("⚠️  Grey zone - moderate risk")
+} else {
+    print("⚠️  Distress zone - high bankruptcy risk")
+}
+
+// Piotroski F-Score (fundamental strength, 0-9)
+let piotroski = piotroskiFScore(
+    incomeStatement: incomeStatement,
+    balanceSheet: balanceSheet,
+    cashFlowStatement: cashFlowStatement
+)
+
+print("\n=== Piotroski F-Score ===")
+print("F-Score: \(Int(piotroski.totalScore)) / 9")
+
+let fScore = Int(piotroski.totalScore)
+if fScore >= 7 {
+    print("✓ Strong fundamentals")
+} else if fScore >= 4 {
+    print("ℹ️  Moderate fundamentals")
+} else {
+    print("⚠️  Weak fundamentals")
+}
+</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Altman Z-Score</strong>:<ul><li>> 3.0: Financially sound</li><li>1.8-3.0: Watch zone</li><li>< 1.8: High bankruptcy risk</li></ul></li><li><strong>Piotroski F-Score</strong>:<ul><li>8-9: Very strong</li><li>5-7: Solid</li><li>0-4: Weak</li></ul></li></ul><hr /><h2>How It Works</h2><h3>TimeSeries Return Values</h3><p>All ratio functions return <code>TimeSeries<Double></code>, allowing trend analysis:</p><pre><code class="language-swift">// Analyze trends across quarters
+print("\n=== Profitability Trends ===")
+print("Period       ROE      ROA    Net Margin")
+for period in periods {
+    let roe = profitability.roe[period]!
+    let roa = profitability.roa[period]!
+    let margin = profitability.netMargin[period]!
+
+	print("\(period.label.padding(toLength: 7, withPad: " ", startingAt: 0)) \(roe.percent(1).paddingLeft(toLength: 8)) \(roa.percent(1).paddingLeft(toLength: 8)) \(margin.percent(1).paddingLeft(toLength: 12))")
+}
+
+// Calculate quarter-over-quarter growth
+let q1_roe = profitability.roe[q1]!
+let q2_roe = profitability.roe[q2]!
+let qoq_growth = ((q2_roe - q1_roe) / q1_roe)
+print("\nQ2 ROE growth vs Q1: \(qoq_growth.percent())")
+</code></pre><h3>Industry Benchmarks</h3><p>Typical ranges vary by industry:</p><p><strong>Technology</strong>:</p><ul><li>Gross Margin: 60-80%</li><li>ROE: 15-30%</li><li>D/E: 0.1-0.5 (low leverage)</li><li>Asset Turnover: 0.5-1.0</li></ul><p><strong>Retail</strong>:</p><ul><li>Gross Margin: 25-40%</li><li>ROE: 15-25%</li><li>D/E: 0.5-1.5</li><li>Asset Turnover: 2.0-4.0 (high)</li></ul><p><strong>Financial Services</strong>:</p><ul><li>Net Margin: 15-25%</li><li>ROE: 10-15%</li><li>D/E: 5.0-10.0 (high leverage)</li><li>Equity Multiplier: 10-20x</li></ul><hr /><h2>Try It Yourself</h2><p>Try the code in a playground and experiment:</p><pre><code>→ Full API Reference: BusinessMath Docs – 2.2 Financial Ratios
+</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Compare profitability ratios for two companies</li><li>Track liquidity trends over multiple quarters</li><li>Perform DuPont analysis to identify ROE drivers</li></ol><hr /><h2>Real-World Application</h2><p>Investment analysts use financial ratios for every stock evaluation:</p><ul><li><strong>Profitability screening</strong>: ROE > 15%, ROIC > WACC</li><li><strong>Safety checks</strong>: Current Ratio > 1.5, Z-Score > 2.99</li><li><strong>Efficiency comparisons</strong>: Compare DSO across industry peers</li><li><strong>Valuation</strong>: Low P/E + high Piotroski F-Score = potential value</li></ul><p>BusinessMath makes these calculations systematic, repeatable, and type-safe.</p><hr /><h3>📝 Development Note</h3><p>During development, we debated whether to return individual ratios (separate functions for each) or composite structs (one function returning all profitability ratios).</p><p><strong>The composite approach won</strong> because real-world analysis requires calculating many related ratios simultaneously. Calling 7 separate functions for profitability analysis was tedious and led to code duplication.</p><p>But we kept individual functions available too:</p><pre><code class="language-swift">// Composite (most common)
+let all = profitabilityRatios(incomeStatement: is, balanceSheet: bs)
+
+// Individual (when you only need one)
+let roe = returnOnEquity(incomeStatement: is, balanceSheet: bs)
+</code></pre><p><strong>The lesson</strong>: Provide both convenience (composite) and precision (individual). Let users choose based on their needs.</p><p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan (Week 3) - Managing API surface area</a></p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Risk Analytics (Friday) - VaR, stress testing, and comprehensive risk metrics.</p><p><strong>Case Study</strong>: Week 3 Friday will combine depreciation + TVM + financial ratios for capital equipment decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 7/~48</li><li>Topics Covered: Foundation + Analysis Tools (in progress)</li><li>Playgrounds: 6 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, financial-ratios, profitability, liquidity, solvency</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

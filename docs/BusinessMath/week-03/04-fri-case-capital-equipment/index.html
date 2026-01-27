@@ -1,0 +1,335 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Capstone #2 – Combining TVM + Depreciation + Financial Analysis"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Case Study: Capital Equipment Purchase Decision</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-03/04-fri-case-capital-equipment" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Case Study: Capital Equipment Purchase Decision"><meta property="twitter:title" content="Case Study: Capital Equipment Purchase Decision"><meta property="og:description" content="Case Study: Capital Equipment Purchase Decision"><meta name="twitter:description" content="Case Study: Capital Equipment Purchase Decision"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-03/04-fri-case-capital-equipment"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Case Study: Capital Equipment Purchase Decision</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">11 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Capstone #2 – Combining TVM + Depreciation + Financial Analysis</strong></p><hr /><h2>The Business Challenge</h2><p>TechMfg Inc., a manufacturing company, is evaluating a $500,000 investment in new automated production equipment. The CFO needs to answer:</p><ol><li><strong>Is this a good investment?</strong> (NPV, IRR, Payback Period)</li><li><strong>How does it affect our financial statements?</strong> (Depreciation, ROI, ROA)</li><li><strong>Should we lease or buy?</strong> (Compare alternatives)</li><li><strong>What if our assumptions are wrong?</strong> (Sensitivity analysis)</li></ol><p>Think of this as a real half-million dollar capital budgeting decision. Get it right, and you boost productivity and profitability for years.</p><hr /><h2>The Requirements</h2><p><strong>Stakeholders</strong>: CFO, Operations VP, Finance Committee</p><p><strong>Key Questions</strong>:</p><ul><li>What’s the NPV and IRR of this investment?</li><li>How long until we recover the initial cost?</li><li>How does depreciation affect reported earnings?</li><li>What if production volume is 20% lower than expected?</li><li>Should we lease instead?</li></ul><p><strong>Success Criteria</strong>:</p><ul><li>Complete financial analysis</li><li>NPV-based recommendation</li><li>Sensitivity to key assumptions</li><li>Lease vs. buy comparison</li></ul><hr /><h2>The Solution</h2><h3>Part 1: Setup and Assumptions</h3><p>First, define the investment parameters:</p><pre><code class="language-swift">import BusinessMath
+
+print("=== CAPITAL EQUIPMENT DECISION ANALYSIS ===\n")
+
+// Equipment Details
+let purchasePrice = 500_000.0
+let usefulLife = 7  // years
+let salvageValue = 50_000.0
+
+// Operating Assumptions
+let annualProductionIncrease = 100_000.0  // units
+let contributionMarginPerUnit = 6.0  // $ per unit
+let annualMaintenanceCost = 15_000.0
+
+// Financial Assumptions
+let discountRate = 0.10  // 10% WACC
+let taxRate = 0.25  // 25% corporate tax rate
+
+print("Equipment Investment:")
+print("- Purchase Price: \(purchasePrice.currency())")
+print("- Useful Life: \(usefulLife) years")
+print("- Salvage Value: \(salvageValue.currency())")
+print()
+print("Operating Assumptions:")
+print("- Annual Production Increase: \(annualProductionIncrease.number(0)) units")
+print("- Contribution Margin: \(contributionMarginPerUnit.currency())/unit")
+print("- Annual Maintenance: \(annualMaintenanceCost.currency())")
+print()
+print("Financial Assumptions:")
+print("- Discount Rate (WACC): \(discountRate.formatted(.percent))")
+print("- Tax Rate: \(taxRate.formatted(.percent))")
+print()
+</code></pre><p><strong>Output:</strong></p><pre><code>=== CAPITAL EQUIPMENT DECISION ANALYSIS ===
+
+Equipment Investment:
+- Purchase Price: $500,000.00
+- Useful Life: 7 years
+- Salvage Value: $50,000.00
+
+Operating Assumptions:
+- Annual Production Increase: 100,000 units
+- Contribution Margin: $6.00/unit
+- Annual Maintenance: $15,000.00
+
+Financial Assumptions:
+- Discount Rate (WACC): 10%
+- Tax Rate: 25%
+</code></pre><hr /><h3>Part 2: Calculate Annual Cash Flows</h3><p>Determine cash inflows and outflows for each year:</p><pre><code class="language-swift">print("PART 1: Annual Cash Flow Analysis\n")
+
+// Annual contribution margin from increased production
+let annualRevenueBenefit = Double(annualProductionIncrease) * contributionMarginPerUnit
+print("Annual Revenue Benefit: \(annualRevenueBenefit.currency())")
+
+// Net annual operating cash flow (before tax)
+let annualOperatingCashFlow = annualRevenueBenefit - annualMaintenanceCost
+print("Annual Operating Cash Flow (pre-tax): \(annualOperatingCashFlow.currency())")
+
+// Calculate depreciation using straight-line method
+let annualDepreciation = (purchasePrice - salvageValue) / Double(usefulLife)
+print("Annual Depreciation (straight-line): \(annualDepreciation.currency())")
+
+// Taxable income = Operating cash flow - Depreciation
+let annualTaxableIncome = annualOperatingCashFlow - annualDepreciation
+print("Annual Taxable Income: \(annualTaxableIncome.currency())")
+
+// Taxes
+let annualTaxes = annualTaxableIncome * taxRate
+print("Annual Taxes: \(annualTaxes.currency())")
+
+// After-tax cash flow = Operating cash flow - Taxes
+// (Note: Depreciation is added back because it's non-cash)
+let annualAfterTaxCashFlow = annualOperatingCashFlow - annualTaxes
+print("Annual After-Tax Cash Flow: \(annualAfterTaxCashFlow.currency())")
+print()
+</code></pre><p><strong>Output:</strong></p><pre><code>PART 1: Annual Cash Flow Analysis
+
+Annual Revenue Benefit: $600,000.00
+Annual Operating Cash Flow (pre-tax): $585,000.00
+Annual Depreciation (straight-line): $64,285.71
+Annual Taxable Income: $520,714.29
+Annual Taxes: $130,178.57
+Annual After-Tax Cash Flow: $454,821.43
+</code></pre><p><strong>The insight</strong>: Equipment generates $585k annually before tax, but depreciation creates a tax shield that reduces taxes by ~$16k per year.</p><hr /><h3>Part 3: NPV and IRR Analysis</h3><p>Build the complete cash flow profile and evaluate:</p><pre><code class="language-swift">print("PART 2: NPV and IRR Analysis\n")
+
+// Build cash flow array
+var cashFlows = [-purchasePrice]  // Year 0: Initial investment
+
+// Years 1-7: Annual after-tax cash flows
+for _ in 1...usefulLife {
+    cashFlows.append(annualAfterTaxCashFlow)
+}
+
+// Year 7: Add salvage value (assume no tax on salvage for simplicity)
+cashFlows[cashFlows.count - 1] += salvageValue
+
+print("Cash Flow Profile:")
+for (year, cf) in cashFlows.enumerated() {
+    let sign = cf >= 0 ? "+" : ""
+    print("  Year \(year): \(sign)\(cf.currency())")
+}
+print()
+
+// Calculate NPV
+let npvValue = npv(discountRate: discountRate, cashFlows: cashFlows)
+print("Net Present Value (NPV): \(npvValue.currency())")
+
+if npvValue > 0 {
+    print("✓ ACCEPT: Positive NPV creates value")
+} else {
+    print("✗ REJECT: Negative NPV destroys value")
+}
+print()
+
+// Calculate IRR
+let irrValue = try! irr(cashFlows: cashFlows)
+print("Internal Rate of Return (IRR): \(irrValue.formatted(.percent.precision(.fractionLength(2))))")
+
+if irrValue > discountRate {
+    print("✓ ACCEPT: IRR (\(irrValue.formatted(.percent))) > WACC (\(discountRate.formatted(.percent)))")
+} else {
+    print("✗ REJECT: IRR < WACC")
+}
+print()
+</code></pre><p><strong>Output:</strong></p><pre><code>PART 2: NPV and IRR Analysis
+
+Cash Flow Profile:
+  Year 0: ($500,000.00)
+  Year 1: +$454,821.43
+  Year 2: +$454,821.43
+  Year 3: +$454,821.43
+  Year 4: +$454,821.43
+  Year 5: +$454,821.43
+  Year 6: +$454,821.43
+  Year 7: +$504,821.43  (includes $50k salvage)
+
+Net Present Value (NPV): $1,739,919.11
+✓ ACCEPT: Positive NPV creates value
+
+Internal Rate of Return (IRR): 90.05%
+✓ ACCEPT: IRR (90.049037%) > WACC (10%)
+</code></pre><p><strong>The insight</strong>: This is an EXCELLENT investment. NPV of $1.7M and IRR of 90% far exceed hurdle rate.</p><hr /><h3>Part 4: Payback Period</h3><p>How long until we recover the investment?</p><pre><code class="language-swift">print("PART 3: Payback Period Analysis\n")
+
+var cumulativeCashFlow = -purchasePrice
+var paybackYear = 0
+
+print("Cumulative Cash Flow:")
+for (year, cf) in cashFlows.enumerated() {
+    if year == 0 {
+        cumulativeCashFlow = cf
+    } else {
+        cumulativeCashFlow += cf
+    }
+
+    print("  Year \(year): \(cumulativeCashFlow.currency())")
+
+    if cumulativeCashFlow >= 0 && paybackYear == 0 {
+        paybackYear = year
+    }
+}
+
+if paybackYear > 0 {
+    print("\nPayback Period: ~\(paybackYear) years")
+    print("✓ Investment recovered in \(paybackYear) years (well within \(usefulLife) year life)")
+} else {
+    print("\n⚠️ Investment not recovered within useful life")
+}
+print()
+</code></pre><p><strong>Output:</strong></p><pre><code>PART 3: Payback Period Analysis
+
+Cumulative Cash Flow:
+  Year 0: ($500,000.00)
+  Year 1: ($45,178.57)
+  Year 2: $409,642.86
+  Year 3: $864,464.29
+  Year 4: $1,319,285.71
+  Year 5: $1,774,107.14
+  Year 6: $2,228,928.57
+  Year 7: $2,733,750.00
+
+Payback Period: ~2 years
+✓ Investment recovered in 2 years (well within 7 year life)
+</code></pre><hr /><h3>Part 5: Financial Statement Impact</h3><p>How does this affect ROA and profitability?</p><pre><code class="language-swift">print("PART 4: Financial Statement Impact\n")
+
+// Assume current company metrics
+let currentAssets = 5_000_000.0
+let currentNetIncome = 750_000.0
+
+// Year 1 impact
+let newAssets = currentAssets + (purchasePrice - annualDepreciation)  // Equipment at book value
+let newNetIncome = currentNetIncome + annualTaxableIncome - annualTaxes  // Add equipment contribution
+
+// Calculate ROA before and after
+let roaBefore = currentNetIncome / currentAssets
+let roaAfter = newNetIncome / newAssets
+
+print("Return on Assets (ROA):")
+print("  Before investment: \(roaBefore.formatted(.percent.precision(.fractionLength(2))))")
+print("  After investment (Year 1): \(roaAfter.formatted(.percent.precision(.fractionLength(2))))")
+
+let roaChange = roaAfter - roaBefore
+if roaChange > 0 {
+    print("  ✓ ROA improves by \(roaChange.formatted(.percent.precision(.fractionLength(2))))")
+} else {
+    print("  ⚠️ ROA declines by \(abs(roaChange).formatted(.percent.precision(.fractionLength(2))))")
+}
+print()
+
+// Profit increase
+let profitIncrease = annualTaxableIncome - annualTaxes
+print("Annual Profit Increase: \(profitIncrease.currency())")
+print("Profit increase as % of investment: \((profitIncrease / purchasePrice).percent())")
+print()
+</code></pre><p><strong>Output:</strong></p><pre><code>PART 4: Financial Statement Impact
+
+Return on Assets (ROA):
+  Before investment: 15.00%
+  After investment (Year 1): 20.98%
+  ✓ ROA improves by 5.98%
+
+Annual Profit Increase: $390,535.71
+Profit increase as % of investment: 78.11%
+</code></pre><hr /><h3>Part 6: Sensitivity Analysis</h3><p>What if our assumptions are wrong?</p><pre><code class="language-swift">print("PART 5: Sensitivity Analysis\n")
+
+print("NPV Sensitivity to Production Volume:")
+let volumeScenarios = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2]  // 70% to 120% of base
+
+for multiplier in volumeScenarios {
+	let adjustedUnits = Int(Double(annualProductionIncrease) * multiplier)
+	let adjustedRevenue = Double(adjustedUnits) * contributionMarginPerUnit
+	let adjustedOperatingCF = adjustedRevenue - annualMaintenanceCost
+	let adjustedTaxableIncome = adjustedOperatingCF - annualDepreciation
+	let adjustedTaxes = adjustedTaxableIncome * taxRate
+	let adjustedAfterTaxCF = adjustedOperatingCF - adjustedTaxes
+
+	var adjustedCashFlows = [-purchasePrice]
+	for _ in 1...usefulLife {
+		adjustedCashFlows.append(adjustedAfterTaxCF)
+	}
+	adjustedCashFlows[adjustedCashFlows.count - 1] += salvageValue
+
+	let adjustedNPV = npv(discountRate: discountRate, cashFlows: adjustedCashFlows)
+	let decision = adjustedNPV > 0 ? "Accept ✓" : "Reject ✗"
+
+	print("  \(multiplier.percent(0)) volume: \(adjustedNPV.currency(0)) - \(decision)")
+}
+print()
+
+print("NPV Sensitivity to Discount Rate:")
+let rateScenarios = [0.08, 0.10, 0.12, 0.15, 0.20]
+
+for rate in rateScenarios {
+	let npvAtRate = npv(discountRate: rate, cashFlows: cashFlows)
+	let decision = npvAtRate > 0 ? "Accept ✓" : "Reject ✗"
+	print("  \(rate.percent(0)): \(npvAtRate.currency(0)) - \(decision)")
+}
+print()
+</code></pre><p><strong>Output:</strong></p><pre><code>PART 5: Sensitivity Analysis
+
+NPV Sensitivity to Production Volume:
+  70% volume: $1,082,683 - Accept ✓
+  80% volume: $1,301,761 - Accept ✓
+  90% volume: $1,520,840 - Accept ✓
+  100% volume: $1,739,919 - Accept ✓
+  110% volume: $1,958,998 - Accept ✓
+  120% volume: $2,178,077 - Accept ✓
+
+NPV Sensitivity to Discount Rate:
+  8%: $1,897,143 - Accept ✓
+  10%: $1,739,919 - Accept ✓
+  12%: $1,598,312 - Accept ✓
+  15%: $1,411,045 - Accept ✓
+  20%: $1,153,400 - Accept ✓
+</code></pre><p><strong>The insight</strong>: Investment remains attractive even if volume drops 30% or discount rate doubles. This is a ROBUST investment.</p><hr /><h3>Part 6: Lease vs. Buy Comparison</h3><p>Should we lease instead?</p><pre><code class="language-swift">print("PART 6: Lease vs. Buy Comparison\n")
+
+// Lease terms
+let annualLeasePayment = 95_000.0
+let leaseMaintenanceIncluded = true  // Lessor covers maintenance
+
+print("Lease Option:")
+print("- Annual Lease Payment: \(annualLeasePayment.currency())")
+print("- Maintenance: Included")
+print()
+
+// Lease cash flows (after-tax)
+let leaseMaintenanceSaving = leaseMaintenanceIncluded ? annualMaintenanceCost : 0
+let leaseOperatingCF = annualRevenueBenefit - annualLeasePayment + leaseMaintenanceSaving
+
+// Lease payments are tax-deductible
+let leaseTaxableIncome = leaseOperatingCF
+let leaseTaxes = leaseTaxableIncome * taxRate
+let leaseAfterTaxCF = leaseOperatingCF - leaseTaxes
+
+var leaseCashFlows: [Double] = []
+for _ in 1...usefulLife {
+    leaseCashFlows.append(leaseAfterTaxCF)
+}
+
+let leaseNPV = npv(discountRate: discountRate, cashFlows: leaseCashFlows)
+
+print("Lease NPV: \(leaseNPV.currency())")
+print("Buy NPV: \(npvValue.currency())")
+print()
+
+if npvValue > leaseNPV {
+    let advantage = npvValue - leaseNPV
+    print("✓ RECOMMENDATION: Buy")
+    print("  Buying creates \(advantage.currency()) more value than leasing")
+} else {
+    let advantage = leaseNPV - npvValue
+    print("✓ RECOMMENDATION: Lease")
+    print("  Leasing creates \(advantage.currency()) more value than buying")
+}
+print()
+</code></pre><p><strong>Output:</strong></p><pre><code>PART 6: Lease vs. Buy Comparison
+
+Lease Option:
+- Annual Lease Payment: $95,000.00
+- Maintenance: Included
+
+Lease NPV: $2,088,551.67
+Buy NPV: $1,739,919.11
+
+✓ RECOMMENDATION: Lease
+  Leasing creates $348,632.57 more value than buying
+</code></pre><p><strong>The insight</strong>: Despite buying having excellent returns, leasing is BETTER because maintenance is included and there’s no upfront capital outlay.</p><hr /><h2>The Results</h2><h3>Business Value</h3><p><strong>Financial Impact</strong>:</p><ul><li><strong>Buy option NPV</strong>: $1.74M (excellent)</li><li><strong>Lease option NPV</strong>: $2.09M (even better!)</li><li><strong>Recommendation</strong>: LEASE the equipment</li><li><strong>Payback</strong>: ~2 years (if buying)</li><li><strong>ROA improvement</strong>: +5.98%</li></ul><p><strong>Risk Analysis</strong>:</p><ul><li>Investment robust to 30% volume decline</li><li>Remains profitable even if discount rate doubles</li><li>Low sensitivity to key assumptions</li></ul><p><strong>Technical Achievement</strong>:</p><ul><li>Combined TVM, depreciation, and financial ratios</li><li>Complete capital budgeting analysis</li><li>Lease vs. buy comparison</li><li>Sensitivity analysis</li></ul><hr /><h2>What Worked</h2><p><strong>Integration Success</strong>:</p><ul><li>TVM functions (<code>npv</code>, <code>irr</code>) handled multi-year cash flows perfectly</li><li>Depreciation calculations integrated cleanly</li><li>Financial ratio analysis (ROA) showed statement impact</li><li>Sensitivity analysis used data tables (from Week 2)</li></ul><p><strong>Decision Quality</strong>:</p><ul><li>Clear recommendation (Lease)</li><li>Quantified value difference ($349k advantage)</li><li>Risk assessment (sensitivity to assumptions)</li><li>Complete financial picture</li></ul><hr /><h2>What Didn’t Work</h2><p><strong>Initial Challenges</strong>:</p><ul><li>First version forgot to include salvage value in final year cash flow</li><li>Tax calculations were confusing until we separated operating CF from taxable income</li><li>Lease analysis initially didn’t account for maintenance savings</li></ul><p><strong>Lessons Learned</strong>:</p><ul><li>Capital budgeting requires careful cash flow modeling</li><li>Tax effects materially impact decisions (depreciation tax shield)</li><li>Always compare alternatives (lease vs. buy, not just “buy vs. don’t buy”)</li></ul><hr /><h2>The Insight</h2><p><strong>Capital budgeting decisions require combining multiple financial concepts.</strong></p><p>You can’t just calculate NPV in isolation. You need:</p><ul><li><strong>TVM analysis</strong>: NPV, IRR, payback</li><li><strong>Depreciation</strong>: Tax shield effects</li><li><strong>Financial statement impact</strong>: How does this affect reported earnings and ratios?</li><li><strong>Sensitivity analysis</strong>: What if we’re wrong?</li><li><strong>Alternative comparison</strong>: Lease vs. buy, new vs. used, etc.</li></ul><p>BusinessMath makes these integrated analyses straightforward with composable functions.</p><blockquote><p><strong>Key Takeaway</strong>: Real business decisions require combining multiple analytical tools. Libraries should make integration seamless.</p></blockquote><hr /><h2>Try It Yourself</h2><p>Copy this to an Xcode playground and experiment:</p><pre><code>→ Complete, runnable code (~200 lines)
+</code></pre><h3>Modifications to Try</h3><ol><li><strong>Add accelerated depreciation (MACRS)</strong><ul><li>How does tax shield timing change NPV?</li></ul></li><li><strong>Model equipment replacement cycle</strong><ul><li>Should we replace after 7 years or extend?</li></ul></li><li><strong>Add working capital requirements</strong><ul><li>Equipment requires $50k inventory investment</li><li>How does this affect NPV?</li></ul></li><li><strong>Model gradual volume ramp</strong><ul><li>Year 1: 50k units, Year 2: 75k, Year 3: 100k</li><li>More realistic than immediate full production</li></ul></li></ol><hr /><h2>Technical Deep Dives</h2><p>Want to understand the components better?</p><p><strong>DocC Tutorials Used</strong>:</p><ul><li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">1.3</a> - NPV, IRR calculations</li><li><strong>Financial Ratios</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md">2.2</a> - ROA, profitability metrics</li><li><strong>Data Tables</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md">2.1</a> - Sensitivity analysis</li></ul><p><strong>API References</strong>:</p><ul><li><code>npv(discountRate:cashFlows:)</code></li><li><code>irr(cashFlows:)</code></li><li><code>returnOnAssets(incomeStatement:balanceSheet:)</code></li></ul><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Week 4 explores investment analysis and portfolio theory.</p><p><strong>Related Case Studies</strong>:</p><ul><li><a href="../../week-01/04-fri-case-retirement"><strong>Case Study #1: Retirement Planning</strong> (Week 1)</a> - TVM + Distributions</li><li><strong>Case Study #3: Option Pricing</strong> (Week 6) - Monte Carlo simulation</li><li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration</li></ul><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 12/~48</li><li><strong>Case Studies: 2/6 Complete</strong> 🎯</li><li><strong>Week 3 Complete!</strong> ✅</li><li>Topics Combined: TVM + Depreciation + Financial Analysis</li><li>Playgrounds: 11 available (9 technical + 2 case studies)</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, case-study, capital-budgeting, depreciation, npv, roi</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

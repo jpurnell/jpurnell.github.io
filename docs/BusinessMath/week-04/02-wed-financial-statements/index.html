@@ -1,0 +1,329 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 14 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Building Financial Statements</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-04/02-wed-financial-statements" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Building Financial Statements"><meta property="twitter:title" content="Building Financial Statements"><meta property="og:description" content="Building Financial Statements"><meta name="twitter:description" content="Building Financial Statements"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-04/02-wed-financial-statements"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Building Financial Statements</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">8 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 14 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Creating Income Statements with revenue and expense accounts</li><li>Building Balance Sheets with assets, liabilities, and equity</li><li>Modeling Cash Flow Statements with operating, investing, and financing activities</li><li>Verifying the accounting equation (Assets = Liabilities + Equity)</li><li>Computing key metrics automatically from statements</li></ul><hr /><h2>The Problem</h2><p>Financial statements are the foundation of business analysis. Every valuation, credit decision, and strategic plan starts with:</p><ul><li><strong>Income Statement</strong>: Is the company profitable?</li><li><strong>Balance Sheet</strong>: What does the company own and owe?</li><li><strong>Cash Flow Statement</strong>: Is the company generating cash?</li></ul><p>Building these statements manually is tedious and error-prone. You need to:</p><ul><li>Track accounts across multiple periods</li><li>Ensure accounts are properly classified</li><li>Calculate subtotals (gross profit, operating income, EBITDA)</li><li>Verify accounting equations balance</li><li>Compute ratios from the statements</li></ul><p><strong>You need a structured, type-safe way to model financial statements programmatically.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides <code>IncomeStatement</code>, <code>BalanceSheet</code>, and <code>CashFlowStatement</code> types that handle classification, computation, and validation automatically.</p><h3>Creating an Entity</h3><p>Every financial model starts with an entity:</p><pre><code class="language-swift">import BusinessMath
+
+let acme = Entity(
+    id: "ACME001",
+    primaryType: .ticker,
+    name: "Acme Corporation",
+    identifiers: [.ticker: "ACME"],
+    currency: "USD"
+)
+</code></pre><hr /><h3>Building an Income Statement</h3><p>The Income Statement shows profitability over time:</p><pre><code class="language-swift">// Define periods
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let q2 = Period.quarter(year: 2025, quarter: 2)
+let q3 = Period.quarter(year: 2025, quarter: 3)
+let q4 = Period.quarter(year: 2025, quarter: 4)
+let periods = [q1, q2, q3, q4]
+
+// Revenue account
+let revenue = try Account(
+    entity: acme,
+    name: "Product Revenue",
+    incomeStatementRole: .productRevenue,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [1_000_000, 1_100_000, 1_200_000, 1_300_000]
+    )
+)
+
+// Cost of Goods Sold
+let cogs = try Account(
+    entity: acme,
+    name: "Cost of Goods Sold",
+    incomeStatementRole: .costOfGoodsSold,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [400_000, 440_000, 480_000, 520_000]
+    )
+)
+
+// Operating Expenses
+let salaries = try Account(
+    entity: acme,
+    name: "Salaries",
+    incomeStatementRole: .generalAndAdministrative,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [200_000, 200_000, 200_000, 200_000]
+    )
+)
+
+let marketing = try Account(
+    entity: acme,
+    name: "Marketing",
+    incomeStatementRole: .salesAndMarketing,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [50_000, 60_000, 70_000, 80_000]
+    )
+)
+
+let depreciation = try Account(
+    entity: acme,
+    name: "Depreciation",
+    incomeStatementRole: .depreciationAmortization,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [50_000, 50_000, 50_000, 50_000]
+    )
+)
+
+// Interest and Taxes
+let interestExpense = try Account(
+    entity: acme,
+    name: "Interest Expense",
+    incomeStatementRole: .interestExpense,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [10_000, 10_000, 10_000, 10_000]
+    )
+)
+
+let incomeTax = try Account(
+    entity: acme,
+    name: "Income Tax",
+    incomeStatementRole: .incomeTaxExpense,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [60_000, 69_000, 78_000, 87_000]
+    )
+)
+
+// Create Income Statement
+let incomeStatement = try IncomeStatement(
+    entity: acme,
+    periods: periods,
+    accounts: [revenue, cogs, salaries, marketing, depreciation, interestExpense, incomeTax]
+)
+
+// Access computed values
+print("=== Q1 2025 Income Statement ===\n")
+print("Revenue:\t\t\(incomeStatement.totalRevenue[q1]!.currency())")
+print("COGS:\t\t\t(\(cogs.timeSeries[q1]!.currency()))")
+print("Gross Profit:\t\t\(incomeStatement.grossProfit[q1]!.currency())")
+print("  Gross Margin:\t\t\(incomeStatement.grossMargin[q1]!.percent(1))")
+print()
+print("Operating Expenses:\t(\((salaries.timeSeries[q1]! + marketing.timeSeries[q1]! + depreciation.timeSeries[q1]!).currency()))")
+print("Operating Income:\t\(incomeStatement.operatingIncome[q1]!.currency())")
+print("  Operating Margin:\t\(incomeStatement.operatingMargin[q1]!.percent(1))")
+print()
+print("EBITDA:\t\t\t\(incomeStatement.ebitda[q1]!.currency())")
+print("  EBITDA Margin:\t\t\(incomeStatement.ebitdaMargin[q1]!.percent(1))")
+print()
+print("Interest Expense:\t(\(interestExpense.timeSeries[q1]!.currency()))")
+print("Income Tax:\t\t(\(incomeTax.timeSeries[q1]!.currency()))")
+print("Net Income:\t\t\(incomeStatement.netIncome[q1]!.currency())")
+print("  Net Margin:\t\t\(incomeStatement.netMargin[q1]!.percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Q1 2025 Income Statement ===
+
+Revenue:		$1,000,000
+COGS:			($400,000)
+Gross Profit:		$600,000
+  Gross Margin:		60.0%
+
+Operating Expenses:	($300,000)
+Operating Income:	$300,000
+  Operating Margin:	30.0%
+
+EBITDA:			$350,000
+  EBITDA Margin:		35.0%
+
+Interest Expense:	($10,000)
+Income Tax:		($60,000)
+Net Income:		$230,000
+  Net Margin:		23.0%
+</code></pre><p><strong>The power</strong>: Income Statement automatically computes gross profit, operating income, EBITDA, and all margins. No manual calculations.</p><hr /><h3>Building a Balance Sheet</h3><p>The Balance Sheet shows financial position:</p><pre><code class="language-swift">// Assets
+let cash = try Account(
+    entity: acme,
+    name: "Cash and Equivalents",
+    balanceSheetRole: .cashAndEquivalents,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [500_000, 600_000, 750_000, 900_000]
+    )
+)
+
+let receivables = try Account(
+    entity: acme,
+    name: "Accounts Receivable",
+    balanceSheetRole: .accountsReceivable,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [300_000, 330_000, 360_000, 390_000]
+    )
+)
+
+let inventory = try Account(
+    entity: acme,
+    name: "Inventory",
+    balanceSheetRole: .inventory,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [200_000, 220_000, 240_000, 260_000]
+    )
+)
+
+let ppe = try Account(
+    entity: acme,
+    name: "Property, Plant & Equipment",
+    balanceSheetRole: .propertyPlantEquipment,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [1_000_000, 980_000, 960_000, 940_000]
+    )
+)
+
+// Liabilities
+let payables = try Account(
+    entity: acme,
+    name: "Accounts Payable",
+    balanceSheetRole: .accountsPayable,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [150_000, 165_000, 180_000, 195_000]
+    )
+)
+
+let longTermDebt = try Account(
+    entity: acme,
+    name: "Long-term Debt",
+    balanceSheetRole: .longTermDebt,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [500_000, 500_000, 500_000, 500_000]
+    )
+)
+
+// Equity
+let commonStock = try Account(
+    entity: acme,
+    name: "Common Stock",
+    balanceSheetRole: .commonStock,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [1_000_000, 1_000_000, 1_000_000, 1_000_000]
+    )
+)
+
+let retainedEarnings = try Account(
+    entity: acme,
+    name: "Retained Earnings",
+    balanceSheetRole: .retainedEarnings,
+    timeSeries: TimeSeries(
+        periods: periods,
+        values: [350_000, 465_000, 630_000, 805_000]
+    )
+)
+
+// Create Balance Sheet
+let balanceSheet = try BalanceSheet(
+    entity: acme,
+    periods: periods,
+    accounts: [cash, receivables, inventory, ppe, payables, longTermDebt, commonStock, retainedEarnings]
+)
+
+// Print Balance Sheet
+print("\n=== Q1 2025 Balance Sheet ===\n")
+print("ASSETS")
+print("Current Assets:")
+print("  Cash:\t\t\t\(cash.timeSeries[q1]!.currency())")
+print("  Receivables:\t\t\(receivables.timeSeries[q1]!.currency())")
+print("  Inventory:\t\t\(inventory.timeSeries[q1]!.currency())")
+print("  Total Current:\t\(balanceSheet.currentAssets[q1]!.currency())")
+print()
+print("Fixed Assets:")
+print("  PP&E:\t\t\t\(ppe.timeSeries[q1]!.currency())")
+print()
+print("Total Assets:\t\t\(balanceSheet.totalAssets[q1]!.currency())")
+print()
+print("LIABILITIES")
+print("Current Liabilities:")
+print("  Payables:\t\t\(payables.timeSeries[q1]!.currency())")
+print()
+print("Long-term Liabilities:")
+print("  Debt:\t\t\t\(longTermDebt.timeSeries[q1]!.currency())")
+print()
+print("Total Liabilities:\t\(balanceSheet.totalLiabilities[q1]!.currency())")
+print()
+print("EQUITY")
+print("  Common Stock:\t\t\(commonStock.timeSeries[q1]!.currency())")
+print("  Retained Earnings:\t\(retainedEarnings.timeSeries[q1]!.currency())")
+print("Total Equity:\t\t\(balanceSheet.totalEquity[q1]!.currency())")
+print()
+print("Total Liab + Equity:\t\((balanceSheet.totalLiabilities[q1]! + balanceSheet.totalEquity[q1]!).currency()))")
+
+// Verify accounting equation
+let assets = balanceSheet.totalAssets[q1]!
+let liabilities = balanceSheet.totalLiabilities[q1]!
+let equity = balanceSheet.totalEquity[q1]!
+
+print("\n✓ Balance Check: Assets (\(assets.currency())) = Liabilities + Equity (\((liabilities + equity).currency()))")
+print("  Balanced: \(assets == liabilities + equity)")
+
+// Calculate ratios
+print("\nKey Ratios:")
+print("  Current Ratio:\t\t\(balanceSheet.currentRatio[q1]!.number(2))x")
+print("  Debt-to-Equity:\t\t\(balanceSheet.debtToEquity[q1]!.number(2))x")
+print("  Equity Ratio:\t\t\(balanceSheet.equityRatio[q1]!.percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Q1 2025 Balance Sheet ===
+
+ASSETS
+Current Assets:
+  Cash:			$500,000
+  Receivables:		$300,000
+  Inventory:		$200,000
+  Total Current:	$1,000,000
+
+Fixed Assets:
+  PP&E:			$1,000,000
+
+Total Assets:		$2,000,000
+
+LIABILITIES
+Current Liabilities:
+  Payables:		$150,000
+
+Long-term Liabilities:
+  Debt:			$500,000
+
+Total Liabilities:	$650,000
+
+EQUITY
+  Common Stock:		$1,000,000
+  Retained Earnings:	$350,000
+Total Equity:		$1,350,000
+
+Total Liab + Equity:	$2,000,000
+
+✓ Balance Check: Assets ($2,000,000) = Liabilities + Equity ($2,000,000)
+  Balanced: true
+
+Key Ratios:
+  Current Ratio:		6.67x
+  Debt-to-Equity:		0.37x
+  Equity Ratio:		67.5%
+</code></pre><p><strong>The insight</strong>: Balance Sheet automatically validates Assets = Liabilities + Equity and computes liquidity/leverage ratios.</p><hr /><h3>Linking Statements Together</h3><p>Retained Earnings bridges Income Statement and Balance Sheet:</p><pre><code class="language-swift">// Verify retained earnings flow
+let beginningRE = retainedEarnings.timeSeries[q1]!  // $350,000
+let netIncome = incomeStatement.netIncome[q1]!      // $230,000 (calculated earlier)
+let dividends = 0.0  // No dividends paid in Q1
+let endingRE = retainedEarnings.timeSeries[q2]!     // $465,000
+
+let calculatedEndingRE = beginningRE + netIncome - dividends
+
+print("\n=== Retained Earnings Reconciliation ===")
+print("Beginning (Q1): \(beginningRE.currency())")
+print("+ Net Income:   \(netIncome.currency())")
+print("- Dividends:    \(dividends.currency())")
+print("= Ending (Q2):  \(calculatedEndingRE.currency())")
+print("\nActual Q2 RE:   \(endingRE.currency())")
+print("Difference:     \((endingRE - calculatedEndingRE).currency())")
+</code></pre><p><strong>This links the statements</strong>: Net income flows from Income Statement → Retained Earnings on Balance Sheet.</p><hr /><h2>Try It Yourself</h2><p>Copy this to an Xcode playground and experiment:</p><pre><code>→ Full API Reference: BusinessMath Docs – 3.5 Financial Statements
+</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Add a Cash Flow Statement with operating, investing, and financing activities</li><li>Model multiple years of annual statements</li><li>Create pro forma statements for forecasting</li></ol><hr /><h2>Real-World Application</h2><p>Every three-statement model starts here:</p><ul><li><strong>Investment banking</strong>: Modeling LBO returns</li><li><strong>Corporate finance</strong>: Budgeting and planning</li><li><strong>Equity research</strong>: Forecasting earnings</li><li><strong>Credit analysis</strong>: Assessing solvency</li></ul><p>BusinessMath makes statement modeling type-safe, validated, and composable.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Use Role Enums Instead of Generic Types?</strong></p><p>You could use generic <code>type: .expense</code> for all expenses.</p><p>But role-specific enums provide:</p><ul><li><strong>Explicit classification</strong>: <code>incomeStatementRole: .costOfGoodsSold</code> makes intent clear</li><li><strong>Type safety</strong>: Can’t accidentally treat COGS as operating expense</li><li><strong>Automatic aggregation</strong>: Multiple accounts with same role aggregate automatically</li><li><strong>Multi-role capability</strong>: Same account (e.g., D&A) can have both Income Statement and Cash Flow roles</li><li><strong>Statement validation</strong>: Ensures only valid roles are used per statement type</li></ul><p>This prevents errors like classifying interest as operating expense or mixing incompatible accounts.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of financial statement modeling was deciding: <strong>How much abstraction?</strong></p><p>We could have made a single <code>FinancialStatements</code> class with all three statements bundled. But different analyses need different statements:</p><ul><li><strong>Valuation</strong>: Needs Income Statement and Cash Flow Statement</li><li><strong>Credit analysis</strong>: Needs Balance Sheet and Cash Flow Statement</li><li><strong>Profitability</strong>: Needs only Income Statement</li></ul><p>We chose <strong>separate statement types</strong> that compose when needed. More flexible, slightly more verbose.</p><p><strong>Related Methodology</strong>: <a href="../../week-03/02-tue-master-plan">The Master Plan</a> (Week 3) - Managing API surface area</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: <a href="../03-fri-lease-accounting">Lease Accounting (Friday) - IFRS 16 / ASC 842</a> lease modeling with right-of-use assets and lease liabilities.</p><p><strong>Next week</strong>: Week 5 explores loans, investments, and valuations.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 4/12</li><li>Posts Published: 14/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements (in progress)</li><li>Playgrounds: 13 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, income-statement, balance-sheet, cash-flow, financial-modeling</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

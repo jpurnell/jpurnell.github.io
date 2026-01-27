@@ -1,0 +1,160 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 9 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Growth Modeling and Forecasting</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-03/01-mon-growth-modeling" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Growth Modeling and Forecasting"><meta property="twitter:title" content="Growth Modeling and Forecasting"><meta property="og:description" content="Growth Modeling and Forecasting"><meta name="twitter:description" content="Growth Modeling and Forecasting"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-03/01-mon-growth-modeling"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Growth Modeling and Forecasting</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">9 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 9 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Calculating growth rates (simple and CAGR)</li><li>Fitting trend models (linear, exponential, logistic)</li><li>Extracting and applying seasonal patterns</li><li>Building complete forecasting workflows</li><li>Choosing the right approach for your data</li></ul><hr /><h2>The Problem</h2><p>Business planning requires forecasting: <strong>Will we hit our revenue target? How many users will we have next quarter? What should our headcount plan look like?</strong></p><p>Forecasting means understanding growth patterns:</p><ul><li><strong>Growth rates</strong>: How fast are we growing?</li><li><strong>Trend models</strong>: What’s the underlying trajectory?</li><li><strong>Seasonality</strong>: Do we have recurring patterns (Q4 spike, summer slump)?</li></ul><p>Building robust forecasts manually requires statistical knowledge, careful data handling, and combining multiple techniques. <strong>You need systematic tools for growth analysis and forecasting.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive growth modeling including growth rate calculations, trend fitting, and seasonality extraction.</p><h3>Growth Rates</h3><p>Calculate simple and compound growth:</p><pre><code class="language-swift">import BusinessMath
+
+// Simple growth rate
+let growth = try growthRate(from: 100_000, to: 120_000)
+// Result: 0.20 (20% growth)
+
+// Negative growth (decline)
+let decline = try growthRate(from: 120_000, to: 100_000)
+// Result: -0.1667 (-16.67% decline)
+</code></pre><p><strong>Formula:</strong></p><pre><code>Growth Rate = (Ending / Beginning) - 1
+</code></pre><hr /><h3>Compound Annual Growth Rate (CAGR)</h3><p>CAGR smooths out volatility to show steady equivalent growth:</p><pre><code class="language-swift">// Revenue: $100k → $110k → $125k → $150k over 3 years
+let compoundGrowth = cagr(
+    beginningValue: 100_000,
+    endingValue: 150_000,
+    years: 3
+)
+// Result: ~0.1447 (14.47% per year)
+
+// Verify: does 14.47% compound for 3 years give $150k?
+let verification = 100_000 * pow((1 + compoundGrowth), 3.0)
+// Result: ~150,000 ✓
+</code></pre><p><strong>Formula:</strong></p><pre><code>CAGR = (Ending / Beginning)^(1/years) - 1
+</code></pre><p><strong>The insight</strong>: Revenue was volatile year-to-year ($10k, then $15k, then $25k growth), but CAGR shows the equivalent steady rate: 14.47% annually.</p><hr /><h3>Applying Growth</h3><p>Project future values:</p><pre><code class="language-swift">// Project $100k base with 15% annual growth for 5 years
+let projection = applyGrowth(
+    baseValue: 100_000,
+    rate: 0.15,
+    periods: 5,
+    compounding: .annual
+)
+// Result: [100k, 115k, 132.25k, 152.09k, 174.90k, 201.14k]
+</code></pre><hr /><h3>Compounding Frequencies</h3><p>Different frequencies affect growth:</p><pre><code class="language-swift">let base = 100_000.0
+let rate = 0.12  // 12% annual rate
+let years = 5
+
+// Annual: 12% once per year
+let annual = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .annual)
+print(annual.last!.number(0))
+// Final: ~176,234
+
+// Quarterly: 3% four times per year
+let quarterly = applyGrowth(baseValue: base, rate: rate, periods: years * 4, compounding: .quarterly)
+print(quarterly.last!.number(0))
+// Final: ~180,611 (higher due to more frequent compounding)
+
+// Monthly: 1% twelve times per year
+let monthly = applyGrowth(baseValue: base, rate: rate, periods: years * 12, compounding: .monthly)
+print(monthly.last!.number(0))
+// Final: ~181,670
+
+// Continuous: e^(rt)
+let continuous = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .continuous)
+print(continuous.last!.number(0))
+// Final: ~182,212 (theoretical maximum)
+</code></pre><p><strong>The insight</strong>: More frequent compounding increases final value. Continuous compounding is the mathematical limit.</p><hr /><h2>Trend Models</h2><p>Trend models fit mathematical functions to historical data for forecasting.</p><h3>Linear Trend</h3><p>Models constant absolute growth:</p><pre><code class="language-swift">// Historical revenue shows steady ~$5k/month increase
+let periods_linearTrend = (1...12).map { Period.month(year: 2024, month: $0) }
+let revenue_linearTrend: [Double] = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]
+
+let historical_linearTrend = TimeSeries(periods: periods_linearTrend, values: revenue_linearTrend)
+
+// Fit linear trend
+var trend_linearTrend = LinearTrend<Double>()
+try trend_linearTrend.fit(to: historical_linearTrend)
+
+// Project 6 months forward
+let forecast_linearTrend = try trend_linearTrend.project(periods: 6)
+print(forecast_linearTrend.valuesArray.map({$0.rounded()}))
+// Result: [142, 145, 148, 152, 155, 159] (approximately)
+</code></pre><p><strong>Formula:</strong></p><pre><code>y = mx + b
+
+Where:
+- m = slope (rate of change)
+- b = intercept (starting value)
+</code></pre><p><strong>Best for</strong>:</p><ul><li>Steady absolute growth (adding same $ each period)</li><li>Short-term forecasts</li><li>Linear relationships</li></ul><hr /><h3>Exponential Trend</h3><p>Models constant percentage growth:</p><pre><code class="language-swift">// Revenue doubling every few years
+let periods_exponentialTrend = (0..<10).map { Period.year(2015 + $0) }
+let revenue_exponentialTrend: [Double] = [100, 115, 130, 155, 175, 200, 235, 265, 310, 350]
+
+let historical_exponentialTrend = TimeSeries(periods: periods_exponentialTrend, values: revenue_exponentialTrend)
+
+// Fit exponential trend
+var trend_exponentialTrend = ExponentialTrend<Double>()
+try trend_exponentialTrend.fit(to: historical_exponentialTrend)
+
+// Project 5 years forward
+let forecast_exponentialTrend = try trend_exponentialTrend.project(periods: 5)
+// Result: [407, 468, 538, 619, 713]
+</code></pre><p><strong>Formula:</strong></p><pre><code>y = a × e^(bx)
+
+Where:
+- a = initial value
+- b = growth rate
+- e = Euler's number (2.71828...)
+</code></pre><p><strong>Best for</strong>:</p><ul><li>Constant percentage growth (e.g., 15% per year)</li><li>Long-term trends</li><li>Compound growth scenarios</li></ul><hr /><h3>Logistic Trend</h3><p>Models growth approaching a capacity limit (S-curve):</p><pre><code class="language-swift">// User adoption: starts slow, accelerates, then plateaus
+let periods_logisticTrend = (0..<24).map { Period.month(year: 2023 + $0/12, month: ($0 % 12) + 1) }
+let users_logisticTrend: [Double] = [100, 150, 250, 400, 700, 1200, 2000, 3500, 5500, 8000,
+						11000, 14000, 17000, 19500, 21500, 23000, 24000, 24500,
+						24800, 24900, 24950, 24970, 24985, 24990]
+
+let historical_logisticTrend = TimeSeries(periods: periods_logisticTrend, values: users_logisticTrend)
+
+// Fit logistic trend with capacity of 25,000 users
+var trend_logisticTrend = LogisticTrend<Double>(capacity: 25_000)
+try trend_logisticTrend.fit(to: historical_logisticTrend)
+
+// Project 12 months forward
+let forecast_logisticTrend = try trend_logisticTrend.project(periods: 12)
+// Result: Approaches but never exceeds 25,000
+</code></pre><p><strong>Formula:</strong></p><pre><code>y = L / (1 + e^(-k(x-x₀)))
+
+Where:
+- L = capacity (maximum value)
+- k = growth rate
+- x₀ = midpoint of curve
+</code></pre><p><strong>Best for</strong>:</p><ul><li>Market saturation scenarios</li><li>Product adoption curves</li><li>SaaS user growth with market limits</li><li>Biological growth (population with carrying capacity)</li></ul><hr /><h2>Seasonality</h2><p>Extract and apply recurring patterns.</p><h3>Seasonal Indices</h3><p>Calculate seasonal factors:</p><pre><code class="language-swift">// Quarterly revenue with Q4 holiday spike
+let periods = (0..<12).map { Period.quarter(year: 2022 + $0/4, quarter: ($0 % 4) + 1) }
+let revenue: [Double] = [100, 120, 110, 150,  // 2022
+                         105, 125, 115, 160,  // 2023
+                         110, 130, 120, 170]  // 2024
+
+let ts = TimeSeries(periods: periods, values: revenue)
+
+// Calculate seasonal indices (4 quarters per year)
+let indices = try seasonalIndices(timeSeries: ts, periodsPerYear: 4)
+print(indices.map({"\($0.number(2))"}).joined(separator: ", "))
+// Result: [~0.85, ~1.00, ~0.91, ~1.24]
+</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Q1: 0.85</strong> → 15% below average (post-holiday slump)</li><li><strong>Q2: 1.00</strong> → Average</li><li><strong>Q3: 0.91</strong> → 9% below average (summer slowdown)</li><li><strong>Q4: 1.24</strong> → 24% above average (holiday spike!)</li></ul><hr /><h3>Complete Forecasting Workflow</h3><p>Combine all techniques:</p><pre><code class="language-swift">// 1. Load historical data
+let historical = TimeSeries(periods: historicalPeriods, values: historicalRevenue)
+
+// 2. Extract seasonal pattern
+let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
+
+// 3. Deseasonalize to reveal underlying trend
+let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
+
+// 4. Fit trend model to deseasonalized data
+var trend = LinearTrend<Double>()
+try trend.fit(to: deseasonalized)
+
+// 5. Project trend forward
+let forecastPeriods = 4  // Next 4 quarters
+let trendForecast = try trend.project(periods: forecastPeriods)
+
+// 6. Reapply seasonality to trend forecast
+let seasonalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
+
+// 7. Present forecast
+for (period, value) in zip(seasonalForecast.periods, seasonalForecast.valuesArray) {
+    print("\(period.label): \(value.currency())")
+}
+</code></pre><p><strong>This workflow</strong>:</p><ol><li>Extracts the recurring seasonal pattern</li><li>Removes it to see the underlying growth trend</li><li>Fits a trend model to clean data</li><li>Projects that trend forward</li><li>Reapplies the seasonal pattern to the forecast</li><li>Produces realistic forecasts that account for both trend and seasonality</li></ol><hr /><h2>Choosing the Right Approach</h2><h3>Decision Tree</h3><p><strong>Step 1: Does your data have seasonality?</strong></p><ul><li><strong>Yes</strong> → Extract seasonal pattern first</li><li><strong>No</strong> → Skip to trend modeling</li></ul><p><strong>Step 2: What kind of growth pattern?</strong></p><ul><li><strong>Constant $ per period</strong> → Linear Trend</li><li><strong>Constant % per period</strong> → Exponential Trend</li><li><strong>Growth approaching limit</strong> → Logistic Trend</li></ul><p><strong>Step 3: How much history do you have?</strong></p><ul><li><strong>< 2 full cycles</strong> → Use simple growth rates</li><li><strong>2-3 cycles</strong> → Linear or exponential trend</li><li><strong>3+ cycles</strong> → Full decomposition with seasonality</li></ul><p><strong>Step 4: What’s your forecast horizon?</strong></p><ul><li><strong>Short-term (1-3 periods)</strong> → Any model works</li><li><strong>Medium-term (4-8 periods)</strong> → Trend models with seasonality</li><li><strong>Long-term (9+ periods)</strong> → Be cautious, validate assumptions</li></ul><hr /><h2>Try It Yourself</h2><p>Download the playground and experiment:</p><pre><code>→ Download: Week03/GrowthModeling.playground
+→ Full API Reference: BusinessMath Docs – 3.1 Growth Modeling
+</code></pre><p><strong>Modifications to try</strong>:</p><ol><li>Calculate CAGR for your company’s historical revenue</li><li>Fit different trend models and compare predictions</li><li>Extract seasonal patterns from your business data</li></ol><hr /><h2>Real-World Application</h2><p>A SaaS company tracking user growth notices:</p><ul><li><strong>Monthly data</strong>: 10-15% growth, but volatile</li><li><strong>CAGR over 2 years</strong>: 12.3% (the smoothed view)</li><li><strong>Seasonal pattern</strong>: Lower signups in July-August (summer)</li><li><strong>Trend model</strong>: Logistic with 100k user capacity (market saturation)</li></ul><p>Combining these insights produces a forecast that accounts for:</p><ul><li>Long-term growth trajectory (logistic curve)</li><li>Seasonal dips in summer</li><li>Market saturation approaching</li></ul><p><strong>This is infinitely more useful than a simple “we’re growing 15%/month” projection.</strong></p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Deseasonalize Before Trend Fitting?</strong></p><p>If you fit a trend to raw seasonal data, the model gets confused:</p><ul><li>Q4 spikes look like acceleration</li><li>Q1 dips look like deceleration</li><li>The fitted trend becomes wavy instead of smooth</li></ul><p><strong>Deseasonalizing first</strong> lets you fit a clean trend, then reapply the seasonal pattern to forecasts.</p><p>Think of it like removing noise before measuring signal.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest decision in growth modeling was: <strong>Should we make seasonality automatic, or explicit?</strong></p><p>Some libraries auto-detect seasonal patterns. Sounds convenient! But it often gets it wrong—detecting false patterns in noise, or missing real patterns in small datasets.</p><p>We chose <strong>explicit seasonality</strong>:</p><ul><li>You specify <code>periodsPerYear</code> (4 for quarters, 12 for months)</li><li>You inspect the indices before using them</li><li>You decide if the pattern makes business sense</li></ul><p>This requires one extra line of code, but prevents silent errors. When seasonality extraction fails, you know immediately and can investigate.</p><p><strong>The lesson</strong>: Convenience features that fail silently are worse than explicit APIs that require judgment.</p><p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan</a> (Tuesday) - Planning for API decisions</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: The Master Plan (Tuesday) - How to organize large projects with AI collaboration.</p><p><strong>This week</strong>: Revenue modeling (Thursday) and Capital Equipment case study (Friday).</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 9/~48</li><li>Topics Covered: Foundation + Analysis + Operational Models (starting)</li><li>Playgrounds: 8 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, growth, forecasting, cagr, trends, seasonality</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

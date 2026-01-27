@@ -8,7 +8,7 @@ post: 3
 docc_source: "1.2-TimeSeries.md"
 playground: "Week01/TimeSeries.playground"
 tags: businessmath, swift, time-series, periods, temporal-data
-published: false
+published: true
 ---
 
 # Time Series Foundation
@@ -32,7 +32,7 @@ Business data is inherently temporal. Revenue happens in months, quarters, and y
 
 But handling temporal data correctly is tricky. What happens when you add a month to January 31st? How do you align quarterly data with monthly data? How do you ensure you're not accidentally comparing January 2024 revenue with January 2025?
 
-Arrays with dates are fragile—index mistakes are silent, type mixing goes undetected, and time arithmetic is error-prone. You need a better abstraction.
+Arrays with dates are fragile—index mistakes are silent, type mixing goes undetected, and time arithmetic is error-prone. Getting the data model right requires a thoughtful execution and a better abstraction.
 
 ---
 
@@ -196,27 +196,27 @@ let janMonth = Period.month(year: 2025, month: 1)
 let febMonth = janMonth + 1  // → February 2025
 ```
 
----
-
-## Try It Yourself
-
-Download the playground and experiment:
-
-```
-→ Download: Week01/TimeSeries.playground
-→ Full API Reference: BusinessMath Docs – Time Series Analysis
-```
-
-**Modifications to try**:
-1. Create a time series for quarterly revenue and subdivide to monthly
-2. Calculate the distance between two periods in different years
-3. Build a time series from Q1 2024 to Q4 2025 (8 quarters)
+<!------->
+<!---->
+<!--## Try It Yourself-->
+<!---->
+<!--Download the playground and experiment:-->
+<!---->
+<!--```-->
+<!--→ Download: Week01/TimeSeries.playground-->
+<!--→ Full API Reference: BusinessMath Docs – Time Series Analysis-->
+<!--```-->
+<!---->
+<!--**Modifications to try**:-->
+<!--1. Create a time series for quarterly revenue and subdivide to monthly-->
+<!--2. Calculate the distance between two periods in different years-->
+<!--3. Build a time series from Q1 2024 to Q4 2025 (8 quarters)-->
 
 ---
 
 ## Real-World Application
 
-Financial analysts work with time series constantly. Revenue data comes monthly, but executives want quarterly summaries. Historical analysis might span years, but forecasts project months.
+Financial analysts work with time series constantly. Internal revenue data may come monthly, but executives want quarterly summaries. Historical analysis might span years, but forecasts may project only 3 or 6 months.
 
 Period subdivision makes aggregation simple:
 
@@ -239,9 +239,9 @@ print("Q1 Revenue: \(q1Revenue.currency(0))")  // $315K
 
 During development of the time series functionality, we discovered that multiple statistical formulas have different variants. For example, there are at least three common definitions of "exponential moving average."
 
-Without explicit documentation of *which* variant we chose, tests would pass but results wouldn't match external tools like Excel. This led to a practice: when implementing any algorithm with multiple valid interpretations, we document the exact formula in both the code and DocC.
+Without explicit documentation of *which* variant we chose, tests would pass but results wouldn't match external tools like Excel, which is the defacto standard for the financial community. This led to a practice: when implementing any algorithm with multiple valid interpretations, we document the exact formula in both the code and DocC.
 
-From Week 9 of the journey: "AI will confidently implement *a* version of the algorithm. Your job is to ensure it's the *right* version for your use case."
+"AI will confidently implement *a* version of the algorithm. Your job is to ensure it's the *right* version for your use case."
 
 The fix: Include the formula in the test itself:
 
@@ -260,7 +260,7 @@ func testEMAFormula() {
 
 This test not only verifies correctness but documents which variant we're using.
 
-**Related Methodology**: [Documentation as Design](#) (Week 2)
+**Related Methodology**: [Documentation as Design](../../week-02/02-tue-documentation-as-design) (Week 2)
 
 ---
 
@@ -268,7 +268,7 @@ This test not only verifies correctness but documents which variant we're using.
 
 **Coming up next**: Friday's case study combines Time Series with Time Value of Money to build a retirement planning calculator.
 
-**Case Study #1**: Retirement Planning Calculator (Friday) - See time series and TVM working together to answer real business questions.
+**Case Study #1**: [Retirement Planning Calculator (Friday)](../04-fri-case-retirement) - See time series and TVM working together to answer real business questions.
 
 ---
 
