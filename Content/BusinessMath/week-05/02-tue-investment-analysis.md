@@ -1,6 +1,6 @@
 ---
 title: Investment Analysis with NPV and IRR
-date: 2026-02-04 13:00
+date: 2026-02-03 13:00
 series: BusinessMath Quarterly Series
 week: 5
 post: 2
