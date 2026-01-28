@@ -92,7 +92,7 @@ Bond Pricing
 Face Value: $1,000
 Coupon Rate: 6.0%
 Market Yield: 5.0%
-Price: $1,043.30
+Price: $1,043.82
 
 Current Yield: 5.75%
 ```
@@ -133,7 +133,7 @@ do {
 Yield to Maturity Analysis
 ===========================
 Market Price: $980.00
-YTM: 6.44%
+YTM: 6.48%
 
 Verification: $980.00
 Difference: $0.00
@@ -185,20 +185,20 @@ print("Actual change: \(actualChange.percent(2))")
 ```
 Interest Rate Risk Metrics
 ==========================
-Macaulay Duration: 4.38 years
-Modified Duration: 4.27
-Convexity: 21.2
+Macaulay Duration: 4.41 years
+Modified Duration: 4.30
+Convexity: 22.07
 
 If yield increases by 100 bps:
-Duration estimate: -4.27%
-With convexity adjustment: -4.16%
-Actual change: -4.15%
+Duration estimate: -4.30%
+With convexity adjustment: -4.19%
+Actual change: -4.19%
 ```
 
 **The interpretation**:
-- **Macaulay Duration (4.38 years)**: Weighted average time to receive cash flows
-- **Modified Duration (4.27)**: Price sensitivity—a 1% yield increase causes ~4.3% price drop
-- **Convexity (21.2)**: Curvature—improves duration estimate for large yield changes
+- **Macaulay Duration (4.41 years)**: Weighted average time to receive cash flows
+- **Modified Duration (4.30)**: Price sensitivity—a 1% yield increase causes ~4.3% price drop
+- **Convexity (22.07)**: Curvature—improves duration estimate for large yield changes
 
 **The insight**: **Duration** is a linear approximation. **Convexity** captures the curve. Together, they predict price changes accurately.
 
@@ -261,18 +261,16 @@ print("Bond Price: \(corporatePrice.currency(2))")
 ```
 Credit Risk Analysis
 ====================
-Z-Score: 2.3
-Default Probability: 8.5%
-
+Z-Score: 2.30
+Default Probability: 3.92%
 Seniority: Senior Unsecured
 Expected Recovery: 50%
-
-Credit Spread: 232 bps
+Credit Spread: 206 bps
 
 Corporate Bond Pricing:
 Risk-Free Rate: 3.00%
-Corporate Yield: 5.32%
-Bond Price: $984.23
+Corporate Yield: 5.06%
+Bond Price: $997.39
 ```
 
 **The workflow**: **Z-Score → Default Probability → Credit Spread → Bond Yield → Bond Price**
@@ -317,11 +315,11 @@ for scenario in scenarios {
 Credit Deterioration Impact
 ===========================
 
-Scenario           | Z-Score | PD     | Spread | Price
--------------------|---------|--------|--------|--------
-Investment Grade   | 3.5     | 2.0%   | 56 bps | $1,018.45
-Grey Zone          | 2.0     | 12.5%  | 312 bps| $957.82
-Distress           | 1.0     | 35.0%  | 891 bps| $798.34
+Scenario           | Z-Score | PD     | Spread     | Price
+-------------------|---------|--------|------------|----------
+Investment Grade   |     3.5 |   0.0% |      2 bps | $1,091.44
+Grey Zone          |     2.0 |  11.9% |    708 bps |   $804.45
+Distress           |     1.0 |  88.1% | 18,421 bps |    $28.14
 ```
 
 **The pattern**: As credit deteriorates (lower Z-Score), default probability rises, spreads widen, and bond prices fall. The relationship is **non-linear**—distressed bonds see massive spread widening.
@@ -419,20 +417,20 @@ print("Duration Reduction: \(((1 - effectiveDuration / straightDuration) * 100).
 ```
 Callable Bond Analysis
 ======================
-Non-Callable Price: $1,156.78
-Callable Price: $1,128.45
-Call Option Value: $28.33
-Investor gives up: $28.33
+Non-Callable Price: $1,150.82
+Callable Price: $1,048.51
+Call Option Value: $102.31
+Investor gives up: $102.31
 
 Spread Decomposition:
-Nominal Spread: 232 bps
-OAS (credit only): 185 bps
-Option Spread: 47 bps
+Nominal Spread: 206 bps
+OAS (credit only): 206 bps
+Option Spread: 0 bps
 
 Duration Comparison:
-Non-Callable Duration: 7.2 years
-Effective Duration: 4.8 years
-Duration Reduction: 33%
+Non-Callable Duration: 7.56 years
+Effective Duration: 1.80 years
+Duration Reduction: 76%
 ```
 
 **The callable bond mechanics**:
@@ -499,18 +497,18 @@ for year in [1, 5, 10] {
 Credit Curve Analysis
 =====================
 2-Year Spread: 85 bps
-7-Year Spread: 215 bps
+7-Year Spread: 208 bps
 
 Cumulative Default Probabilities:
-1-Year: 1.0% default, 99.0% survival
-3-Year: 3.5% default, 96.5% survival
-5-Year: 5.8% default, 94.2% survival
-10-Year: 10.5% default, 89.5% survival
+1-Year: 1.00% default, 99.00% survival
+3-Year: 6.95% default, 93.05% survival
+5-Year: 16.47% default, 83.53% survival
+10-Year: 39.35% default, 60.65% survival
 
 Hazard Rates (Default Intensity):
-1-Year: 1.0% per year
-5-Year: 1.2% per year
-10-Year: 1.3% per year
+1-Year: 1.00% per year
+5-Year: 3.60% per year
+10-Year: 5.00% per year
 ```
 
 **The credit curve**: Shows how default risk evolves over time. **Upward-sloping** curves indicate increasing uncertainty at longer horizons.
@@ -521,12 +519,316 @@ Hazard Rates (Default Intensity):
 
 ## Try It Yourself
 
-Download the playground and experiment:
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+import Foundation
+
+
+// MARK: - Basic Bond Pricing
+
+// 5-year corporate bond
+// - Face value: $1,000
+// - Annual coupon: 6%
+// - Semiannual payments
+// - Current market yield: 5%
+
+let calendar = Calendar.current
+let today = Date()
+let maturity = calendar.date(byAdding: .year, value: 5, to: today)!
+
+let bond = Bond(
+	faceValue: 1000.0,
+	couponRate: 0.06,
+	maturityDate: maturity,
+	paymentFrequency: .semiAnnual,
+	issueDate: today
+)
+
+let marketPrice = bond.price(yield: 0.05, asOf: today)
+
+print("Bond Pricing")
+print("============")
+print("Face Value: $1,000")
+print("Coupon Rate: 6.0%")
+print("Market Yield: 5.0%")
+print("Price: \(marketPrice.currency(2))")
+
+let currentYield = bond.currentYield(price: marketPrice)
+print("Current Yield: \(currentYield.percent(2))")
+
+// MARK: - Yield to Maturity
+
+// Find YTM given observed market price
+
+let observedPrice = 980.00  // Trading below par
+
+do {
+	let ytm = try bond.yieldToMaturity(price: observedPrice, asOf: today)
+
+	print("\nYield to Maturity Analysis")
+	print("===========================")
+	print("Market Price: \(observedPrice.currency())")
+	print("YTM: \(ytm.percent(2))")
+
+	// Verify round-trip: Price → YTM → Price
+	let verifyPrice = bond.price(yield: ytm, asOf: today)
+	print("Verification: \(verifyPrice.currency(2))")
+	print("Difference: \(abs(verifyPrice - observedPrice).currency(2))")
+
+} catch {
+	print("YTM calculation failed: \(error)")
+}
+
+// MARK: - Duration and Convexity
+
+let yield = 0.05
+
+let macaulayDuration = bond.macaulayDuration(yield: yield, asOf: today)
+let modifiedDuration = bond.modifiedDuration(yield: yield, asOf: today)
+let convexity = bond.convexity(yield: yield, asOf: today)
+
+print("\nInterest Rate Risk Metrics")
+print("==========================")
+print("Macaulay Duration: \(macaulayDuration.number(2)) years")
+print("Modified Duration: \(modifiedDuration.number(2))")
+print("Convexity: \(convexity.number(2))")
+
+// Estimate price change from 1% yield increase
+let yieldChange = 0.01  // 100 bps
+let priceChange = -modifiedDuration * yieldChange
+
+print("\nIf yield increases by 100 bps:")
+print("Duration estimate: \(priceChange.percent(2))")
+
+// More accurate estimate with convexity
+let convexityAdj = 0.5 * convexity * yieldChange * yieldChange
+let improvedEstimate = priceChange + convexityAdj
+
+print("With convexity adjustment: \(improvedEstimate.percent(2))")
+
+// Actual price change
+let newPrice = bond.price(yield: yield + yieldChange, asOf: today)
+let originalPrice = bond.price(yield: yield, asOf: today)
+let actualChange = ((newPrice / originalPrice) - 1.0)
+
+print("Actual change: \(actualChange.percent(2))")
+
+// MARK: - Credit Risk Analysis
+
+// Step 1: Start with credit metrics (Altman Z-Score)
+let zScore = 2.3  // Grey zone (moderate credit risk)
+
+// Step 2: Convert Z-Score to default probability
+let creditModel = CreditSpreadModel<Double>()
+let defaultProbability = creditModel.defaultProbability(zScore: zScore)
+
+print("\nCredit Risk Analysis")
+print("====================")
+print("Z-Score: \(zScore.number(2))")
+print("Default Probability: \(defaultProbability.percent(2))")
+
+// Step 3: Determine recovery rate by seniority
+let seniority = Seniority.seniorUnsecured
+let recoveryRate = RecoveryModel<Double>.standardRecoveryRate(seniority: seniority)
+
+print("Seniority: Senior Unsecured")
+print("Expected Recovery: \(recoveryRate.percent(0))")
+
+// Step 4: Calculate credit spread
+let creditSpread = creditModel.creditSpread(
+	defaultProbability: defaultProbability,
+	recoveryRate: recoveryRate,
+	maturity: 5.0
+)
+
+print("Credit Spread: \((creditSpread * 10000).number(0)) bps")
+
+// Step 5: Price the bond
+let riskFreeRate = 0.03  // 3% Treasury yield
+let corporateYield = riskFreeRate + creditSpread
+
+let corporateBond = Bond(
+	faceValue: 1000.0,
+	couponRate: 0.05,
+	maturityDate: maturity,
+	paymentFrequency: .semiAnnual,
+	issueDate: today
+)
+
+let corporatePrice = corporateBond.price(yield: corporateYield, asOf: today)
+
+print("\nCorporate Bond Pricing:")
+print("Risk-Free Rate: \(riskFreeRate.percent(2))")
+print("Corporate Yield: \(corporateYield.percent(2))")
+print("Bond Price: \(corporatePrice.currency(2))")
+
+
+// MARK: - Credit Deterioration Impact
+
+print("\nCredit Deterioration Impact")
+print("===========================")
+
+let scenarios = [
+	(name: "Investment Grade", zScore: 3.5),
+	(name: "Grey Zone", zScore: 2.0),
+	(name: "Distress", zScore: 1.0)
+]
+
+print("\nScenario           | Z-Score | PD     | Spread     | Price")
+print("-------------------|---------|--------|------------|----------")
+
+for scenario in scenarios {
+	let pd = creditModel.defaultProbability(zScore: scenario.zScore)
+	let spread = creditModel.creditSpread(
+		defaultProbability: pd,
+		recoveryRate: recoveryRate,
+		maturity: 5.0
+	)
+	let yld = riskFreeRate + spread
+	let price = corporateBond.price(yield: yld, asOf: today)
+
+	print("\(scenario.name.padding(toLength: 18, withPad: " ", startingAt: 0)) | \(scenario.zScore.number(1).paddingLeft(toLength: 7)) | \(pd.percent(1).paddingLeft(toLength: 6)) | \((spread * 10000).number(0).paddingLeft(toLength: 6)) bps | \(price.currency(2).paddingLeft(toLength: 9))")
+}
+
+// MARK: - Callable Bonds and OAS
+
+	// High-coupon callable bond (issuer can refinance)
+
+	let highCouponBond = Bond(
+		faceValue: 1000.0,
+		couponRate: 0.07,  // 7% coupon (above market)
+		maturityDate: calendar.date(byAdding: .year, value: 10, to: today)!,
+		paymentFrequency: .semiAnnual,
+		issueDate: today
+	)
+
+	// Callable after 3 years at $1,040 (4% premium)
+	let callDate = calendar.date(byAdding: .year, value: 3, to: today)!
+	let callSchedule = [CallProvision(date: callDate, callPrice: 1040.0)]
+
+	let callableBond = CallableBond(
+		bond: highCouponBond,
+		callSchedule: callSchedule
+	)
+
+	let volatility = 0.15  // 15% interest rate volatility
+
+	// Step 1: Price non-callable bond
+	let straightYield = riskFreeRate + creditSpread
+	let straightPrice = highCouponBond.price(yield: straightYield, asOf: today)
+
+	// Step 2: Price callable bond
+	let callablePrice = callableBond.price(
+		riskFreeRate: riskFreeRate,
+		spread: creditSpread,
+		volatility: volatility,
+		asOf: today
+	)
+
+	// Step 3: Calculate embedded option value
+	let callOptionValue = callableBond.callOptionValue(
+		riskFreeRate: riskFreeRate,
+		spread: creditSpread,
+		volatility: volatility,
+		asOf: today
+	)
+
+	print("\nCallable Bond Analysis")
+	print("======================")
+	print("Non-Callable Price: \(straightPrice.currency(2))")
+	print("Callable Price: \(callablePrice.currency(2))")
+	print("Call Option Value: \(callOptionValue.currency(2))")
+	print("Investor gives up: \((straightPrice - callablePrice).currency(2))")
+
+	// Step 4: Calculate Option-Adjusted Spread (OAS)
+	do {
+		let oas = try callableBond.optionAdjustedSpread(
+			marketPrice: callablePrice,
+			riskFreeRate: riskFreeRate,
+			volatility: volatility,
+			asOf: today
+		)
+
+		print("\nSpread Decomposition:")
+		print("Nominal Spread: \((creditSpread * 10000).number(0)) bps")
+		print("OAS (credit only): \((oas * 10000).number(0)) bps")
+		print("Option Spread: \(((creditSpread - oas) * 10000).number(0)) bps")
+
+	} catch {
+		print("OAS calculation failed: \(error)")
+	}
+
+	// Step 5: Effective duration (accounts for call option)
+	let effectiveDuration = callableBond.effectiveDuration(
+		riskFreeRate: riskFreeRate,
+		spread: creditSpread,
+		volatility: volatility,
+		asOf: today
+	)
+
+	let straightDuration = highCouponBond.macaulayDuration(yield: straightYield, asOf: today)
+
+	print("\nDuration Comparison:")
+	print("Non-Callable Duration: \(straightDuration.number(2)) years")
+	print("Effective Duration: \(effectiveDuration.number(2)) years")
+	print("Duration Reduction: \(((1 - effectiveDuration / straightDuration) * 100).number(0))%")
+
+
+// MARK: - Credit Curves
+
+	// Credit curve from market observations
+
+	let periods = [
+		Period.year(1),
+		Period.year(3),
+		Period.year(5),
+		Period.year(10)
+	]
+
+	// Observed spreads (typically upward sloping)
+	let marketSpreads = TimeSeries(
+		periods: periods,
+		values: [0.005, 0.012, 0.018, 0.025]  // 50, 120, 180, 250 bps
+	)
+
+	let creditCurve = CreditCurve(
+		spreads: marketSpreads,
+		recoveryRate: recoveryRate
+	)
+
+	print("\nCredit Curve Analysis")
+	print("=====================")
+
+	// Interpolate spreads
+	for years in [2.0, 7.0] {
+		let spread = creditCurve.spread(maturity: years)
+		print("\(years.number(0))-Year Spread: \((spread * 10000).number(0)) bps")
+	}
+
+	// Cumulative default probabilities
+	print("\nCumulative Default Probabilities:")
+	for year in [1, 3, 5, 10] {
+		let cdp = creditCurve.cumulativeDefaultProbability(maturity: Double(year))
+		let survival = 1.0 - cdp
+		print("\(year)-Year: \(cdp.percent(2)) default, \(survival.percent(2)) survival")
+	}
+
+	// Hazard rates (forward default intensities)
+	print("\nHazard Rates (Default Intensity):")
+	for year in [1, 5, 10] {
+		let hazard = creditCurve.hazardRate(maturity: Double(year))
+		print("\(year)-Year: \(hazard.percent(2)) per year")
+	}
 
 ```
-→ Download: Week05/BondValuation.playground
-→ Full API Reference: BusinessMath Docs – 3.10 Bond Valuation
-```
+</details>
+
+
+→ Full API Reference: [BusinessMath Docs – 3.10 Bond Valuation](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.10-BondValuationGuide.md)
+
 
 **Modifications to try**:
 1. Price corporate bonds across the credit spectrum (AAA to CCC)
@@ -588,7 +890,7 @@ The most challenging implementation was **callable bond pricing with binomial tr
 
 We chose **accuracy over speed**—bond portfolios are repriced daily, not millisecond-by-millisecond.
 
-**Related Methodology**: [Test-First Development](../week-01/02-tue-test-first-development.md) (Week 1) - We wrote tests comparing our binomial tree to Bloomberg's pricing for callable bonds before implementation.
+**Related Methodology**: [Test-First Development](../week-01/02-tue-test-first-development) (Week 1) - We wrote tests comparing our binomial tree to Bloomberg's pricing for callable bonds before implementation.
 
 ---
 
