@@ -9,13 +9,13 @@ import Foundation
 import Ignite
 
 struct BusinessMath: StaticPage {
-	var title = "Blog"
+	var title = "BusinessMath"
 
 	func body(context: PublishingContext) -> [BlockElement] {
 		for content in context.allContent.filter({$0.title == "Welcome to BusinessMath: A 12-Week Journey"}) {
-			Text("BusinessMath")
-							.font(.title1)
-							.class("mainTitle")
+			Text{
+				Link("BusinessMath", target: URL("https://www.github.com/jpurnell/BusinessMath"))
+			}.font(.title1).class("mainTitle")
 			Divider()
 			Text(content.body).frame(width: "70%", maxWidth: "800px")
 		}
