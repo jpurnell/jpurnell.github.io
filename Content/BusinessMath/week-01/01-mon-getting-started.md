@@ -11,7 +11,7 @@ tags: businessmath, swift, getting-started, tvm, time-series
 published: true
 ---
 
-# Getting Started with BusinessMath
+# Getting Started with [BusinessMath](https://github.com/jpurnell/BusinessMath)
 
 **Part 1 of 12-Week BusinessMath Series**
 
@@ -30,17 +30,17 @@ published: true
 
 Financial calculations are everywhere in business: retirement planning, loan amortization, investment analysis, revenue forecasting. But implementing these correctly requires understanding compound interest, time series data structures, and numerical precision—and getting any of it wrong can cost real money.
 
-BusinessMath is a library that handles the complexity while giving you confidence in the results. Calculations work across different numeric types (Double, Float) without rewriting code. And the API is ergonomic and clear enough that you can understand it six months from now or pick it up and work with it day-to-day.
+[BusinessMath](https://github.com/jpurnell/BusinessMath) is a library that handles the complexity while giving you confidence in the results. Calculations work across different numeric types (Double, Float) without rewriting code. And the API is ergonomic and clear enough that you can understand it six months from now or pick it up and work with it day-to-day.
 
 ---
 
 ## The Solution
 
-BusinessMath makes complex calculations simple. Here's how to get started:
+[BusinessMath](https://github.com/jpurnell/BusinessMath) makes complex calculations simple. Here's how to get started:
 
 ### Installation
 
-Add BusinessMath to your `Package.swift`:
+Add [BusinessMath](https://github.com/jpurnell/BusinessMath) to your `Package.swift`:
 
 ```swift
 dependencies: [
@@ -80,7 +80,7 @@ print("Future value: \(fv.currency())")
 
 ### Working with Time Periods
 
-BusinessMath provides type-safe temporal identifiers:
+[BusinessMath](https://github.com/jpurnell/BusinessMath) provides type-safe temporal identifiers:
 
 ```swift
 // Create periods at different granularities
@@ -145,7 +145,7 @@ print("IRR: \(irrValue.formatted(.percent.precision(.fractionLength(2))))")
 
 ## How It Works
 
-BusinessMath is built on three core principles:
+[BusinessMath](https://github.com/jpurnell/BusinessMath) is built on three core principles:
 
 ### 1. Type Safety
 
@@ -268,13 +268,13 @@ let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10)
 
 Financial calculations power critical business decisions. A financial advisor uses PV/FV to calculate retirement contributions. A CFO uses NPV to evaluate capital projects. A business analyst uses time series to forecast revenue.
 
-Getting these calculations right matters. A 0.1% error in IRR on a $10M project translates to $10,000 in misallocated capital. BusinessMath's rigorous testing (200+ tests) and documentation ensure you can trust the results.
+Getting these calculations right matters. A 0.1% error in IRR on a $10M project translates to $10,000 in misallocated capital. [BusinessMath](https://github.com/jpurnell/BusinessMath)'s rigorous testing (200+ tests) and documentation ensure you can trust the results.
 
 ---
 
 ### 📝 Development Note
 
-When we started the BusinessMath project, the first question was: "What does production quality mean?" We defined it explicitly from day one: comprehensive tests, full documentation, zero compiler warnings.
+When we started the [BusinessMath](https://github.com/jpurnell/BusinessMath) project, the first question was: "What does production quality mean?" We defined it explicitly from day one: comprehensive tests, full documentation, zero compiler warnings.
 
 That clarity determined every decision afterward. AI doesn't inherently produce production-quality code—it amplifies your standards. Set them high initially, and AI helps you meet them. Set them low, and AI happily generates technical debt.
 

@@ -11,7 +11,7 @@ tags: businessmath, swift, introduction
 published: true
 ---
 
-# Welcome to BusinessMath: A 12-Week Journey
+# Welcome to [**BusinessMath**](https://github.com/jpurnell/BusinessMath): A 12-Week Journey
 
 **Your roadmap to mastering financial calculations, statistical analysis, and optimization in Swift**
 
@@ -19,9 +19,9 @@ published: true
 
 Welcome! Over the next twelve weeks, we're going on a journey together—from calculating the basics of time value of money to building sophisticated portfolio optimizers and real-time trading systems. Whether you're a Swift developer curious about financial mathematics, a business analyst looking to bring your calculations into code, or someone who just loves solving practical problems with elegant tools, this series is for you.
 
-## What is BusinessMath?
+## What is [**BusinessMath**](https://github.com/jpurnell/BusinessMath)?
 
-BusinessMath is a comprehensive Swift library that brings financial calculations, statistical analysis, and optimization algorithms to your fingertips. Need to calculate loan amortization schedules? Run Monte Carlo simulations? Optimize a portfolio under constraints? BusinessMath has you covered—with clean, type-safe APIs that work across all Apple platforms.
+[**BusinessMath**](https://github.com/jpurnell/BusinessMath) is a comprehensive Swift library that brings financial calculations, statistical analysis, and optimization algorithms to your fingertips. Need to calculate loan amortization schedules? Run Monte Carlo simulations? Optimize a portfolio under constraints? BusinessMath has you covered—with clean, type-safe APIs that work across all Apple platforms.
 
 But this library is more than just a collection of functions. It's built on principles that matter: test-driven development, comprehensive documentation, and real-world applicability. Every calculation is tested, every API is documented, and every feature is designed to solve actual business problems.
 
