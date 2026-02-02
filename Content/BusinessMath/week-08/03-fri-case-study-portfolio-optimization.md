@@ -100,9 +100,9 @@ print("====================")
 print("Asset                   | Return | Volatility")
 print("------------------------|--------|------------")
 for (i, asset) in assets.enumerated() {
-    print("\(asset.paddingRight(toLength: 23)) | " +
-          "\(expectedReturns[i].percent(1).paddingLeft(toLength: 6)) | " +
-          "\(volatilities[i].percent(1).paddingLeft(toLength: 10))")
+	print("\(asset.padding(toLength: 23, withPad: " ", startingAt: 0)) | " +
+		  "\(expectedReturns[i].percent(1).paddingLeft(toLength: 6)) | " +
+		  "\(volatilities[i].percent(1).paddingLeft(toLength: 10))")
 }
 ```
 
@@ -160,7 +160,7 @@ print("\nEqual-Weight Portfolio")
 print("======================")
 print("Expected return: \(portfolioReturn(equalWeights).percent(2))")
 print("Volatility: \(sqrt(portfolioVariance(equalWeights)).percent(2))")
-print("Sharpe ratio: \(portfolioSharpe(equalWeights).rounded(toPlaces: 3))")
+print("Sharpe ratio: \(portfolioSharpe(equalWeights).number(3))")
 ```
 
 **Output:**
@@ -168,8 +168,8 @@ print("Sharpe ratio: \(portfolioSharpe(equalWeights).rounded(toPlaces: 3))")
 Equal-Weight Portfolio
 ======================
 Expected return: 8.63%
-Volatility: 13.24%
-Sharpe ratio: 0.425
+Volatility: 12.36%
+Sharpe ratio: 0.455
 ```
 
 ---
@@ -232,19 +232,19 @@ print("Asset                   | Weight  | Allocation")
 print("------------------------|---------|------------")
 
 for (i, asset) in assets.enumerated() {
-    let weight = optimalWeights[i]
-    let allocation = 10_000_000 * weight
-    if weight > 0.01 {
-        print("\(asset.paddingRight(toLength: 23)) | " +
-              "\(weight.percent(1).paddingLeft(toLength: 7)) | " +
-              "\(allocation.currency(0).paddingLeft(toLength: 11))")
-    }
+	let weight = optimalWeights[i]
+	let allocation = 10_000_000 * weight
+	if weight > 0.01 {
+		print("\(asset.padding(toLength: 23, withPad: " ", startingAt: 0)) | " +
+			  "\(weight.percent(1).paddingLeft(toLength: 7)) | " +
+			  "\(allocation.currency(0).paddingLeft(toLength: 11))")
+	}
 }
 
 print("------------------------|---------|------------")
 print("Expected return: \(optimalReturn.percent(2))")
 print("Volatility: \(optimalVolatility.percent(2))")
-print("Sharpe ratio: \(optimalSharpe.rounded(toPlaces: 3))")
+print("Sharpe ratio: \(optimalSharpe.number(3))")
 ```
 
 **Output:**
@@ -253,19 +253,20 @@ Maximum Sharpe Portfolio ($10M)
 ================================
 Asset                   | Weight  | Allocation
 ------------------------|---------|------------
-US Large Cap            |   24.3% |  $2,430,000
-US Small Cap            |   30.0% |  $3,000,000
-International Developed |   18.7% |  $1,870,000
-Emerging Markets        |   12.5% |  $1,250,000
-US Bonds                |    9.2% |    $920,000
-Real Estate             |    5.3% |    $530,000
+US Large Cap            |   16.7% |  $1,666,677
+US Small Cap            |   13.5% |  $1,351,837
+International Developed |    6.7% |    $669,720
+Emerging Markets        |   19.5% |  $1,951,924
+US Bonds                |   30.0% |  $3,000,000
+Real Estate             |   11.8% |  $1,177,176
+Commodities             |    1.8% |    $182,667
 ------------------------|---------|------------
-Expected return: 10.75%
-Volatility: 16.84%
-Sharpe ratio: 0.460
+Expected return: 9.13%
+Volatility: 12.77%
+Sharpe ratio: 0.480
 ```
 
-**The result**: Optimizer allocated 30% (max) to US Small Cap (highest Sharpe), diversified across equities, minimal bonds. Sharpe improved from 0.425 (equal-weight) to 0.460.
+**The result**: Optimizer allocated 30% (max) to US Bonds (highest Sharpe), diversified across equities, minimal commodities. Sharpe improved from 0.425 (equal-weight) to 0.480.
 
 ---
 
@@ -305,7 +306,7 @@ for (i, asset) in assets.enumerated() {
 print("------------------------|---------|------------")
 print("Expected return: \(minVarReturn.percent(2))")
 print("Volatility: \(minVarVolatility.percent(2))")
-print("Sharpe ratio: \(portfolioSharpe(minVarWeights).rounded(toPlaces: 3))")
+print("Sharpe ratio: \(portfolioSharpe(minVarWeights).number(3))")
 ```
 
 **Output:**
@@ -314,17 +315,21 @@ Minimum Variance Portfolio ($10M)
 ==================================
 Asset                   | Weight  | Allocation
 ------------------------|---------|------------
-US Large Cap            |   12.5% |  $1,250,000
-US Bonds                |   48.3% |  $4,830,000
-International Bonds     |   30.0% |  $3,000,000
-Real Estate             |    9.2% |    $920,000
+US Large Cap            |   11.2% |  $1,121,277
+US Small Cap            |    1.1% |    $111,528
+International Developed |    2.5% |    $253,557
+Emerging Markets        |    2.5% |    $251,663
+US Bonds                |   30.0% |  $2,999,999
+International Bonds     |   30.0% |  $2,999,990
+Real Estate             |   11.9% |  $1,191,560
+Commodities             |   10.7% |  $1,070,428
 ------------------------|---------|------------
-Expected return: 5.92%
-Volatility: 5.48%
-Sharpe ratio: 0.533
+Expected return: 5.70%
+Volatility: 7.41%
+Sharpe ratio: 0.365
 ```
 
-**The result**: Minimum risk (5.5% volatility) but low return (5.9%). Heavily weighted toward bonds. Surprisingly high Sharpe (0.533) due to excellent risk-adjusted performance.
+**The result**: Minimum risk (7.4% volatility) but low return (5.7%). Heavily weighted toward bonds. Surprisingly reasonable Sharpe (0.365) due to excellent risk-adjusted performance.
 
 ---
 
@@ -335,42 +340,24 @@ Generate the efficient frontier to show all optimal portfolios:
 ```swift
 import BusinessMath
 
-// Target returns from min to max
-let minReturn = minVarReturn
-let maxReturn = optimalReturn
-let targetReturns = VectorN.linearSpace(from: minReturn, to: maxReturn, count: 20)
-
-var frontierPortfolios: [(return: Double, volatility: Double, sharpe: Double, weights: VectorN<Double>)] = []
-
-for targetReturn in targetReturns.toArray() {
-    // Minimize variance subject to achieving target return
-    let result = try optimizer.minimize(
-        portfolioVariance,
-        from: equalWeights,
-        subjectTo: constraints + [
-            .equality { w in
-                portfolioReturn(w) - targetReturn  // Achieve exact target return
-            }
-        ]
-    )
-
-    let weights = result.solution
-    let ret = portfolioReturn(weights)
-    let vol = sqrt(portfolioVariance(weights))
-    let sharpe = (ret - riskFreeRate) / vol
-
-    frontierPortfolios.append((ret, vol, sharpe, weights))
-}
+// Use built-in efficient frontier generator (avoids memory leaks)
+let portfolioOptimizer = PortfolioOptimizer()
+let frontier = try portfolioOptimizer.efficientFrontier(
+	expectedReturns: expectedReturns,
+	covariance: covarianceMatrix,
+	riskFreeRate: riskFreeRate,
+	numberOfPoints: 20
+)
 
 print("\nEfficient Frontier (20 points)")
 print("===============================")
 print("Return | Volatility | Sharpe")
 print("-------|------------|--------")
 
-for portfolio in frontierPortfolios {
-    print("\(portfolio.return.percent(2).paddingLeft(toLength: 6)) | " +
-          "\(portfolio.volatility.percent(2).paddingLeft(toLength: 10)) | " +
-          "\(portfolio.sharpe.rounded(toPlaces: 3).description.paddingLeft(toLength: 6))")
+for portfolio in frontier.portfolios {
+	print("\(portfolio.expectedReturn.percent(2).paddingLeft(toLength: 6)) | " +
+		  "\(portfolio.volatility.percent(2).paddingLeft(toLength: 10)) | " +
+		  "\(portfolio.sharpeRatio.number(3).description.paddingLeft(toLength: 6))")
 }
 ```
 
@@ -380,29 +367,29 @@ Efficient Frontier (20 points)
 ===============================
 Return | Volatility | Sharpe
 -------|------------|--------
- 5.92% |      5.48% |  0.533
- 6.18% |      5.62% |  0.565
- 6.43% |      5.81% |  0.591
- 6.69% |      6.05% |  0.610
- 6.94% |      6.33% |  0.622
- 7.20% |      6.65% |  0.630
- 7.45% |      7.01% |  0.635
- 7.71% |      7.41% |  0.636
- 7.96% |      7.84% |  0.633
- 8.22% |      8.30% |  0.628
- 8.47% |      8.79% |  0.621
- 8.73% |      9.31% |  0.612
- 8.98% |      9.85% |  0.602
- 9.24% |     10.42% |  0.599
- 9.49% |     11.01% |  0.588
- 9.75% |     11.62% |  0.580
-10.01% |     12.25% |  0.572
-10.26% |     12.90% |  0.563
-10.52% |     13.56% |  0.554
-10.75% |     14.23% |  0.545
+ 3.00% |      6.14% | -0.000
+ 3.58% |      5.76% |  0.101
+ 4.16% |      5.63% |  0.206
+ 4.74% |      5.77% |  0.301
+ 5.32% |      6.18% |  0.375
+ 5.89% |      6.79% |  0.426
+ 6.47% |      7.57% |  0.459
+ 7.05% |      8.46% |  0.479
+ 7.63% |      9.44% |  0.491
+ 8.21% |     10.47% |  0.498
+ 8.79% |     11.55% |  0.501
+ 9.37% |     12.66% |  0.503
+ 9.95% |     13.80% |  0.504
+10.53% |     14.95% |  0.503
+11.11% |     16.12% |  0.503
+11.68% |     17.31% |  0.502
+12.26% |     18.50% |  0.501
+12.84% |     19.70% |  0.500
+13.42% |     20.90% |  0.499
+14.00% |     22.11% |  0.497
 ```
 
-**Key insight**: Maximum Sharpe (0.636) occurs at 7.7% return, 7.4% volatility—not at the endpoints!
+**Key insight**: Maximum Sharpe (0.504) occurs at 9.95% return, 13.8% volatility—not at the endpoints!
 
 ---
 
@@ -458,7 +445,7 @@ let cvar95 = initialValue - expectedShortfall
 
 // Probability of loss
 let lossCount = portfolioValues.filter { $0 < initialValue }.count
-let probLoss = Double(lossCount) / Double(iterations) * 100
+let probLoss = Double(lossCount) / Double(iterations)
 
 print("\nMonte Carlo Risk Analysis (10,000 scenarios, 1 year)")
 print("====================================================")
@@ -477,7 +464,7 @@ print("")
 print("Risk Metrics:")
 print("  Value at Risk (95%): \(var95.currency(0)) (\((-var95/initialValue).percent(2)))")
 print("  Expected Shortfall (CVaR): \(cvar95.currency(0)) (\((-cvar95/initialValue).percent(2)))")
-print("  Probability of loss: \(probLoss.rounded(toPlaces: 1))%")
+print("  Probability of loss: \(probLoss.percent(1))")
 ```
 
 **Output:**
@@ -485,28 +472,28 @@ print("  Probability of loss: \(probLoss.rounded(toPlaces: 1))%")
 Monte Carlo Risk Analysis (10,000 scenarios, 1 year)
 ====================================================
 Initial value: $10,000,000
-Expected final value: $11,075,000
-Expected return: 10.75%
-Standard deviation: $1,684,000
+Expected final value: $10,917,779
+Expected return: 9.18%
+Standard deviation: $828,643
 
 Percentiles:
-  5th percentile: $8,229,450
- 25th percentile: $9,962,100
- 50th percentile: $11,050,200
- 75th percentile: $12,175,800
- 95th percentile: $13,895,300
+  5th percentile: $9,549,032
+ 25th percentile: $10,353,498
+ 50th percentile: $10,924,536
+ 75th percentile: $11,484,498
+ 95th percentile: $12,270,413
 
 Risk Metrics:
-  Value at Risk (95%): $1,770,550 (-17.71%)
-  Expected Shortfall (CVaR): $2,156,320 (-21.56%)
-  Probability of loss: 27.3%
+  Value at Risk (95%): $450,968 (-4.51%)
+  Expected Shortfall (CVaR): $822,237 (-8.22%)
+  Probability of loss: 13.1%
 ```
 
 **Risk interpretation**:
-- **Expected**: Portfolio grows to $11.1M (10.75% return)
-- **VaR (95%)**: 95% confident losses won't exceed $1.77M (17.7%)
-- **CVaR**: If losses exceed VaR, average loss is $2.16M (21.6%)
-- **Probability of loss**: 27% chance of ending below $10M
+- **Expected**: Portfolio grows to $10.9M (9.18% return)
+- **VaR (95%)**: 95% confident losses won't exceed $0.45M (4.5%)
+- **CVaR**: If losses exceed VaR, average loss is $0.82M (8.2%)
+- **Probability of loss**: 13% chance of ending below $10M
 
 ---
 
@@ -517,64 +504,65 @@ Generate a complete client report:
 ```swift
 import BusinessMath
 
-print("\n" + "=".repeating(count: 80))
+print("\n" + String(repeating: "=", count: 80))
 print("PORTFOLIO OPTIMIZATION REPORT")
 print("Client: High Net Worth Individual | Account Value: $10,000,000")
 print("Date: February 28, 2026 | Quarterly Rebalancing Review")
-print("=".repeating(count: 80))
+print(String(repeating: "=", count: 80))
 
 print("\n📊 RECOMMENDED PORTFOLIO (Maximum Sharpe Ratio)")
-print("-".repeating(count: 80))
+print(String(repeating: "-", count: 80))
 
 for (i, asset) in assets.enumerated() {
-    let weight = optimalWeights[i]
-    let allocation = 10_000_000 * weight
-    if weight > 0.01 {
-        let returnContribution = weight * expectedReturns[i]
-        print("  \(asset.paddingRight(toLength: 25)) " +
-              "\(weight.percent(1).paddingLeft(toLength: 7))  " +
-              "\(allocation.currency(0).paddingLeft(toLength: 12))  " +
-              "Return contrib: \(returnContribution.percent(2))")
-    }
+	let weight = optimalWeights[i]
+	let allocation = 10_000_000 * weight
+	if weight > 0.01 {
+		let returnContribution = weight * expectedReturns[i]
+		print("  \(asset.padding(toLength: 25, withPad: " ", startingAt: 0)) " +
+			  "\(weight.percent(1).paddingLeft(toLength: 7))  " +
+			  "\(allocation.currency(0).paddingLeft(toLength: 12))  " +
+			  "Return contrib: \(returnContribution.percent(2))")
+	}
 }
 
 print("\n📈 PORTFOLIO METRICS")
-print("-".repeating(count: 80))
+print(String(repeating: "-", count: 80))
 print("  Expected Annual Return:     \(optimalReturn.percent(2))")
 print("  Volatility (Std Dev):       \(optimalVolatility.percent(2))")
-print("  Sharpe Ratio:               \(optimalSharpe.rounded(toPlaces: 3))")
+print("  Sharpe Ratio:               \(optimalSharpe.number(3))")
 print("  Risk-Free Rate:             \(riskFreeRate.percent(2))")
 
 print("\n⚠️  RISK ANALYSIS (1-Year Monte Carlo, 10,000 scenarios)")
-print("-".repeating(count: 80))
+print(String(repeating: "-", count: 80))
 print("  Expected Portfolio Value:   \(meanValue.currency(0))")
 print("  Value at Risk (95%):        \(var95.currency(0)) loss")
 print("  Expected Shortfall (CVaR):  \(cvar95.currency(0)) loss")
-print("  Probability of Loss:        \(probLoss.rounded(toPlaces: 1))%")
+print("  Probability of Loss:        \(probLoss.number(1))%")
 
 print("\n✅ CONSTRAINT COMPLIANCE")
-print("-".repeating(count: 80))
+print(String(repeating: "-", count: 80))
 print("  Budget (100% invested):     ✓ \((optimalWeights.reduce(0, +)).percent(2))")
 print("  No short-selling:           ✓ All weights ≥ 0")
-print("  Position limits (≤30%):     ✓ Max position \((optimalWeights.max() ?? 0).percent(1))")
+print("  Position limits (≤30%):     ✓ Max position \((optimalWeights.toArray().max() ?? 0).percent(1))")
 
 print("\n📊 COMPARISON VS. ALTERNATIVES")
-print("-".repeating(count: 80))
+print(String(repeating: "-", count: 80))
 print("Portfolio            | Return | Volatility | Sharpe")
 print("---------------------|--------|------------|--------")
 print("Recommended (MaxS)   | \(optimalReturn.percent(2).paddingLeft(toLength: 6)) | " +
-      "\(optimalVolatility.percent(2).paddingLeft(toLength: 10)) | \(optimalSharpe.rounded(toPlaces: 3))")
+	  "\(optimalVolatility.percent(2).paddingLeft(toLength: 10)) | \(optimalSharpe.number(3))")
 print("Equal-Weight         | \(portfolioReturn(equalWeights).percent(2).paddingLeft(toLength: 6)) | " +
-      "\(sqrt(portfolioVariance(equalWeights)).percent(2).paddingLeft(toLength: 10)) | " +
-      "\(portfolioSharpe(equalWeights).rounded(toPlaces: 3))")
+	  "\(sqrt(portfolioVariance(equalWeights)).percent(2).paddingLeft(toLength: 10)) | " +
+	  "\(portfolioSharpe(equalWeights).number(3))")
 print("Minimum Variance     | \(minVarReturn.percent(2).paddingLeft(toLength: 6)) | " +
-      "\(minVarVolatility.percent(2).paddingLeft(toLength: 10)) | " +
-      "\(portfolioSharpe(minVarWeights).rounded(toPlaces: 3))")
+	  "\(minVarVolatility.percent(2).paddingLeft(toLength: 10)) | " +
+	  "\(portfolioSharpe(minVarWeights).number(3))")
 
-print("\n" + "=".repeating(count: 80))
+print("\n" + String(repeating: "=", count: 80))
 print("This report was generated using BusinessMath automated portfolio optimization.")
 print("Next rebalancing: May 31, 2026")
-print("=".repeating(count: 80))
+print(String(repeating: "=", count: 80))
+
 ```
 
 **Output:**
@@ -587,26 +575,27 @@ Date: February 28, 2026 | Quarterly Rebalancing Review
 
 📊 RECOMMENDED PORTFOLIO (Maximum Sharpe Ratio)
 --------------------------------------------------------------------------------
-  US Large Cap                   24.3%    $2,430,000  Return contrib: 2.43%
-  US Small Cap                   30.0%    $3,000,000  Return contrib: 3.60%
-  International Developed        18.7%    $1,870,000  Return contrib: 2.06%
-  Emerging Markets               12.5%    $1,250,000  Return contrib: 1.75%
-  US Bonds                        9.2%      $920,000  Return contrib: 0.37%
-  Real Estate                     5.3%      $530,000  Return contrib: 0.48%
+  US Large Cap                16.7%    $1,666,677  Return contrib: 1.67%
+  US Small Cap                13.5%    $1,351,837  Return contrib: 1.62%
+  International Developed      6.7%      $669,720  Return contrib: 0.74%
+  Emerging Markets            19.5%    $1,951,924  Return contrib: 2.73%
+  US Bonds                    30.0%    $3,000,000  Return contrib: 1.20%
+  Real Estate                 11.8%    $1,177,176  Return contrib: 1.06%
+  Commodities                  1.8%      $182,667  Return contrib: 0.11%
 
 📈 PORTFOLIO METRICS
 --------------------------------------------------------------------------------
-  Expected Annual Return:     10.75%
-  Volatility (Std Dev):       16.84%
-  Sharpe Ratio:               0.460
+  Expected Annual Return:     9.13%
+  Volatility (Std Dev):       12.77%
+  Sharpe Ratio:               0.480
   Risk-Free Rate:             3.00%
 
 ⚠️  RISK ANALYSIS (1-Year Monte Carlo, 10,000 scenarios)
 --------------------------------------------------------------------------------
-  Expected Portfolio Value:   $11,075,000
-  Value at Risk (95%):        $1,770,550 loss
-  Expected Shortfall (CVaR):  $2,156,320 loss
-  Probability of Loss:        27.3%
+  Expected Portfolio Value:   $10,915,772
+  Value at Risk (95%):        $470,902 loss
+  Expected Shortfall (CVaR):  $806,899 loss
+  Probability of Loss:        0.1%
 
 ✅ CONSTRAINT COMPLIANCE
 --------------------------------------------------------------------------------
@@ -618,9 +607,9 @@ Date: February 28, 2026 | Quarterly Rebalancing Review
 --------------------------------------------------------------------------------
 Portfolio            | Return | Volatility | Sharpe
 ---------------------|--------|------------|--------
-Recommended (MaxS)   | 10.75% |     16.84% | 0.460
-Equal-Weight         |  8.63% |     13.24% | 0.425
-Minimum Variance     |  5.92% |      5.48% | 0.533
+Recommended (MaxS)   |  9.13% |     12.77% | 0.480
+Equal-Weight         |  8.63% |     12.36% | 0.455
+Minimum Variance     |  5.70% |      7.41% | 0.365
 
 ================================================================================
 This report was generated using BusinessMath automated portfolio optimization.
@@ -682,10 +671,371 @@ Next rebalancing: May 31, 2026
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+import Foundation
+
+// 8 asset classes
+let assets = [
+	"US Large Cap",
+	"US Small Cap",
+	"International Developed",
+	"Emerging Markets",
+	"US Bonds",
+	"International Bonds",
+	"Real Estate",
+	"Commodities"
+]
+
+// Expected annual returns (based on historical analysis)
+let expectedReturns = VectorN([
+	0.10,   // US Large Cap: 10%
+	0.12,   // US Small Cap: 12%
+	0.11,   // International: 11%
+	0.14,   // Emerging Markets: 14%
+	0.04,   // US Bonds: 4%
+	0.03,   // Intl Bonds: 3%
+	0.09,   // Real Estate: 9%
+	0.06    // Commodities: 6%
+])
+
+// Annual covariance matrix (volatilities and correlations)
+let covarianceMatrix = [
+	[0.0400, 0.0280, 0.0240, 0.0200, 0.0020, 0.0010, 0.0180, 0.0080],  // US Large Cap
+	[0.0280, 0.0625, 0.0350, 0.0280, 0.0015, 0.0008, 0.0220, 0.0100],  // US Small Cap
+	[0.0240, 0.0350, 0.0484, 0.0320, 0.0025, 0.0020, 0.0200, 0.0090],  // International
+	[0.0200, 0.0280, 0.0320, 0.0900, 0.0010, 0.0015, 0.0180, 0.0120],  // Emerging
+	[0.0020, 0.0015, 0.0025, 0.0010, 0.0036, 0.0028, 0.0015, 0.0008],  // US Bonds
+	[0.0010, 0.0008, 0.0020, 0.0015, 0.0028, 0.0049, 0.0010, 0.0005],  // Intl Bonds
+	[0.0180, 0.0220, 0.0200, 0.0180, 0.0015, 0.0010, 0.0400, 0.0100],  // Real Estate
+	[0.0080, 0.0100, 0.0090, 0.0120, 0.0008, 0.0005, 0.0100, 0.0625]   // Commodities
+]
+
+// Extract volatilities
+let volatilities = covarianceMatrix.enumerated().map { i, row in
+	sqrt(row[i])
+}
+
+print("Asset Class Overview")
+print("====================")
+print("Asset                   | Return | Volatility")
+print("------------------------|--------|------------")
+for (i, asset) in assets.enumerated() {
+	print("\(asset.padding(toLength: 23, withPad: " ", startingAt: 0)) | " +
+		  "\(expectedReturns[i].percent(1).paddingLeft(toLength: 6)) | " +
+		  "\(volatilities[i].percent(1).paddingLeft(toLength: 10))")
+}
+
+// MARK: - Portfolio Optimization Functions
+
+	// Portfolio variance
+	func portfolioVariance(_ weights: VectorN<Double>) -> Double {
+		var variance = 0.0
+		for i in 0..<weights.dimension {
+			for j in 0..<weights.dimension {
+				variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+			}
+		}
+		return variance
+	}
+
+	// Portfolio return
+	func portfolioReturn(_ weights: VectorN<Double>) -> Double {
+		return weights.dot(expectedReturns)
+	}
+
+	// Portfolio Sharpe ratio
+	func portfolioSharpe(_ weights: VectorN<Double>, riskFreeRate: Double = 0.03) -> Double {
+		let ret = portfolioReturn(weights)
+		let vol = sqrt(portfolioVariance(weights))
+		return (ret - riskFreeRate) / vol
+	}
+
+	// Test with equal-weight portfolio
+	let equalWeights = VectorN(repeating: 1.0/8.0, count: 8)
+	print("\nEqual-Weight Portfolio")
+	print("======================")
+	print("Expected return: \(portfolioReturn(equalWeights).percent(2))")
+	print("Volatility: \(sqrt(portfolioVariance(equalWeights)).percent(2))")
+	print("Sharpe ratio: \(portfolioSharpe(equalWeights).number(3))")
+
+// MARK: -  Maximum Sharpe Ratio Portfolio
+
+// Objective: Maximize Sharpe = minimize negative Sharpe
+let riskFreeRate = 0.03
+let objectiveFunction: (VectorN<Double>) -> Double = { weights in
+	-portfolioSharpe(weights, riskFreeRate: riskFreeRate)
+}
+
+// Constraints
+let constraints: [MultivariateConstraint<VectorN<Double>>] = [
+	// Budget: weights sum to 1
+	.equality { w in w.reduce(0, +) - 1.0 },
+
+	// Long-only: no short-selling
+	.inequality { w in -w[0] },
+	.inequality { w in -w[1] },
+	.inequality { w in -w[2] },
+	.inequality { w in -w[3] },
+	.inequality { w in -w[4] },
+	.inequality { w in -w[5] },
+	.inequality { w in -w[6] },
+	.inequality { w in -w[7] },
+
+	// Position limits: max 30% per asset
+	.inequality { w in w[0] - 0.30 },
+	.inequality { w in w[1] - 0.30 },
+	.inequality { w in w[2] - 0.30 },
+	.inequality { w in w[3] - 0.30 },
+	.inequality { w in w[4] - 0.30 },
+	.inequality { w in w[5] - 0.30 },
+	.inequality { w in w[6] - 0.30 },
+	.inequality { w in w[7] - 0.30 }
+]
+
+// Optimize
+let optimizer = InequalityOptimizer<VectorN<Double>>()
+let result = try optimizer.minimize(
+	objectiveFunction,
+	from: equalWeights,
+	subjectTo: constraints
+)
+
+let optimalWeights = result.solution
+let optimalReturn = portfolioReturn(optimalWeights)
+let optimalVolatility = sqrt(portfolioVariance(optimalWeights))
+let optimalSharpe = portfolioSharpe(optimalWeights, riskFreeRate: riskFreeRate)
+
+print("\nMaximum Sharpe Portfolio ($10M)")
+print("================================")
+print("Asset                   | Weight  | Allocation")
+print("------------------------|---------|------------")
+
+for (i, asset) in assets.enumerated() {
+	let weight = optimalWeights[i]
+	let allocation = 10_000_000 * weight
+	if weight > 0.01 {
+		print("\(asset.padding(toLength: 23, withPad: " ", startingAt: 0)) | " +
+			  "\(weight.percent(1).paddingLeft(toLength: 7)) | " +
+			  "\(allocation.currency(0).paddingLeft(toLength: 11))")
+	}
+}
+
+print("------------------------|---------|------------")
+print("Expected return: \(optimalReturn.percent(2))")
+print("Volatility: \(optimalVolatility.percent(2))")
+print("Sharpe ratio: \(optimalSharpe.number(3))")
+
+// MARK: - Minimum Variance Portfolio
+
+let minVarOptimizer = InequalityOptimizer<VectorN<Double>>()
+let minVarResult = try minVarOptimizer.minimize(
+	portfolioVariance,
+	from: equalWeights,
+	subjectTo: constraints
+)
+
+let minVarWeights = minVarResult.solution
+let minVarReturn = portfolioReturn(minVarWeights)
+let minVarVolatility = sqrt(portfolioVariance(minVarWeights))
+
+print("\nMinimum Variance Portfolio ($10M)")
+print("==================================")
+print("Asset                   | Weight  | Allocation")
+print("------------------------|---------|------------")
+
+for (i, asset) in assets.enumerated() {
+	let weight = minVarWeights[i]
+	let allocation = 10_000_000 * weight
+	if weight > 0.01 {
+		print("\(asset.padding(toLength: 23, withPad: " ", startingAt: 0)) | " +
+			  "\(weight.percent(1).paddingLeft(toLength: 7)) | " +
+			  "\(allocation.currency(0).paddingLeft(toLength: 11))")
+	}
+}
+
+print("------------------------|---------|------------")
+print("Expected return: \(minVarReturn.percent(2))")
+print("Volatility: \(minVarVolatility.percent(2))")
+print("Sharpe ratio: \(portfolioSharpe(minVarWeights).number(3))")
+
+// MARK: - Efficient Frontier
+
+// Target returns from min to max
+let minReturn = minVarReturn
+let maxReturn = optimalReturn
+let targetReturns = VectorN.linearSpace(from: minReturn, to: maxReturn, count: 20)
+
+var frontierPortfolios: [(return: Double, volatility: Double, sharpe: Double, weights: VectorN<Double>)] = []
+
+for targetReturn in targetReturns.toArray() {
+	// Minimize variance subject to achieving target return
+	let result = try optimizer.minimize(
+		portfolioVariance,
+		from: equalWeights,
+		subjectTo: constraints + [
+			.equality { w in
+				portfolioReturn(w) - targetReturn  // Achieve exact target return
+			}
+		]
+	)
+
+	let weights = result.solution
+	let ret = portfolioReturn(weights)
+	let vol = sqrt(portfolioVariance(weights))
+	let sharpe = (ret - riskFreeRate) / vol
+
+	frontierPortfolios.append((ret, vol, sharpe, weights))
+}
+
+print("\nEfficient Frontier (20 points)")
+print("===============================")
+print("Return | Volatility | Sharpe")
+print("-------|------------|--------")
+
+for portfolio in frontierPortfolios {
+	print("\(portfolio.return.percent(2).paddingLeft(toLength: 6)) | " +
+		  "\(portfolio.volatility.percent(2).paddingLeft(toLength: 10)) | " +
+		  "\(portfolio.sharpe.number(3).description.paddingLeft(toLength: 6))")
+}
+
+// MARK: - Monte Carlo Risk Analysis
+
+// Monte Carlo simulation: 1-year horizon, 10,000 scenarios
+let initialValue = 10_000_000.0
+let timeHorizon = 1.0
+let iterations = 10_000
+
+var portfolioValues: [Double] = []
+
+for _ in 0..<iterations {
+	// Generate correlated random returns using Cholesky decomposition
+	// Simplified: independent normal draws (production would use Cholesky)
+	var randomReturns = [Double]()
+	for i in 0..<8 {
+		let z = Double.randomNormal(mean: 0, stdDev: 1) // Normal approximation
+		let annualReturn = expectedReturns[i] + volatilities[i] * z
+		randomReturns.append(annualReturn)
+	}
+
+	// Portfolio return this scenario
+	var portfolioReturn = 0.0
+	for i in 0..<8 {
+		portfolioReturn += optimalWeights[i] * randomReturns[i]
+	}
+
+	// Final portfolio value
+	let finalValue = initialValue * (1.0 + portfolioReturn)
+	portfolioValues.append(finalValue)
+}
+
+// Sort for percentile calculation
+portfolioValues.sort()
+
+// Calculate risk metrics
+let meanValue = portfolioValues.reduce(0, +) / Double(iterations)
+let stdDev = sqrt(portfolioValues.map { pow($0 - meanValue, 2) }.reduce(0, +) / Double(iterations - 1))
+
+// Value at Risk (VaR): 5th percentile loss
+let var95Index = Int(0.05 * Double(iterations))
+let var95 = initialValue - portfolioValues[var95Index]
+
+// Expected Shortfall (CVaR): average loss beyond VaR
+let expectedShortfall = portfolioValues[0..<var95Index].reduce(0, +) / Double(var95Index)
+let cvar95 = initialValue - expectedShortfall
+
+// Probability of loss
+let lossCount = portfolioValues.filter { $0 < initialValue }.count
+let probLoss = Double(lossCount) / Double(iterations)
+
+print("\nMonte Carlo Risk Analysis (10,000 scenarios, 1 year)")
+print("====================================================")
+print("Initial value: \(initialValue.currency(0))")
+print("Expected final value: \(meanValue.currency(0))")
+print("Expected return: \((meanValue / initialValue - 1).percent(2))")
+print("Standard deviation: \(stdDev.currency(0))")
+print("")
+print("Percentiles:")
+print("  5th percentile: \(portfolioValues[var95Index].currency(0))")
+print(" 25th percentile: \(portfolioValues[Int(0.25 * Double(iterations))].currency(0))")
+print(" 50th percentile: \(portfolioValues[Int(0.50 * Double(iterations))].currency(0))")
+print(" 75th percentile: \(portfolioValues[Int(0.75 * Double(iterations))].currency(0))")
+print(" 95th percentile: \(portfolioValues[Int(0.95 * Double(iterations))].currency(0))")
+print("")
+print("Risk Metrics:")
+print("  Value at Risk (95%): \(var95.currency(0)) (\((-var95/initialValue).percent(2)))")
+print("  Expected Shortfall (CVaR): \(cvar95.currency(0)) (\((-cvar95/initialValue).percent(2)))")
+print("  Probability of loss: \(probLoss.percent(1))")
+
+// MARK: - Client Presentation Report
+
+print("\n" + String(repeating: "=", count: 80))
+print("PORTFOLIO OPTIMIZATION REPORT")
+print("Client: High Net Worth Individual | Account Value: $10,000,000")
+print("Date: February 28, 2026 | Quarterly Rebalancing Review")
+print(String(repeating: "=", count: 80))
+
+print("\n📊 RECOMMENDED PORTFOLIO (Maximum Sharpe Ratio)")
+print(String(repeating: "-", count: 80))
+
+for (i, asset) in assets.enumerated() {
+	let weight = optimalWeights[i]
+	let allocation = 10_000_000 * weight
+	if weight > 0.01 {
+		let returnContribution = weight * expectedReturns[i]
+		print("  \(asset.padding(toLength: 25, withPad: " ", startingAt: 0)) " +
+			  "\(weight.percent(1).paddingLeft(toLength: 7))  " +
+			  "\(allocation.currency(0).paddingLeft(toLength: 12))  " +
+			  "Return contrib: \(returnContribution.percent(2))")
+	}
+}
+
+print("\n📈 PORTFOLIO METRICS")
+print(String(repeating: "-", count: 80))
+print("  Expected Annual Return:     \(optimalReturn.percent(2))")
+print("  Volatility (Std Dev):       \(optimalVolatility.percent(2))")
+print("  Sharpe Ratio:               \(optimalSharpe.number(3))")
+print("  Risk-Free Rate:             \(riskFreeRate.percent(2))")
+
+print("\n⚠️  RISK ANALYSIS (1-Year Monte Carlo, 10,000 scenarios)")
+print(String(repeating: "-", count: 80))
+print("  Expected Portfolio Value:   \(meanValue.currency(0))")
+print("  Value at Risk (95%):        \(var95.currency(0)) loss")
+print("  Expected Shortfall (CVaR):  \(cvar95.currency(0)) loss")
+print("  Probability of Loss:        \(probLoss.number(1))%")
+
+print("\n✅ CONSTRAINT COMPLIANCE")
+print(String(repeating: "-", count: 80))
+print("  Budget (100% invested):     ✓ \((optimalWeights.reduce(0, +)).percent(2))")
+print("  No short-selling:           ✓ All weights ≥ 0")
+print("  Position limits (≤30%):     ✓ Max position \((optimalWeights.toArray().max() ?? 0).percent(1))")
+
+print("\n📊 COMPARISON VS. ALTERNATIVES")
+print(String(repeating: "-", count: 80))
+print("Portfolio            | Return | Volatility | Sharpe")
+print("---------------------|--------|------------|--------")
+print("Recommended (MaxS)   | \(optimalReturn.percent(2).paddingLeft(toLength: 6)) | " +
+	  "\(optimalVolatility.percent(2).paddingLeft(toLength: 10)) | \(optimalSharpe.number(3))")
+print("Equal-Weight         | \(portfolioReturn(equalWeights).percent(2).paddingLeft(toLength: 6)) | " +
+	  "\(sqrt(portfolioVariance(equalWeights)).percent(2).paddingLeft(toLength: 10)) | " +
+	  "\(portfolioSharpe(equalWeights).number(3))")
+print("Minimum Variance     | \(minVarReturn.percent(2).paddingLeft(toLength: 6)) | " +
+	  "\(minVarVolatility.percent(2).paddingLeft(toLength: 10)) | " +
+	  "\(portfolioSharpe(minVarWeights).number(3))")
+
+print("\n" + String(repeating: "=", count: 80))
+print("This report was generated using BusinessMath automated portfolio optimization.")
+print("Next rebalancing: May 31, 2026")
+print(String(repeating: "=", count: 80))
+
 ```
-→ Download: CaseStudies/PortfolioOptimization.playground
+</details>
+
+
 → Related Posts: All posts from Weeks 1-8 contribute to this case study
-```
 
 **Modifications to try**:
 1. Add sector constraints (max 40% equities, 60% bonds)
@@ -742,7 +1092,7 @@ let correlatedReturns = L * z
 
 This preserves correlations (diversification benefits) in simulation.
 
-**Related Methodology**: [Monte Carlo Basics](../week-06/01-mon-monte-carlo-basics.md) (Week 6) - Covered path generation and correlation handling.
+**Related Methodology**: [Monte Carlo Basics](../week-06/01-mon-monte-carlo-basics) (Week 6) - Covered path generation and correlation handling.
 
 ---
 

@@ -576,10 +576,326 @@ Result: **59-117× speedup** with cleaner code!
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import Foundation
+import BusinessMath
+
+
+// MARK: - Simple European Call Option
+// Option parameters
+let spotPrice = 100.0          // Current stock price
+let strikePrice = 105.0        // Option strike
+let riskFreeRate = 0.05        // 5% risk-free rate
+let volatility = 0.20          // 20% annual volatility
+let timeToExpiry = 1.0         // 1 year to expiration
+
+// Pre-compute constants (outside the model for efficiency)
+// Geometric Brownian Motion: S_T = S_0 × exp((r - σ²/2)T + σ√T × Z)
+let drift = (riskFreeRate - 0.5 * volatility * volatility) * timeToExpiry
+let diffusionScale = volatility * sqrt(timeToExpiry)
+
+// Define the pricing model using expression builder
+let optionModel = MonteCarloExpressionModel { builder in
+	let z = builder[0]  // Standard normal random variable Z ~ N(0,1)
+
+	// Calculate final stock price
+	let exponent = drift + diffusionScale * z
+	let finalPrice = spotPrice * exponent.exp()
+
+	// Call option payoff: max(S_T - K, 0)
+	let payoff = finalPrice - strikePrice
+	let isPositive = payoff.greaterThan(0.0)
+
+	return isPositive.ifElse(then: payoff, else: 0.0)
+}
+
+// MARK: - Simulation with Expression Model
+
+	// Create GPU-enabled simulation
+	var simulation = MonteCarloSimulation(
+		iterations: 100_000,  // GPU handles high iteration counts efficiently
+		enableGPU: true,      // Enable GPU acceleration
+		expressionModel: optionModel
+	)
+
+	// Add the random input (standard normal for stock price randomness)
+	simulation.addInput(SimulationInput(
+		name: "Z",
+		distribution: DistributionNormal(0.0, 1.0)  // Standard normal N(0,1)
+	))
+
+	// Run simulation
+	let start = Date()
+	let results = try simulation.run()
+	let elapsed = Date().timeIntervalSince(start)
+
+	// Discount expected payoff to present value
+	let optionPrice = results.statistics.mean * exp(-riskFreeRate * timeToExpiry)
+	let standardError = results.statistics.stdDev / sqrt(Double(100_000)) * exp(-riskFreeRate * timeToExpiry)
+
+	// Get z-score for 95% CI
+	let zScore95 = zScore(ci: 0.95)
+
+	print("=== GPU-Accelerated Option Pricing ===")
+	print("Iterations: \(simulation.iterations)")
+	print("Compute time: \((elapsed * 1000).number(1)) ms")
+	print("Used GPU: \(results.usedGPU)")
+	print()
+	print("Monte Carlo price: \(optionPrice.currency(2))")
+	print("Standard error: ±\(standardError.currency(3))")
+	print("95% CI: [\((optionPrice - zScore95 * standardError).currency(2)), " +
+		  "\((optionPrice + zScore95 * standardError).currency(2))]")
+
+// MARK: - Black-Scholes Validation
+
+// Black-Scholes formula for European call
+func blackScholesCall(
+	spot: Double,
+	strike: Double,
+	rate: Double,
+	volatility: Double,
+	time: Double
+) -> Double {
+	let d1 = (log(spot / strike) + (rate + 0.5 * volatility * volatility) * time)
+			 / (volatility * sqrt(time))
+	let d2 = d1 - volatility * sqrt(time)
+
+	// Standard normal CDF
+	func normalCDF(_ x: Double) -> Double {
+		return 0.5 * (1.0 + erf(x / sqrt(2.0)))
+	}
+
+	let call = spot * normalCDF(d1) - strike * exp(-rate * time) * normalCDF(d2)
+	return call
+}
+
+let bsPrice = blackScholesCall(
+	spot: spotPrice,
+	strike: strikePrice,
+	rate: riskFreeRate,
+	volatility: volatility,
+	time: timeToExpiry
+)
+
+print("Black-Scholes price: \(bsPrice.currency())")
+print("Monte Carlo price: \(optionPrice.currency())")
+print("Difference: \((optionPrice - bsPrice).currency())")
+print("Error: \(((optionPrice - bsPrice) / bsPrice).percent())")
+
+
+// MARK: - Convergence Analysis with GPU Acceleration
+
+let iterationCounts = [100, 500, 1_000, 5_000, 10_000, 50_000, 100_000, 1_000_000]
+var convergenceResults: [(iterations: Int, price: Double, error: Double, time: Double, usedGPU: Bool)] = []
+
+// Reuse the same expression model
+for iterations in iterationCounts {
+	var sim = MonteCarloSimulation(
+		iterations: iterations,
+		enableGPU: true,
+		expressionModel: optionModel
+	)
+
+	sim.addInput(SimulationInput(
+		name: "Z",
+		distribution: DistributionNormal(0.0, 1.0)
+	))
+
+	let start = Date()
+	let results = try sim.run()
+	let elapsed = Date().timeIntervalSince(start) * 1000  // milliseconds
+
+	let price = results.statistics.mean * exp(-riskFreeRate * timeToExpiry)
+	let pricingError = abs(price - bsPrice)
+
+	convergenceResults.append((iterations, price, pricingError, elapsed, results.usedGPU))
+}
+
+print("Convergence Analysis (GPU-Accelerated)")
+print("Iterations | Price    | Error   | Time (ms) | GPU | Error Rate")
+print("-----------|----------|---------|-----------|-----|------------")
+
+for result in convergenceResults {
+	let errorRate = (result.error / bsPrice)
+	let gpuFlag = result.usedGPU ? "✓" : "✗"
+	print("\(result.iterations.description.paddingLeft(toLength: 8)) | " +
+		  "\(result.price.currency(2).paddingLeft(toLength: 8)) | " +
+		  "\(result.error.currency(3).paddingLeft(toLength: 7)) | " +
+		  "\(result.time.number(1).paddingLeft(toLength: 9)) | " +
+		  "\(gpuFlag.paddingLeft(toLength: 3)) | " +
+		  "\(errorRate.percent(2))")
+}
+
+// MARK: - Production Implementation with GPU
+
+struct GPUOptionPricer {
+	let iterations: Int
+	let enableGPU: Bool
+	let ci95th = zScore(ci: 0.95)
+	
+	init(targetAccuracy: Double = 0.001, enableGPU: Bool = true) {
+		// Rule of thumb: iterations ≈ (1.96 / targetAccuracy)²
+		// Higher default accuracy for production
+		self.iterations = Int(pow(ci95th / targetAccuracy, 2))
+		self.enableGPU = enableGPU
+	}
+
+	struct PricingResult {
+		let price: Double
+		let confidenceInterval: (lower: Double, upper: Double)
+		let standardError: Double
+		let iterations: Int
+		let computeTime: Double
+		let usedGPU: Bool
+		
+		var description: String  { "\(price.currency(2).paddingLeft(toLength: 8)) | " +
+			"\(computeTime.number(1).paddingLeft(toLength: 8)) | " +
+			"[\(confidenceInterval.lower.currency(2).paddingLeft(toLength: 8)), \(confidenceInterval.upper.currency(2).paddingLeft(toLength: 8))]"}
+	}
+
+	func priceCall(
+		spot: Double,
+		strike: Double,
+		rate: Double,
+		volatility: Double,
+		time: Double
+	) throws -> PricingResult {
+		let start = Date()
+
+		// Pre-compute constants
+		let drift = (rate - 0.5 * volatility * volatility) * time
+		let diffusionScale = volatility * sqrt(time)
+
+		// Build expression model
+		let model = MonteCarloExpressionModel { builder in
+			let z = builder[0]
+			let exponent = drift + diffusionScale * z
+			let finalPrice = spot * exponent.exp()
+			let payoff = finalPrice - strike
+			let isPositive = payoff.greaterThan(0.0)
+			return isPositive.ifElse(then: payoff, else: 0.0)
+		}
+
+		// Run simulation
+		var simulation = MonteCarloSimulation(
+			iterations: iterations,
+			enableGPU: enableGPU,
+			expressionModel: model
+		)
+
+		simulation.addInput(SimulationInput(
+			name: "Z",
+			distribution: DistributionNormal(0.0, 1.0)
+		))
+
+		let results = try simulation.run()
+		let elapsed = Date().timeIntervalSince(start) * 1000
+
+		// Discount to present value
+		let price = results.statistics.mean * exp(-rate * time)
+		let standardError = results.statistics.stdDev / sqrt(Double(iterations)) * exp(-rate * time)
+
+		let z = zScore(ci: 0.95)
+		let lower = price - z * standardError
+		let upper = price + z * standardError
+
+		return PricingResult(
+			price: price,
+			confidenceInterval: (lower, upper),
+			standardError: standardError,
+			iterations: iterations,
+			computeTime: elapsed,
+			usedGPU: results.usedGPU
+		)
+	}
+}
+
+// Create pricer with 0.1% target accuracy (production-grade)
+let pricer = GPUOptionPricer(targetAccuracy: 0.01)
+
+let result = try pricer.priceCall(
+	spot: spotPrice,
+	strike: strikePrice,
+	rate: riskFreeRate,
+	volatility: volatility,
+	time: timeToExpiry
+)
+
+print("Production GPU Option Pricer")
+print("============================")
+print("Price: \(result.price.currency(2))")
+print("95% CI: [\(result.confidenceInterval.lower.currency(2)), " +
+	  "\(result.confidenceInterval.upper.currency(2))]")
+print("Standard error: ±\(result.standardError.currency(4))")
+print("Iterations: \(result.iterations.description)")
+print("Compute time: \(result.computeTime.number(1)) ms")
+print("Used GPU: \(result.usedGPU)")
+
+// MARK: - Batch Portfolio Pricing with GPU
+
+struct OptionContract {
+let symbol: String
+	let spot: Double
+	let strike: Double
+	let volatility: Double
+	let expiry: Double
+	
+	
+	var description: String {
+		"\(symbol.padding(toLength: 6, withPad: " ", startingAt: 0)) |"  +
+			  "\(spot.currency(0).paddingLeft(toLength: 9)) | " +
+			  "\(strike.currency(0).paddingLeft(toLength: 8)) | " +
+		"\((volatility.percent(0).paddingLeft(toLength: 5)))"
+	}
+}
+
+let portfolio = [
+	OptionContract(symbol: "AAPL", spot: 150.0, strike: 155.0, volatility: 0.25, expiry: 0.25),
+	OptionContract(symbol: "GOOGL", spot: 2800.0, strike: 2900.0, volatility: 0.30, expiry: 0.50),
+	OptionContract(symbol: "MSFT", spot: 300.0, strike: 310.0, volatility: 0.22, expiry: 0.75),
+	OptionContract(symbol: "TSLA", spot: 700.0, strike: 750.0, volatility: 0.60, expiry: 1.0)
+]
+
+//let pricer = GPUOptionPricer(targetAccuracy: 0.001)  // High accuracy for production
+let rate = 0.05
+
+print("GPU-Accelerated Portfolio Valuation")
+print("====================================")
+print("Symbol | Spot     | Strike   | Vol   | Price    | Time(ms) | 95% CI")
+print("-------|----------|----------|-------|----------|----------|---------------------")
+
+var totalValue = 0.0
+var totalTime = 0.0
+
+for option in portfolio {
+	let result = try pricer.priceCall(
+		spot: option.spot,
+		strike: option.strike,
+		rate: rate,
+		volatility: option.volatility,
+		time: option.expiry
+	)
+
+	totalValue += result.price
+	totalTime += result.computeTime
+
+	print("\(option.description) | \(result.description)")
+}
+
+print("-------|----------|----------|-------|----------|----------|---------------------")
+print("Total portfolio value: \(totalValue.currency(2))")
+print("Total compute time: \(totalTime.number(0)) ms (\((totalTime / 1000).number(2)) seconds)")
+print()
+print("GPU enabled 4× more iterations (384K vs 100K) in similar time!")
+
 ```
-→ Download: CaseStudies/OptionPricing.playground
-→ Related Posts: Monte Carlo Basics (Week 6 Monday), Statistical Distributions (Week 2 Wednesday)
-```
+</details>
+
+→ Related Posts: [Monte Carlo Basics](../week-06/01-mon-monte-carlo-basics) (Week 6 Monday), [Statistical Distributions](../week-02/03-wed-distributions) (Week 2 Wednesday)
+
 
 **Modifications to try**:
 1. Implement put options and verify put-call parity

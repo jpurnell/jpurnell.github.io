@@ -330,6 +330,204 @@ Portfolio volatility: 17.2%
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+import Foundation
+
+// Profit function with price elasticity
+func profit(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price  // Demand curve
+	let revenue = price * quantity
+	let fixedCosts = 2_000.0
+	let variableCost = 5.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+	// Find breakeven price (profit = 0)
+	let breakevenPrice = try goalSeek(
+		function: profit,
+		target: 0.0,
+		guess: 10.0,
+		tolerance: 0.01
+	)
+	print("Breakeven price: \(breakevenPrice.currency(2))")
+
+
+// MARK: - Goal Seeking for IRR
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+	var npv = 0.0
+	for (t, cf) in cashFlows.enumerated() {
+		npv += cf / pow(1 + rate, Double(t))
+	}
+	return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+	function: npv,
+	target: 0.0,
+	guess: 0.10
+)
+
+print("IRR: \(irr.percent(2))")
+
+
+// MARK: - Vector Operations
+
+// Create vectors
+let v = VectorN([3.0, 4.0])
+let w = VectorN([1.0, 2.0])
+
+// Basic operations
+let sum = v + w              // [4, 6]
+let scaled = 2.0 * v         // [6, 8]
+
+// Norms and distances
+print("Norm: \(v.norm)")                // 5.0
+print("Distance: \(v.distance(to: w))") // 2.828
+print("Dot product: \(v.dot(w))")       // 11.0
+
+
+// MARK: - Portfolio Weights
+
+let weights = VectorN([0.25, 0.30, 0.25, 0.20])
+let returns = VectorN([0.12, 0.15, 0.10, 0.18])
+
+// Portfolio return (weighted average)
+let portfolioReturn = weights.dot(returns)
+print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.6%
+
+// MARK: - Multivariate Operations
+
+// Minimize Rosenbrock function (classic test problem)
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+	let x = v[0], y = v[1]
+	let a = 1 - x
+	let b = y - x*x
+	return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Adam optimizer (adaptive learning rate)
+let optimizer = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 10_000
+)
+
+let result = try optimizer.minimizeAdam(
+	function: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result.solution.toArray())")  // ~[1, 1]
+print("Iterations: \(result.iterations)")
+print("Final value: \(result.value)")
+
+
+// MARK: - BFGS
+	// Quadratic function: f(x) = x^T A x
+	let A = [[2.0, 0.0, 0.0],
+			 [0.0, 3.0, 0.0],
+			 [0.0, 0.0, 4.0]]
+
+	let quadratic: (VectorN<Double>) -> Double = { v in
+		var result = 0.0
+		for i in 0..<3 {
+			for j in 0..<3 {
+				result += v[i] * A[i][j] * v[j]
+			}
+		}
+		return result
+	}
+
+	let bfgs = MultivariateNewtonRaphson<VectorN<Double>>(
+		maxIterations: 50
+	)
+
+	let resultBFGS = try bfgs.minimize(
+		quadratic,
+		from: VectorN([5.0, 5.0, 5.0])
+	)
+
+	print("Converged in \(resultBFGS.iterations) iterations")
+	print("Solution: \(resultBFGS.solution.toArray())")  // ~[0, 0, 0]
+
+// MARK: - Constrained Optimization
+
+// Minimize x² + y² subject to x + y = 1
+let objective: (VectorN<Double>) -> Double = { v in
+	v[0]*v[0] + v[1]*v[1]
+}
+
+let optimizerConstrained = ConstrainedOptimizer<VectorN<Double>>()
+
+let resultConstrained = try optimizerConstrained.minimize(
+	objective,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: [
+		.equality { v in v[0] + v[1] - 1.0 }
+	]
+)
+
+print("Solution: \(resultConstrained.solution.toArray())")  // [0.5, 0.5]
+
+// Shadow price (Lagrange multiplier)
+if let lambda = resultConstrained.lagrangeMultipliers.first {
+	print("Shadow price: \(lambda.number(3))")  // How much objective improves if constraint relaxed
+}
+
+// MARK: - Portfolio with Constraints
+
+let expectedReturns = VectorN([0.08, 0.12, 0.15])
+let covarianceMatrix = [
+	[0.0400, 0.0100, 0.0080],
+	[0.0100, 0.0900, 0.0200],
+	[0.0080, 0.0200, 0.1600]
+]
+
+// Portfolio variance function
+let portfolioVariance: (VectorN<Double>) -> Double = { weights in
+	var variance = 0.0
+	for i in 0..<3 {
+		for j in 0..<3 {
+			variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+		}
+	}
+	return variance
+}
+
+let portfolioOptimizer = InequalityOptimizer<VectorN<Double>>()
+
+let resultPortfolio = try portfolioOptimizer.minimize(
+	portfolioVariance,
+	from: VectorN([0.4, 0.4, 0.2]),
+	subjectTo: [
+		// Target return ≥ 10%
+		.inequality { w in
+			let ret = w.dot(expectedReturns)
+			return 0.10 - ret  // ≤ 0 means ret ≥ 10%
+		},
+		// Fully invested
+		.equality { w in w.reduce(0, +) - 1.0 },
+		// Long-only
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] }
+	]
+)
+
+print("Optimal weights: \(resultPortfolio.solution.toArray())")
+print("Portfolio variance: \(portfolioVariance(resultPortfolio.solution).number(4))")
+print("Portfolio volatility: \((sqrt(portfolioVariance(resultPortfolio.solution))).percent(1))")
+
+```
+</details>
 
 → Full API Reference: [BusinessMath Docs – 5.1 Optimization Guide](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.1-OptimizationGuide.md)
 

@@ -55,6 +55,10 @@ import BusinessMath
 let optimizer = PortfolioOptimizer()
 
 let expectedReturns = VectorN([0.12, 0.15, 0.18, 0.05])
+
+// Construct covariance from correlation matrix to ensure validity
+// High correlation between Asset 1 (12% return) and Asset 3 (18% return)
+// makes Asset 1 a candidate for shorting in 130/30 strategy
 let volatilities = [0.20, 0.30, 0.40, 0.10]  // 20%, 30%, 40%, 10%
 let correlations = [
 	[1.00, 0.30, 0.70, 0.10],  // Asset 1: high corr with Asset 3
@@ -73,10 +77,10 @@ for i in 0..<4 {
 
 // Maximum Sharpe ratio (optimal risk-adjusted return)
 let maxSharpe = try optimizer.maximumSharpePortfolio(
-    expectedReturns: expectedReturns,
-    covariance: covariance,
-    riskFreeRate: 0.02,
-    constraintSet: .longOnly
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	constraintSet: .longOnly
 )
 
 print("Maximum Sharpe Portfolio:")
@@ -104,11 +108,10 @@ Maximum Sharpe Portfolio:
 Find the portfolio with the lowest possible risk:
 
 ```swift
-// Minimum variance (conservative portfolio)
 let minVar = try optimizer.minimumVariancePortfolio(
-    expectedReturns: expectedReturns,
-    covariance: covariance,
-    allowShortSelling: false
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	allowShortSelling: false
 )
 
 print("Minimum Variance Portfolio:")
@@ -161,7 +164,6 @@ let targetPortfolio = frontier.portfolios.min(by: { p1, p2 in
 print("\nTarget \(targetReturn.percent(0)) Return Portfolio:")
 print("  Volatility: \(targetPortfolio.volatility.percent(1))")
 print("  Weights: \(targetPortfolio.weights.toArray().map { $0.percent(1) })")
-print()
 ```
 
 **Output:**
@@ -206,14 +208,14 @@ Risk parity allocates capital so each asset contributes equally to total portfol
 ```swift
 // Each asset contributes equally to total risk
 let riskParity = try optimizer.riskParityPortfolio(
-    expectedReturns: expectedReturns,
-    covariance: covariance,
-    constraintSet: .longOnly
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	constraintSet: .longOnly
 )
 
 print("Risk Parity Portfolio:")
 for (i, weight) in riskParity.weights.toArray().enumerated() {
-    print("  Asset \(i + 1): \(weight.percent(1))")
+	print("  Asset \(i + 1): \(weight.percent(1))")
 }
 print("Expected Return: \(riskParity.expectedReturn.percent(1))")
 print("Volatility: \(riskParity.volatility.percent(1))")
@@ -223,13 +225,13 @@ print("Sharpe Ratio: \(riskParity.sharpeRatio.number(2))")
 **Output:**
 ```
 Risk Parity Portfolio:
-  Asset 1: 26.9%
-  Asset 2: 15.8%
-  Asset 3: 10.7%
-  Asset 4: 46.6%
-Expected Return: 9.9%
-Volatility: 12.5%
-Sharpe Ratio: 0.79
+  Asset 1: 20.9%
+  Asset 2: 14.6%
+  Asset 3: 9.9%
+  Asset 4: 54.7%
+Expected Return: 9.2%
+Volatility: 12.1%
+Sharpe Ratio: 0.76
 ```
 
 **The philosophy**: Risk parity doesn't maximize Sharpe ratio—it equalizes risk contribution. Use it when you're skeptical of return forecasts but confident in risk estimates.
@@ -243,10 +245,10 @@ Real-world portfolios have constraints beyond full investment:
 ```swift
 // Long-Short with leverage limit (130/30 strategy)
 let longShort = try optimizer.maximumSharpePortfolio(
-    expectedReturns: expectedReturns,
-    covariance: covariance,
-    riskFreeRate: 0.02,
-    constraintSet: .longShort(maxLeverage: 1.3)
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	constraintSet: .longShort(maxLeverage: 1.3)
 )
 
 print("130/30 Portfolio:")
@@ -255,13 +257,13 @@ print("  Weights: \(longShort.weights.toArray().map { $0.percent(1) })")
 
 // Box constraints (min/max per position)
 let boxConstrained = try optimizer.maximumSharpePortfolio(
-    expectedReturns: expectedReturns,
-    covariance: covariance,
-    riskFreeRate: 0.02,
-    constraintSet: .boxConstrained(min: 0.05, max: 0.40)
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	constraintSet: .boxConstrained(min: 0.05, max: 0.40)
 )
 
-print("\nBox Constrained Portfolio (5%-40% per position):")
+print("Box Constrained Portfolio (5%-40% per position):")
 print("  Sharpe: \(boxConstrained.sharpeRatio.number(2))")
 print("  Weights: \(boxConstrained.weights.toArray().map { $0.percent(1) })")
 ```
@@ -284,55 +286,261 @@ Box Constrained Portfolio (5%-40% per position):
 ## Real-World Example: $1M Multi-Asset Portfolio
 
 ```swift
-let assets = ["US Large Cap", "US Small Cap", "International", "Bonds", "Real Estate"]
-let expectedReturns = VectorN([0.10, 0.12, 0.11, 0.04, 0.09])
-let covariance = [
-    [0.0225, 0.0180, 0.0150, 0.0020, 0.0100],
-    [0.0180, 0.0400, 0.0200, 0.0010, 0.0150],
-    [0.0150, 0.0200, 0.0400, 0.0030, 0.0120],
-    [0.0020, 0.0010, 0.0030, 0.0016, 0.0010],
-    [0.0100, 0.0150, 0.0120, 0.0010, 0.0256]
+let assets_rwe = ["US Large Cap", "US Small Cap", "International", "Bonds", "Real Estate"]
+let expectedReturns_rwe = VectorN([0.10, 0.12, 0.11, 0.0375, 0.09])
+
+// More realistic covariance structure (constructed from correlations)
+let volatilities_rwe = [0.15, 0.18, 0.165, 0.075, 0.14]  // 15%, 18%, 17%, 7%, 14%
+let correlations_rwe = [
+	[1.00, 0.75, 0.65, 0.25, 0.50],  // US Large Cap
+	[0.75, 1.00, 0.70, 0.10, 0.55],  // US Small Cap (high corr with US stocks)
+	[0.65, 0.70, 1.00, 0.20, 0.45],  // International (corr with other stocks)
+	[0.25, 0.10, 0.20, 1.00, 0.15],  // Bonds (moderate diversifier)
+	[0.50, 0.55, 0.45, 0.15, 1.00]   // Real Estate (hybrid characteristics)
 ]
 
-let optimizer = PortfolioOptimizer()
+// Convert to covariance matrix
+var covariance_rwe = [[Double]](repeating: [Double](repeating: 0, count: 5), count: 5)
+for i in 0..<5 {
+	for j in 0..<5 {
+		covariance_rwe[i][j] = correlations_rwe[i][j] * volatilities_rwe[i] * volatilities_rwe[j]
+	}
+}
+
+let optimizer_rwe = PortfolioOptimizer()
 
 // Conservative investor
-let conservative = try optimizer.minimumVariancePortfolio(
-    expectedReturns: expectedReturns,
-    covariance: covariance,
-    allowShortSelling: false
+let conservative_rwe = try optimizer_rwe.minimumVariancePortfolio(
+	expectedReturns: expectedReturns_rwe,
+	covariance: covariance_rwe,
+	allowShortSelling: false
 )
 
 print("Conservative Portfolio ($1M):")
-for (i, asset) in assets.enumerated() {
-    let weight = conservative.weights.toArray()[i]
-    if weight > 0.01 {
-        let allocation = 1_000_000 * weight
-        print("  \(asset): \(allocation.currency(0)) (\(weight.percent(1)))")
-    }
+for (i, asset) in assets_rwe.enumerated() {
+	let weight = conservative_rwe.weights.toArray()[i]
+	if weight > 0.01 {
+		let allocation = 1_000_000 * weight
+		print("  \(asset): \(allocation.currency(0)) (\(weight.percent(1)))")
+	}
 }
-print("Expected Return: \(conservative.expectedReturn.percent(1))")
-print("Volatility: \(conservative.volatility.percent(1))")
+print("Expected Return: \(conservative_rwe.expectedReturn.percent(1))")
+print("Volatility: \(conservative_rwe.volatility.percent(1))")
 ```
 
 **Output:**
 ```
 Conservative Portfolio ($1M):
-  US Large Cap: $215,000 (21.5%)
-  Bonds: $685,000 (68.5%)
-  Real Estate: $100,000 (10.0%)
-Expected Return: 6.2%
-Volatility: 7.8%
+  US Small Cap: $44,228 (4.4%)
+  International: $16,441 (1.6%)
+  Bonds: $797,952 (79.8%)
+  Real Estate: $141,379 (14.1%)
+Expected Return: 5.0%
+Volatility: 6.9%
 ```
 
 ---
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+//do {
+// 4 assets: stocks (small, large), bonds, real estate
+let optimizer = PortfolioOptimizer()
+
+let expectedReturns = VectorN([0.12, 0.15, 0.18, 0.05])
+
+// Construct covariance from correlation matrix to ensure validity
+// High correlation between Asset 1 (12% return) and Asset 3 (18% return)
+// makes Asset 1 a candidate for shorting in 130/30 strategy
+let volatilities = [0.20, 0.30, 0.40, 0.10]  // 20%, 30%, 40%, 10%
+let correlations = [
+	[1.00, 0.30, 0.70, 0.10],  // Asset 1: high corr with Asset 3
+	[0.30, 1.00, 0.50, 0.15],  // Asset 2: moderate corr with Asset 3
+	[0.70, 0.50, 1.00, 0.05],  // Asset 3: highest return
+	[0.10, 0.15, 0.05, 1.00]   // Asset 4: bonds (low correlation)
+]
+
+// Convert correlation to covariance: cov[i][j] = corr[i][j] * vol[i] * vol[j]
+var covariance = [[Double]](repeating: [Double](repeating: 0, count: 4), count: 4)
+for i in 0..<4 {
+	for j in 0..<4 {
+		covariance[i][j] = correlations[i][j] * volatilities[i] * volatilities[j]
+	}
+}
+
+// MARK: - Maximum Sharpe Portfolio
+
+print("Running Maximum Sharpe Portfolio...")
+let maxSharpe = try optimizer.maximumSharpePortfolio(
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	constraintSet: .longOnly
+)
+
+print("Maximum Sharpe Portfolio:")
+print("  Sharpe Ratio: \(maxSharpe.sharpeRatio.number(2))")
+print("  Expected Return: \(maxSharpe.expectedReturn.percent(1))")
+print("  Volatility: \(maxSharpe.volatility.percent(1))")
+print("  Weights: \(maxSharpe.weights.toArray().map { $0.percent(1) })")
+print()
+
+// MARK: - Minimum Variance Portfolio
+
+print("Running Minimum Variance Portfolio...")
+let minVar = try optimizer.minimumVariancePortfolio(
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	allowShortSelling: false
+)
+
+print("Minimum Variance Portfolio:")
+print("  Expected Return: \(minVar.expectedReturn.percent(1))")
+print("  Volatility: \(minVar.volatility.percent(1))")
+print("  Weights: \(minVar.weights.toArray().map { $0.percent(1) })")
+print()
+
+// MARK: - Efficient Frontier
+
+print("Running Efficient Frontier...")
+let frontier = try optimizer.efficientFrontier(
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	numberOfPoints: 20
+)
+
+print("Efficient Frontier:")
+print("Volatility | Return   | Sharpe")
+print("-----------|----------|-------")
+
+for portfolio in frontier.portfolios {
+	print("\(portfolio.volatility.percent(1).paddingLeft(toLength: 10)) | " +
+		  "\(portfolio.expectedReturn.percent(2).paddingLeft(toLength: 8)) | " +
+		  "\(portfolio.sharpeRatio.number(2))")
+}
+
+// Find portfolio closest to 12% target return
+let targetReturn = 0.12
+let targetPortfolio = frontier.portfolios.min(by: { p1, p2 in
+	abs(p1.expectedReturn - targetReturn) < abs(p2.expectedReturn - targetReturn)
+})!
+
+print("\nTarget \(targetReturn.percent(0)) Return Portfolio:")
+print("  Volatility: \(targetPortfolio.volatility.percent(1))")
+print("  Weights: \(targetPortfolio.weights.toArray().map { $0.percent(1) })")
+print()
+
+// MARK: - Risk Parity
+
+print("Running Risk Parity Portfolio...")
+let riskParity = try optimizer.riskParityPortfolio(
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	constraintSet: .longOnly
+)
+
+print("Risk Parity Portfolio:")
+for (i, weight) in riskParity.weights.toArray().enumerated() {
+	print("  Asset \(i + 1): \(weight.percent(1))")
+}
+print("Expected Return: \(riskParity.expectedReturn.percent(1))")
+print("Volatility: \(riskParity.volatility.percent(1))")
+print("Sharpe Ratio: \(riskParity.sharpeRatio.number(2))")
+print()
+
+// MARK: - Constrained Portfolios
+
+print("Running 130/30 Portfolio...")
+let longShort = try optimizer.maximumSharpePortfolio(
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	constraintSet: .longShort(maxLeverage: 1.3)
+)
+
+print("130/30 Portfolio:")
+print("  Sharpe: \(longShort.sharpeRatio.number(2))")
+print("  Weights: \(longShort.weights.toArray().map { $0.percent(1) })")
+print()
+
+print("Running Box Constrained Portfolio...")
+let boxConstrained = try optimizer.maximumSharpePortfolio(
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	constraintSet: .boxConstrained(min: 0.05, max: 0.40)
+)
+
+print("Box Constrained Portfolio (5%-40% per position):")
+print("  Sharpe: \(boxConstrained.sharpeRatio.number(2))")
+print("  Weights: \(boxConstrained.weights.toArray().map { $0.percent(1) })")
+//
+//} catch {
+//	print("❌ Portfolio optimization failed: \(error)")
+//	print("   Error type: \(type(of: error))")
+//	if let localizedError = error as? BusinessMathError {
+//		print("   Description: \(localizedError.errorDescription ?? "No description")")
+//	}
+//}
+//
+
+// MARK: - Real-World Example: $1mm Asset Portfolio
+
+let assets_rwe = ["US Large Cap", "US Small Cap", "International", "Bonds", "Real Estate"]
+let expectedReturns_rwe = VectorN([0.10, 0.12, 0.11, 0.0375, 0.09])
+
+// More realistic covariance structure (constructed from correlations)
+let volatilities_rwe = [0.15, 0.18, 0.165, 0.075, 0.14]  // 15%, 18%, 17%, 7%, 14%
+let correlations_rwe = [
+	[1.00, 0.75, 0.65, 0.25, 0.50],  // US Large Cap
+	[0.75, 1.00, 0.70, 0.10, 0.55],  // US Small Cap (high corr with US stocks)
+	[0.65, 0.70, 1.00, 0.20, 0.45],  // International (corr with other stocks)
+	[0.25, 0.10, 0.20, 1.00, 0.15],  // Bonds (moderate diversifier)
+	[0.50, 0.55, 0.45, 0.15, 1.00]   // Real Estate (hybrid characteristics)
+]
+
+// Convert to covariance matrix
+var covariance_rwe = [[Double]](repeating: [Double](repeating: 0, count: 5), count: 5)
+for i in 0..<5 {
+	for j in 0..<5 {
+		covariance_rwe[i][j] = correlations_rwe[i][j] * volatilities_rwe[i] * volatilities_rwe[j]
+	}
+}
+
+print(covariance_rwe.flatMap({$0.map({$0.number(3)})}))
+
+let optimizer_rwe = PortfolioOptimizer()
+
+// Conservative investor
+let conservative_rwe = try optimizer_rwe.minimumVariancePortfolio(
+	expectedReturns: expectedReturns_rwe,
+	covariance: covariance_rwe,
+	allowShortSelling: false
+)
+
+print("Conservative Portfolio ($1M):")
+for (i, asset) in assets_rwe.enumerated() {
+	let weight = conservative_rwe.weights.toArray()[i]
+	if weight > 0.01 {
+		let allocation = 1_000_000 * weight
+		print("  \(asset): \(allocation.currency(0)) (\(weight.percent(1)))")
+	}
+}
+print("Expected Return: \(conservative_rwe.expectedReturn.percent(1))")
+print("Volatility: \(conservative_rwe.volatility.percent(1))")
+
 ```
-→ Download: Week07/Optimization.playground
-→ Full API Reference: BusinessMath Docs – 5.2 Portfolio Optimization
-```
+</details>
+
+→ Full API Reference: [BusinessMath Docs – 5.2 Portfolio Optimization](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.2-PortfolioOptimizationGuide.md)
+
 
 **Modifications to try**:
 1. Compare maximum Sharpe vs. risk parity for a 10-asset portfolio
@@ -388,7 +596,7 @@ We implemented multiple safeguards:
 
 Without these, 30% of real-world portfolios would fail to optimize.
 
-**Related Methodology**: [Numerical Stability](../week-02/01-mon-numerical-foundations.md) (Week 2) - Covered condition numbers and ill-posed problems.
+**Related Methodology**: [Numerical Stability](../week-02/01-mon-numerical-foundations) (Week 2) - Covered condition numbers and ill-posed problems.
 
 ---
 
