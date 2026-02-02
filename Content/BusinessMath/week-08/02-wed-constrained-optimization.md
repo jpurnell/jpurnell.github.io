@@ -124,8 +124,8 @@ let result = try optimizer.minimize(
     subjectTo: constraints
 )
 
-print("Solution: \(result.solution.toArray().map({ $0.rounded(toPlaces: 4) }))")
-print("Objective: \(result.objectiveValue.rounded(toPlaces: 6))")
+print("Solution: \(result.solution.toArray().map({ $0.number(4) }))")
+print("Objective: \(result.objectiveValue.number(6))")
 print("Constraint satisfied: \(constraints[0].isSatisfied(at: result.solution))")
 ```
 
@@ -149,16 +149,16 @@ let result = try optimizer.minimize(objective, from: initial, subjectTo: constra
 
 if let multipliers = result.lagrangeMultipliers {
     for (i, λ) in multipliers.enumerated() {
-        print("Constraint \(i): λ = \(λ.rounded(toPlaces: 4))")
-        print("  Marginal value of relaxing: \(λ.rounded(toPlaces: 4)) per unit")
+        print("Constraint \(i): λ = \(λ.number(3))")
+        print("  Marginal value of relaxing: \(λ.number(3)) per unit")
     }
 }
 ```
 
 **Output:**
 ```
-Constraint 0: λ = 0.5000
-  Marginal value of relaxing: 0.5000 per unit
+Constraint 0: λ = -0.999
+  Marginal value of relaxing: -0.999 per unit
 ```
 
 **Interpretation**: If we relax "x + y = 1" to "x + y = 1.01", the objective improves by ~0.005 (λ × 0.01).
@@ -178,6 +178,7 @@ Constraint 0: λ = 0.5000
 
 ```swift
 import BusinessMath
+import Foundation
 
 // Portfolio variance
 let covariance = [
@@ -226,8 +227,8 @@ print("All constraints satisfied: \(constraints.allSatisfy { $0.isSatisfied(at: 
 
 **Output:**
 ```
-Optimal weights: [45.2%, 38.1%, 16.7%]
-Portfolio risk: 19.84%
+Optimal weights: ["50.0%", "36.8%", "13.2%"]
+Portfolio risk: 18.50%
 All constraints satisfied: true
 ```
 
@@ -296,13 +297,13 @@ print("Sharpe ratio (rf=3%): \((optimalReturn - 0.03) / optimalRisk)")
 
 **Output:**
 ```
-Optimal weights: [25.3%, 28.7%, 31.2%, 14.8%]
+Optimal weights: ["11.0%", "25.9%", "31.2%", "31.9%"]
 Expected return: 12.00%
-Volatility: 21.45%
-Sharpe ratio (rf=3%): 0.420
+Volatility: 19.81%
+Sharpe ratio (rf=3%): 0.4542157498481902
 ```
 
-**The solution**: The optimizer found the minimum-risk portfolio that achieves exactly 12% return. Asset 4 (highest return but highest risk) gets only 14.8% because we're minimizing risk, not maximizing return.
+**The solution**: The optimizer found the minimum-risk portfolio that achieves exactly 12% return. Asset 4 (highest return but highest risk) gets only 31.9% because we're minimizing risk, not maximizing return.
 
 ---
 
@@ -320,22 +321,65 @@ let unconstrained = try unconstrainedOptimizer.minimizeBFGS(
 print("Unconstrained solution: \(unconstrained.solution.toArray().map({ $0.percent(1) }))")
 print("Sum of weights: \((unconstrained.solution.reduce(0, +)).percent(1))")
 
-// Constrained: Minimum variance + budget + long-only
+print("\n=== Impact of Constraints ===\n")
 let constrainedOptimizer = InequalityOptimizer<VectorN<Double>>()
-let constrained = try constrainedOptimizer.minimize(
-    portfolioVariance,
-    from: VectorN([0.25, 0.25, 0.25, 0.25]),
-    subjectTo: [
-        .equality { w in w.reduce(0, +) - 1.0 },
-        .inequality { w in -w[0] },
-        .inequality { w in -w[1] },
-        .inequality { w in -w[2] },
-        .inequality { w in -w[3] }
-    ]
+// Budget-only: Minimum variance with just the budget constraint (allows shorting)
+let budgetOnly = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 }  // Only budget constraint
+	]
 )
 
-print("Constrained solution: \(constrained.solution.toArray().map({ $0.percent(1) }))")
-print("Sum of weights: \((constrained.solution.reduce(0, +)).percent(1))")
+print("Budget-only (allows shorting):")
+print("  Weights: \(budgetOnly.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(budgetOnly.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))")
+
+// Long-only: Add non-negativity constraints
+let longOnly_option = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] }
+	]
+)
+
+print("\nLong-only (no short positions):")
+print("  Weights: \(longOnly_option.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(longOnly_option.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))")
+
+// Position limits: Add 40% maximum per position
+let positionLimited = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] },
+		.inequality { w in w[0] - 0.40 },
+		.inequality { w in w[1] - 0.40 },
+		.inequality { w in w[2] - 0.40 },
+		.inequality { w in w[3] - 0.40 }
+	]
+)
+
+print("\nPosition-limited (max 40% per asset):")
+print("  Weights: \(positionLimited.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(positionLimited.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))")
+
+print("\n💡 Note: More constraints → higher variance (constraints limit optimization)")
+print("   But constraints reflect real-world limitations (no shorting, diversification rules, etc.)")
+
 ```
 
 **Output:**
@@ -353,10 +397,248 @@ Sum of weights: 100.0%
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+import Foundation
+
+// MARK: - Basic Constraint Infrastructure
+
+// Equality constraint: x + y = 1
+let equality: MultivariateConstraint<VectorN<Double>> = .equality { v in
+	let x = v[0], y = v[1]
+	return x + y - 1.0
+}
+
+// Inequality constraint: x ≥ 0 → -x ≤ 0
+let inequality: MultivariateConstraint<VectorN<Double>> = .inequality { v in
+	-v[0]
+}
+
+// Check if satisfied
+let point = VectorN([0.5, 0.5])
+print("Equality satisfied: \(equality.isSatisfied(at: point))")  // true
+print("Inequality satisfied: \(inequality.isSatisfied(at: point))")  // true
+
+
+// MARK: - Pre-Built Helpers
+
+// Budget constraint: weights sum to 1
+let budget = MultivariateConstraint<VectorN<Double>>.budgetConstraint
+
+// Non-negativity: all components ≥ 0 (long-only)
+let longOnly = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: 5)
+
+// Position limits: each weight ≤ 30%
+let positionLimits = MultivariateConstraint<VectorN<Double>>.positionLimit(0.30, dimension: 5)
+
+// Box constraints: 5% ≤ wᵢ ≤ 40%
+let box = MultivariateConstraint<VectorN<Double>>.boxConstraints(
+	min: 0.05,
+	max: 0.40,
+	dimension: 5
+)
+
+// Combine multiple constraints
+let allConstraints = [budget] + longOnly + positionLimits
+
+// MARK: - Equality-Constrained Optimization
+
+// Minimize x² + y² subject to x + y = 1
+let objective_eqConst: (VectorN<Double>) -> Double = { v in
+	let x = v[0], y = v[1]
+	return x*x + y*y
+}
+
+let constraints_eqConst = [
+	MultivariateConstraint<VectorN<Double>>.equality { v in
+		v[0] + v[1] - 1.0  // x + y = 1
+	}
+]
+
+let optimizer_eqConst = ConstrainedOptimizer<VectorN<Double>>()
+let result_eqConst = try optimizer_eqConst.minimize(
+	objective_eqConst,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: constraints_eqConst
+)
+
+print("Solution: \(result_eqConst.solution.toArray().map({ $0.number(4) }))")
+print("Objective: \(result_eqConst.objectiveValue.number(6))")
+print("Constraint satisfied: \(constraints_eqConst[0].isSatisfied(at: result_eqConst.solution))")
+
+for (i, λ) in result_eqConst.lagrangeMultipliers.enumerated() {
+	print("Constraint \(i): λ = \(λ.number(3))")
+	print("  Marginal value of relaxing: \(λ.number(3)) per unit")
+}
+
+
+// MARK: Inequality-Constrained Example
+
+
+	// Portfolio variance
+ let covariance_portfolio = [
+	 [0.04, 0.01, 0.02],
+	 [0.01, 0.09, 0.03],
+	 [0.02, 0.03, 0.16]
+ ]
+
+ let portfolioVariance_portfolio: (VectorN<Double>) -> Double = { w in
+	 var variance = 0.0
+	 for i in 0..<3 {
+		 for j in 0..<3 {
+			 variance += w[i] * w[j] * covariance_portfolio[i][j]
+		 }
+	 }
+	 return variance
+ }
+
+ // Constraints
+ let constraints_portfolio: [MultivariateConstraint<VectorN<Double>>] = [
+	 // Budget: weights sum to 1
+	 .equality { w in w.reduce(0, +) - 1.0 },
+
+	 // Long-only: wᵢ ≥ 0 → -wᵢ ≤ 0
+	 .inequality { w in -w[0] },
+	 .inequality { w in -w[1] },
+	 .inequality { w in -w[2] },
+
+	 // Position limits: wᵢ ≤ 0.5 → wᵢ - 0.5 ≤ 0
+	 .inequality { w in w[0] - 0.5 },
+	 .inequality { w in w[1] - 0.5 },
+	 .inequality { w in w[2] - 0.5 }
+ ]
+
+ let optimizer_portfolio = InequalityOptimizer<VectorN<Double>>()
+ let result_portfolio = try optimizer_portfolio.minimize(
+	 portfolioVariance_portfolio,
+	 from: VectorN([1.0/3, 1.0/3, 1.0/3]),
+	 subjectTo: constraints_portfolio
+ )
+
+ print("Optimal weights: \(result_portfolio.solution.toArray().map({ $0.percent(1) }))")
+ print("Portfolio risk: \(sqrt(result_portfolio.objectiveValue).percent(2))")
+ print("All constraints satisfied: \(constraints_portfolio.allSatisfy { $0.isSatisfied(at: result_portfolio.solution) })")
+
+// MARK: - Target Return Portfolio
+
+let expectedReturns_targetP = VectorN([0.08, 0.10, 0.12, 0.15])
+let covarianceMatrix_targetP = [
+	[0.0400, 0.0100, 0.0080, 0.0050],
+	[0.0100, 0.0625, 0.0150, 0.0100],
+	[0.0080, 0.0150, 0.0900, 0.0200],
+	[0.0050, 0.0100, 0.0200, 0.1600]
+]
+
+// Objective: Minimize variance
+func portfolioVariance_targetP(_ weights: VectorN<Double>) -> Double {
+	var variance = 0.0
+	for i in 0..<weights.dimension {
+		for j in 0..<weights.dimension {
+			variance += weights[i] * weights[j] * covarianceMatrix_targetP[i][j]
+		}
+	}
+	return variance
+}
+
+let optimizer_targetP = InequalityOptimizer<VectorN<Double>>()
+
+let result_targetP = try optimizer_targetP.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		// Fully invested
+		.equality { w in w.reduce(0, +) - 1.0 },
+
+		// Target return ≥ 12%
+		.inequality { w in
+			let ret = w.dot(expectedReturns_targetP)
+			return 0.12 - ret  // ≤ 0 means ret ≥ 12%
+		},
+
+		// Long-only
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] }
+	]
+)
+
+print("Optimal weights: \(result_targetP.solution.toArray().map({ $0.percent(1) }))")
+
+let optimalReturn_targetP = result_targetP.solution.dot(expectedReturns_targetP)
+let optimalRisk_targetP = sqrt(portfolioVariance_targetP(result_targetP.solution))
+
+print("Expected return: \(optimalReturn_targetP.percent(2))")
+print("Volatility: \(optimalRisk_targetP.percent(2))")
+print("Sharpe ratio (rf=3%): \((optimalReturn_targetP - 0.03) / optimalRisk_targetP)")
+
+// MARK: - Comparing Constrained vs Fewer Constraints
+print("\n=== Impact of Constraints ===\n")
+let constrainedOptimizer = InequalityOptimizer<VectorN<Double>>()
+// Budget-only: Minimum variance with just the budget constraint (allows shorting)
+let budgetOnly = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 }  // Only budget constraint
+	]
+)
+
+print("Budget-only (allows shorting):")
+print("  Weights: \(budgetOnly.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(budgetOnly.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))")
+
+// Long-only: Add non-negativity constraints
+let longOnly_option = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] }
+	]
+)
+
+print("\nLong-only (no short positions):")
+print("  Weights: \(longOnly_option.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(longOnly_option.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))")
+
+// Position limits: Add 40% maximum per position
+let positionLimited = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] },
+		.inequality { w in w[0] - 0.40 },
+		.inequality { w in w[1] - 0.40 },
+		.inequality { w in w[2] - 0.40 },
+		.inequality { w in w[3] - 0.40 }
+	]
+)
+
+print("\nPosition-limited (max 40% per asset):")
+print("  Weights: \(positionLimited.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(positionLimited.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))")
+
+print("\n💡 Note: More constraints → higher variance (constraints limit optimization)")
+print("   But constraints reflect real-world limitations (no shorting, diversification rules, etc.)")
+
 ```
-→ Download: Week08/Advanced-Optimization.playground
-→ Full API Reference: BusinessMath Docs – 5.6 Constrained Optimization
-```
+</details>
+
+→ Full API Reference: [BusinessMath Docs – 5.6 Constrained Optimization](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.6-ConstrainedOptimization.md)
 
 **Modifications to try**:
 1. Add sector constraints (e.g., max 40% in any sector across multiple assets)
@@ -438,7 +720,7 @@ The hardest challenge was **choosing the right constrained optimization algorith
 - Works without Hessian (uses gradient only)
 - Naturally produces shadow prices (Lagrange multipliers)
 
-**Related Methodology**: [Algorithm Selection](../week-01/04-thu-development-workflow.md) (Week 1) - Covered how we evaluate trade-offs between implementation complexity and user benefit.
+**Related Methodology**: [Algorithm Selection](../week-01/04-thu-development-workflow) (Week 1) - Covered how we evaluate trade-offs between implementation complexity and user benefit.
 
 ---
 

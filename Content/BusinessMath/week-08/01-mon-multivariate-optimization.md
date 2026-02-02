@@ -65,7 +65,7 @@ print("Gradient: \(gradient.toArray())")  // ≈ [2.0, 8.0]
 // Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓
 
 // Compute Hessian (curvature matrix)
-let hessian = try numericalHessian(of: function, at: point)
+let hessian = try numericalHessian(function, at: point)
 print("Hessian:")
 for row in hessian {
     print(row.map { $0.number(1) })
@@ -112,8 +112,8 @@ let result = try optimizer.minimize(
     initialGuess: VectorN([5.0, 5.0])
 )
 
-print("Minimum at: \(result.solution.toArray().map({ $0.rounded(toPlaces: 3) }))")
-print("Value: \(result.objectiveValue.rounded(toPlaces: 6))")
+print("Minimum at: \(result.solution.toArray().map({ $0.number(3) }))")
+print("Value: \(result.objectiveValue.number(6))")
 print("Iterations: \(result.iterations)")
 print("Converged: \(result.converged)")
 ```
@@ -145,10 +145,10 @@ let rosenbrock: (VectorN<Double>) -> Double = { v in
 
 // Gradient descent with momentum (default 0.9)
 let optimizerWithMomentum = GradientDescentOptimizer<Double>(
-    learningRate: 0.01,
-    momentum: 0.9,
-    useNesterov: false,
-    maxIterations: 5000
+	learningRate: 0.01,
+	maxIterations: 5000,
+	momentum: 0.9,
+	useNesterov: false
 )
 
 // Note: Using scalar optimizer for demonstration
@@ -161,7 +161,7 @@ let result = optimizerWithMomentum.optimize(
     bounds: nil
 )
 
-print("Converged to: \(result.optimalValue.rounded(toPlaces: 4))")
+print("Converged to: \(result.optimalValue.number(4))")
 print("Iterations: \(result.iterations)")
 ```
 
@@ -199,11 +199,11 @@ let newtonOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
 let result = try newtonOptimizer.minimize(
     function: quadratic,
     gradient: { try numericalGradient(quadratic, at: $0) },
-    hessian: { try numericalHessian(of: quadratic, at: $0) },
+    hessian: { try numericalHessian(quadratic, at: $0) },
     initialGuess: VectorN([10.0, 10.0])
 )
 
-print("Solution: \(result.solution.toArray().map({ $0.rounded(toPlaces: 6) }))")
+print("Solution: \(result.solution.toArray().map({ $0.number(6) }))")
 print("Converged in: \(result.iterations) iterations")
 ```
 
@@ -293,8 +293,8 @@ print("Reason: \(result.selectionReason ?? "N/A")")
 **Output:**
 ```
 Solution: [1.0000, 1.0000]
-Algorithm used: BFGS
-Reason: Small problem (2 variables), smooth function - using quasi-Newton for fast convergence
+Algorithm used: Newton-Raphson
+Reason: Small problem (2 variables) - using Newton-Raphson for fast convergence
 ```
 
 **How it works**:
@@ -354,33 +354,210 @@ let optimizer = MultivariateNewtonRaphson<VectorN<Double>>()
 let result = try optimizer.minimizeBFGS(
     function: objective,
     gradient: { try numericalGradient(objective, at: $0) },
-    initialGuess: VectorN([1.0, 1.0, 1.0])
+	initialGuess: VectorN([1.0, 2.0, 3.0])
 )
 
 print("Fitted parameters:")
-print("  a = \(result.solution[0].rounded(toPlaces: 2)) (true: 2.0)")
-print("  b = \(result.solution[1].rounded(toPlaces: 2)) (true: 3.0)")
-print("  c = \(result.solution[2].rounded(toPlaces: 2)) (true: 5.0)")
-print("SSE: \(result.objectiveValue.rounded(toPlaces: 1))")
+print("  a = \(result_params.solution[0].number(2)) (true: 2.0)")
+print("  b = \(result_params.solution[1].number(2)) (true: 3.0)")
+print("  c = \(result_params.solution[2].number(2)) (true: 5.0)")
+print("SSE: \(result_params.objectiveValue.number(1))")
 ```
 
 **Output:**
 ```
 Fitted parameters:
-  a = 2.01 (true: 2.0)
-  b = 2.98 (true: 3.0)
-  c = 5.12 (true: 5.0)
-SSE: 623.4
+  a = 1.98 (true: 2.0)
+  b = 3.17 (true: 3.0)
+  c = 4.82 (true: 5.0)
+SSE: 311.7
 ```
 
 ---
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+// MARK: - Numerical Differentiation
+
+// Define f(x,y) = x² + 2y²
+let function_nd: (VectorN<Double>) -> Double = { v in
+	let x = v[0]
+	let y = v[1]
+	return x*x + 2*y*y
+}
+
+// Compute gradient at (1, 2)
+let point_nd = VectorN([1.0, 2.0])
+let gradient_nd = try numericalGradient(function_nd, at: point_nd)
+print("Gradient: \(gradient_nd.toArray())")  // ≈ [2.0, 8.0]
+// Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓
+
+// Compute Hessian (curvature matrix)
+let hessian = try numericalHessian(function_nd, at: point_nd)
+print("Hessian:")
+for row in hessian {
+	print(row.map { $0.number(1) })
+}
+// [[2.0, 0.0], [0.0, 4.0]]
+
+// MARK: - Gradient Descent
+
+// Minimize f(x,y) = x² + 4y²
+let function_gd: (VectorN<Double>) -> Double = { v in
+	v[0]*v[0] + 4*v[1]*v[1]
+}
+
+// Basic gradient descent
+let optimizer_gd = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 1000,
+	tolerance: 1e-6
+)
+
+let result_gd = try optimizer_gd.minimize(
+	function: function_gd,
+	gradient: { x in try numericalGradient(function_gd, at: x) },
+	initialGuess: VectorN([5.0, 5.0])
+)
+
+print("Minimum at: \(result_gd.solution.toArray().map({ $0.number(3)  }))")
+print("Value: \(result_gd.objectiveValue.number(6))")
+print("Iterations: \(result_gd.iterations)")
+print("Converged: \(result_gd.converged)")
+
+// MARK: Gradient Descent with Momentum
+
+// Rosenbrock function: classic test problem
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+	let x = v[0], y = v[1]
+	let a = 1 - x
+	let b = y - x*x
+	return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Gradient descent with momentum (default 0.9)
+let optimizerWithMomentum = GradientDescentOptimizer<Double>(
+	learningRate: 0.01,
+	maxIterations: 5000,
+	momentum: 0.9,
+	useNesterov: false
+)
+
+// Note: Using scalar optimizer for demonstration
+// For VectorN, use MultivariateGradientDescent
+
+let result_gdm = optimizerWithMomentum.optimize(
+	objective: { x in (x - 5) * (x - 5) },
+	constraints: [],
+	initialGuess: 0.0,
+	bounds: nil
+)
+
+print("Converged to: \(result_gdm.optimalValue.number(1))")
+print("Iterations: \(result_gdm.iterations)")
+
+// MARK: - Newton-Raphson: Quadratic Convergence
+
+	// Quadratic function: f(x,y) = x² + 4y² + 2xy
+	let quadratic: (VectorN<Double>) -> Double = { v in
+		let x = v[0], y = v[1]
+		return x*x + 4*y*y + 2*x*y
+	}
+
+	// Full Newton-Raphson (uses exact Hessian)
+	let newtonOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
+		maxIterations: 100,
+		tolerance: 1e-8,
+		useLineSearch: true
+	)
+
+	let result_newton = try newtonOptimizer.minimize(
+		function: quadratic,
+		gradient: { try numericalGradient(quadratic, at: $0) },
+		hessian: { try numericalHessian(quadratic, at: $0) },
+		initialGuess: VectorN([10.0, 10.0])
+	)
+
+	print("Solution: \(result_newton.solution.toArray().map({ $0.number(6) }))")
+	print("Converged in: \(result_newton.iterations) iterations")
+
+// MARK: - BFGS: Quasi-Newton Sweet Spot
+
+// BFGS quasi-Newton
+let bfgsOptimizer = MultivariateNewtonRaphson<VectorN<Double>>()
+
+let result_bfgs = try bfgsOptimizer.minimizeBFGS(
+	function: rosenbrock,
+	gradient: { try numericalGradient(rosenbrock, at: $0) },
+	initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result_bfgs.solution.toArray().map({ $0.number(4) }))")
+print("Iterations: \(result_bfgs.iterations)")
+print("Final value: \(result_bfgs.objectiveValue.number(8))")
+
+// MARK: - Adaptive Optimizer
+
+// AdaptiveOptimizer chooses the best algorithm automatically
+let optimizer_adaptive = AdaptiveOptimizer<VectorN<Double>>()
+
+let result_adaptive = try optimizer_adaptive.optimize(
+	objective: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0]),
+	constraints: []
+)
+
+print("Solution: \(result_adaptive.solution.toArray().map({ $0.number(4) }))")
+print("Algorithm used: \(result_adaptive.algorithmUsed)")
+print("Reason: \(result_adaptive.selectionReason)")
+
+
+// MARK: - Parameter Fitting Example
+
+// Data: y = a*x² + b*x + c + noise
+let xData = VectorN.linearSpace(from: 0.0, to: 10.0, count: 50)
+let yData = xData.map { x in
+	2.0 * x * x + 3.0 * x + 5.0 + Double.random(in: -5...5)
+}
+
+// Objective: Minimize sum of squared errors
+let objective_params: (VectorN<Double>) -> Double = { params in
+	let a = params[0], b = params[1], c = params[2]
+	var sse = 0.0
+	for i in 0..<xData.dimension {
+		let x = xData[i]
+		let predicted = a * x * x + b * x + c
+		let error = yData[i] - predicted
+		sse += error * error
+	}
+	return sse
+}
+
+// BFGS for fast convergence
+let optimizer_params = MultivariateNewtonRaphson<VectorN<Double>>()
+let result_params = try optimizer_params.minimizeBFGS(
+	function: objective_params,
+	gradient: { try numericalGradient(objective_params, at: $0) },
+	initialGuess: VectorN([1.0, 2.0, 3.0])
+)
+
+print("Fitted parameters:")
+print("  a = \(result_params.solution[0].number(2)) (true: 2.0)")
+print("  b = \(result_params.solution[1].number(2)) (true: 3.0)")
+print("  c = \(result_params.solution[2].number(2)) (true: 5.0)")
+print("SSE: \(result_params.objectiveValue.number(1))")
+
 ```
-→ Download: Week08/Advanced-Optimization.playground
-→ Full API Reference: BusinessMath Docs – 5.5 Multivariate Optimization
-```
+</details>
+
+→ Full API Reference: [BusinessMath Docs – 5.5 Multivariate Optimization](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.5-MultivariateOptimization.md)
+
 
 **Modifications to try**:
 1. Compare convergence rates: plot iteration vs. objective value for each algorithm
@@ -439,7 +616,7 @@ The hardest challenge was **making numerical differentiation robust across all R
 
 This automatically adjusts to the numeric type's precision.
 
-**Related Methodology**: [Numerical Stability](../week-02/01-mon-numerical-foundations.md) (Week 2) - Covered machine epsilon and catastrophic cancellation.
+**Related Methodology**: [Numerical Stability](../week-02/01-mon-numerical-foundations) (Week 2) - Covered machine epsilon and catastrophic cancellation.
 
 ---
 

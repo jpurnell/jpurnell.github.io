@@ -681,7 +681,344 @@ For comprehensive GPU Monte Carlo coverage, see: <doc:4.3-MonteCarloExpressionMo
 
 ## Try It Yourself
 
-Download the playground and experiment:
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+let company = Entity(
+	id: "TECH001",
+	primaryType: .ticker,
+	name: "TechCo"
+)
+
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]
+
+// Base case: Define primitive drivers
+// These are the independent inputs that scenarios can override
+let baseRevenue = DeterministicDriver(name: "Revenue", value: 1_000_000)
+let baseCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.60)  // 60% of revenue
+let baseOpEx = DeterministicDriver(name: "OpEx", value: 200_000)
+
+var baseOverrides: [String: AnyDriver<Double>] = [:]
+baseOverrides["Revenue"] = AnyDriver(baseRevenue)
+baseOverrides["COGS Rate"] = AnyDriver(baseCOGSRate)
+baseOverrides["Operating Expenses"] = AnyDriver(baseOpEx)
+
+let baseCase = FinancialScenario(
+	name: "Base Case",
+	description: "Expected performance",
+	driverOverrides: baseOverrides
+)
+
+// Builder function: Convert primitive drivers → financial statements
+// Key insight: COGS is calculated as Revenue × COGS Rate, creating a relationship
+let builder: ScenarioRunner.StatementBuilder = { drivers, periods in
+	let revenue = drivers["Revenue"]!.sample(for: periods[0])
+	let cogsRate = drivers["COGS Rate"]!.sample(for: periods[0])
+	let opex = drivers["Operating Expenses"]!.sample(for: periods[0])
+	
+	// Calculate COGS from the relationship: COGS = Revenue × COGS Rate
+	let cogs = revenue * cogsRate
+
+	// Build Income Statement
+	let revenueAccount = try Account(
+		entity: company,
+		name: "Revenue",
+		incomeStatementRole: .revenue,
+		timeSeries: TimeSeries(periods: periods, values: Array(repeating: revenue, count: periods.count))
+	)
+
+	let cogsAccount = try Account(
+		entity: company,
+		name: "COGS",
+		incomeStatementRole: .costOfGoodsSold,
+		timeSeries: TimeSeries(periods: periods, values: Array(repeating: cogs, count: periods.count))
+	)
+
+	let opexAccount = try Account(
+		entity: company,
+		name: "Operating Expenses",
+		incomeStatementRole: .operatingExpenseOther,
+		timeSeries: TimeSeries(periods: periods, values: Array(repeating: opex, count: periods.count))
+	)
+
+	let incomeStatement = try IncomeStatement(
+		entity: company,
+		periods: periods,
+		accounts: [revenueAccount, cogsAccount, opexAccount]
+	)
+
+	// Simple balance sheet and cash flow (required for complete projection)
+	let cashAccount = try Account(
+		entity: company,
+		name: "Cash",
+		balanceSheetRole: .cashAndEquivalents,
+		timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]),
+	)
+
+	let equityAccount = try Account(
+		entity: company,
+		name: "Equity",
+		balanceSheetRole: .commonStock,
+		timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000])
+	)
+
+	let balanceSheet = try BalanceSheet(
+		entity: company,
+		periods: periods,
+		accounts: [cashAccount, equityAccount]
+	)
+
+	let cfAccount = try Account(
+		entity: company,
+		name: "Operating Cash Flow",
+		cashFlowRole: .netIncome,
+		timeSeries: incomeStatement.netIncome,
+		metadata: AccountMetadata(category: "Operating Activities")
+	)
+
+	let cashFlowStatement = try CashFlowStatement(
+		entity: company,
+		periods: periods,
+		accounts: [cfAccount]
+	)
+
+	return (incomeStatement, balanceSheet, cashFlowStatement)
+}
+
+// Run base case
+let runner = ScenarioRunner()
+let baseProjection = try runner.run(
+	scenario: baseCase,
+	entity: company,
+	periods: quarters,
+	builder: builder
+)
+
+print("Base Case Q1 Net Income: \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
+
+// MARK: - Create Multiple Scenarios
+
+	// Best Case: Higher revenue, lower costs
+	let bestRevenue = DeterministicDriver(name: "Revenue", value: 1_200_000)  // +20%
+	let bestCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.45)        // -10%
+	let bestOpEx = DeterministicDriver(name: "Operating Expenses", value: 180_000)          // -10%
+
+	var bestOverrides: [String: AnyDriver<Double>] = [:]
+	bestOverrides["Revenue"] = AnyDriver(bestRevenue)
+	bestOverrides["COGS Rate"] = AnyDriver(bestCOGSRate)
+	bestOverrides["Operating Expenses"] = AnyDriver(bestOpEx)
+
+	let bestCase = FinancialScenario(
+		name: "Best Case",
+		description: "Optimistic performance",
+		driverOverrides: bestOverrides
+	)
+
+	// Worst Case: Lower revenue, higher costs
+	let worstRevenue = DeterministicDriver(name: "Revenue", value: 800_000)   // -20%
+	let worstCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.825)       // +10%
+	let worstOpEx = DeterministicDriver(name: "Operating Expenses", value: 220_000)         // +10%
+
+	var worstOverrides: [String: AnyDriver<Double>] = [:]
+	worstOverrides["Revenue"] = AnyDriver(worstRevenue)
+	worstOverrides["COGS Rate"] = AnyDriver(worstCOGSRate)
+	worstOverrides["Operating Expenses"] = AnyDriver(worstOpEx)
+
+	let worstCase = FinancialScenario(
+		name: "Worst Case",
+		description: "Lower sales + margin compression",
+		driverOverrides: worstOverrides
+	)
+
+	// Run all scenarios
+	let bestProjection = try runner.run(
+		scenario: bestCase,
+		entity: company,
+		periods: quarters,
+		builder: builder
+	)
+
+	let worstProjection = try runner.run(
+		scenario: worstCase,
+		entity: company,
+		periods: quarters,
+		builder: builder
+	)
+
+	// Compare results
+	print("\n=== Q1 Net Income Comparison ===")
+	print("Best Case:  \(bestProjection.incomeStatement.netIncome[q1]!.currency(0))")
+	print("Base Case:  \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
+	print("Worst Case: \(worstProjection.incomeStatement.netIncome[q1]!.currency(0))")
+
+	let range = bestProjection.incomeStatement.netIncome[q1]! -
+				worstProjection.incomeStatement.netIncome[q1]!
+	print("\nRange: \(range.currency(0))")
+
+// MARK: - One-Way Sensitivity Analysis
+
+// How does Revenue affect Net Income?
+let revenueSensitivity = try runSensitivity(
+	baseCase: baseCase,
+	entity: company,
+	periods: quarters,
+	inputDriver: "Revenue",
+	inputRange: 800_000...1_200_000,  // ±20%
+	steps: 9,  // Test 9 evenly-spaced values
+	builder: builder
+) { projection in
+	// Extract Q1 Net Income as output metric
+	let q1 = Period.quarter(year: 2025, quarter: 1)
+	return projection.incomeStatement.netIncome[q1]!
+}
+
+print("\n=== Revenue Sensitivity Analysis ===")
+print("Revenue     →   Net Income")
+print("----------      -----------")
+
+for (revenue, netIncome) in zip(revenueSensitivity.inputValues, revenueSensitivity.outputValues) {
+	print("\(revenue.currency(0).paddingLeft(toLength: 10))  → \(netIncome.currency(0).paddingLeft(toLength: 10))")
+}
+
+// Calculate sensitivity (slope)
+let deltaRevenue = revenueSensitivity.inputValues.last! - revenueSensitivity.inputValues.first!
+let deltaIncome = revenueSensitivity.outputValues.last! - revenueSensitivity.outputValues.first!
+let sensitivity = deltaIncome / deltaRevenue
+
+print("\nSensitivity: \(sensitivity.number(2))")
+print("For every $1 increase in revenue, net income increases by \(sensitivity.currency(2))")
+
+
+// MARK: -  Tornado Diagram Analysis
+
+	// Analyze all key drivers at once
+	let tornado = try runTornadoAnalysis(
+		baseCase: baseCase,
+		entity: company,
+		periods: quarters,
+		inputDrivers: ["Revenue", "COGS Rate", "Operating Expenses"],
+		variationPercent: 0.20,  // Vary each by ±20%
+		steps: 2,  // Just test high and low
+		builder: builder
+	) { projection in
+		return projection.incomeStatement.netIncome[q1]!
+	}
+
+	print("\n=== Tornado Diagram (Ranked by Impact) ===")
+	print("Driver                  Low         High        Impact      % Impact")
+	print("--------------------    ----------  ----------  ----------  --------")
+
+	for input in tornado.inputs {
+		let impact = tornado.impacts[input]!
+		let low = tornado.lowValues[input]!
+		let high = tornado.highValues[input]!
+		let percentImpact = (impact / tornado.baseCaseOutput)
+
+		print("\(input.padding(toLength: 20, withPad: " ", startingAt: 0))\(low.currency(0).paddingLeft(toLength: 12))\(high.currency(0).paddingLeft(toLength: 12))\(impact.currency(0).paddingLeft(toLength: 12))\(percentImpact.percent(0).paddingLeft(toLength: 12))")
+	}
+
+// MARK: - Visualize the Tornado
+
+let tornadoPlot = plotTornadoDiagram(tornado)
+
+print("\n" + tornadoPlot)
+
+// MARK: - Two-Way Sensitivity Analysis
+
+	// How do Revenue and COGS Rate interact?
+	let twoWay = try runTwoWaySensitivity(
+		baseCase: baseCase,
+		entity: company,
+		periods: quarters,
+		inputDriver1: "Revenue",
+		inputRange1: 800_000...1_200_000,
+		steps1: 5,
+		inputDriver2: "COGS Rate",
+		inputRange2: 0.48...0.72,  // 48% to 72% COGS
+		steps2: 5,
+		builder: builder
+	) { projection in
+		return projection.incomeStatement.netIncome[q1]!
+	}
+
+	// Print data table
+	print("\n=== Two-Way Sensitivity: Revenue × COGS Rate ===")
+	print("\nCOGS Rate →         48%         54%         60%         66%         72%")
+	print("Revenue ↓")
+	print("-----------    --------    --------    --------    --------    --------")
+
+	for (i, revenue) in twoWay.inputValues1.enumerated() {
+		var row = "\(revenue.currency(0).paddingLeft(toLength: 11))"
+		for j in 0..<twoWay.inputValues2.count {
+			let netIncome = twoWay.results[i][j]
+			row += netIncome.currency(0).paddingLeft(toLength: 12)
+		}
+		print(row)
+	}
+
+
+// MARK: - Monte Carlo Integration
+
+	// Create probabilistic scenario with uncertain Revenue and COGS Rate
+	let uncertainRevenue = ProbabilisticDriver<Double>.normal(
+		name: "Revenue",
+		mean: 1_000_000.0,
+		stdDev: 100_000.0  // ±$100K uncertainty
+	)
+
+	let uncertainCOGSRate = ProbabilisticDriver<Double>.normal(
+		name: "COGS Rate",
+		mean: 0.60,
+		stdDev: 0.05  // ±5% margin uncertainty
+	)
+
+	var monteCarloOverrides: [String: AnyDriver<Double>] = [:]
+	monteCarloOverrides["Revenue"] = AnyDriver(uncertainRevenue)
+	monteCarloOverrides["COGS Rate"] = AnyDriver(uncertainCOGSRate)
+	monteCarloOverrides["Operating Expenses"] = AnyDriver(baseOpEx)
+
+	let uncertainScenario = FinancialScenario(
+		name: "Monte Carlo",
+		description: "Probabilistic scenario",
+		driverOverrides: monteCarloOverrides
+	)
+
+	// Run 10,000 iterations
+	let simulation = try runFinancialSimulation(
+		scenario: uncertainScenario,
+		entity: company,
+		periods: quarters,
+		iterations: 10_000,
+		builder: builder
+	)
+
+	// Analyze results
+	let netIncomeMetric: (FinancialProjection) -> Double = { projection in
+		return projection.incomeStatement.netIncome[q1]!
+	}
+
+	print("\n=== Monte Carlo Results (10,000 iterations) ===")
+	print("Mean: \(simulation.mean(metric: netIncomeMetric).currency(0))")
+
+	print("\nPercentiles:")
+	print("  P5:  \(simulation.percentile(0.05, metric: netIncomeMetric).currency(0))")
+	print("  P25: \(simulation.percentile(0.25, metric: netIncomeMetric).currency(0))")
+	print("  P50: \(simulation.percentile(0.50, metric: netIncomeMetric).currency(0))")
+	print("  P75: \(simulation.percentile(0.75, metric: netIncomeMetric).currency(0))")
+	print("  P95: \(simulation.percentile(0.95, metric: netIncomeMetric).currency(0))")
+
+	let ci90 = simulation.confidenceInterval(0.90, metric: netIncomeMetric)
+	print("\n90% CI: [\(ci90.lowerBound.currency(0)), \(ci90.upperBound.currency(0))]")
+
+	let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric)
+	print("\nProbability of loss: \(probLoss.percent(1))")
+
+```
+</details>
 
 → Full API Reference: [BusinessMath Docs – 4.2 Scenario Analysis](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.2-ScenarioAnalysisGuide.md)
 

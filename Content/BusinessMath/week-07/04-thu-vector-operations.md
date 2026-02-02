@@ -409,7 +409,7 @@ let portfolioReturn = weights.dot(expectedReturns)
 print("Portfolio return: \(portfolioReturn.percent(1))")
 
 // Normalize to equal weights for comparison
-let equalWeights = VectorN.ones(dimension: 4).normalized()
+let equalWeights = VectorN<Double>.equalWeights(dimension: 4)
 let equalReturn = equalWeights.dot(expectedReturns)
 print("Equal-weight return: \(equalReturn.percent(1))")
 ```
@@ -417,7 +417,7 @@ print("Equal-weight return: \(equalReturn.percent(1))")
 **Output:**
 ```
 Fully invested: true
-Portfolio return: 8.5%
+Portfolio return: 8.8%
 Equal-weight return: 8.5%
 ```
 
@@ -425,10 +425,241 @@ Equal-weight return: 8.5%
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+
+// Create a 2D vector
+let v = Vector2D<Double>(x: 3.0, y: 4.0)
+let w = Vector2D(x: 1.0, y: 2.0)
+
+// Basic operations
+let sum = v + w                    // Vector2D(x: 4.0, y: 6.0)
+let scaled = 2.0 * v               // Vector2D(x: 6.0, y: 8.0)
+
+// Norm and distance
+print(v.norm)                      // 5.0 (√(3² + 4²))
+print(v.distance(to: w))           // 2.828...
+print(v.dot(w))                    // 11.0 (3*1 + 4*2)
+
+// 2D-specific operations
+print(v.cross(w))                  // 2.0 (pseudo-cross product)
+print(v.angle)                     // 0.927... radians (~53°)
+let rotated = v.rotated(by: .pi/2) // Vector2D(x: -4.0, y: 3.0)
+print(rotated.toArray())
+
+// MARK: Vector3D
+
+	// Create 3D vectors
+let v_3d = Vector3D<Double>(x: 1.0, y: 2.0, z: 3.0)
+let w_3d = Vector3D<Double>(x: 4.0, y: 5.0, z: 6.0)
+
+// Basic operations
+let sum3 = v_3d + w_3d                 // Vector3D(x: 5.0, y: 7.0, z: 9.0)
+let scaled3 = 2.0 * v_3d             // Vector3D(x: 2.0, y: 4.0, z: 6.0)
+
+// Norm and dot product
+print(v_3d.norm)                     // 3.742... (√(1² + 2² + 3²))
+print(v_3d.dot(w_3d))                  // 32.0 (1*4 + 2*5 + 3*6)
+
+// 3D-specific: Cross product
+let cross = v_3d.cross(w_3d)           // Vector3D perpendicular to both
+print(cross)                       // Vector3D(x: -3.0, y: 6.0, z: -3.0)
+
+// Verify perpendicularity
+print(v_3d.dot(cross))               // ~0.0 (perpendicular)
+print(w_3d.dot(cross))               // ~0.0 (perpendicular)
+
+// MARK: VectorN
+
+	// Create an N-dimensional vector
+	let vN = VectorN<Double>([1.0, 2.0, 3.0, 4.0, 5.0])
+	let wN = VectorN([5.0, 4.0, 3.0, 2.0, 1.0])
+
+	// Basic operations
+	let sumN = vN + wN                 // VectorN([6, 6, 6, 6, 6])
+	let scaledN = 2.0 * vN             // VectorN([2, 4, 6, 8, 10])
+
+	// Norm and dot product
+	print(vN.norm)                     // 7.416... (√55)
+	print(vN.dot(wN))                  // 35.0
+
+	// Element access
+	print(vN[0])                       // 1.0
+	print(vN[2])                       // 3.0
+
+	// Statistical operations
+	print(vN.dimension)                // 5
+	print(vN.sum)                      // 15.0
+	print(vN.mean)                     // 3.0
+	print(vN.standardDeviation())      // 1.581...
+	print(vN.min)                      // 1.0
+	print(vN.max)                      // 5.0
+
+// MARK: - Arithmetic Operations
+
+let v_arith = VectorN([1.0, 2.0, 3.0])
+let w_arith = VectorN([4.0, 5.0, 6.0])
+
+// Addition and subtraction
+let sum_arith = v_arith + w_arith                    // [5, 7, 9]
+let diff_arith = v_arith - w_arith                   // [-3, -3, -3]
+
+// Scalar multiplication
+let scaled_arith = 3.0 * v_arith               // [3, 6, 9]
+let divided = v_arith / 2.0              // [0.5, 1.0, 1.5]
+
+// Negation
+let negated = -v_arith                   // [-1, -2, -3]
+
+// MARK: - Norms and Distances
+
+let v_norm = VectorN([3.0, 4.0])
+let w_norm = VectorN([0.0, 0.0])
+
+// Euclidean norm
+print(v_norm.norm)                      // 5.0 (√(3² + 4²))
+print(v_norm.squaredNorm)               // 25.0 (faster for comparisons)
+
+// Distance metrics
+print(v_norm.distance(to: w_norm))           // 5.0 (Euclidean)
+print(v_norm.manhattanDistance(to: w_norm))  // 7.0 (|3| + |4|)
+print(v_norm.chebyshevDistance(to: w_norm))  // 4.0 (max(|3|, |4|))
+
+
+// MARK: - Dot Products and Angles
+
+let v_dot = VectorN([1.0, 0.0, 0.0])
+let w_dot = VectorN([0.0, 1.0, 0.0])
+
+// Dot product
+print(v_dot.dot(w_dot))                    // 0.0 (perpendicular)
+
+// Cosine similarity
+print(v_dot.cosineSimilarity(with: w_dot)) // 0.0 (orthogonal)
+
+// Angle between vectors
+let angle_dot = v_dot.angle(with: w_dot)       // π/2 radians (90°)
+print(angle_dot * 180 / .pi)           // 90.0 degrees
+
+
+// MARK: Projections
+
+let v_proj = VectorN([3.0, 4.0])
+let w_proj = VectorN([1.0, 0.0])
+
+// Project v onto w
+let projection = v_proj.projection(onto: w_proj)  // [3.0, 0.0]
+
+// Rejection (component perpendicular to w)
+let rejection = v_proj.rejection(from: w_proj)    // [0.0, 4.0]
+
+// Verify: v = projection + rejection
+print(v_proj == projection + rejection)      // true
+
+// MARK: - Normalization
+
+
+
+// Normalize to unit length
+let unit = v_norm.normalized()          // [0.6, 0.8]
+print(unit.norm)                   // 1.0
+
+// Verify direction preserved
+print(v_norm.cosineSimilarity(with: unit))  // 1.0 (same direction)
+
+
+// MARK: - VectorN Specific Construction
+
+	// From array
+	let v1 = VectorN([1.0, 2.0, 3.0])
+
+	// Repeating value
+	let v2 = VectorN(repeating: 5.0, count: 10)
+
+	// Zero vector
+	let v3 = VectorN<Double>.zero
+
+	// Ones vector
+	let v4 = VectorN<Double>.ones(dimension: 5)
+
+	// Basis vector (one component = 1, rest = 0)
+	let e2 = VectorN<Double>.basisVector(dimension: 5, index: 2)
+	// [0, 0, 1, 0, 0]
+
+	// Linear space (evenly spaced)
+	let v5 = VectorN.linearSpace(from: 0.0, to: 10.0, count: 11)
+	// [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+	// Log space (logarithmically spaced)
+	let v6 = VectorN.logSpace(from: 1.0, to: 100.0, count: 3)
+	// [1, 10, 100]
+
+// MARK: - Functional Operations
+
+let v_func = VectorN([-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])
+
+// Map (element-wise transform)
+let squared_func = v_func.map { $0 * $0 }    // [4, 1, 0, 1, 4, 9]
+
+// Filter
+let positive_func = v_func.filter { $0 > 0 } // [1, 2, 3]
+
+// Reduce
+let sum_func = v_func.reduce(0.0, +)         // 3.0
+
+// Zip with another vector
+let w_func = VectorN([4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+let product_func = v_func.zipWith(w_func, *)      // [-8, -5, 0, 7, 16, 27]
+print(product_func)
+
+
+// MARK: Portfolio Weights Example
+
+// 4-asset portfolio
+let assets = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]
+let weights = VectorN([0.40, 0.25, 0.25, 0.10])
+let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.08])
+
+// Verify fully invested (weights sum to 1.0)
+print("Fully invested: \(weights.sum == 1.0)")
+
+// Portfolio expected return (weighted average)
+let portfolioReturn = weights.dot(expectedReturns)
+print("Portfolio return: \(portfolioReturn.percent(1))")
+
+// Equal weights for comparison (each asset gets 25%)
+let equalWeights = VectorN<Double>.equalWeights(dimension: 4)
+print("Equal weights: \(equalWeights.toArray())")  // [0.25, 0.25, 0.25, 0.25]
+print("Sum: \(equalWeights.sum)")  // 1.0
+let equalReturn = equalWeights.dot(expectedReturns)
+print("Equal-weight return: \(equalReturn.percent(1))")  // 8.5%
+
+// MARK: - Simplex Projection vs Normalization
+
+// Demonstrate the difference between simplex projection and normalization
+let rawScores = VectorN([3.0, 1.0, 2.0])
+
+// Simplex projection: components sum to 1.0
+let probabilities = rawScores.simplexProjection()
+print("\nSimplex projection (sum = 1.0):")
+print("  Values: \(probabilities.toArray().map { $0.number(3) })")
+print("  Sum: \(probabilities.sum.number(2))")
+print("  Norm: \(probabilities.norm.number(3))")
+
+// Normalization: Euclidean norm = 1.0
+let unitVector = rawScores.normalized()
+print("\nNormalization (norm = 1.0):")
+print("  Values: \(unitVector.toArray().map { $0.number(3) })")
+print("  Sum: \(unitVector.sum.number(3))")
+print("  Norm: \(unitVector.norm.number(2))")
+
 ```
-→ Download: Week07/Optimization.playground
-→ Full API Reference: BusinessMath Docs – 5.4 Vector Operations
-```
+</details>
+
+→ Full API Reference: [BusinessMath Docs – 5.4 Vector Operations](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.4-VectorOperations.md)
 
 **Modifications to try**:
 1. Build a 10-asset portfolio and compute risk contribution per asset
@@ -488,7 +719,7 @@ The hardest design decision was **choosing the right vector protocol hierarchy**
 
 **Trade-off:** Implementing VectorSpace requires all methods. But this ensures every vector type is fully functional.
 
-**Related Methodology**: [Protocol-Oriented Design](../week-01/03-wed-architecture-patterns.md) (Week 1) - Covered protocol composition and generic programming.
+**Related Methodology**: [Protocol-Oriented Design](../week-01/03-wed-architecture-patterns) (Week 1) - Covered protocol composition and generic programming.
 
 ---
 

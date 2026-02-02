@@ -61,6 +61,7 @@ Understanding the difference is critical:
 
 ```swift
 import BusinessMath
+import Foundation
 
 // Find x where x² = 4
 let result = try goalSeek(
@@ -113,7 +114,7 @@ func profit(price: Double) -> Double {
 let breakevenPrice = try goalSeek(
     function: profit,
     target: 0.0,
-    guess: 10.0,
+    guess: 4.0,
     tolerance: 0.01
 )
 
@@ -154,7 +155,7 @@ print("Revenue: \((pricePerUnit * requiredQuantity).currency(0))")
 
 **Output:**
 ```
-Need to sell 2000 units
+Need to sell 2,000 units
 Revenue: $100,000
 ```
 
@@ -166,6 +167,7 @@ IRR is the discount rate where NPV equals zero—a perfect goal-seek problem:
 
 ```swift
 import BusinessMath
+import Foundation
 
 let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
 
@@ -190,7 +192,7 @@ print("Verification - NPV at IRR: \(npv(rate: irr).currency(2))")
 
 **Output:**
 ```
-IRR: 18.45%
+IRR: 12.83%
 Verification - NPV at IRR: $0.00
 ```
 
@@ -221,8 +223,8 @@ print("Verification: \(verify.number(10))")
 
 **Output:**
 ```
-Solution: x = 1.824549
-Verification: 0.0000000001
+Solution: x = 1.923939
+Verification: 0.0000000000
 ```
 
 ---
@@ -380,7 +382,7 @@ let optimizer = GoalSeekOptimizer<Double>(
 let result = optimizer.optimize(
     objective: profitFunction,
     constraints: [],
-    initialGuess: 10.0,
+    initialGuess: 4.0,
     bounds: (lower: 0.0, upper: 100.0)
 )
 
@@ -400,10 +402,168 @@ Iterations: 6
 
 ## Try It Yourself
 
+<details>
+<summary>Click to expand full playground code</summary>
+
+```swift
+import BusinessMath
+import Foundation
+
+// MARK: - Basic Goal Seek
+
+// Find x where x² = 4
+let result = try goalSeek(
+	function: { x in x * x },
+	target: 4.0,
+	guess: 1.0
+)
+
+print(result.number())  // ~2.0
+
+// MARK: - Breakeven Analysis
+// Find the price where profit = 0
+
+// Profit function with demand elasticity
+func profit(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price  // Demand curve
+	let revenue = price * quantity
+	let fixedCosts = 5_000.0
+	let variableCost = 4.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+// Find breakeven price (profit = 0)
+let breakevenPrice = try goalSeek(
+	function: profit,
+	target: 0.0,
+	guess: 6.0,
+	tolerance: 0.01
+)
+
+print("Breakeven price: \(breakevenPrice.currency(2))")
+print("Verification: \(profit(price: breakevenPrice).currency(2))")
+
+// MARK: - Target Revenue
+let pricePerUnit = 50.0
+let targetRevenue = 100_000.0
+
+// Revenue = price × quantity
+let requiredQuantity = try goalSeek(
+	function: { quantity in pricePerUnit * quantity },
+	target: targetRevenue,
+	guess: 1_000.0
+)
+
+print("Need to sell \(requiredQuantity.number(0)) units")
+print("Revenue: \((pricePerUnit * requiredQuantity).currency(0))")
+
+// MARK: - Internal Rate of Return
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+	var npv = 0.0
+	for (t, cf) in cashFlows.enumerated() {
+		npv += cf / pow(1 + rate, Double(t))
+	}
+	return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+	function: npv,
+	target: 0.0,
+	guess: 0.10  // Start with 10% guess
+)
+
+print("IRR: \(irr.percent(2))")
+print("Verification - NPV at IRR: \(npv(rate: irr).currency(2))")
+
+// MARK: - Equation Solving
+
+// Solve: e^x - 2x - 3 = 0
+let solution = try goalSeek(
+	function: { x in exp(x) - 2*x - 3 },
+	target: 0.0,
+	guess: 1.0
+)
+
+print("Solution: x = \(solution.number(6))")
+
+// Verify: Should be ≈ 0
+let verify = exp(solution) - 2*solution - 3
+print("Verification: \(verify.number(10))")
+
+// MARK: - Error Handling, Division by Zero
+
+do {
+	// Function with zero derivative at x=0
+	let result = try goalSeek(
+		function: { x in x * x * x },  // f'(0) = 0
+		target: 0.0,
+		guess: 0.0  // BAD: Starting at stationary point
+	)
+	print(result)
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking failed: Division by zero encountered"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try a different initial guess away from stationary points"
+	}
+}
+
+// MARK: - Error Handling, Failed Convergence
+
+do {
+	let result = try goalSeek(
+		function: { x in sin(x) },
+		target: 1.5,  // BAD: sin(x) never equals 1.5
+		guess: 0.0
+	)
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking did not converge within 1000 iterations"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try different initial guess, increase max iterations, or relax tolerance"
+	}
+}
+
+// MARK: - Goal Seek Optimizer Class
+func profitFunction(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price
+	let revenue = price * quantity
+	let fixedCosts = 5_000.0
+	let variableCost = 4.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+let optimizer_GS = GoalSeekOptimizer<Double>(
+	target: 0.0,
+	tolerance: 0.0001,
+	maxIterations: 1000
+)
+
+let result_GS = optimizer_GS.optimize(
+	objective: profitFunction,
+	constraints: [],
+	initialGuess: 4.0,
+	bounds: (lower: 0.0, upper: 100.0)
+)
+
+print("Solution: \(result_GS.optimalValue.currency(2))")
+print("Converged: \(result_GS.converged)")
+print("Iterations: \(result_GS.iterations)")
+
 ```
-→ Download: Week07/Optimization.playground
-→ Full API Reference: BusinessMath Docs – 5.3 Core Optimization
-```
+</details>
+
+→ Full API Reference: [BusinessMath Docs – 5.3 Core Optimization](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.3-CoreOptimization.md)
 
 **Modifications to try**:
 1. Find the profit-maximizing price (use `minimize()` on negative profit)
@@ -460,7 +620,7 @@ We settled on `h = √ε × max(|x|, 1)` where ε is machine epsilon. This adapt
 
 **Result:** Goal-seeking works reliably across all numeric types without user tuning.
 
-**Related Methodology**: [Numerical Stability](../week-02/01-mon-numerical-foundations.md) (Week 2) - Covered catastrophic cancellation and condition numbers.
+**Related Methodology**: [Numerical Stability](../week-02/01-mon-numerical-foundations) (Week 2) - Covered catastrophic cancellation and condition numbers.
 
 ---
 
