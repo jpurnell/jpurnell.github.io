@@ -60,7 +60,7 @@ import BusinessMath
 func profit(price: Double) -> Double {
     let quantity = 10_000 - 1_000 * price  // Demand curve
     let revenue = price * quantity
-    let fixedCosts = 20_000.0
+    let fixedCosts = 2_000.0
     let variableCost = 5.0
     let totalCosts = fixedCosts + variableCost * quantity
     return revenue - totalCosts
@@ -79,7 +79,7 @@ print("Breakeven price: \(breakevenPrice.currency(2))")
 
 **Output:**
 ```
-Breakeven price: $7.24
+Breakeven price: $9.56
 ```
 
 **The method**: Uses bisection + Newton-Raphson hybrid for robust convergence.
@@ -113,7 +113,7 @@ print("IRR: \(irr.percent(2))")
 
 **Output:**
 ```
-IRR: 18.45%
+IRR: 12.83%
 ```
 
 ---
@@ -144,7 +144,7 @@ let returns = VectorN([0.12, 0.15, 0.10, 0.18])
 
 // Portfolio return (weighted average)
 let portfolioReturn = weights.dot(returns)
-print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.4%
+print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.6%
 ```
 
 ---
@@ -163,14 +163,14 @@ let rosenbrock: (VectorN<Double>) -> Double = { v in
 }
 
 // Adam optimizer (adaptive learning rate)
-let optimizer = AdamOptimizer<VectorN<Double>>(
-    learningRate: 0.01,
-    maxIterations: 10_000
+let optimizer = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 10_000
 )
 
-let result = try optimizer.minimize(
-    rosenbrock,
-    from: VectorN([0.0, 0.0])
+let result = try optimizer.minimizeAdam(
+	function: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0])
 )
 
 print("Solution: \(result.solution.toArray())")  // ~[1, 1]
@@ -180,10 +180,9 @@ print("Final value: \(result.value)")
 
 **Output:**
 ```
-Solution: [0.999, 0.998]
-Iterations: 4,782
-Final value: 0.00001
-```
+Solution: [0.9999990406781208, 0.9999980785494371]
+Iterations: 704
+Final value: 9.210867997017215e-13```
 
 **The power**: Adam finds the minimum automatically with no manual tuning.
 
@@ -210,11 +209,10 @@ let quadratic: (VectorN<Double>) -> Double = { v in
 }
 
 let bfgs = MultivariateNewtonRaphson<VectorN<Double>>(
-    method: .bfgs,
     maxIterations: 50
 )
 
-let result = try bfgs.minimize(
+let resultBFGS = try bfgs.minimize(
     quadratic,
     from: VectorN([5.0, 5.0, 5.0])
 )
@@ -240,24 +238,24 @@ Optimize with equality and inequality constraints:
 ```swift
 // Minimize x² + y² subject to x + y = 1
 let objective: (VectorN<Double>) -> Double = { v in
-    v[0]*v[0] + v[1]*v[1]
+	v[0]*v[0] + v[1]*v[1]
 }
 
-let optimizer = ConstrainedOptimizer<VectorN<Double>>()
+let optimizerConstrained = ConstrainedOptimizer<VectorN<Double>>()
 
-let result = try optimizer.minimize(
-    objective,
-    from: VectorN([0.0, 1.0]),
-    subjectTo: [
-        .equality { v in v[0] + v[1] - 1.0 }
-    ]
+let resultConstrained = try optimizerConstrained.minimize(
+	objective,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: [
+		.equality { v in v[0] + v[1] - 1.0 }
+	]
 )
 
-print("Solution: \(result.solution.toArray())")  // [0.5, 0.5]
+print("Solution: \(resultConstrained.solution.toArray())")  // [0.5, 0.5]
 
 // Shadow price (Lagrange multiplier)
-if let lambda = result.lagrangeMultipliers?.first {
-    print("Shadow price: \(lambda.number(3))")  // How much objective improves if constraint relaxed
+if let lambda = resultConstrained.lagrangeMultipliers.first {
+	print("Shadow price: \(lambda.number(3))")  // How much objective improves if constraint relaxed
 }
 ```
 
@@ -321,9 +319,9 @@ print("Portfolio volatility: \((sqrt(portfolioVariance(result.solution))).percen
 
 **Output:**
 ```
-Optimal weights: [0.45, 0.35, 0.20]
-Portfolio variance: 0.0389
-Portfolio volatility: 19.7%
+Optimal weights: [0.6099086625245681, 0.2435453283923856, 0.1465460569466559]
+Portfolio variance: 0.0295
+Portfolio volatility: 17.2%
 ```
 
 **The solution**: 45% in asset 1 (low risk), 35% in asset 2 (medium), 20% in asset 3 (high return). Achieves 10% target return with minimum possible risk.
@@ -332,10 +330,8 @@ Portfolio volatility: 19.7%
 
 ## Try It Yourself
 
-```
-→ Download: Week07/Optimization.playground
-→ Full API Reference: BusinessMath Docs – 5.1 Optimization Guide
-```
+
+→ Full API Reference: [BusinessMath Docs – 5.1 Optimization Guide](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.1-OptimizationGuide.md)
 
 **Modifications to try**:
 1. Find the profit-maximizing price (not just breakeven)
@@ -387,7 +383,7 @@ The hardest part was **choosing default optimization algorithms**. We provide mu
 
 Rather than pick one "default," we expose all and provide guidance on when to use each.
 
-**Related Methodology**: [Test-First Development](../week-01/02-tue-test-first-development.md) (Week 1) - We tested each optimizer on standard test functions (Rosenbrock, Rastrigin, etc.) with known solutions.
+**Related Methodology**: [Test-First Development](../week-01/02-tue-test-first-development) (Week 1) - We tested each optimizer on standard test functions (Rosenbrock, Rastrigin, etc.) with known solutions.
 
 ---
 

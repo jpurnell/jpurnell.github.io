@@ -8,7 +8,7 @@ docc_source: "3.7-LoanAmortization.md"
 playground: "Week05/LoanAmortization.playground"
 tags: businessmath, swift, loans, mortgages, amortization, payments
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Loan Amortization Analysis

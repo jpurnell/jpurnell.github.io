@@ -55,12 +55,21 @@ import BusinessMath
 let optimizer = PortfolioOptimizer()
 
 let expectedReturns = VectorN([0.12, 0.15, 0.18, 0.05])
-let covariance = [
-    [0.04, 0.01, 0.02, 0.00],  // Asset 1: 20% vol
-    [0.01, 0.09, 0.03, 0.01],  // Asset 2: 30% vol
-    [0.02, 0.03, 0.16, 0.02],  // Asset 3: 40% vol
-    [0.00, 0.01, 0.02, 0.01]   // Asset 4: 10% vol (bonds)
+let volatilities = [0.20, 0.30, 0.40, 0.10]  // 20%, 30%, 40%, 10%
+let correlations = [
+	[1.00, 0.30, 0.70, 0.10],  // Asset 1: high corr with Asset 3
+	[0.30, 1.00, 0.50, 0.15],  // Asset 2: moderate corr with Asset 3
+	[0.70, 0.50, 1.00, 0.05],  // Asset 3: highest return
+	[0.10, 0.15, 0.05, 1.00]   // Asset 4: bonds (low correlation)
 ]
+
+// Convert correlation to covariance: cov[i][j] = corr[i][j] * vol[i] * vol[j]
+var covariance = [[Double]](repeating: [Double](repeating: 0, count: 4), count: 4)
+for i in 0..<4 {
+	for j in 0..<4 {
+		covariance[i][j] = correlations[i][j] * volatilities[i] * volatilities[j]
+	}
+}
 
 // Maximum Sharpe ratio (optimal risk-adjusted return)
 let maxSharpe = try optimizer.maximumSharpePortfolio(
@@ -80,13 +89,13 @@ print("  Weights: \(maxSharpe.weights.toArray().map { $0.percent(1) })")
 **Output:**
 ```
 Maximum Sharpe Portfolio:
-  Sharpe Ratio: 1.35
-  Expected Return: 14.2%
-  Volatility: 21.5%
-  Weights: [25.3%, 18.7%, 12.1%, 43.9%]
+  Sharpe Ratio: 0.62
+  Expected Return: 9.6%
+  Volatility: 12.2%
+  Weights: ["38.6%", "18.5%", "0.0%", "42.9%"]
 ```
 
-**The result**: Despite bonds having the lowest return (5%), they get the highest allocation (44%) because they reduce portfolio risk while maintaining strong Sharpe ratio.
+**The result**: Despite bonds having the lowest return (5%), they get the highest allocation (43%) because they reduce portfolio risk while maintaining strong Sharpe ratio.
 
 ---
 
@@ -111,12 +120,12 @@ print("  Weights: \(minVar.weights.toArray().map { $0.percent(1) })")
 **Output:**
 ```
 Minimum Variance Portfolio:
-  Expected Return: 7.8%
-  Volatility: 9.2%
-  Weights: [12.5%, 5.1%, 0.0%, 82.4%]
+  Expected Return: 6.4%
+  Volatility: 9.3%
+  Weights: ["16.4%", "2.2%", "0.0%", "81.4%"]
 ```
 
-**The trade-off**: Lowest risk (9.2% volatility) but also lowest return (7.8%). The optimizer heavily weights bonds and eliminates the high-volatility asset entirely.
+**The trade-off**: Lowest risk (9.3% volatility) but also lowest return (6.4%). The optimizer heavily weights bonds and eliminates the high-volatility asset entirely.
 
 ---
 
@@ -127,10 +136,10 @@ The efficient frontier shows all optimal portfolios—those with maximum return 
 ```swift
 // Generate 20 points along the efficient frontier
 let frontier = try optimizer.efficientFrontier(
-    expectedReturns: expectedReturns,
-    covariance: covariance,
-    riskFreeRate: 0.02,
-    numberOfPoints: 20
+	expectedReturns: expectedReturns,
+	covariance: covariance,
+	riskFreeRate: 0.02,
+	numberOfPoints: 20
 )
 
 print("Efficient Frontier:")
@@ -138,20 +147,21 @@ print("Volatility | Return   | Sharpe")
 print("-----------|----------|-------")
 
 for portfolio in frontier.portfolios {
-    print("\(portfolio.volatility.percent(1).paddingLeft(toLength: 10)) | " +
-          "\(portfolio.expectedReturn.percent(2).paddingLeft(toLength: 8)) | " +
-          "\(portfolio.sharpeRatio.number(2))")
+	print("\(portfolio.volatility.percent(1).paddingLeft(toLength: 10)) | " +
+		  "\(portfolio.expectedReturn.percent(2).paddingLeft(toLength: 8)) | " +
+		  "\(portfolio.sharpeRatio.number(2))")
 }
 
 // Find portfolio closest to 12% target return
 let targetReturn = 0.12
 let targetPortfolio = frontier.portfolios.min(by: { p1, p2 in
-    abs(p1.expectedReturn - targetReturn) < abs(p2.expectedReturn - targetReturn)
+	abs(p1.expectedReturn - targetReturn) < abs(p2.expectedReturn - targetReturn)
 })!
 
-print("\nTarget 12% Return Portfolio:")
+print("\nTarget \(targetReturn.percent(0)) Return Portfolio:")
 print("  Volatility: \(targetPortfolio.volatility.percent(1))")
 print("  Weights: \(targetPortfolio.weights.toArray().map { $0.percent(1) })")
+print()
 ```
 
 **Output:**
@@ -159,16 +169,30 @@ print("  Weights: \(targetPortfolio.weights.toArray().map { $0.percent(1) })")
 Efficient Frontier:
 Volatility | Return   | Sharpe
 -----------|----------|-------
-      9.2% |    7.80% | 0.63
-     10.5% |    9.20% | 0.69
-     12.1% |   10.50% | 0.70
-     14.2% |   11.80% | 0.69
-     16.8% |   13.10% | 0.66
-     ... (15 more points)
+      9.7% |    5.00% | 0.31
+      9.3% |    5.68% | 0.40
+      9.2% |    6.37% | 0.48
+      9.3% |    7.05% | 0.54
+      9.8% |    7.74% | 0.59
+     10.5% |    8.42% | 0.61
+     11.5% |    9.11% | 0.62
+     12.5% |    9.79% | 0.62
+     13.8% |   10.47% | 0.62
+     15.1% |   11.16% | 0.61
+     16.4% |   11.84% | 0.60
+     17.9% |   12.53% | 0.59
+     19.3% |   13.21% | 0.58
+     20.9% |   13.89% | 0.57
+     22.4% |   14.58% | 0.56
+     23.9% |   15.26% | 0.55
+     25.5% |   15.95% | 0.55
+     27.1% |   16.63% | 0.54
+     28.7% |   17.32% | 0.53
+     30.3% |   18.00% | 0.53
 
 Target 12% Return Portfolio:
-  Volatility: 14.8%
-  Weights: [28.2%, 15.3%, 8.5%, 48.0%]
+  Volatility: 16.4%
+  Weights: ["56.7%", "31.0%", "-1.7%", "14.1%"]
 ```
 
 **The insight**: The efficient frontier curves—there's no linear relationship between risk and return. The maximum Sharpe portfolio is where the line from the risk-free rate is tangent to the frontier.
@@ -199,13 +223,13 @@ print("Sharpe Ratio: \(riskParity.sharpeRatio.number(2))")
 **Output:**
 ```
 Risk Parity Portfolio:
-  Asset 1: 35.2%  (20% vol)
-  Asset 2: 23.5%  (30% vol)
-  Asset 3: 17.6%  (40% vol)
-  Asset 4: 23.7%  (10% vol bonds)
-Expected Return: 10.8%
-Volatility: 15.3%
-Sharpe Ratio: 0.57
+  Asset 1: 26.9%
+  Asset 2: 15.8%
+  Asset 3: 10.7%
+  Asset 4: 46.6%
+Expected Return: 9.9%
+Volatility: 12.5%
+Sharpe Ratio: 0.79
 ```
 
 **The philosophy**: Risk parity doesn't maximize Sharpe ratio—it equalizes risk contribution. Use it when you're skeptical of return forecasts but confident in risk estimates.
@@ -245,13 +269,12 @@ print("  Weights: \(boxConstrained.weights.toArray().map { $0.percent(1) })")
 **Output:**
 ```
 130/30 Portfolio:
-  Sharpe: 1.52
-  Weights: [38.2%, 27.5%, 15.3%, 49.0%]
-  (Note: Some negative weights allowed, total leverage = 130%)
+  Sharpe: 0.62
+  Weights: ["42.0%", "19.7%", "-3.2%", "41.5%"]
 
 Box Constrained Portfolio (5%-40% per position):
-  Sharpe: 1.18
-  Weights: [15.2%, 12.8%, 5.0%, 40.0%]
+  Sharpe: 0.61
+  Weights: ["36.5%", "18.5%", "5.0%", "40.0%"]
 ```
 
 **The trade-off**: Constraints reduce the Sharpe ratio (1.18 vs. 1.35 unconstrained) but reflect real-world restrictions.
