@@ -1,57 +1,13 @@
----
-title: Bond Valuation & Credit Analysis
-date: 2026-02-06 13:00
-series: BusinessMath Quarterly Series
-week: 5
-post: 4
-docc_source: "3.10-BondValuationGuide.md"
-playground: "Week05/BondValuation.playground"
-tags: businessmath, swift, bonds, fixed-income, credit-risk, duration, convexity, callable-bonds, oas
-layout: BlogPostLayout
-published: true
----
-
-# Bond Valuation & Credit Analysis
-
-**Part 19 of 12-Week BusinessMath Series**
-
----
-
-## What You'll Learn
-
-- Pricing bonds and calculating yield to maturity (YTM)
-- Measuring interest rate risk using duration and convexity
-- Converting credit metrics (Z-Scores) to default probabilities and spreads
-- Valuing callable bonds and calculating Option-Adjusted Spread (OAS)
-- Building credit curves to analyze default risk over time
-- Calculating expected losses for bond portfolios
-- Making informed fixed income investment decisions
-
----
-
-## The Problem
-
-Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:
-
-- **How do you price a bond?** It's not just "divide coupon by yield"—that's current yield, not price.
-- **What's the interest rate risk?** If rates rise 1%, how much does your bond portfolio lose?
-- **How do you value credit risk?** A BBB-rated bond should yield more than AAA, but how much?
-- **What about callable bonds?** Issuers can refinance if rates drop—how do you value that option?
-
-**Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.**
-
----
-
-## The Solution
-
-BusinessMath provides comprehensive bond valuation and credit analysis: `Bond` pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.
-
-### Basic Bond Pricing
-
-Price a simple corporate bond:
-
-```swift
-import BusinessMath
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 19 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Bond Valuation & Credit Analysis</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Bond Valuation & Credit Analysis"><meta property="twitter:title" content="Bond Valuation & Credit Analysis"><meta property="og:description" content="Bond Valuation & Credit Analysis"><meta name="twitter:description" content="Bond Valuation & Credit Analysis"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Bond Valuation & Credit Analysis</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">15 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 19 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Pricing bonds and calculating yield to maturity (YTM)</li><li>Measuring interest rate risk using duration and convexity</li><li>Converting credit metrics (Z-Scores) to default probabilities and spreads</li><li>Valuing callable bonds and calculating Option-Adjusted Spread (OAS)</li><li>Building credit curves to analyze default risk over time</li><li>Calculating expected losses for bond portfolios</li><li>Making informed fixed income investment decisions</li></ul><hr /><h2>The Problem</h2><p>Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:</p><ul><li><strong>How do you price a bond?</strong> It’s not just “divide coupon by yield”—that’s current yield, not price.</li><li><strong>What’s the interest rate risk?</strong> If rates rise 1%, how much does your bond portfolio lose?</li><li><strong>How do you value credit risk?</strong> A BBB-rated bond should yield more than AAA, but how much?</li><li><strong>What about callable bonds?</strong> Issuers can refinance if rates drop—how do you value that option?</li></ul><p><strong>Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive bond valuation and credit analysis: <code>Bond</code> pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.</p><h3>Basic Bond Pricing</h3><p>Price a simple corporate bond:</p><pre><code class="language-swift">import BusinessMath
 import Foundation
 
 // 5-year corporate bond
@@ -83,11 +39,7 @@ print("Price: \(marketPrice.currency(2))")
 
 let currentYield = bond.currentYield(price: marketPrice)
 print("Current Yield: \(currentYield.percent(2))")
-```
-
-**Output:**
-```
-Bond Pricing
+</code></pre><p><strong>Output:</strong></p><pre><code>Bond Pricing
 ============
 Face Value: $1,000
 Coupon Rate: 6.0%
@@ -95,18 +47,7 @@ Market Yield: 5.0%
 Price: $1,043.82
 
 Current Yield: 5.75%
-```
-
-**The pricing rule**: When coupon > yield, bond trades at **premium** (> $1,000). When yield > coupon, trades at **discount** (< $1,000). This is the inverse price-yield relationship.
-
----
-
-### Yield to Maturity (YTM)
-
-Given a market price, solve for the internal rate of return:
-
-```swift
-// Find YTM given observed market price
+</code></pre><p><strong>The pricing rule</strong>: When coupon > yield, bond trades at <strong>premium</strong> (> $1,000). When yield > coupon, trades at <strong>discount</strong> (< $1,000). This is the inverse price-yield relationship.</p><hr /><h3>Yield to Maturity (YTM)</h3><p>Given a market price, solve for the internal rate of return:</p><pre><code class="language-swift">// Find YTM given observed market price
 
 let observedPrice = 980.00  // Trading below par
 
@@ -126,29 +67,14 @@ do {
 } catch {
     print("YTM calculation failed: \(error)")
 }
-```
-
-**Output:**
-```
-Yield to Maturity Analysis
+</code></pre><p><strong>Output:</strong></p><pre><code>Yield to Maturity Analysis
 ===========================
 Market Price: $980.00
 YTM: 6.48%
 
 Verification: $980.00
 Difference: $0.00
-```
-
-**The definition**: YTM is the **total return** if you buy at current price, hold to maturity, and reinvest all coupons at the YTM rate. It's the bond's IRR.
-
----
-
-### Duration and Convexity
-
-Measure interest rate risk:
-
-```swift
-let yield = 0.05
+</code></pre><p><strong>The definition</strong>: YTM is the <strong>total return</strong> if you buy at current price, hold to maturity, and reinvest all coupons at the YTM rate. It’s the bond’s IRR.</p><hr /><h3>Duration and Convexity</h3><p>Measure interest rate risk:</p><pre><code class="language-swift">let yield = 0.05
 
 let macaulayDuration = bond.macaulayDuration(yield: yield, asOf: today)
 let modifiedDuration = bond.modifiedDuration(yield: yield, asOf: today)
@@ -179,11 +105,7 @@ let originalPrice = bond.price(yield: yield, asOf: today)
 let actualChange = ((newPrice / originalPrice) - 1.0)
 
 print("Actual change: \(actualChange.percent(2))")
-```
-
-**Output:**
-```
-Interest Rate Risk Metrics
+</code></pre><p><strong>Output:</strong></p><pre><code>Interest Rate Risk Metrics
 ==========================
 Macaulay Duration: 4.41 years
 Modified Duration: 4.30
@@ -193,23 +115,7 @@ If yield increases by 100 bps:
 Duration estimate: -4.30%
 With convexity adjustment: -4.19%
 Actual change: -4.19%
-```
-
-**The interpretation**:
-- **Macaulay Duration (4.41 years)**: Weighted average time to receive cash flows
-- **Modified Duration (4.30)**: Price sensitivity—a 1% yield increase causes ~4.3% price drop
-- **Convexity (22.07)**: Curvature—improves duration estimate for large yield changes
-
-**The insight**: **Duration** is a linear approximation. **Convexity** captures the curve. Together, they predict price changes accurately.
-
----
-
-### Credit Risk Analysis
-
-Convert company fundamentals to bond pricing:
-
-```swift
-// Step 1: Start with credit metrics (Altman Z-Score)
+</code></pre><p><strong>The interpretation</strong>:</p><ul><li><strong>Macaulay Duration (4.41 years)</strong>: Weighted average time to receive cash flows</li><li><strong>Modified Duration (4.30)</strong>: Price sensitivity—a 1% yield increase causes ~4.3% price drop</li><li><strong>Convexity (22.07)</strong>: Curvature—improves duration estimate for large yield changes</li></ul><p><strong>The insight</strong>: <strong>Duration</strong> is a linear approximation. <strong>Convexity</strong> captures the curve. Together, they predict price changes accurately.</p><hr /><h3>Credit Risk Analysis</h3><p>Convert company fundamentals to bond pricing:</p><pre><code class="language-swift">// Step 1: Start with credit metrics (Altman Z-Score)
 let zScore = 2.3  // Grey zone (moderate credit risk)
 
 // Step 2: Convert Z-Score to default probability
@@ -255,11 +161,7 @@ print("\nCorporate Bond Pricing:")
 print("Risk-Free Rate: \(riskFreeRate.percent(2))")
 print("Corporate Yield: \(corporateYield.percent(2))")
 print("Bond Price: \(corporatePrice.currency(2))")
-```
-
-**Output:**
-```
-Credit Risk Analysis
+</code></pre><p><strong>Output:</strong></p><pre><code>Credit Risk Analysis
 ====================
 Z-Score: 2.30
 Default Probability: 3.92%
@@ -271,20 +173,7 @@ Corporate Bond Pricing:
 Risk-Free Rate: 3.00%
 Corporate Yield: 5.06%
 Bond Price: $997.39
-```
-
-**The workflow**: **Z-Score → Default Probability → Credit Spread → Bond Yield → Bond Price**
-
-**The formula**: Credit Spread ≈ (Default Probability × Loss Given Default) / (1 - Default Probability)
-
----
-
-### Credit Deterioration Impact
-
-See how credit quality affects bond values:
-
-```swift
-print("\nCredit Deterioration Impact")
+</code></pre><p><strong>The workflow</strong>: <strong>Z-Score → Default Probability → Credit Spread → Bond Yield → Bond Price</strong></p><p><strong>The formula</strong>: Credit Spread ≈ (Default Probability × Loss Given Default) / (1 - Default Probability)</p><hr /><h3>Credit Deterioration Impact</h3><p>See how credit quality affects bond values:</p><pre><code class="language-swift">print("\nCredit Deterioration Impact")
 print("===========================")
 
 let scenarios = [
@@ -308,11 +197,7 @@ for scenario in scenarios {
 
     print("\(scenario.name.padding(toLength: 18, withPad: " ", startingAt: 0)) | \(scenario.zScore.number(1))     | \(pd.percent(1)) | \((spread * 10000).number(0)) bps | \(price.currency(2))")
 }
-```
-
-**Output:**
-```
-Credit Deterioration Impact
+</code></pre><p><strong>Output:</strong></p><pre><code>Credit Deterioration Impact
 ===========================
 
 Scenario           | Z-Score | PD     | Spread     | Price
@@ -320,18 +205,7 @@ Scenario           | Z-Score | PD     | Spread     | Price
 Investment Grade   |     3.5 |   0.0% |      2 bps | $1,091.44
 Grey Zone          |     2.0 |  11.9% |    708 bps |   $804.45
 Distress           |     1.0 |  88.1% | 18,421 bps |    $28.14
-```
-
-**The pattern**: As credit deteriorates (lower Z-Score), default probability rises, spreads widen, and bond prices fall. The relationship is **non-linear**—distressed bonds see massive spread widening.
-
----
-
-### Callable Bonds and OAS
-
-Value bonds with embedded call options:
-
-```swift
-// High-coupon callable bond (issuer can refinance)
+</code></pre><p><strong>The pattern</strong>: As credit deteriorates (lower Z-Score), default probability rises, spreads widen, and bond prices fall. The relationship is <strong>non-linear</strong>—distressed bonds see massive spread widening.</p><hr /><h3>Callable Bonds and OAS</h3><p>Value bonds with embedded call options:</p><pre><code class="language-swift">// High-coupon callable bond (issuer can refinance)
 
 let highCouponBond = Bond(
     faceValue: 1000.0,
@@ -411,11 +285,7 @@ print("\nDuration Comparison:")
 print("Non-Callable Duration: \(straightDuration.number(2)) years")
 print("Effective Duration: \(effectiveDuration.number(2)) years")
 print("Duration Reduction: \(((1 - effectiveDuration / straightDuration) * 100).number(0))%")
-```
-
-**Output:**
-```
-Callable Bond Analysis
+</code></pre><p><strong>Output:</strong></p><pre><code>Callable Bond Analysis
 ======================
 Non-Callable Price: $1,150.82
 Callable Price: $1,048.51
@@ -431,23 +301,7 @@ Duration Comparison:
 Non-Callable Duration: 7.56 years
 Effective Duration: 1.80 years
 Duration Reduction: 76%
-```
-
-**The callable bond mechanics**:
-1. **Callable price < Non-callable price**: Investor compensates issuer for refinancing option
-2. **OAS isolates credit risk**: Strips out option risk for apples-to-apples comparison
-3. **Effective duration < Macaulay duration**: Call option limits price appreciation when rates fall (**negative convexity**)
-
-**The insight**: Callable bonds exhibit **negative convexity**—when rates fall, price gains are capped at the call price.
-
----
-
-### Credit Curves
-
-Build term structures of credit spreads:
-
-```swift
-// Credit curve from market observations
+</code></pre><p><strong>The callable bond mechanics</strong>:</p><ol><li><strong>Callable price < Non-callable price</strong>: Investor compensates issuer for refinancing option</li><li><strong>OAS isolates credit risk</strong>: Strips out option risk for apples-to-apples comparison</li><li><strong>Effective duration < Macaulay duration</strong>: Call option limits price appreciation when rates fall (<strong>negative convexity</strong>)</li></ol><p><strong>The insight</strong>: Callable bonds exhibit <strong>negative convexity</strong>—when rates fall, price gains are capped at the call price.</p><hr /><h3>Credit Curves</h3><p>Build term structures of credit spreads:</p><pre><code class="language-swift">// Credit curve from market observations
 
 let periods = [
     Period.year(1),
@@ -490,11 +344,7 @@ for year in [1, 5, 10] {
     let hazard = creditCurve.hazardRate(maturity: Double(year))
     print("\(year)-Year: \(hazard.percent(2)) per year")
 }
-```
-
-**Output:**
-```
-Credit Curve Analysis
+</code></pre><p><strong>Output:</strong></p><pre><code>Credit Curve Analysis
 =====================
 2-Year Spread: 85 bps
 7-Year Spread: 208 bps
@@ -509,21 +359,9 @@ Hazard Rates (Default Intensity):
 1-Year: 1.00% per year
 5-Year: 3.60% per year
 10-Year: 5.00% per year
-```
-
-**The credit curve**: Shows how default risk evolves over time. **Upward-sloping** curves indicate increasing uncertainty at longer horizons.
-
-**Hazard rate**: Instantaneous default intensity—useful for pricing credit derivatives like CDSs.
-
----
-
-## Try It Yourself
-
-<details>
+</code></pre><p><strong>The credit curve</strong>: Shows how default risk evolves over time. <strong>Upward-sloping</strong> curves indicate increasing uncertainty at longer horizons.</p><p><strong>Hazard rate</strong>: Instantaneous default intensity—useful for pricing credit derivatives like CDSs.</p><hr /><h2>Try It Yourself</h2><details>
 <summary>Click to expand full playground code</summary>
-
-```swift
-import BusinessMath
+<pre><code class="language-swift">import BusinessMath
 import Foundation
 
 
@@ -823,87 +661,5 @@ for scenario in scenarios {
 		print("\(year)-Year: \(hazard.percent(2)) per year")
 	}
 
-```
-</details>
-
-
-→ Full API Reference: [BusinessMath Docs – 3.10 Bond Valuation](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.10-BondValuationGuide.md)
-
-
-**Modifications to try**:
-1. Price corporate bonds across the credit spectrum (AAA to CCC)
-2. Calculate portfolio duration for a bond ladder
-3. Model callable bond strategies in different rate environments
-4. Build credit curves for multiple issuers
-
----
-
-## Real-World Application
-
-Fixed income is the **largest asset class** globally:
-
-- **Pension funds**: Managing $100B+ bond portfolios
-- **Insurance companies**: Asset-liability matching with bonds
-- **Central banks**: Setting monetary policy via bond markets
-- **Corporates**: Issuing bonds to finance operations
-
-**Portfolio manager use case**: "We hold $5B in corporate bonds. Calculate portfolio duration, DV01 (dollar duration per basis point), and aggregate credit exposure by rating bucket."
-
-BusinessMath makes this analysis programmatic, real-time, and portfolio-wide.
-
----
-
-`★ Insight ─────────────────────────────────────`
-
-**Why Do Bonds Have Inverse Price-Yield Relationship?**
-
-It's counter-intuitive: when yields rise, bond prices **fall**. Why?
-
-**The mechanism**: A bond is a stream of fixed cash flows. When yields rise:
-- New bonds issue with higher coupons
-- Your old bond (with lower coupon) is less attractive
-- To compete, your bond must trade at a **discount**
-
-**Example**:
-- You buy a 5% coupon bond for $1,000 (yield = 5%)
-- Rates rise, new bonds pay 6% coupons
-- Your 5% bond must drop to ~$957 so its **yield** rises to 6%
-
-**The math**: Bond price = PV(future coupons + principal). When discount rate (yield) increases, PV decreases.
-
-**The lesson**: **Duration measures this price sensitivity**. Higher duration = greater price volatility when yields change.
-
-`─────────────────────────────────────────────────`
-
----
-
-### 📝 Development Note
-
-The most challenging implementation was **callable bond pricing with binomial trees**. We had to:
-
-1. Build interest rate trees with specified volatility
-2. Implement backward induction (value at maturity, work backward)
-3. Check at each node: Is bond callable? If yes, value = min(continuation value, call price)
-4. Calculate OAS by iterating to find spread that matches market price
-
-**Trade-off**: Binomial trees are slower than closed-form solutions but handle path-dependent options (callable, putable, convertible bonds).
-
-We chose **accuracy over speed**—bond portfolios are repriced daily, not millisecond-by-millisecond.
-
-**Related Methodology**: [Test-First Development](../week-01/02-tue-test-first-development) (Week 1) - We wrote tests comparing our binomial tree to Bloomberg's pricing for callable bonds before implementation.
-
----
-
-## Next Steps
-
-**Coming up next week**: Week 6 explores Monte Carlo simulation and scenario analysis for risk modeling.
-
-**Monday**: Monte Carlo Basics - Building stochastic models for forecasting under uncertainty.
-
----
-
-**Series Progress**:
-- Week: 5/12
-- Posts Published: 19/~48
-- Topics Covered: Foundation + Analysis + Operational + Financial Statements + **Advanced Modeling (complete)**
-- Playgrounds: 18 available
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.10-BondValuationGuide.md">BusinessMath Docs – 3.10 Bond Valuation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Price corporate bonds across the credit spectrum (AAA to CCC)</li><li>Calculate portfolio duration for a bond ladder</li><li>Model callable bond strategies in different rate environments</li><li>Build credit curves for multiple issuers</li></ol><hr /><h2>Real-World Application</h2><p>Fixed income is the <strong>largest asset class</strong> globally:</p><ul><li><strong>Pension funds</strong>: Managing $100B+ bond portfolios</li><li><strong>Insurance companies</strong>: Asset-liability matching with bonds</li><li><strong>Central banks</strong>: Setting monetary policy via bond markets</li><li><strong>Corporates</strong>: Issuing bonds to finance operations</li></ul><p><strong>Portfolio manager use case</strong>: “We hold $5B in corporate bonds. Calculate portfolio duration, DV01 (dollar duration per basis point), and aggregate credit exposure by rating bucket.”</p><p>BusinessMath makes this analysis programmatic, real-time, and portfolio-wide.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Do Bonds Have Inverse Price-Yield Relationship?</strong></p><p>It’s counter-intuitive: when yields rise, bond prices <strong>fall</strong>. Why?</p><p><strong>The mechanism</strong>: A bond is a stream of fixed cash flows. When yields rise:</p><ul><li>New bonds issue with higher coupons</li><li>Your old bond (with lower coupon) is less attractive</li><li>To compete, your bond must trade at a <strong>discount</strong></li></ul><p><strong>Example</strong>:</p><ul><li>You buy a 5% coupon bond for $1,000 (yield = 5%)</li><li>Rates rise, new bonds pay 6% coupons</li><li>Your 5% bond must drop to ~$957 so its <strong>yield</strong> rises to 6%</li></ul><p><strong>The math</strong>: Bond price = PV(future coupons + principal). When discount rate (yield) increases, PV decreases.</p><p><strong>The lesson</strong>: <strong>Duration measures this price sensitivity</strong>. Higher duration = greater price volatility when yields change.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The most challenging implementation was <strong>callable bond pricing with binomial trees</strong>. We had to:</p><ol><li>Build interest rate trees with specified volatility</li><li>Implement backward induction (value at maturity, work backward)</li><li>Check at each node: Is bond callable? If yes, value = min(continuation value, call price)</li><li>Calculate OAS by iterating to find spread that matches market price</li></ol><p><strong>Trade-off</strong>: Binomial trees are slower than closed-form solutions but handle path-dependent options (callable, putable, convertible bonds).</p><p>We chose <strong>accuracy over speed</strong>—bond portfolios are repriced daily, not millisecond-by-millisecond.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing our binomial tree to Bloomberg’s pricing for callable bonds before implementation.</p><hr /><h2>Next Steps</h2><p><strong>Coming up next week</strong>: Week 6 explores Monte Carlo simulation and scenario analysis for risk modeling.</p><p><strong>Monday</strong>: Monte Carlo Basics - Building stochastic models for forecasting under uncertainty.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 5/12</li><li>Posts Published: 19/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + <strong>Advanced Modeling (complete)</strong></li><li>Playgrounds: 18 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, bonds, fixed-income, credit-risk, duration, convexity, callable-bonds, oas</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

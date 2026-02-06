@@ -1,7 +1,1992 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/01-mon-loan-amortization</guid><title>Loan Amortization Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/01-mon-loan-amortization</link><description><![CDATA[Part 16 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 02 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[loans]]></category><category><![CDATA[mortgages]]></category><category><![CDATA[amortization]]></category><category><![CDATA[payments]]></category><content:encoded><![CDATA[<p><strong>Part 16 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Calculating monthly loan payments using TVM functions</li><li>Generating complete amortization schedules</li><li>Analyzing principal vs. interest breakdowns over time</li><li>Comparing different loan scenarios (terms, rates)</li><li>Evaluating extra payment strategies and payoff acceleration</li><li>Calculating cumulative totals for tax deductions</li></ul><hr /><h2>The Problem</h2><p>Whether you’re buying a house, car, or funding business expansion, loans are everywhere. But understanding <strong>how loans actually work</strong> is surprisingly complex:</p><ul><li><strong>Why do early payments go mostly to interest?</strong> On a 30-year mortgage, the first payment might be 83% interest!</li><li><strong>How much does a lower rate save?</strong> Is 5.5% vs. 6% worth refinancing?</li><li><strong>Should I pay extra principal?</strong> What if I add $200/month—when does the loan pay off?</li><li><strong>What’s tax deductible?</strong> How much mortgage interest can I deduct each year?</li></ul><p><strong>Manual loan calculations in spreadsheets are tedious and error-prone when analyzing multiple scenarios.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive loan amortization functions built on time value of money primitives: <code>payment()</code>, <code>interestPayment()</code>, <code>principalPayment()</code>, and cumulative functions for multi-period totals.</p><h3>Calculate Monthly Payment</h3><p>Start with the basic loan parameters:</p><pre><code class="language-swift">import BusinessMath
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</guid><title>Bond Valuation & Credit Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</link><description><![CDATA[Part 19 of 12-Week BusinessMath Series]]></description><pubDate>Fri, 06 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[bonds]]></category><category><![CDATA[fixed-income]]></category><category><![CDATA[credit-risk]]></category><category><![CDATA[duration]]></category><category><![CDATA[convexity]]></category><category><![CDATA[callable-bonds]]></category><category><![CDATA[oas]]></category><content:encoded><![CDATA[<p><strong>Part 19 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Pricing bonds and calculating yield to maturity (YTM)</li><li>Measuring interest rate risk using duration and convexity</li><li>Converting credit metrics (Z-Scores) to default probabilities and spreads</li><li>Valuing callable bonds and calculating Option-Adjusted Spread (OAS)</li><li>Building credit curves to analyze default risk over time</li><li>Calculating expected losses for bond portfolios</li><li>Making informed fixed income investment decisions</li></ul><hr /><h2>The Problem</h2><p>Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:</p><ul><li><strong>How do you price a bond?</strong> It’s not just “divide coupon by yield”—that’s current yield, not price.</li><li><strong>What’s the interest rate risk?</strong> If rates rise 1%, how much does your bond portfolio lose?</li><li><strong>How do you value credit risk?</strong> A BBB-rated bond should yield more than AAA, but how much?</li><li><strong>What about callable bonds?</strong> Issuers can refinance if rates drop—how do you value that option?</li></ul><p><strong>Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive bond valuation and credit analysis: <code>Bond</code> pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.</p><h3>Basic Bond Pricing</h3><p>Price a simple corporate bond:</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// 5-year corporate bond
+// - Face value: $1,000
+// - Annual coupon: 6%
+// - Semiannual payments
+// - Current market yield: 5%
+
+let calendar = Calendar.current
+let today = Date()
+let maturity = calendar.date(byAdding: .year, value: 5, to: today)!
+
+let bond = Bond(
+    faceValue: 1000.0,
+    couponRate: 0.06,
+    maturityDate: maturity,
+    paymentFrequency: .semiAnnual,
+    issueDate: today
+)
+
+let marketPrice = bond.price(yield: 0.05, asOf: today)
+
+print("Bond Pricing")
+print("============")
+print("Face Value: $1,000")
+print("Coupon Rate: 6.0%")
+print("Market Yield: 5.0%")
+print("Price: \(marketPrice.currency(2))")
+
+let currentYield = bond.currentYield(price: marketPrice)
+print("Current Yield: \(currentYield.percent(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Bond Pricing
+============
+Face Value: $1,000
+Coupon Rate: 6.0%
+Market Yield: 5.0%
+Price: $1,043.82
+
+Current Yield: 5.75%
+</code></pre><p><strong>The pricing rule</strong>: When coupon > yield, bond trades at <strong>premium</strong> (> $1,000). When yield > coupon, trades at <strong>discount</strong> (< $1,000). This is the inverse price-yield relationship.</p><hr /><h3>Yield to Maturity (YTM)</h3><p>Given a market price, solve for the internal rate of return:</p><pre><code class="language-swift">// Find YTM given observed market price
+
+let observedPrice = 980.00  // Trading below par
+
+do {
+    let ytm = try bond.yieldToMaturity(price: observedPrice, asOf: today)
+
+    print("\nYield to Maturity Analysis")
+    print("===========================")
+    print("Market Price: \(observedPrice.currency())")
+    print("YTM: \(ytm.percent(2))")
+
+    // Verify round-trip: Price → YTM → Price
+    let verifyPrice = bond.price(yield: ytm, asOf: today)
+    print("Verification: \(verifyPrice.currency(2))")
+    print("Difference: \(abs(verifyPrice - observedPrice).currency(2))")
+
+} catch {
+    print("YTM calculation failed: \(error)")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Yield to Maturity Analysis
+===========================
+Market Price: $980.00
+YTM: 6.48%
+
+Verification: $980.00
+Difference: $0.00
+</code></pre><p><strong>The definition</strong>: YTM is the <strong>total return</strong> if you buy at current price, hold to maturity, and reinvest all coupons at the YTM rate. It’s the bond’s IRR.</p><hr /><h3>Duration and Convexity</h3><p>Measure interest rate risk:</p><pre><code class="language-swift">let yield = 0.05
+
+let macaulayDuration = bond.macaulayDuration(yield: yield, asOf: today)
+let modifiedDuration = bond.modifiedDuration(yield: yield, asOf: today)
+let convexity = bond.convexity(yield: yield, asOf: today)
+
+print("\nInterest Rate Risk Metrics")
+print("==========================")
+print("Macaulay Duration: \(macaulayDuration.number(2)) years")
+print("Modified Duration: \(modifiedDuration.number(2))")
+print("Convexity: \(convexity.number(2))")
+
+// Estimate price change from 1% yield increase
+let yieldChange = 0.01  // 100 bps
+let priceChange = -modifiedDuration * yieldChange
+
+print("\nIf yield increases by 100 bps:")
+print("Duration estimate: \(priceChange.percent(2))")
+
+// More accurate estimate with convexity
+let convexityAdj = 0.5 * convexity * yieldChange * yieldChange
+let improvedEstimate = priceChange + convexityAdj
+
+print("With convexity adjustment: \(improvedEstimate.percent(2))")
+
+// Actual price change
+let newPrice = bond.price(yield: yield + yieldChange, asOf: today)
+let originalPrice = bond.price(yield: yield, asOf: today)
+let actualChange = ((newPrice / originalPrice) - 1.0)
+
+print("Actual change: \(actualChange.percent(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Interest Rate Risk Metrics
+==========================
+Macaulay Duration: 4.41 years
+Modified Duration: 4.30
+Convexity: 22.07
+
+If yield increases by 100 bps:
+Duration estimate: -4.30%
+With convexity adjustment: -4.19%
+Actual change: -4.19%
+</code></pre><p><strong>The interpretation</strong>:</p><ul><li><strong>Macaulay Duration (4.41 years)</strong>: Weighted average time to receive cash flows</li><li><strong>Modified Duration (4.30)</strong>: Price sensitivity—a 1% yield increase causes ~4.3% price drop</li><li><strong>Convexity (22.07)</strong>: Curvature—improves duration estimate for large yield changes</li></ul><p><strong>The insight</strong>: <strong>Duration</strong> is a linear approximation. <strong>Convexity</strong> captures the curve. Together, they predict price changes accurately.</p><hr /><h3>Credit Risk Analysis</h3><p>Convert company fundamentals to bond pricing:</p><pre><code class="language-swift">// Step 1: Start with credit metrics (Altman Z-Score)
+let zScore = 2.3  // Grey zone (moderate credit risk)
+
+// Step 2: Convert Z-Score to default probability
+let creditModel = CreditSpreadModel<Double>()
+let defaultProbability = creditModel.defaultProbability(zScore: zScore)
+
+print("\nCredit Risk Analysis")
+print("====================")
+print("Z-Score: \(zScore.number(2))")
+print("Default Probability: \(defaultProbability.percent(2))")
+
+// Step 3: Determine recovery rate by seniority
+let seniority = Seniority.seniorUnsecured
+let recoveryRate = RecoveryModel<Double>.standardRecoveryRate(seniority: seniority)
+
+print("Seniority: Senior Unsecured")
+print("Expected Recovery: \(recoveryRate.percent(0))")
+
+// Step 4: Calculate credit spread
+let creditSpread = creditModel.creditSpread(
+    defaultProbability: defaultProbability,
+    recoveryRate: recoveryRate,
+    maturity: 5.0
+)
+
+print("Credit Spread: \((creditSpread * 10000).number(0)) bps")
+
+// Step 5: Price the bond
+let riskFreeRate = 0.03  // 3% Treasury yield
+let corporateYield = riskFreeRate + creditSpread
+
+let corporateBond = Bond(
+    faceValue: 1000.0,
+    couponRate: 0.05,
+    maturityDate: maturity,
+    paymentFrequency: .semiAnnual,
+    issueDate: today
+)
+
+let corporatePrice = corporateBond.price(yield: corporateYield, asOf: today)
+
+print("\nCorporate Bond Pricing:")
+print("Risk-Free Rate: \(riskFreeRate.percent(2))")
+print("Corporate Yield: \(corporateYield.percent(2))")
+print("Bond Price: \(corporatePrice.currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Credit Risk Analysis
+====================
+Z-Score: 2.30
+Default Probability: 3.92%
+Seniority: Senior Unsecured
+Expected Recovery: 50%
+Credit Spread: 206 bps
+
+Corporate Bond Pricing:
+Risk-Free Rate: 3.00%
+Corporate Yield: 5.06%
+Bond Price: $997.39
+</code></pre><p><strong>The workflow</strong>: <strong>Z-Score → Default Probability → Credit Spread → Bond Yield → Bond Price</strong></p><p><strong>The formula</strong>: Credit Spread ≈ (Default Probability × Loss Given Default) / (1 - Default Probability)</p><hr /><h3>Credit Deterioration Impact</h3><p>See how credit quality affects bond values:</p><pre><code class="language-swift">print("\nCredit Deterioration Impact")
+print("===========================")
+
+let scenarios = [
+    (name: "Investment Grade", zScore: 3.5),
+    (name: "Grey Zone", zScore: 2.0),
+    (name: "Distress", zScore: 1.0)
+]
+
+print("\nScenario           | Z-Score | PD     | Spread | Price")
+print("-------------------|---------|--------|--------|--------")
+
+for scenario in scenarios {
+    let pd = creditModel.defaultProbability(zScore: scenario.zScore)
+    let spread = creditModel.creditSpread(
+        defaultProbability: pd,
+        recoveryRate: recoveryRate,
+        maturity: 5.0
+    )
+    let yld = riskFreeRate + spread
+    let price = corporateBond.price(yield: yld, asOf: today)
+
+    print("\(scenario.name.padding(toLength: 18, withPad: " ", startingAt: 0)) | \(scenario.zScore.number(1))     | \(pd.percent(1)) | \((spread * 10000).number(0)) bps | \(price.currency(2))")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Credit Deterioration Impact
+===========================
+
+Scenario           | Z-Score | PD     | Spread     | Price
+-------------------|---------|--------|------------|----------
+Investment Grade   |     3.5 |   0.0% |      2 bps | $1,091.44
+Grey Zone          |     2.0 |  11.9% |    708 bps |   $804.45
+Distress           |     1.0 |  88.1% | 18,421 bps |    $28.14
+</code></pre><p><strong>The pattern</strong>: As credit deteriorates (lower Z-Score), default probability rises, spreads widen, and bond prices fall. The relationship is <strong>non-linear</strong>—distressed bonds see massive spread widening.</p><hr /><h3>Callable Bonds and OAS</h3><p>Value bonds with embedded call options:</p><pre><code class="language-swift">// High-coupon callable bond (issuer can refinance)
+
+let highCouponBond = Bond(
+    faceValue: 1000.0,
+    couponRate: 0.07,  // 7% coupon (above market)
+    maturityDate: calendar.date(byAdding: .year, value: 10, to: today)!,
+    paymentFrequency: .semiAnnual,
+    issueDate: today
+)
+
+// Callable after 3 years at $1,040 (4% premium)
+let callDate = calendar.date(byAdding: .year, value: 3, to: today)!
+let callSchedule = [CallProvision(date: callDate, callPrice: 1040.0)]
+
+let callableBond = CallableBond(
+    bond: highCouponBond,
+    callSchedule: callSchedule
+)
+
+let volatility = 0.15  // 15% interest rate volatility
+
+// Step 1: Price non-callable bond
+let straightYield = riskFreeRate + creditSpread
+let straightPrice = highCouponBond.price(yield: straightYield, asOf: today)
+
+// Step 2: Price callable bond
+let callablePrice = callableBond.price(
+    riskFreeRate: riskFreeRate,
+    spread: creditSpread,
+    volatility: volatility,
+    asOf: today
+)
+
+// Step 3: Calculate embedded option value
+let callOptionValue = callableBond.callOptionValue(
+    riskFreeRate: riskFreeRate,
+    spread: creditSpread,
+    volatility: volatility,
+    asOf: today
+)
+
+print("\nCallable Bond Analysis")
+print("======================")
+print("Non-Callable Price: \(straightPrice.currency(2))")
+print("Callable Price: \(callablePrice.currency(2))")
+print("Call Option Value: \(callOptionValue.currency(2))")
+print("Investor gives up: \((straightPrice - callablePrice).currency(2))")
+
+// Step 4: Calculate Option-Adjusted Spread (OAS)
+do {
+    let oas = try callableBond.optionAdjustedSpread(
+        marketPrice: callablePrice,
+        riskFreeRate: riskFreeRate,
+        volatility: volatility,
+        asOf: today
+    )
+
+    print("\nSpread Decomposition:")
+    print("Nominal Spread: \((creditSpread * 10000).number(0)) bps")
+    print("OAS (credit only): \((oas * 10000).number(0)) bps")
+    print("Option Spread: \(((creditSpread - oas) * 10000).number(0)) bps")
+
+} catch {
+    print("OAS calculation failed: \(error)")
+}
+
+// Step 5: Effective duration (accounts for call option)
+let effectiveDuration = callableBond.effectiveDuration(
+    riskFreeRate: riskFreeRate,
+    spread: creditSpread,
+    volatility: volatility,
+    asOf: today
+)
+
+let straightDuration = highCouponBond.macaulayDuration(yield: straightYield, asOf: today)
+
+print("\nDuration Comparison:")
+print("Non-Callable Duration: \(straightDuration.number(2)) years")
+print("Effective Duration: \(effectiveDuration.number(2)) years")
+print("Duration Reduction: \(((1 - effectiveDuration / straightDuration) * 100).number(0))%")
+</code></pre><p><strong>Output:</strong></p><pre><code>Callable Bond Analysis
+======================
+Non-Callable Price: $1,150.82
+Callable Price: $1,048.51
+Call Option Value: $102.31
+Investor gives up: $102.31
+
+Spread Decomposition:
+Nominal Spread: 206 bps
+OAS (credit only): 206 bps
+Option Spread: 0 bps
+
+Duration Comparison:
+Non-Callable Duration: 7.56 years
+Effective Duration: 1.80 years
+Duration Reduction: 76%
+</code></pre><p><strong>The callable bond mechanics</strong>:</p><ol><li><strong>Callable price < Non-callable price</strong>: Investor compensates issuer for refinancing option</li><li><strong>OAS isolates credit risk</strong>: Strips out option risk for apples-to-apples comparison</li><li><strong>Effective duration < Macaulay duration</strong>: Call option limits price appreciation when rates fall (<strong>negative convexity</strong>)</li></ol><p><strong>The insight</strong>: Callable bonds exhibit <strong>negative convexity</strong>—when rates fall, price gains are capped at the call price.</p><hr /><h3>Credit Curves</h3><p>Build term structures of credit spreads:</p><pre><code class="language-swift">// Credit curve from market observations
+
+let periods = [
+    Period.year(1),
+    Period.year(3),
+    Period.year(5),
+    Period.year(10)
+]
+
+// Observed spreads (typically upward sloping)
+let marketSpreads = TimeSeries(
+    periods: periods,
+    values: [0.005, 0.012, 0.018, 0.025]  // 50, 120, 180, 250 bps
+)
+
+let creditCurve = CreditCurve(
+    spreads: marketSpreads,
+    recoveryRate: recoveryRate
+)
+
+print("\nCredit Curve Analysis")
+print("=====================")
+
+// Interpolate spreads
+for years in [2.0, 7.0] {
+    let spread = creditCurve.spread(maturity: years)
+    print("\(years.number(0))-Year Spread: \((spread * 10000).number(0)) bps")
+}
+
+// Cumulative default probabilities
+print("\nCumulative Default Probabilities:")
+for year in [1, 3, 5, 10] {
+    let cdp = creditCurve.cumulativeDefaultProbability(maturity: Double(year))
+    let survival = 1.0 - cdp
+    print("\(year)-Year: \(cdp.percent(2)) default, \(survival.percent(2)) survival")
+}
+
+// Hazard rates (forward default intensities)
+print("\nHazard Rates (Default Intensity):")
+for year in [1, 5, 10] {
+    let hazard = creditCurve.hazardRate(maturity: Double(year))
+    print("\(year)-Year: \(hazard.percent(2)) per year")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Credit Curve Analysis
+=====================
+2-Year Spread: 85 bps
+7-Year Spread: 208 bps
+
+Cumulative Default Probabilities:
+1-Year: 1.00% default, 99.00% survival
+3-Year: 6.95% default, 93.05% survival
+5-Year: 16.47% default, 83.53% survival
+10-Year: 39.35% default, 60.65% survival
+
+Hazard Rates (Default Intensity):
+1-Year: 1.00% per year
+5-Year: 3.60% per year
+10-Year: 5.00% per year
+</code></pre><p><strong>The credit curve</strong>: Shows how default risk evolves over time. <strong>Upward-sloping</strong> curves indicate increasing uncertainty at longer horizons.</p><p><strong>Hazard rate</strong>: Instantaneous default intensity—useful for pricing credit derivatives like CDSs.</p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+
+// MARK: - Basic Bond Pricing
+
+// 5-year corporate bond
+// - Face value: $1,000
+// - Annual coupon: 6%
+// - Semiannual payments
+// - Current market yield: 5%
+
+let calendar = Calendar.current
+let today = Date()
+let maturity = calendar.date(byAdding: .year, value: 5, to: today)!
+
+let bond = Bond(
+	faceValue: 1000.0,
+	couponRate: 0.06,
+	maturityDate: maturity,
+	paymentFrequency: .semiAnnual,
+	issueDate: today
+)
+
+let marketPrice = bond.price(yield: 0.05, asOf: today)
+
+print("Bond Pricing")
+print("============")
+print("Face Value: $1,000")
+print("Coupon Rate: 6.0%")
+print("Market Yield: 5.0%")
+print("Price: \(marketPrice.currency(2))")
+
+let currentYield = bond.currentYield(price: marketPrice)
+print("Current Yield: \(currentYield.percent(2))")
+
+// MARK: - Yield to Maturity
+
+// Find YTM given observed market price
+
+let observedPrice = 980.00  // Trading below par
+
+do {
+	let ytm = try bond.yieldToMaturity(price: observedPrice, asOf: today)
+
+	print("\nYield to Maturity Analysis")
+	print("===========================")
+	print("Market Price: \(observedPrice.currency())")
+	print("YTM: \(ytm.percent(2))")
+
+	// Verify round-trip: Price → YTM → Price
+	let verifyPrice = bond.price(yield: ytm, asOf: today)
+	print("Verification: \(verifyPrice.currency(2))")
+	print("Difference: \(abs(verifyPrice - observedPrice).currency(2))")
+
+} catch {
+	print("YTM calculation failed: \(error)")
+}
+
+// MARK: - Duration and Convexity
+
+let yield = 0.05
+
+let macaulayDuration = bond.macaulayDuration(yield: yield, asOf: today)
+let modifiedDuration = bond.modifiedDuration(yield: yield, asOf: today)
+let convexity = bond.convexity(yield: yield, asOf: today)
+
+print("\nInterest Rate Risk Metrics")
+print("==========================")
+print("Macaulay Duration: \(macaulayDuration.number(2)) years")
+print("Modified Duration: \(modifiedDuration.number(2))")
+print("Convexity: \(convexity.number(2))")
+
+// Estimate price change from 1% yield increase
+let yieldChange = 0.01  // 100 bps
+let priceChange = -modifiedDuration * yieldChange
+
+print("\nIf yield increases by 100 bps:")
+print("Duration estimate: \(priceChange.percent(2))")
+
+// More accurate estimate with convexity
+let convexityAdj = 0.5 * convexity * yieldChange * yieldChange
+let improvedEstimate = priceChange + convexityAdj
+
+print("With convexity adjustment: \(improvedEstimate.percent(2))")
+
+// Actual price change
+let newPrice = bond.price(yield: yield + yieldChange, asOf: today)
+let originalPrice = bond.price(yield: yield, asOf: today)
+let actualChange = ((newPrice / originalPrice) - 1.0)
+
+print("Actual change: \(actualChange.percent(2))")
+
+// MARK: - Credit Risk Analysis
+
+// Step 1: Start with credit metrics (Altman Z-Score)
+let zScore = 2.3  // Grey zone (moderate credit risk)
+
+// Step 2: Convert Z-Score to default probability
+let creditModel = CreditSpreadModel<Double>()
+let defaultProbability = creditModel.defaultProbability(zScore: zScore)
+
+print("\nCredit Risk Analysis")
+print("====================")
+print("Z-Score: \(zScore.number(2))")
+print("Default Probability: \(defaultProbability.percent(2))")
+
+// Step 3: Determine recovery rate by seniority
+let seniority = Seniority.seniorUnsecured
+let recoveryRate = RecoveryModel<Double>.standardRecoveryRate(seniority: seniority)
+
+print("Seniority: Senior Unsecured")
+print("Expected Recovery: \(recoveryRate.percent(0))")
+
+// Step 4: Calculate credit spread
+let creditSpread = creditModel.creditSpread(
+	defaultProbability: defaultProbability,
+	recoveryRate: recoveryRate,
+	maturity: 5.0
+)
+
+print("Credit Spread: \((creditSpread * 10000).number(0)) bps")
+
+// Step 5: Price the bond
+let riskFreeRate = 0.03  // 3% Treasury yield
+let corporateYield = riskFreeRate + creditSpread
+
+let corporateBond = Bond(
+	faceValue: 1000.0,
+	couponRate: 0.05,
+	maturityDate: maturity,
+	paymentFrequency: .semiAnnual,
+	issueDate: today
+)
+
+let corporatePrice = corporateBond.price(yield: corporateYield, asOf: today)
+
+print("\nCorporate Bond Pricing:")
+print("Risk-Free Rate: \(riskFreeRate.percent(2))")
+print("Corporate Yield: \(corporateYield.percent(2))")
+print("Bond Price: \(corporatePrice.currency(2))")
+
+
+// MARK: - Credit Deterioration Impact
+
+print("\nCredit Deterioration Impact")
+print("===========================")
+
+let scenarios = [
+	(name: "Investment Grade", zScore: 3.5),
+	(name: "Grey Zone", zScore: 2.0),
+	(name: "Distress", zScore: 1.0)
+]
+
+print("\nScenario           | Z-Score | PD     | Spread     | Price")
+print("-------------------|---------|--------|------------|----------")
+
+for scenario in scenarios {
+	let pd = creditModel.defaultProbability(zScore: scenario.zScore)
+	let spread = creditModel.creditSpread(
+		defaultProbability: pd,
+		recoveryRate: recoveryRate,
+		maturity: 5.0
+	)
+	let yld = riskFreeRate + spread
+	let price = corporateBond.price(yield: yld, asOf: today)
+
+	print("\(scenario.name.padding(toLength: 18, withPad: " ", startingAt: 0)) | \(scenario.zScore.number(1).paddingLeft(toLength: 7)) | \(pd.percent(1).paddingLeft(toLength: 6)) | \((spread * 10000).number(0).paddingLeft(toLength: 6)) bps | \(price.currency(2).paddingLeft(toLength: 9))")
+}
+
+// MARK: - Callable Bonds and OAS
+
+	// High-coupon callable bond (issuer can refinance)
+
+	let highCouponBond = Bond(
+		faceValue: 1000.0,
+		couponRate: 0.07,  // 7% coupon (above market)
+		maturityDate: calendar.date(byAdding: .year, value: 10, to: today)!,
+		paymentFrequency: .semiAnnual,
+		issueDate: today
+	)
+
+	// Callable after 3 years at $1,040 (4% premium)
+	let callDate = calendar.date(byAdding: .year, value: 3, to: today)!
+	let callSchedule = [CallProvision(date: callDate, callPrice: 1040.0)]
+
+	let callableBond = CallableBond(
+		bond: highCouponBond,
+		callSchedule: callSchedule
+	)
+
+	let volatility = 0.15  // 15% interest rate volatility
+
+	// Step 1: Price non-callable bond
+	let straightYield = riskFreeRate + creditSpread
+	let straightPrice = highCouponBond.price(yield: straightYield, asOf: today)
+
+	// Step 2: Price callable bond
+	let callablePrice = callableBond.price(
+		riskFreeRate: riskFreeRate,
+		spread: creditSpread,
+		volatility: volatility,
+		asOf: today
+	)
+
+	// Step 3: Calculate embedded option value
+	let callOptionValue = callableBond.callOptionValue(
+		riskFreeRate: riskFreeRate,
+		spread: creditSpread,
+		volatility: volatility,
+		asOf: today
+	)
+
+	print("\nCallable Bond Analysis")
+	print("======================")
+	print("Non-Callable Price: \(straightPrice.currency(2))")
+	print("Callable Price: \(callablePrice.currency(2))")
+	print("Call Option Value: \(callOptionValue.currency(2))")
+	print("Investor gives up: \((straightPrice - callablePrice).currency(2))")
+
+	// Step 4: Calculate Option-Adjusted Spread (OAS)
+	do {
+		let oas = try callableBond.optionAdjustedSpread(
+			marketPrice: callablePrice,
+			riskFreeRate: riskFreeRate,
+			volatility: volatility,
+			asOf: today
+		)
+
+		print("\nSpread Decomposition:")
+		print("Nominal Spread: \((creditSpread * 10000).number(0)) bps")
+		print("OAS (credit only): \((oas * 10000).number(0)) bps")
+		print("Option Spread: \(((creditSpread - oas) * 10000).number(0)) bps")
+
+	} catch {
+		print("OAS calculation failed: \(error)")
+	}
+
+	// Step 5: Effective duration (accounts for call option)
+	let effectiveDuration = callableBond.effectiveDuration(
+		riskFreeRate: riskFreeRate,
+		spread: creditSpread,
+		volatility: volatility,
+		asOf: today
+	)
+
+	let straightDuration = highCouponBond.macaulayDuration(yield: straightYield, asOf: today)
+
+	print("\nDuration Comparison:")
+	print("Non-Callable Duration: \(straightDuration.number(2)) years")
+	print("Effective Duration: \(effectiveDuration.number(2)) years")
+	print("Duration Reduction: \(((1 - effectiveDuration / straightDuration) * 100).number(0))%")
+
+
+// MARK: - Credit Curves
+
+	// Credit curve from market observations
+
+	let periods = [
+		Period.year(1),
+		Period.year(3),
+		Period.year(5),
+		Period.year(10)
+	]
+
+	// Observed spreads (typically upward sloping)
+	let marketSpreads = TimeSeries(
+		periods: periods,
+		values: [0.005, 0.012, 0.018, 0.025]  // 50, 120, 180, 250 bps
+	)
+
+	let creditCurve = CreditCurve(
+		spreads: marketSpreads,
+		recoveryRate: recoveryRate
+	)
+
+	print("\nCredit Curve Analysis")
+	print("=====================")
+
+	// Interpolate spreads
+	for years in [2.0, 7.0] {
+		let spread = creditCurve.spread(maturity: years)
+		print("\(years.number(0))-Year Spread: \((spread * 10000).number(0)) bps")
+	}
+
+	// Cumulative default probabilities
+	print("\nCumulative Default Probabilities:")
+	for year in [1, 3, 5, 10] {
+		let cdp = creditCurve.cumulativeDefaultProbability(maturity: Double(year))
+		let survival = 1.0 - cdp
+		print("\(year)-Year: \(cdp.percent(2)) default, \(survival.percent(2)) survival")
+	}
+
+	// Hazard rates (forward default intensities)
+	print("\nHazard Rates (Default Intensity):")
+	for year in [1, 5, 10] {
+		let hazard = creditCurve.hazardRate(maturity: Double(year))
+		print("\(year)-Year: \(hazard.percent(2)) per year")
+	}
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.10-BondValuationGuide.md">BusinessMath Docs – 3.10 Bond Valuation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Price corporate bonds across the credit spectrum (AAA to CCC)</li><li>Calculate portfolio duration for a bond ladder</li><li>Model callable bond strategies in different rate environments</li><li>Build credit curves for multiple issuers</li></ol><hr /><h2>Real-World Application</h2><p>Fixed income is the <strong>largest asset class</strong> globally:</p><ul><li><strong>Pension funds</strong>: Managing $100B+ bond portfolios</li><li><strong>Insurance companies</strong>: Asset-liability matching with bonds</li><li><strong>Central banks</strong>: Setting monetary policy via bond markets</li><li><strong>Corporates</strong>: Issuing bonds to finance operations</li></ul><p><strong>Portfolio manager use case</strong>: “We hold $5B in corporate bonds. Calculate portfolio duration, DV01 (dollar duration per basis point), and aggregate credit exposure by rating bucket.”</p><p>BusinessMath makes this analysis programmatic, real-time, and portfolio-wide.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Do Bonds Have Inverse Price-Yield Relationship?</strong></p><p>It’s counter-intuitive: when yields rise, bond prices <strong>fall</strong>. Why?</p><p><strong>The mechanism</strong>: A bond is a stream of fixed cash flows. When yields rise:</p><ul><li>New bonds issue with higher coupons</li><li>Your old bond (with lower coupon) is less attractive</li><li>To compete, your bond must trade at a <strong>discount</strong></li></ul><p><strong>Example</strong>:</p><ul><li>You buy a 5% coupon bond for $1,000 (yield = 5%)</li><li>Rates rise, new bonds pay 6% coupons</li><li>Your 5% bond must drop to ~$957 so its <strong>yield</strong> rises to 6%</li></ul><p><strong>The math</strong>: Bond price = PV(future coupons + principal). When discount rate (yield) increases, PV decreases.</p><p><strong>The lesson</strong>: <strong>Duration measures this price sensitivity</strong>. Higher duration = greater price volatility when yields change.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The most challenging implementation was <strong>callable bond pricing with binomial trees</strong>. We had to:</p><ol><li>Build interest rate trees with specified volatility</li><li>Implement backward induction (value at maturity, work backward)</li><li>Check at each node: Is bond callable? If yes, value = min(continuation value, call price)</li><li>Calculate OAS by iterating to find spread that matches market price</li></ol><p><strong>Trade-off</strong>: Binomial trees are slower than closed-form solutions but handle path-dependent options (callable, putable, convertible bonds).</p><p>We chose <strong>accuracy over speed</strong>—bond portfolios are repriced daily, not millisecond-by-millisecond.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing our binomial tree to Bloomberg’s pricing for callable bonds before implementation.</p><hr /><h2>Next Steps</h2><p><strong>Coming up next week</strong>: Week 6 explores Monte Carlo simulation and scenario analysis for risk modeling.</p><p><strong>Monday</strong>: Monte Carlo Basics - Building stochastic models for forecasting under uncertainty.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 5/12</li><li>Posts Published: 19/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + <strong>Advanced Modeling (complete)</strong></li><li>Playgrounds: 18 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/03-wed-equity-valuation</guid><title>Equity Valuation: From Dividends to Residual Income</title><link>https://www.justinpurnell.com/BusinessMath/week-05/03-wed-equity-valuation</link><description><![CDATA[Part 18 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 05 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[equity-valuation]]></category><category><![CDATA[ddm]]></category><category><![CDATA[fcfe]]></category><category><![CDATA[residual-income]]></category><category><![CDATA[stock-valuation]]></category><content:encoded><![CDATA[<p><strong>Part 18 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Valuing dividend-paying stocks with Gordon Growth Model</li><li>Using two-stage and H-models for growth transitions</li><li>Applying Free Cash Flow to Equity (FCFE) for non-dividend payers</li><li>Bridging from Enterprise Value to Equity Value</li><li>Using Residual Income Models for financial institutions</li><li>Comparing valuations across multiple methods</li><li>Triangulating to a fair value range</li></ul><hr /><h2>The Problem</h2><p>Stock valuation is both art and science. <strong>How much is a share of Apple worth? Tesla? Your local bank?</strong> Getting it wrong is expensive:</p><ul><li><strong>Which model should you use?</strong> Dividends? Cash flows? Book value?</li><li><strong>How do you value growth companies that don’t pay dividends?</strong> Traditional dividend models don’t work.</li><li><strong>What about companies transitioning from high growth to maturity?</strong> Single-stage models are too simplistic.</li><li><strong>How do you handle complex capital structures?</strong> Debt, preferred stock, minority interests…</li></ul><p><strong>Spreadsheet valuation is tedious and error-prone when modeling multiple scenarios and methods.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides five complementary equity valuation approaches: Gordon Growth DDM, Two-Stage DDM, H-Model, FCFE, Enterprise Value Bridge, and Residual Income. Use multiple methods and triangulate to a range.</p><h3>Gordon Growth Model (DDM)</h3><p>Start with the simplest model for stable, dividend-paying companies:</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Mature utility company
+// - Current dividend: $2.50/share
+// - Growth: 4% annually (stable)
+// - Required return: 9% (cost of equity)
+
+let utilityStock = GordonGrowthModel(
+    dividendPerShare: 2.50,
+    growthRate: 0.04,
+    requiredReturn: 0.09
+)
+
+let intrinsicValue = utilityStock.valuePerShare()
+
+print("Gordon Growth Model Valuation")
+print("==============================")
+print("Current Dividend: $2.50")
+print("Growth Rate: 4.0%")
+print("Required Return: 9.0%")
+print("Intrinsic Value: \(intrinsicValue.currency(2))")
+
+// Compare to market price
+let marketPrice = 48.00
+let assessment = intrinsicValue > marketPrice ? "UNDERVALUED" : "OVERVALUED"
+let difference = abs((intrinsicValue / marketPrice) - 1.0)
+
+print("\nMarket Price: \(marketPrice.currency())")
+print("Assessment: \(assessment) by \(difference.percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Gordon Growth Model Valuation
+==============================
+Current Dividend: $2.50
+Growth Rate: 4.0%
+Required Return: 9.0%
+Intrinsic Value: $50.00
+
+Market Price: $48.00
+Assessment: UNDERVALUED by 4.2%
+</code></pre><p><strong>The formula</strong>: Value = D₁ / (r - g) where D₁ = next dividend, r = required return, g = growth rate.</p><p><strong>The limitation</strong>: Only works for stable, mature companies with predictable dividend growth. Not suitable for growth stocks.</p><hr /><h3>Two-Stage Growth Model</h3><p>For companies transitioning from high growth to maturity:</p><pre><code class="language-swift">// Technology company: High growth → Maturity
+// - Current dividend: $1.00/share
+// - High growth: 20% for 5 years
+// - Stable growth: 5% thereafter
+// - Required return: 12% (higher risk)
+
+let techStock = TwoStageDDM(
+    currentDividend: 1.00,
+    highGrowthRate: 0.20,
+    highGrowthPeriods: 5,
+    stableGrowthRate: 0.05,
+    requiredReturn: 0.12
+)
+
+let techValue = techStock.valuePerShare()
+
+print("\nTwo-Stage DDM Valuation")
+print("========================")
+print("Current Dividend: $1.00")
+print("High Growth: 20% for 5 years")
+print("Stable Growth: 5% thereafter")
+print("Required Return: 12%")
+print("Intrinsic Value: \(techValue.currency(2))")
+
+// Break down components
+let highGrowthValue = techStock.highGrowthPhaseValue()
+let terminalValue = techStock.terminalValue()
+
+print("\nValue Decomposition:")
+print("  High Growth Phase: \(highGrowthValue.currency())")
+print("  Terminal Value (PV): \(terminalValue.currency())")
+print("  Total: \((highGrowthValue + terminalValue).currency())")
+</code></pre><p><strong>Output:</strong></p><pre><code>Two-Stage DDM Valuation
+========================
+Current Dividend: $1.00
+High Growth: 20% for 5 years
+Stable Growth: 5% thereafter
+Required Return: 12%
+Intrinsic Value: $27.36
+
+Value Decomposition:
+  High Growth Phase: $6.18
+  Terminal Value (PV): $21.18
+  Total: $27.36
+</code></pre><p><strong>The insight</strong>: <strong>77% of value comes from the terminal phase</strong>, not the high-growth years! This is common in two-stage models—most value is in perpetuity.</p><hr /><h3>H-Model (Declining Growth)</h3><p>When growth declines linearly (not abruptly):</p><pre><code class="language-swift">// Emerging market company
+// - Current dividend: $2.00
+// - Initial growth: 15% (current)
+// - Terminal growth: 5% (mature)
+// - Half-life: 8 years (time to decline)
+// - Required return: 11%
+
+let emergingStock = HModel(
+    currentDividend: 2.00,
+    initialGrowthRate: 0.15,
+    terminalGrowthRate: 0.05,
+    halfLife: 8,
+    requiredReturn: 0.11
+)
+
+let emergingValue = emergingStock.valuePerShare()
+
+print("\nH-Model Valuation")
+print("==================")
+print("Current Dividend: $2.00")
+print("Growth: 15% declining to 5% over 8 years")
+print("Required Return: 11%")
+print("Intrinsic Value: \(emergingValue.currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>H-Model Valuation
+==================
+Current Dividend: $2.00
+Growth: 15% declining to 5% over 8 years
+Required Return: 11%
+Intrinsic Value: $61.67
+</code></pre><p><strong>The formula</strong>: Value = [D₀ × (1 + gₗ)] / (r - gₗ) + [D₀ × H × (gₛ - gₗ)] / (r - gₗ)</p><p><strong>The use case</strong>: More realistic than two-stage for companies where growth fades gradually (most real-world scenarios).</p><hr /><h3>Free Cash Flow to Equity (FCFE)</h3><p>For companies that don’t pay dividends (like growth tech companies):</p><pre><code class="language-swift">// High-growth tech company (no dividends)
+
+let periods = [
+    Period.year(2024),
+    Period.year(2025),
+    Period.year(2026)
+]
+
+// Operating cash flow (growing 20%)
+let operatingCF = TimeSeries(
+    periods: periods,
+    values: [500.0, 600.0, 720.0]  // Millions
+)
+
+// Capital expenditures (also growing 20%)
+let capEx = TimeSeries(
+    periods: periods,
+    values: [100.0, 120.0, 144.0]  // Millions
+)
+
+let fcfeModel = FCFEModel(
+    operatingCashFlow: operatingCF,
+    capitalExpenditures: capEx,
+    netBorrowing: nil,  // No debt changes
+    costOfEquity: 0.12,
+    terminalGrowthRate: 0.05
+)
+
+// Total equity value
+let totalEquityValue = fcfeModel.equityValue()
+
+// Value per share (100M shares outstanding)
+let sharesOutstanding = 100.0
+let fcfeSharePrice = fcfeModel.valuePerShare(sharesOutstanding: sharesOutstanding)
+
+print("\nFCFE Model Valuation")
+print("====================")
+print("Total Equity Value: \(totalEquityValue.currency(0))M")
+print("Shares Outstanding: \(sharesOutstanding.number(0))M")
+print("Value Per Share: \(fcfeSharePrice.currency(2))")
+
+// Show FCFE breakdown
+let fcfeValues = fcfeModel.fcfe()
+print("\nProjected FCFE:")
+for (period, value) in zip(fcfeValues.periods, fcfeValues.valuesArray) {
+    print("  \(period.label): \(value.currency(0))M")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>FCFE Model Valuation
+====================
+Total Equity Value: $7,300M
+Shares Outstanding: 100M
+Value Per Share: $73.00
+
+Projected FCFE:
+  2024: $400M
+  2025: $480M
+  2026: $576M
+</code></pre><p><strong>The power</strong>: FCFE captures <strong>all cash available to equity holders</strong>, regardless of dividend policy. Superior to DDM for growth companies.</p><hr /><h3>Enterprise Value Bridge</h3><p>When you start with firm-wide cash flows (FCFF), bridge to equity value:</p><pre><code class="language-swift">// Step 1: Calculate Enterprise Value from FCFF
+
+let fcffPeriods = [
+    Period.year(2024),
+    Period.year(2025),
+    Period.year(2026)
+]
+
+let fcff = TimeSeries(
+    periods: fcffPeriods,
+    values: [150.0, 165.0, 181.5]  // Growing 10% (millions)
+)
+
+let enterpriseValue = enterpriseValueFromFCFF(
+    freeCashFlowToFirm: fcff,
+    wacc: 0.09,
+    terminalGrowthRate: 0.03
+)
+
+print("\nEnterprise Value Bridge")
+print("========================")
+print("Enterprise Value: \(enterpriseValue.currency(0))M")
+
+// Step 2: Bridge to Equity Value
+let bridge = EnterpriseValueBridge(
+    enterpriseValue: enterpriseValue,
+    totalDebt: 500.0,           // Total debt outstanding
+    cash: 100.0,                // Cash and equivalents
+    nonOperatingAssets: 50.0,   // Marketable securities
+    minorityInterest: 20.0,     // Minority shareholders
+    preferredStock: 30.0        // Preferred equity
+)
+
+let breakdown = bridge.breakdown()
+
+print("\nBridge to Equity:")
+print("  Enterprise Value:    \(breakdown.enterpriseValue.currency(0))M")
+print("  - Net Debt:          \(breakdown.netDebt.currency(0))M")
+print("  + Non-Op Assets:     \(breakdown.nonOperatingAssets.currency(0))M")
+print("  - Minority Interest: \(breakdown.minorityInterest.currency(0))M")
+print("  - Preferred Stock:   \(breakdown.preferredStock.currency(0))M")
+print("  " + String(repeating: "=", count: 30))
+print("  Common Equity Value: \(breakdown.equityValue.currency(0))M")
+
+let bridgeSharePrice = bridge.valuePerShare(sharesOutstanding: 100.0)
+print("\nValue Per Share: \(bridgeSharePrice.currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Enterprise Value Bridge
+========================
+Enterprise Value: $2,823M
+
+Bridge to Equity:
+  Enterprise Value:    $2,823M
+  - Net Debt:          $400M
+  + Non-Op Assets:     $50M
+  - Minority Interest: $20M
+  - Preferred Stock:   $30M
+  ==============================
+  Common Equity Value: $2,423M
+
+Value Per Share: $24.23
+</code></pre><p><strong>The process</strong>: <strong>EV → Subtract debt → Add non-op assets → Subtract other claims = Equity Value</strong></p><p><strong>The critical insight</strong>: Enterprise Value is what an acquirer pays to buy the <strong>whole company</strong>. Equity value is what <strong>common shareholders</strong> receive.</p><hr /><h3>Residual Income Model</h3><p>For banks and financial institutions where book value is meaningful:</p><pre><code class="language-swift">// Regional bank
+
+let riPeriods = [
+    Period.year(2024),
+    Period.year(2025),
+    Period.year(2026)
+]
+
+// Projected earnings (5% growth)
+let netIncome = TimeSeries(
+    periods: riPeriods,
+    values: [120.0, 126.0, 132.3]  // Millions
+)
+
+// Book value of equity (grows with retained earnings)
+let bookValue = TimeSeries(
+    periods: riPeriods,
+    values: [1000.0, 1050.0, 1102.5]  // Millions
+)
+
+let riModel = ResidualIncomeModel(
+    currentBookValue: 1000.0,
+    netIncome: netIncome,
+    bookValue: bookValue,
+    costOfEquity: 0.10,
+    terminalGrowthRate: 0.03
+)
+
+let riEquityValue = riModel.equityValue()
+let riSharePrice = riModel.valuePerShare(sharesOutstanding: 100.0)
+
+print("\nResidual Income Model")
+print("======================")
+print("Current Book Value: \(riModel.currentBookValue.currency(0))M")
+print("Equity Value: \(riEquityValue.currency(0))M")
+print("Value Per Share: \(riSharePrice.currency(2))")
+print("Book Value Per Share: \((riModel.currentBookValue / 100.0).currency(2))")
+
+let priceToBooksRatio = riSharePrice / (riModel.currentBookValue / 100.0)
+print("\nPrice-to-Book Ratio: \(priceToBooksRatio.number(2))x")
+
+// Show residual income (economic profit)
+let residualIncome = riModel.residualIncome()
+print("\nResidual Income (Economic Profit):")
+for (period, ri) in zip(residualIncome.periods, residualIncome.valuesArray) {
+    let verdict = ri > 0 ? "creating value" : "destroying value"
+    print("  \(period.label): \(ri.currency(1))M (\(verdict))")
+}
+
+// ROE analysis
+let roe = riModel.returnOnEquity()
+print("\nReturn on Equity (ROE):")
+for (period, roeValue) in zip(roe.periods, roe.valuesArray) {
+    let spread = roeValue - riModel.costOfEquity
+    print("  \(period.label): \(roeValue.percent(1)) (spread over cost of equity: \(spread.percent(1)))")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Residual Income Model
+======================
+Current Book Value: $1,000M
+Equity Value: $1,296M
+Value Per Share: $12.96
+Book Value Per Share: $10.00
+
+Price-to-Book Ratio: 1.30x
+
+Residual Income (Economic Profit):
+  2024: $20.0M (creating value)
+  2025: $21.0M (creating value)
+  2026: $22.1M (creating value)
+
+Return on Equity (ROE):
+  2024: 12.0% (spread over cost of equity: 2.0%)
+  2025: 12.0% (spread over cost of equity: 2.0%)
+  2026: 12.0% (spread over cost of equity: 2.0%)
+</code></pre><p><strong>The formula</strong>: Equity Value = Book Value + PV(Residual Income)</p><p><strong>Residual Income</strong> = Net Income - (Cost of Equity × Beginning Book Value)</p><p><strong>The insight</strong>: The bank trades at <strong>1.25x book</strong> because ROE (12%) exceeds cost of equity (10%). The 2% spread creates positive residual income and a premium valuation.</p><hr /><h3>Multi-Model Valuation Summary</h3><p>In practice, use multiple methods and triangulate:</p><pre><code class="language-swift">print("\n" + String(repeating: "=", count: 50))
+print("COMPREHENSIVE VALUATION SUMMARY")
+print(String(repeating: "=", count: 50))
+
+struct ValuationSummary {
+    let method: String
+    let value: Double
+    let confidence: String
+    let bestFor: String
+}
+
+let valuations = [
+    ValuationSummary(
+        method: "Gordon Growth DDM",
+        value: 50.00,
+        confidence: "High",
+        bestFor: "Mature dividend payers"
+    ),
+    ValuationSummary(
+        method: "Two-Stage DDM",
+        value: 27.36,
+        confidence: "Medium",
+        bestFor: "Growth-to-maturity transition"
+    ),
+    ValuationSummary(
+        method: "H-Model",
+        value: 48.33,
+        confidence: "Medium",
+        bestFor: "Declining growth scenarios"
+    ),
+    ValuationSummary(
+        method: "FCFE Model",
+        value: 74.56,
+        confidence: "High",
+        bestFor: "All companies with CF data"
+    ),
+    ValuationSummary(
+        method: "EV Bridge",
+        value: 21.00,
+        confidence: "High",
+        bestFor: "Firm-level DCF to equity"
+    ),
+    ValuationSummary(
+        method: "Residual Income",
+        value: 12.45,
+        confidence: "High",
+        bestFor: "Financial institutions"
+    )
+]
+
+print("\nMethod                | Value    | Confidence | Best For")
+print("----------------------|----------|------------|------------------------")
+
+for v in valuations {
+    print("\(v.method.padding(toLength: 21, withPad: " ", startingAt: 0)) | \(v.value.currency(2).padding(toLength: 8, withPad: " ", startingAt: 0)) | \(v.confidence.padding(toLength: 10, withPad: " ", startingAt: 0)) | \(v.bestFor)")
+}
+
+// Calculate valuation range
+let values = valuations.map { $0.value }
+let minValue = values.min()!
+let maxValue = values.max()!
+let medianValue = values.sorted()[values.count / 2]
+
+print("\nValuation Range:")
+print("  Low:    \(minValue.currency(2))")
+print("  Median: \(medianValue.currency(2))")
+print("  High:   \(maxValue.currency(2))")
+print("  Spread: \((maxValue - minValue).currency(2)) (\(((maxValue - minValue) / medianValue).percent()))")
+</code></pre><p><strong>Output:</strong></p><pre><code>==================================================
+COMPREHENSIVE VALUATION SUMMARY
+==================================================
+
+Method                | Value    | Confidence | Best For
+----------------------|----------|------------|------------------------
+Gordon Growth DDM     | $50.00   | High       | Mature dividend payers
+Two-Stage DDM         | $27.36   | Medium     | Growth-to-maturity transition
+H-Model               | $48.33   | Medium     | Declining growth scenarios
+FCFE Model            | $74.56   | High       | All companies with CF data
+EV Bridge             | $21.00   | High       | Firm-level DCF to equity
+Residual Income       | $12.45   | High       | Financial institutions
+
+Valuation Range:
+  Low:    $12.45
+  Median: $48.33
+  High:   $74.56
+  Spread: $62.11 (128.51%)
+</code></pre><p><strong>The reality</strong>: Different models give <strong>vastly different values</strong> depending on company type and assumptions. This is why equity valuation is <strong>art + science</strong>.</p><p><strong>The approach</strong>: Weight models based on company characteristics, cross-check assumptions, establish a range.</p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+	
+// MARK: - Gordon Growth Model
+
+// Mature utility company
+// - Current dividend: $2.50/share
+// - Growth: 4% annually (stable)
+// - Required return: 9% (cost of equity)
+
+let utilityStock = GordonGrowthModel(
+	dividendPerShare: 2.50,
+	growthRate: 0.04,
+	requiredReturn: 0.09
+)
+
+let intrinsicValue = utilityStock.valuePerShare()
+
+print("Gordon Growth Model Valuation")
+print("==============================")
+print("Current Dividend: $2.50")
+print("Growth Rate: 4.0%")
+print("Required Return: 9.0%")
+print("Intrinsic Value: \(intrinsicValue.currency(2))")
+
+// Compare to market price
+let marketPrice = 48.00
+let assessment = intrinsicValue > marketPrice ? "UNDERVALUED" : "OVERVALUED"
+let difference = abs((intrinsicValue / marketPrice) - 1.0)
+
+print("\nMarket Price: \(marketPrice.currency())")
+print("Assessment: \(assessment) by \(difference.percent(1))")
+
+// MARK: - Two-Stage Growth Model
+
+	// Technology company: High growth → Maturity
+	// - Current dividend: $1.00/share
+	// - High growth: 20% for 5 years
+	// - Stable growth: 5% thereafter
+	// - Required return: 12% (higher risk)
+
+	let techStock = TwoStageDDM(
+		currentDividend: 1.00,
+		highGrowthRate: 0.20,
+		highGrowthPeriods: 5,
+		stableGrowthRate: 0.05,
+		requiredReturn: 0.12
+	)
+
+	let techValue = techStock.valuePerShare()
+
+	print("\nTwo-Stage DDM Valuation")
+	print("========================")
+	print("Current Dividend: $1.00")
+	print("High Growth: 20% for 5 years")
+	print("Stable Growth: 5% thereafter")
+	print("Required Return: 12%")
+	print("Intrinsic Value: \(techValue.currency(2))")
+
+	// Break down components
+	let highGrowthValue = techStock.highGrowthPhaseValue()
+	let terminalValue = techStock.terminalValue()
+
+	print("\nValue Decomposition:")
+	print("  High Growth Phase: \(highGrowthValue.currency())")
+	print("  Terminal Value (PV): \(terminalValue.currency())")
+	print("  Total: \((highGrowthValue + terminalValue).currency())")
+
+// MARK: - H-Model (Declining Growth)
+
+	// Emerging market company
+	// - Current dividend: $2.00
+	// - Initial growth: 15% (current)
+	// - Terminal growth: 5% (mature)
+	// - Half-life: 8 years (time to decline)
+	// - Required return: 11%
+
+	let emergingStock = HModel(
+		currentDividend: 2.00,
+		initialGrowthRate: 0.15,
+		terminalGrowthRate: 0.05,
+		halfLife: 8,
+		requiredReturn: 0.11
+	)
+
+	let emergingValue = emergingStock.valuePerShare()
+
+	print("\nH-Model Valuation")
+	print("==================")
+	print("Current Dividend: $2.00")
+	print("Growth: 15% declining to 5% over 8 years")
+	print("Required Return: 11%")
+	print("Intrinsic Value: \(emergingValue.currency(2))")
+
+
+// MARK: - Free Cash Flow to Equity (FCFE)
+
+	// High-growth tech company (no dividends)
+
+	let periods = [
+		Period.year(2024),
+		Period.year(2025),
+		Period.year(2026)
+	]
+
+	// Operating cash flow (growing 20%)
+	let operatingCF = TimeSeries(
+		periods: periods,
+		values: [500.0, 600.0, 720.0]  // Millions
+	)
+
+	// Capital expenditures (also growing 20%)
+	let capEx = TimeSeries(
+		periods: periods,
+		values: [100.0, 120.0, 144.0]  // Millions
+	)
+
+	let fcfeModel = FCFEModel(
+		operatingCashFlow: operatingCF,
+		capitalExpenditures: capEx,
+		netBorrowing: nil,  // No debt changes
+		costOfEquity: 0.12,
+		terminalGrowthRate: 0.05
+	)
+
+	// Total equity value
+	let totalEquityValue = fcfeModel.equityValue()
+
+	// Value per share (100M shares outstanding)
+	let sharesOutstanding = 100.0
+	let fcfeSharePrice = fcfeModel.valuePerShare(sharesOutstanding: sharesOutstanding)
+
+	print("\nFCFE Model Valuation")
+	print("====================")
+	print("Total Equity Value: \(totalEquityValue.currency(0))M")
+	print("Shares Outstanding: \(sharesOutstanding.number(0))M")
+	print("Value Per Share: \(fcfeSharePrice.currency(2))")
+
+	// Show FCFE breakdown
+	let fcfeValues = fcfeModel.fcfe()
+	print("\nProjected FCFE:")
+	for (period, value) in zip(fcfeValues.periods, fcfeValues.valuesArray) {
+		print("  \(period.label): \(value.currency(0))M")
+	}
+
+// MARK: - Enterprise Value Bridge
+
+	// Step 1: Calculate Enterprise Value from FCFF
+
+	let fcffPeriods = [
+		Period.year(2024),
+		Period.year(2025),
+		Period.year(2026)
+	]
+
+	let fcff = TimeSeries(
+		periods: fcffPeriods,
+		values: [150.0, 165.0, 181.5]  // Growing 10% (millions)
+	)
+
+	let enterpriseValue = enterpriseValueFromFCFF(
+		freeCashFlowToFirm: fcff,
+		wacc: 0.09,
+		terminalGrowthRate: 0.03
+	)
+
+	print("\nEnterprise Value Bridge")
+	print("========================")
+	print("Enterprise Value: \(enterpriseValue.currency(0))M")
+
+	// Step 2: Bridge to Equity Value
+	let bridge = EnterpriseValueBridge(
+		enterpriseValue: enterpriseValue,
+		totalDebt: 500.0,           // Total debt outstanding
+		cash: 100.0,                // Cash and equivalents
+		nonOperatingAssets: 50.0,   // Marketable securities
+		minorityInterest: 20.0,     // Minority shareholders
+		preferredStock: 30.0        // Preferred equity
+	)
+
+	let breakdown = bridge.breakdown()
+
+	print("\nBridge to Equity:")
+	print("  Enterprise Value:    \(breakdown.enterpriseValue.currency(0))M")
+	print("  - Net Debt:          \(breakdown.netDebt.currency(0))M")
+	print("  + Non-Op Assets:     \(breakdown.nonOperatingAssets.currency(0))M")
+	print("  - Minority Interest: \(breakdown.minorityInterest.currency(0))M")
+	print("  - Preferred Stock:   \(breakdown.preferredStock.currency(0))M")
+	print("  " + String(repeating: "=", count: 30))
+	print("  Common Equity Value: \(breakdown.equityValue.currency(0))M")
+
+	let bridgeSharePrice = bridge.valuePerShare(sharesOutstanding: 100.0)
+	print("\nValue Per Share: \(bridgeSharePrice.currency(2))")
+
+// MARK: - Residual Income Model
+
+	// Regional bank
+
+	let riPeriods = [
+		Period.year(2024),
+		Period.year(2025),
+		Period.year(2026)
+	]
+
+	// Projected earnings (5% growth)
+	let netIncome = TimeSeries(
+		periods: riPeriods,
+		values: [120.0, 126.0, 132.3]  // Millions
+	)
+
+	// Book value of equity (grows with retained earnings)
+	let bookValue = TimeSeries(
+		periods: riPeriods,
+		values: [1000.0, 1050.0, 1102.5]  // Millions
+	)
+
+	let riModel = ResidualIncomeModel(
+		currentBookValue: 1000.0,
+		netIncome: netIncome,
+		bookValue: bookValue,
+		costOfEquity: 0.10,
+		terminalGrowthRate: 0.03
+	)
+
+	let riEquityValue = riModel.equityValue()
+	let riSharePrice = riModel.valuePerShare(sharesOutstanding: 100.0)
+
+	print("\nResidual Income Model")
+	print("======================")
+	print("Current Book Value: \(riModel.currentBookValue.currency(0))M")
+	print("Equity Value: \(riEquityValue.currency(0))M")
+	print("Value Per Share: \(riSharePrice.currency(2))")
+	print("Book Value Per Share: \((riModel.currentBookValue / 100.0).currency(2))")
+
+	let priceToBooksRatio = riSharePrice / (riModel.currentBookValue / 100.0)
+	print("\nPrice-to-Book Ratio: \(priceToBooksRatio.number(2))x")
+
+	// Show residual income (economic profit)
+	let residualIncome = riModel.residualIncome()
+	print("\nResidual Income (Economic Profit):")
+	for (period, ri) in zip(residualIncome.periods, residualIncome.valuesArray) {
+		let verdict = ri > 0 ? "creating value" : "destroying value"
+		print("  \(period.label): \(ri.currency(1))M (\(verdict))")
+	}
+
+	// ROE analysis
+	let roe = riModel.returnOnEquity()
+	print("\nReturn on Equity (ROE):")
+	for (period, roeValue) in zip(roe.periods, roe.valuesArray) {
+		let spread = roeValue - riModel.costOfEquity
+		print("  \(period.label): \(roeValue.percent(1)) (spread over cost of equity: \(spread.percent(1)))")
+	}
+
+
+// MARK: - Multi-Model Valuation Summary
+
+print("\n" + String(repeating: "=", count: 50))
+print("COMPREHENSIVE VALUATION SUMMARY")
+print(String(repeating: "=", count: 50))
+
+struct ValuationSummary {
+	let method: String
+	let value: Double
+	let confidence: String
+	let bestFor: String
+}
+
+let valuations = [
+	ValuationSummary(
+		method: "Gordon Growth DDM",
+		value: 50.00,
+		confidence: "High",
+		bestFor: "Mature dividend payers"
+	),
+	ValuationSummary(
+		method: "Two-Stage DDM",
+		value: 27.36,
+		confidence: "Medium",
+		bestFor: "Growth-to-maturity transition"
+	),
+	ValuationSummary(
+		method: "H-Model",
+		value: 48.33,
+		confidence: "Medium",
+		bestFor: "Declining growth scenarios"
+	),
+	ValuationSummary(
+		method: "FCFE Model",
+		value: 74.56,
+		confidence: "High",
+		bestFor: "All companies with CF data"
+	),
+	ValuationSummary(
+		method: "EV Bridge",
+		value: 21.00,
+		confidence: "High",
+		bestFor: "Firm-level DCF to equity"
+	),
+	ValuationSummary(
+		method: "Residual Income",
+		value: 12.45,
+		confidence: "High",
+		bestFor: "Financial institutions"
+	)
+]
+
+print("\nMethod                | Value    | Confidence | Best For")
+print("----------------------|----------|------------|------------------------")
+
+for v in valuations {
+	print("\(v.method.padding(toLength: 21, withPad: " ", startingAt: 0)) | \(v.value.currency(2).padding(toLength: 8, withPad: " ", startingAt: 0)) | \(v.confidence.padding(toLength: 10, withPad: " ", startingAt: 0)) | \(v.bestFor)")
+}
+
+// Calculate valuation range
+let values = valuations.map { $0.value }
+let minValue = values.min()!
+let maxValue = values.max()!
+let medianValue = values.sorted()[values.count / 2]
+
+print("\nValuation Range:")
+print("  Low:    \(minValue.currency(2))")
+print("  Median: \(medianValue.currency(2))")
+print("  High:   \(maxValue.currency(2))")
+print("  Spread: \((maxValue - minValue).currency(2)) (\(((maxValue - minValue) / medianValue).percent()))")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.9-EquityValuationGuide.md"><strong>BusinessMath Docs – 3.9 Equity Valuation</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Value your favorite public company using multiple methods</li><li>Build a comp table comparing 5 companies in the same industry</li><li>Model different growth scenarios (bear/base/bull)</li><li>Calculate implied cost of equity from market prices</li></ol><hr /><h2>Real-World Application</h2><p>Every equity analyst, portfolio manager, and investment banker uses these models:</p><ul><li><strong>Buy-side analysts</strong>: Building DCF models for stock recommendations</li><li><strong>Investment banking</strong>: Valuing targets for M&A advisory</li><li><strong>Private equity</strong>: Pricing buyout opportunities</li><li><strong>Venture capital</strong>: Valuing pre-IPO companies (with adjustments)</li></ul><p><strong>Equity research use case</strong>: “Value Tesla using FCFE. Assume 25% revenue CAGR for 5 years, then 8% perpetual growth. Cost of equity 12%. Compare to current market price.”</p><p>BusinessMath makes these valuations programmatic, scenario-testable, and portfolio-wide.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Do Valuations Vary So Much Across Methods?</strong></p><p>In our example, valuations ranged from $12.45 to $74.56 (6x difference!). Why?</p><p><strong>Each model captures different aspects</strong>:</p><ul><li><strong>DDM</strong>: Only values distributed cash (dividends)</li><li><strong>FCFE</strong>: Values all available cash (includes retained earnings)</li><li><strong>Residual Income</strong>: Values earnings power relative to book value</li><li><strong>EV Bridge</strong>: Values the entire firm, then allocates to equity</li></ul><p><strong>Which is “right”?</strong> Depends on the company:</p><ul><li><strong>Utilities</strong>: DDM works (stable dividends)</li><li><strong>Tech growth</strong>: FCFE works (no dividends, high growth)</li><li><strong>Banks</strong>: Residual Income works (book value meaningful)</li><li><strong>Conglomerates</strong>: EV Bridge works (complex capital structure)</li></ul><p><strong>The lesson</strong>: No single model is universally correct. Use multiple methods, understand their assumptions, and triangulate to a range.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest design challenge was <strong>modeling growth transitions</strong>. Real companies don’t go from 20% growth to 5% growth overnight (two-stage assumption), but they also don’t decline linearly forever (H-Model assumption).</p><p>We considered implementing a <strong>three-stage model</strong> (high growth → declining growth → stable), but decided against it because:</p><ol><li>More parameters = more estimation error</li><li>Users can chain models (two-stage + H-Model)</li><li>Diminishing returns on complexity</li></ol><p><strong>The principle</strong>: Provide flexible primitives rather than complex all-in-one models.</p><p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - We wrote tutorial examples first to ensure APIs were learnable before implementing.</p><hr /><h2>Next Steps</h2><p><strong>Coming up tomorrow</strong>: Bond Valuation - Pricing fixed income, credit spreads, callable bonds, and option-adjusted spreads.</p><p><strong>Next week</strong>: Monte Carlo simulation and scenario analysis for risk modeling.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 5/12</li><li>Posts Published: 18/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Loans + Investments + Equity</li><li>Playgrounds: 17 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/02-tue-investment-analysis</guid><title>Investment Analysis with NPV and IRR</title><link>https://www.justinpurnell.com/BusinessMath/week-05/02-tue-investment-analysis</link><description><![CDATA[Part 17 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 03 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[npv]]></category><category><![CDATA[irr]]></category><category><![CDATA[investment-analysis]]></category><category><![CDATA[profitability-index]]></category><category><![CDATA[payback]]></category><content:encoded><![CDATA[<p><strong>Part 17 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Calculating Net Present Value (NPV) for investment decisions</li><li>Determining Internal Rate of Return (IRR) to measure returns</li><li>Using XNPV and XIRR for irregular cash flow timing</li><li>Computing profitability index and payback periods</li><li>Performing sensitivity analysis on key assumptions</li><li>Comparing multiple investment opportunities systematically</li><li>Making risk-adjusted investment decisions using CAPM</li></ul><hr /><h2>The Problem</h2><p>Every business faces investment decisions: <strong>Should we expand into a new market? Buy this equipment? Acquire that company?</strong> Bad investment decisions destroy value:</p><ul><li><strong>How do you compare investments with different sizes?</strong> $1M investment returning $1.2M vs. $100K returning $130K?</li><li><strong>What if cash flows arrive at irregular times?</strong> Real estate projects don’t have annual cash flows.</li><li><strong>How do you account for risk?</strong> A startup investment should require higher returns than treasury bonds.</li><li><strong>Which metric is most important?</strong> NPV, IRR, payback period, or profitability index?</li></ul><p><strong>Spreadsheet investment analysis is error-prone and doesn’t scale when evaluating dozens of opportunities.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive investment analysis functions: <code>npv()</code>, <code>irr()</code>, <code>xnpv()</code>, <code>xirr()</code>, plus supporting metrics like profitability index and payback periods.</p><h3>Define the Investment</h3><p>Let’s analyze a rental property investment:</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Rental property opportunity
+let propertyPrice = 250_000.0
+let downPayment = 50_000.0      // 20% down
+let renovationCosts = 20_000.0
+let initialInvestment = downPayment + renovationCosts  // $70,000
+
+// Expected annual cash flows (after expenses and mortgage)
+let year1 = 8_000.0
+let year2 = 8_500.0
+let year3 = 9_000.0
+let year4 = 9_500.0
+let year5 = 10_000.0
+let salePrice = 300_000.0       // Sell after 5 years
+let mortgagePayoff = 190_000.0
+let saleProceeds = salePrice - mortgagePayoff  // Net: $110,000
+
+print("Real Estate Investment Analysis")
+print("================================")
+print("Initial Investment: \(initialInvestment.currency(0))")
+print("  Down Payment: \(downPayment.currency(0))")
+print("  Renovations: \(renovationCosts.currency(0))")
+print("\nExpected Cash Flows:")
+print("  Years 1-5: Annual rental income")
+print("  Year 5: + Sale proceeds (\(saleProceeds.currency(0)))")
+print("  Required Return: 12%")
+</code></pre><p><strong>Output:</strong></p><pre><code>Real Estate Investment Analysis
+================================
+Initial Investment: $70,000
+  Down Payment: $50,000
+  Renovations: $20,000
+
+Expected Cash Flows:
+  Years 1-5: Annual rental income
+  Year 5: + Sale proceeds ($110,000)
+  Required Return: 12%
+</code></pre><hr /><h3>Calculate NPV</h3><p>Determine if the investment creates value at your required return:</p><pre><code class="language-swift">// Define all cash flows
+let cashFlows = [
+    -initialInvestment,  // Year 0: Outflow
+    year1,               // Year 1: Rental income
+    year2,               // Year 2
+    year3,               // Year 3
+    year4,               // Year 4
+    year5 + saleProceeds // Year 5: Rental + sale
+]
+
+let requiredReturn = 0.12
+let npvValue = npv(discountRate: requiredReturn, cashFlows: cashFlows)
+
+print("\nNet Present Value Analysis")
+print("===========================")
+print("Discount Rate: \(requiredReturn.percent())")
+print("NPV: \(npvValue.currency(0))")
+
+if npvValue > 0 {
+    print("✓ Positive NPV - Investment adds value")
+    print("  For every $1 invested, you create \((1 + npvValue / initialInvestment).currency(2)) of value")
+} else if npvValue < 0 {
+    print("✗ Negative NPV - Investment destroys value")
+    print("  Should reject this opportunity")
+} else {
+    print("○ Zero NPV - Breakeven investment")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Net Present Value Analysis
+===========================
+Discount Rate: 12.00%
+NPV: $24,454
+✓ Positive NPV - Investment adds value
+  For every $1 invested, you create $1.35 of value
+</code></pre><p><strong>The decision rule</strong>: <strong>NPV > 0 means accept</strong>. This investment creates $24,454 of value at your 12% required return.</p><hr /><h3>Calculate IRR</h3><p>Find the actual return rate of the investment:</p><pre><code class="language-swift">let irrValue = try irr(cashFlows: cashFlows)
+
+print("\nInternal Rate of Return")
+print("=======================")
+print("IRR: \(irrValue.percent(2))")
+print("Required Return: \(requiredReturn.percent())")
+
+if irrValue > requiredReturn {
+    let spread = (irrValue - requiredReturn) * 100
+    print("✓ IRR exceeds required return by \(spread.number(2)) percentage points")
+    print("  Investment is attractive")
+} else if irrValue < requiredReturn {
+    let shortfall = (requiredReturn - irrValue) * 100
+    print("✗ IRR falls short by \(shortfall.number(2)) percentage points")
+} else {
+    print("○ IRR equals required return - Breakeven")
+}
+
+// Verify: NPV at IRR should be ~$0
+let npvAtIRR = npv(discountRate: irrValue, cashFlows: cashFlows)
+print("\nVerification: NPV at IRR = \(npvAtIRR.currency()) (should be ~$0)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Internal Rate of Return
+=======================
+IRR: 20.24%
+Required Return: 12.00%
+✓ IRR exceeds required return by 8.24 percentage points
+  Investment is attractive
+
+Verification: NPV at IRR = $0.00 (should be ~$0)```
+
+**The insight**: The investment returns **22.83%**, well above the 12% hurdle rate. IRR is the discount rate that makes NPV = $0.
+
+---
+
+### Additional Investment Metrics
+
+Calculate supporting metrics for a complete picture:
+
+```swift
+// Profitability Index
+let pi = profitabilityIndex(rate: requiredReturn, cashFlows: cashFlows)
+
+print("\nProfitability Index")
+print("===================")
+print("PI: \(pi.number(2))")
+if pi > 1.0 {
+    print("✓ PI > 1.0 - Creates value")
+    print("  Returns \(pi.currency(2)) for every $1 invested")
+} else {
+    print("✗ PI < 1.0 - Destroys value")
+}
+
+// Payback Period
+let payback = paybackPeriod(cashFlows: cashFlows)
+
+print("\nPayback Period")
+print("==============")
+if let pb = payback {
+    print("Simple Payback: \(pb) years")
+    print("  Investment recovered in year \(pb)")
+} else {
+    print("Investment never recovers initial outlay")
+}
+
+// Discounted Payback
+let discountedPayback = discountedPaybackPeriod(
+    rate: requiredReturn,
+    cashFlows: cashFlows
+)
+
+if let dpb = discountedPayback {
+    print("Discounted Payback: \(dpb) years (at \(requiredReturn.percent()))")
+    if let pb = payback {
+        let difference = dpb - pb
+        print("  Takes \(difference) more years accounting for time value")
+    }
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Profitability Index
+===================
+PI: 1.35
+✓ PI > 1.0 - Creates value
+  Returns $1.35 for every $1 invested
+
+Payback Period
+==============
+Simple Payback: 5 years
+  Investment recovered in year 5
+
+Discounted Payback: 5 years (at 12.00%)
+  Takes 0 more years accounting for time value
+</code></pre><p><strong>The metrics</strong>:</p><ul><li><strong>PI = 1.35</strong>: Every dollar invested returns $1.35 in present value</li><li><strong>Payback = 5 years</strong>: Break even at the end (due to large sale proceeds)</li></ul><hr /><h3>Sensitivity Analysis</h3><p>Test how changes in assumptions affect the decision:</p><pre><code class="language-swift">print("\nSensitivity Analysis")
+print("====================")
+
+// Test different discount rates
+print("NPV at Different Discount Rates:")
+print("Rate  | NPV        | Decision")
+print("------|------------|----------")
+
+for rate in stride(from: 0.08, through: 0.16, by: 0.02) {
+    let npv = npv(discountRate: rate, cashFlows: cashFlows)
+    let decision = npv > 0 ? "Accept" : "Reject"
+    print("\(rate.percent(0)) | \(npv.currency()) | \(decision)")
+}
+
+// Test different sale prices
+print("\nNPV at Different Sale Prices:")
+print("Sale Price | Net Proceeds | NPV        | Decision")
+print("-----------|--------------|------------|----------")
+
+for price in stride(from: 240_000.0, through: 340_000.0, by: 20_000.0) {
+    let proceeds = price - mortgagePayoff
+    let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+    let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+    let decision = npv > 0 ? "Accept" : "Reject"
+    print("\(price.currency(0)) | \(proceeds.currency(0)) | \(npv.currency()) | \(decision)")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Sensitivity Analysis
+====================
+NPV at Different Discount Rates:
+Rate  | NPV        | Decision
+------|------------|----------
+   8% |    $40,492 | Accept
+  10% |    $32,059 | Accept
+  12% |    $24,454 | Accept
+  14% |    $17,582 | Accept
+  16% |    $11,360 | Accept
+
+NPV at Different Sale Prices:
+Sale Price | Net Proceeds | NPV        | Decision
+-----------|--------------|------------|----------
+  $240,000 |      $50,000 |   ($9,592) | Reject
+  $260,000 |      $70,000 |     $1,757 | Accept
+  $280,000 |      $90,000 |    $13,105 | Accept
+  $300,000 |     $110,000 |    $24,454 | Accept
+  $320,000 |     $130,000 |    $35,802 | Accept
+  $340,000 |     $150,000 |    $47,151 | Accept
+</code></pre><p><strong>The risk assessment</strong>: The investment is <strong>sensitive to sale price</strong>. If the property sells for < ~$260k, NPV turns negative. This is your <strong>margin of safety</strong>.</p><hr /><h3>Breakeven Analysis</h3><p>Find the exact breakeven sale price where NPV = $0:</p><pre><code class="language-swift">print("\nBreakeven Analysis:")
+
+var low = 200_000.0
+var high = 350_000.0
+var breakeven = (low + high) / 2
+
+// Binary search for breakeven
+for _ in 0..<20 {
+    let proceeds = breakeven - mortgagePayoff
+    let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+    let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+
+    if abs(npv) < 1.0 { break }  // Close enough
+    else if npv > 0 { high = breakeven }
+    else { low = breakeven }
+
+    breakeven = (low + high) / 2
+}
+
+print("Breakeven Sale Price: \(breakeven.currency(0))")
+print("  At this price, NPV = $0 and IRR = \(requiredReturn.percent())")
+print("  Current assumption: \(salePrice.currency(0))")
+print("  Safety margin: \((salePrice - breakeven).currency(0)) (\(((salePrice - breakeven) / salePrice).percent(1)))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Breakeven Analysis:
+Breakeven Sale Price: $256,905
+  At this price, NPV = $0 and IRR = 12.00%
+  Current assumption: $300,000
+  Safety margin: $43,095 (14.4%)
+</code></pre><p><strong>The cushion</strong>: The property can drop <strong>$43k (14.4%)</strong> from your expected sale price before the investment turns negative.</p><hr /><h3>Compare Multiple Investments</h3><p>Rank several opportunities systematically:</p><pre><code class="language-swift">print("\nComparing Investment Opportunities")
+print("===================================")
+
+struct Investment {
+    let name: String
+    let cashFlows: [Double]
+    let description: String
+}
+
+let investments = [
+    Investment(
+        name: "Real Estate",
+        cashFlows: [-70_000, 8_000, 8_500, 9_000, 9_500, 120_000],
+        description: "Rental property with 5-year hold"
+    ),
+    Investment(
+        name: "Stock Portfolio",
+        cashFlows: [-70_000, 5_000, 5_500, 6_000, 6_500, 75_000],
+        description: "Diversified equity portfolio"
+    ),
+    Investment(
+        name: "Business Expansion",
+        cashFlows: [-70_000, 0, 10_000, 15_000, 20_000, 40_000],
+        description: "Expand product line (delayed returns)"
+    )
+]
+
+print("\nInvestment        | NPV       | IRR     | PI   | Payback")
+print("------------------|-----------|---------|------|--------")
+
+var results: [(name: String, npv: Double, irr: Double)] = []
+
+for investment in investments {
+    let npv = npv(discountRate: requiredReturn, cashFlows: investment.cashFlows)
+    let irr = try irr(cashFlows: investment.cashFlows)
+    let pi = profitabilityIndex(rate: requiredReturn, cashFlows: investment.cashFlows)
+    let pb = paybackPeriod(cashFlows: investment.cashFlows) ?? 99
+
+    results.append((investment.name, npv, irr))
+    print("\(investment.name.padding(toLength: 17, withPad: " ", startingAt: 0)) | \(npv.currency(0)) | \(irr.percent(1)) | \(pi.number(2)) | \(pb) yrs")
+}
+
+// Rank by NPV
+let ranked = results.sorted { $0.npv > $1.npv }
+
+print("\nRanking by NPV:")
+for (i, result) in ranked.enumerated() {
+    print("  \(i + 1). \(result.name) - NPV: \(result.npv.currency(0))")
+}
+
+print("\nRecommendation: Choose '\(ranked[0].name)'")
+print("  Highest NPV = Maximum value creation")
+</code></pre><p><strong>Output:</strong></p><pre><code>Comparing Investment Opportunities
+===================================
+
+Investment        | NPV       | IRR     | PI   | Payback
+------------------|-----------|---------|------|--------
+Real Estate       |   $24,454 |   20.2% | 1.35 | 5 yrs
+Stock Portfolio   | ($10,193) |    8.0% | 0.85 | 5 yrs
+Business Expansio | ($15,944) |    4.9% | 0.77 | 5 yrs
+
+Ranking by NPV:
+  1. Real Estate - NPV: $24,454
+  2. Stock Portfolio - NPV: ($10,193)
+  3. Business Expansion - NPV: ($15,944)
+
+Recommendation: Choose 'Real Estate'
+  Highest NPV = Maximum value creation
+</code></pre><p><strong>The decision</strong>: <strong>Real Estate has the highest NPV</strong>, creating $24,454 of value. Even though Business Expansion has a higher IRR than Stock Portfolio, Real Estate wins on absolute value creation.</p><hr /><h3>Irregular Cash Flow Analysis</h3><p>Use XNPV and XIRR for real-world irregular timing:</p><pre><code class="language-swift">print("\nIrregular Cash Flow Analysis")
+print("============================")
+
+let startDate = Date()
+let dates = [
+	startDate,                                     // Today: Initial investment
+	startDate.addingTimeInterval(90 * 86400),     // 90 days
+	startDate.addingTimeInterval(250 * 86400),    // 250 days
+	startDate.addingTimeInterval(400 * 86400),    // 400 days
+	startDate.addingTimeInterval(600 * 86400),    // 600 days
+	startDate.addingTimeInterval(5 * 365 * 86400) // 5 years
+]
+
+let irregularFlows = [-70_000.0, 8_000, 8_500, 9_000, 9_500, 120_000]
+
+// XNPV accounts for exact dates
+let xnpvValue = try xnpv(rate: requiredReturn, dates: dates, cashFlows: irregularFlows)
+print("XNPV (irregular timing): \(xnpvValue.currency())")
+
+// XIRR finds return with irregular dates
+let xirrValue = try xirr(dates: dates, cashFlows: irregularFlows)
+print("XIRR (irregular timing): \(xirrValue.percent(2))")
+
+// Compare to regular IRR (assumes annual periods)
+let regularIRR = try irr(cashFlows: irregularFlows)
+print("\nComparison:")
+print("  Regular IRR (annual periods): \(regularIRR.percent(2))")
+print("  XIRR (actual dates): \(xirrValue.percent(2))")
+print("  Difference: \(((xirrValue - regularIRR) * 10000).number(0)) basis points")
+</code></pre><p><strong>Output:</strong></p><pre><code>Irregular Cash Flow Analysis
+============================
+XNPV (irregular timing): $29,570.08
+XIRR (irregular timing): 23.80%
+
+Comparison:
+  Regular IRR (annual periods): 20.24%
+  XIRR (actual dates): 23.80%
+  Difference: 356 basis points
+</code></pre><p><strong>The precision</strong>: XIRR is <strong>more accurate</strong> for real-world investments where cash flows don’t arrive exactly annually.</p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Rental property opportunity
+let propertyPrice = 250_000.0
+let downPayment = 50_000.0      // 20% down
+let renovationCosts = 20_000.0
+let initialInvestment = downPayment + renovationCosts  // $70,000
+
+// Expected annual cash flows (after expenses and mortgage)
+let year1 = 8_000.0
+let year2 = 8_500.0
+let year3 = 9_000.0
+let year4 = 9_500.0
+let year5 = 10_000.0
+let salePrice = 300_000.0       // Sell after 5 years
+let mortgagePayoff = 190_000.0
+let saleProceeds = salePrice - mortgagePayoff  // Net: $110,000
+
+print("Real Estate Investment Analysis")
+print("================================")
+print("Initial Investment: \(initialInvestment.currency(0))")
+print("  Down Payment: \(downPayment.currency(0))")
+print("  Renovations: \(renovationCosts.currency(0))")
+print("\nExpected Cash Flows:")
+print("  Years 1-5: Annual rental income")
+print("  Year 5: + Sale proceeds (\(saleProceeds.currency(0)))")
+print("  Required Return: 12%")
+
+// MARK: - Calculate NPV
+
+	// Define all cash flows
+	let cashFlows = [
+		-initialInvestment,  // Year 0: Outflow
+		year1,               // Year 1: Rental income
+		year2,               // Year 2
+		year3,               // Year 3
+		year4,               // Year 4
+		year5 + saleProceeds // Year 5: Rental + sale
+	]
+
+	let requiredReturn = 0.12
+	let npvValue = npv(discountRate: requiredReturn, cashFlows: cashFlows)
+
+	print("\nNet Present Value Analysis")
+	print("===========================")
+	print("Discount Rate: \(requiredReturn.percent())")
+	print("NPV: \(npvValue.currency(0))")
+
+	if npvValue > 0 {
+		print("✓ Positive NPV - Investment adds value")
+		print("  For every $1 invested, you create \((1 + npvValue / initialInvestment).currency(2)) of value")
+	} else if npvValue < 0 {
+		print("✗ Negative NPV - Investment destroys value")
+		print("  Should reject this opportunity")
+	} else {
+		print("○ Zero NPV - Breakeven investment")
+	}
+
+// MARK: - Calculate IRR
+
+let irrValue = try irr(cashFlows: cashFlows)
+
+print("\nInternal Rate of Return")
+print("=======================")
+print("IRR: \(irrValue.percent(2))")
+print("Required Return: \(requiredReturn.percent())")
+
+if irrValue > requiredReturn {
+	let spread = (irrValue - requiredReturn) * 100
+	print("✓ IRR exceeds required return by \(spread.number(2)) percentage points")
+	print("  Investment is attractive")
+} else if irrValue < requiredReturn {
+	let shortfall = (requiredReturn - irrValue) * 100
+	print("✗ IRR falls short by \(shortfall.number(2)) percentage points")
+} else {
+	print("○ IRR equals required return - Breakeven")
+}
+
+// Verify: NPV at IRR should be ~$0
+let npvAtIRR = npv(discountRate: irrValue, cashFlows: cashFlows)
+print("\nVerification: NPV at IRR = \(npvAtIRR.currency()) (should be ~$0)")
+
+
+// MARK: - Additional Investment Metrics
+
+	// Profitability Index
+	let pi = profitabilityIndex(rate: requiredReturn, cashFlows: cashFlows)
+
+	print("\nProfitability Index")
+	print("===================")
+	print("PI: \(pi.number(2))")
+	if pi > 1.0 {
+		print("✓ PI > 1.0 - Creates value")
+		print("  Returns \(pi.currency(2)) for every $1 invested")
+	} else {
+		print("✗ PI < 1.0 - Destroys value")
+	}
+
+	// Payback Period
+	let payback = paybackPeriod(cashFlows: cashFlows)
+
+	print("\nPayback Period")
+	print("==============")
+	if let pb = payback {
+		print("Simple Payback: \(pb) years")
+		print("  Investment recovered in year \(pb)")
+	} else {
+		print("Investment never recovers initial outlay")
+	}
+
+	// Discounted Payback
+	let discountedPayback = discountedPaybackPeriod(
+		rate: requiredReturn,
+		cashFlows: cashFlows
+	)
+
+	if let dpb = discountedPayback {
+		print("Discounted Payback: \(dpb) years (at \(requiredReturn.percent()))")
+		if let pb = payback {
+			let difference = dpb - pb
+			print("  Takes \(difference) more years accounting for time value")
+		}
+	}
+
+// MARK: - Sensitivity Analysis
+
+print("\nSensitivity Analysis")
+print("====================")
+
+// Test different discount rates
+print("NPV at Different Discount Rates:")
+print("Rate  | NPV        | Decision")
+print("------|------------|----------")
+
+for rate in stride(from: 0.08, through: 0.16, by: 0.02) {
+	let npv = npv(discountRate: rate, cashFlows: cashFlows)
+	let decision = npv > 0 ? "Accept" : "Reject"
+	print("\(rate.percent(0).paddingLeft(toLength: 5)) | \(npv.currency(0).paddingLeft(toLength: 10)) | \(decision)")
+}
+
+// Test different sale prices
+print("\nNPV at Different Sale Prices:")
+print("Sale Price | Net Proceeds | NPV        | Decision")
+print("-----------|--------------|------------|----------")
+
+for price in stride(from: 240_000.0, through: 340_000.0, by: 20_000.0) {
+	let proceeds = price - mortgagePayoff
+	let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+	let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+	let decision = npv > 0 ? "Accept" : "Reject"
+	print("\(price.currency(0).paddingLeft(toLength: 10)) | \(proceeds.currency(0).paddingLeft(toLength: 12)) | \(npv.currency(0).paddingLeft(toLength: 10)) | \(decision)")
+}
+
+// MARK: - Breakeven Analysis
+
+print("\nBreakeven Analysis:")
+
+var low = 200_000.0
+var high = 350_000.0
+var breakeven = (low + high) / 2
+
+// Binary search for breakeven
+for _ in 0..<20 {
+	let proceeds = breakeven - mortgagePayoff
+	let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+	let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+
+	if abs(npv) < 1.0 { break }  // Close enough
+	else if npv > 0 { high = breakeven }
+	else { low = breakeven }
+
+	breakeven = (low + high) / 2
+}
+
+print("Breakeven Sale Price: \(breakeven.currency(0))")
+print("  At this price, NPV = $0 and IRR = \(requiredReturn.percent())")
+print("  Current assumption: \(salePrice.currency(0))")
+print("  Safety margin: \((salePrice - breakeven).currency(0)) (\(((salePrice - breakeven) / salePrice).percent(1)))")
+
+// MARK: - Compare Multiple Investments
+
+print("\nComparing Investment Opportunities")
+print("===================================")
+
+struct Investment {
+	let name: String
+	let cashFlows: [Double]
+	let description: String
+}
+
+let investments = [
+	Investment(
+		name: "Real Estate",
+		cashFlows: [-70_000, 8_000, 8_500, 9_000, 9_500, 120_000],
+		description: "Rental property with 5-year hold"
+	),
+	Investment(
+		name: "Stock Portfolio",
+		cashFlows: [-70_000, 5_000, 5_500, 6_000, 6_500, 75_000],
+		description: "Diversified equity portfolio"
+	),
+	Investment(
+		name: "Business Expansion",
+		cashFlows: [-70_000, 0, 10_000, 15_000, 20_000, 40_000],
+		description: "Expand product line (delayed returns)"
+	)
+]
+
+print("\nInvestment        | NPV       | IRR     | PI   | Payback")
+print("------------------|-----------|---------|------|--------")
+
+var results: [(name: String, npv: Double, irr: Double)] = []
+
+for investment in investments {
+	let npv = npv(discountRate: requiredReturn, cashFlows: investment.cashFlows)
+	let irr = try irr(cashFlows: investment.cashFlows)
+	let pi = profitabilityIndex(rate: requiredReturn, cashFlows: investment.cashFlows)
+	let pb = paybackPeriod(cashFlows: investment.cashFlows) ?? 99
+
+	results.append((investment.name, npv, irr))
+	print("\(investment.name.padding(toLength: 17, withPad: " ", startingAt: 0)) | \(npv.currency(0).paddingLeft(toLength: 9)) | \(irr.percent(1).paddingLeft(toLength: 7)) | \(pi.number(2)) | \(pb) yrs")
+}
+
+// Rank by NPV
+let ranked = results.sorted { $0.npv > $1.npv }
+
+print("\nRanking by NPV:")
+for (i, result) in ranked.enumerated() {
+	print("  \(i + 1). \(result.name) - NPV: \(result.npv.currency(0))")
+}
+
+print("\nRecommendation: Choose '\(ranked[0].name)'")
+print("  Highest NPV = Maximum value creation")
+
+// MARK: - Irregular Cash Flow Analysis
+
+print("\nIrregular Cash Flow Analysis")
+print("============================")
+
+let startDate = Date()
+let dates = [
+	startDate,                                     // Today: Initial investment
+	startDate.addingTimeInterval(90 * 86400),     // 90 days
+	startDate.addingTimeInterval(250 * 86400),    // 250 days
+	startDate.addingTimeInterval(400 * 86400),    // 400 days
+	startDate.addingTimeInterval(600 * 86400),    // 600 days
+	startDate.addingTimeInterval(5 * 365 * 86400) // 5 years
+]
+
+let irregularFlows = [-70_000.0, 8_000, 8_500, 9_000, 9_500, 120_000]
+
+// XNPV accounts for exact dates
+let xnpvValue = try xnpv(rate: requiredReturn, dates: dates, cashFlows: irregularFlows)
+print("XNPV (irregular timing): \(xnpvValue.currency())")
+
+// XIRR finds return with irregular dates
+let xirrValue = try xirr(dates: dates, cashFlows: irregularFlows)
+print("XIRR (irregular timing): \(xirrValue.percent(2))")
+
+// Compare to regular IRR (assumes annual periods)
+let regularIRR = try irr(cashFlows: irregularFlows)
+print("\nComparison:")
+print("  Regular IRR (annual periods): \(regularIRR.percent(2))")
+print("  XIRR (actual dates): \(xirrValue.percent(2))")
+print("  Difference: \(((xirrValue - regularIRR) * 10000).number(0)) basis points")
+
+</code></pre></details>
+→ Full API Reference: [**BusinessMath Docs – 3.8 Investment Analysis**](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.8-InvestmentAnalysis.md)
+<p><strong>Modifications to try</strong>:</p><ol><li>Model your company’s capital project pipeline</li><li>Compare equipment purchase vs. lease</li><li>Calculate risk-adjusted NPV using CAPM</li><li>Build Monte Carlo simulation around key assumptions</li></ol><hr /><h2>Real-World Application</h2><p>Every CFO, investor, and analyst uses NPV/IRR daily:</p><ul><li><strong>Private equity</strong>: Evaluating buyout opportunities ($100M+)</li><li><strong>Startups</strong>: Deciding which product line to fund</li><li><strong>Corporate finance</strong>: Capital budgeting for factories, equipment</li><li><strong>Real estate</strong>: Property acquisition analysis</li></ul><p><strong>PE firm use case</strong>: “We have 15 potential acquisitions. Rank them by NPV at our 15% hurdle rate. Show sensitivity to exit multiple (6x, 8x, 10x EBITDA).”</p><p>BusinessMath makes this analysis programmatic, reproducible, and portfolio-wide.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why NPV is Superior to IRR for Decision-Making</strong></p><p>IRR is intuitive (“this investment returns 23%!”) but has flaws:</p><p><strong>Problem 1: Scale blindness</strong></p><ul><li>Project A: Invest $100, return $130 → IRR = 30%</li><li>Project B: Invest $1M, return $1.2M → IRR = 20%</li><li>IRR prefers A, but B creates $200k vs. $30k of value!</li></ul><p><strong>Problem 2: Multiple IRRs</strong></p><ul><li>Cash flows: [-100, +300, -250] → Two IRRs exist (math breakdown)</li></ul><p><strong>Problem 3: Reinvestment assumption</strong></p><ul><li>IRR assumes you can reinvest cash flows at the IRR rate (unrealistic)</li><li>NPV assumes reinvestment at the discount rate (more reasonable)</li></ul><p><strong>The rule</strong>: Use <strong>NPV for decisions</strong> (maximizes value), <strong>IRR for communication</strong> (easy to understand).</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest implementation challenge was <strong>IRR convergence</strong>. IRR is calculated using Newton-Raphson iteration, which can fail if:</p><ul><li>Initial guess is far from the true IRR</li><li>Cash flows have multiple sign changes (multiple IRRs exist)</li><li>All cash flows have the same sign (no IRR exists)</li></ul><p>We implemented robust error handling with:</p><ol><li>Bisection fallback if Newton-Raphson diverges</li><li>Detection of multiple IRRs (warn user)</li><li>Clear error messages when no IRR exists</li></ol><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests for pathological cases (no IRR, multiple IRRs, near-zero cash flows) before implementing.</p><hr /><h2>Next Steps</h2><p><strong>Coming up tomorrow</strong>: Equity Valuation - Pricing stocks using dividend discount models, FCFE, and residual income.</p><p><strong>Thursday</strong>: Bond Valuation - Pricing bonds, credit spreads, and callable securities.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 5/12</li><li>Posts Published: 17/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Loans + Investments</li><li>Playgrounds: 16 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/01-mon-loan-amortization</guid><title>Loan Amortization Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/01-mon-loan-amortization</link><description><![CDATA[Part 16 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 02 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[loans]]></category><category><![CDATA[mortgages]]></category><category><![CDATA[amortization]]></category><category><![CDATA[payments]]></category><content:encoded><![CDATA[<p><strong>Part 16 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Calculating monthly loan payments using TVM functions</li><li>Generating complete amortization schedules</li><li>Analyzing principal vs. interest breakdowns over time</li><li>Comparing different loan scenarios (terms, rates)</li><li>Evaluating extra payment strategies and payoff acceleration</li><li>Calculating cumulative totals for tax deductions</li></ul><hr /><h2>The Problem</h2><p>Whether you’re buying a house, car, or funding business expansion, loans are everywhere. But understanding <strong>how loans actually work</strong> is surprisingly complex:</p><ul><li><strong>Why do early payments go mostly to interest?</strong> On a 30-year mortgage, the first payment might be 83% interest!</li><li><strong>How much does a lower rate save?</strong> Is 5.5% vs. 6% worth refinancing?</li><li><strong>Should I pay extra principal?</strong> What if I add $200/month—when does the loan pay off?</li><li><strong>What’s tax deductible?</strong> How much mortgage interest can I deduct each year?</li></ul><p><strong>Manual loan calculations in spreadsheets are tedious and error-prone when analyzing multiple scenarios.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive loan amortization functions built on time value of money primitives: <code>payment()</code>, <code>interestPayment()</code>, <code>principalPayment()</code>, and cumulative functions for multi-period totals.</p><h3>Calculate Monthly Payment</h3><p>Start with the basic loan parameters:</p><pre><code class="language-swift">import BusinessMath
 
 // 30-year mortgage
 let principal = 300_000.0      // $300,000 loan
@@ -5905,149 +7890,4 @@ func testFVNegativePeriods() {
 3. Run test, verify it passes
 4. Add edge case tests
 5. Refactor if needed
-</code></pre><hr /><h2>See It In Action</h2><p>This practice is demonstrated in the following technical posts:</p><p><strong>Technical Examples</strong>:</p><ul><li><a href="../01-mon-getting-started"><strong>Getting Started</strong> (Monday)</a>: Shows <code>presentValue</code> implemented test-first</li><li><strong>Time Series Foundation</strong> (Wednesday): Period arithmetic validated with tests</li><li><strong>Time Value of Money</strong> (Week 1 Friday case study): Multiple TVM functions integrated</li></ul><p><strong>Related Practices</strong>:</p><ul><li><strong>Documentation as Design</strong> (Week 2): Write docs before implementation</li><li><strong>Coding Standards</strong> (Week 5): Forbidden patterns caught by tests</li></ul><hr /><h2>Common Pitfalls</h2><h3>❌ Pitfall 1: Writing tests after implementation</h3><p><strong>Problem</strong>: You’ve already invested in understanding AI’s code. Tests feel like busy work.<strong>Solution</strong>: Discipline. Tests first, always. No exceptions.</p><h3>❌ Pitfall 2: Tests that just check “doesn’t crash”</h3><p><strong>Problem</strong>: <code>#expect(result != nil)</code> passes for wrong implementations.<strong>Solution</strong>: Test against known, correct values. Do the math yourself first.</p><h3>❌ Pitfall 3: Skipping edge cases</h3><p><strong>Problem</strong>: AI handles normal cases fine, but crashes on zero/negative/nil.<strong>Solution</strong>: Explicitly enumerate edge cases. Write tests for all of them.</p><hr /><h2>Further Reading</h2><p><strong>Technical foundation</strong>:</p><ul><li>Swift Testing framework documentation</li><li><code>#expect</code> vs <code>XCTAssert</code> differences</li></ul><p><strong>Tools mentioned</strong>:</p><ul><li><a href="https://developer.apple.com/xcode/swift-testing/">Swift Testing</a>: Modern testing framework for Swift</li><li><a href="https://www.swift.org/blog/numerics/">Swift Numerics</a>: Generic numeric protocols (<code>Real</code>, <code>ElementaryFunctions</code>)</li></ul><hr /><h2>Discussion</h2><p><strong>Questions to consider</strong>:</p><ol><li>How does test-first development change when AI is writing the implementation?</li><li>What level of test coverage is “enough” for financial calculations?</li><li>How do you balance test-first discipline with exploration/prototyping?</li></ol><p><strong>Share your experience</strong>: Have you tried test-first development with AI? What worked? What didn’t?</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 2/~48</li><li>Methodology Posts: 1/12</li><li>Practices Covered: Test-First Development</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-01/01-mon-getting-started</guid><title>Getting Started with BusinessMath</title><link>https://www.justinpurnell.com/BusinessMath/week-01/01-mon-getting-started</link><description><![CDATA[Part 1 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 05 Jan 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[getting-started]]></category><category><![CDATA[tvm]]></category><category><![CDATA[time-series]]></category><content:encoded><![CDATA[<p><strong>Part 1 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to install and configure BusinessMath in your Swift project</li><li>Core concepts: Periods, Time Series, and Time Value of Money</li><li>Common workflows for financial calculations and forecasting</li><li>Building your first business calculations</li></ul><hr /><h2>The Problem</h2><p>Financial calculations are everywhere in business: retirement planning, loan amortization, investment analysis, revenue forecasting. But implementing these correctly requires understanding compound interest, time series data structures, and numerical precision—and getting any of it wrong can cost real money.</p><p><a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> is a library that handles the complexity while giving you confidence in the results. Calculations work across different numeric types (Double, Float) without rewriting code. And the API is ergonomic and clear enough that you can understand it six months from now or pick it up and work with it day-to-day.</p><hr /><h2>The Solution</h2><p><a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> makes complex calculations simple. Here’s how to get started:</p><h3>Installation</h3><p>Add <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> to your <code>Package.swift</code>:</p><pre><code class="language-swift">dependencies: [
-    .package(url: "https://github.com/jpurnell/BusinessMath.git", from: "2.0.0")
-]
-</code></pre><p>Then import it:</p><pre><code class="language-swift">import BusinessMath
-</code></pre><h3>Your First Calculation: Time Value of Money</h3><pre><code class="language-swift">import BusinessMath
-
-// Present value: What's $110,000 in 1 year worth today at 10% rate?
-let pv = presentValue(
-	futureValue: 110_000,
-	rate: 0.10,
-	periods: 1
-)
-print("Present value: \(pv.currency())")
-// Output: Present value: $100,000.00
-
-// Future value: What will $100K grow to in 5 years at 8%?
-let fv = futureValue(
-	presentValue: 100_000,
-	rate: 0.08,
-	periods: 5
-)
-print("Future value: \(fv.currency())")
-// Output: Future value: $146,932.81
-</code></pre><h3>Working with Time Periods</h3><p><a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> provides type-safe temporal identifiers:</p><pre><code class="language-swift">// Create periods at different granularities
-let jan2025 = Period.month(year: 2025, month: 1)
-let q1_2025 = Period.quarter(year: 2025, quarter: 1)
-let fy2025 = Period.year(2025)
-
-// Period arithmetic
-let feb2025 = jan2025 + 1  // Next month
-let yearRange = jan2025...jan2025 + 11  // Full year
-
-// Subdivision
-let quarters = fy2025.quarters()  // [Q1, Q2, Q3, Q4]
-let months = q1_2025.months()     // [Jan, Feb, Mar]
-</code></pre><h3>Building Time Series</h3><p>Associate values with time periods for analysis:</p><pre><code class="language-swift">let periods = [
-    Period.month(year: 2025, month: 1),
-    Period.month(year: 2025, month: 2),
-    Period.month(year: 2025, month: 3)
-]
-let revenue: [Double] = [100_000, 120_000, 115_000]
-
-let ts = TimeSeries(periods: periods, values: revenue)
-
-// Access values by period
-if let janRevenue = ts[periods[0]] {
-	print("January: \(janRevenue.currency())")
-}
-
-// Iterate over values
-for (period, value) in zip(periods, ts) {
-	print("\(period.label): \(ts[period]!.currency())")
-}
-</code></pre><h3>Investment Analysis</h3><p>Evaluate projects with NPV and IRR:</p><pre><code class="language-swift">// Cash flows: initial investment, then returns over 5 years
-let cashFlows = [-250_000.0, 100_000, 150_000, 200_000, 250_000, 300_000]
-
-// Net Present Value at 10% discount rate
-let npvValue = npv(discountRate: 0.10, cashFlows: cashFlows)
-print("NPV: $\(npvValue.formatted(.number.precision(.fractionLength(2))))")
-// Output: NPV: $472,169.05 (positive NPV → good investment!)
-
-// Internal Rate of Return
-let irrValue = try irr(cashFlows: cashFlows)
-print("IRR: \(irrValue.formatted(.percent.precision(.fractionLength(2))))")
-// Output: IRR: 56.77% (impressive return!)
-</code></pre><hr /><h2>How It Works</h2><p><a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> is built on three core principles:</p><h3>1. Type Safety</h3><p>Periods use Swift enums to prevent mixing incompatible time granularities. You can’t accidentally add a month to a day—the compiler catches it.</p><h3>2. Generic Programming</h3><p>Financial functions work with any numeric type conforming to <code>Real</code> from swift-numerics:</p><pre><code class="language-swift">// Works with Double
-let pvDouble = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0)
-
-// Works with Float
-let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0)
-</code></pre><h3>3. Composability</h3><p>Functions compose naturally. Time series can be transformed, aggregated, and analyzed using simple and ergonomic Swift patterns.</p><hr /><h2>Try It Yourself</h2><p>Copy to an Xcode playground and experiment:</p><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-// Present value: What's $110,000 in 1 year worth today at 10% rate?
-let pv = presentValue(
-	futureValue: 110_000,
-	rate: 0.10,
-	periods: 1
-)
-
-print("Present value: \(pv.currency())")
-// Output: Present value: $100,000.00
-
-// Future value: What will $100K grow to in 5 years at 8%?
-let fv = futureValue(
-	presentValue: 100_000,
-	rate: 0.08,
-	periods: 5
-)
-
-print("Future value: \(fv.currency())")
-// Output: Future value: $146,932.81
-
-	// Create periods at different granularities
-	let jan2025 = Period.month(year: 2025, month: 1)
-	let q1_2025 = Period.quarter(year: 2025, quarter: 1)
-	let fy2025 = Period.year(2025)
-
-	// Period arithmetic
-	let feb2025 = jan2025 + 1  // Next month
-	let yearRange = jan2025...jan2025 + 11  // Full year
-
-	// Subdivision
-	let quarters = fy2025.quarters()  // [Q1, Q2, Q3, Q4]
-	let months = q1_2025.months()     // [Jan, Feb, Mar]
-
-let periods = [
-	Period.month(year: 2025, month: 1),
-	Period.month(year: 2025, month: 2),
-	Period.month(year: 2025, month: 3)
-]
-
-let revenue: [Double] = [100_000, 120_000, 115_000]
-
-let ts = TimeSeries(periods: periods, values: revenue)
-
-// Access values by period
-if let janRevenue = ts[periods[0]] {
-	print("January: \(janRevenue.currency())")
-}
-
-for (period, value) in zip(periods, ts) {
-	print("\(period.label): \(ts[period]!.currency())")
-}
-
-// Cash flows: initial investment, then returns over 5 years
-let cashFlows = [-250_000.0, 100_000, 150_000, 200_000, 250_000, 300_000]
-
-// Net Present Value at 10% discount rate
-let npvValue = npv(discountRate: 0.10, cashFlows: cashFlows)
-print("NPV: \(npvValue.currency())")
-// Output: NPV: $472,168.75 (positive NPV → good investment!)
-
-// Internal Rate of Return
-let irrValue = try irr(cashFlows: cashFlows)
-print("IRR: \(irrValue.percent())")
-// Output: IRR: 56.72% (impressive return!)
-
-// Works with Double
-let pvDouble = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10)
-
-// Works with Float
-let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10)
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.1-GettingStarted.md"><strong>BusinessMath Docs – Getting Started</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Change the interest rate from 10% to 5%—how does PV change?</li><li>Calculate monthly loan payments for different principal amounts</li><li>Create a time series for your own revenue data</li></ol><hr /><h2>Real-World Application</h2><p>Financial calculations power critical business decisions. A financial advisor uses PV/FV to calculate retirement contributions. A CFO uses NPV to evaluate capital projects. A business analyst uses time series to forecast revenue.</p><p>Getting these calculations right matters. A 0.1% error in IRR on a $10M project translates to $10,000 in misallocated capital. <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a>’s rigorous testing (200+ tests) and documentation ensure you can trust the results.</p><hr /><h3>📝 Development Note</h3><p>When we started the <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> project, the first question was: “What does production quality mean?” We defined it explicitly from day one: comprehensive tests, full documentation, zero compiler warnings.</p><p>That clarity determined every decision afterward. AI doesn’t inherently produce production-quality code—it amplifies your standards. Set them high initially, and AI helps you meet them. Set them low, and AI happily generates technical debt.</p><p>The first function (present value) had one test. By the end, we had 247 tests and 100% documentation coverage. The standards compounded.</p><p><strong>Lesson</strong>: Define “production quality” for your next project before writing any code. Be explicit. Write it down. Reference it in every AI prompt.</p><p><strong>Related Methodology</strong>: <a href="../02-tue-test-first-development">Test-First Development with AI</a> (Tuesday’s post)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: <a href="../03-wed-time-series">Time Series Foundation (Wednesday)</a> - Deep dive into periods and temporal data structures</p><p><strong>This week’s capstone</strong>: <a href="../04-fri-case-retirement">Case Study #1: Retirement Planning Calculator (Friday)</a> - Combines TVM and statistical distributions to answer “How much do I need to save?”</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 1/~48</li><li>Case Studies: 0/6</li><li>Topics Covered: Getting Started</li><li>Playgrounds: 1 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/projects/draftNo4</guid><title>draftNo4</title><link>https://www.justinpurnell.com/projects/draftNo4</link><description><![CDATA[Block. It puts some writers down for months. It puts some writers down for life. A not always brief or minor form of it mutes all writers from the outset of every day. “Dear Joel…” This is just a random sample from letters written to former students in response to their howling cries as they suffer the masochistic self-inflicted paralysis of a writer’s normal routine. “Dear Joel…” This Joel will win huge awards and write countless books and a nationally syndicated column, but at the time of this letter he has just been finding out that to cross the electric fence from the actual world to the writing world requires at least as much invention as the writing itself “Dear Joel: You are writing, say, about a grizzly bear. No words are forthcoming. For six, seven, ten hours no words have been forthcoming. You are blocked, frustrated, in despair. You are nowhere, and that’s where you’ve been getting. What do you do? You write, ‘Dear Mother.’ And then you tell your mother about the block, the frustration, the ineptitude, the despair. You insist that you are not cut out to do this kind of work. You whine. You whimper. You outline your problem, and you mention that the bear has a fifty-five-inch waist and a neck more than thirty inches around but could run nose-to-nose with Secretariat. You say the bear prefers to lie down and rest. The bear rests fourteen hours a day. And you go on like that as long as you can. And then you go back and delete the ‘Dear Mother’ and all the whimpering and whining, and just keep the bear.”]]></description><pubDate>Sun, 22 Jul 2007 20:00:00 -0400</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[project]]></category><category><![CDATA[burglar alarm]]></category><category><![CDATA[python]]></category><category><![CDATA[pico]]></category><content:encoded><![CDATA[<p>Block. It puts some writers down for months. It puts some writers down for life. A not always brief or minor form of it mutes all writers from the outset of every day. “Dear Joel…” This is just a random sample from letters written to former students in response to their howling cries as they suffer the masochistic self-inflicted paralysis of a writer’s normal routine. “Dear Joel…” This Joel will win huge awards and write countless books and a nationally syndicated column, but at the time of this letter he has just been finding out that to cross the electric fence from the actual world to the writing world requires at least as much invention as the writing itself “Dear Joel: You are writing, say, about a grizzly bear. No words are forthcoming. For six, seven, ten hours no words have been forthcoming. You are blocked, frustrated, in despair. You are nowhere, and that’s where you’ve been getting. What do you do? You write, ‘Dear Mother.’ And then you tell your mother about the block, the frustration, the ineptitude, the despair. You insist that you are not cut out to do this kind of work. You whine. You whimper. You outline your problem, and you mention that the bear has a fifty-five-inch waist and a neck more than thirty inches around but could run nose-to-nose with Secretariat. You say the bear prefers to lie down and rest. The bear rests fourteen hours a day. And you go on like that as long as you can. And then you go back and delete the ‘Dear Mother’ and all the whimpering and whining, and just keep the bear.”</p><p>You could be Joel, even if your name is Jenny. Or Julie, Jillian, Jim, Jane, Joe. You are working on a first draft and small wonder you’re unhappy. If you lack confidence in setting one word after another and sense that you are stuck in a place from which you will never be set free, if you feel sure that you will never make it and were not cut out to do this, if your prose seems stillborn and you completely lack confidence, you must be a writer. If you say you see things differently and describe your efforts positively, if you tell people that you “just love to write,” you may be delusional. How could anyone. ever know that something is good before it exists? And unless you can identifY what is not succeeding-unless you can see those dark clunky spots that are giving you such a low opinion of your prose as it develops-how are you going to be able to tone it up and make it work?</p><p>The idea of writing “Dear Mother” and later snipping off the salutation popped into my head forty-one years ago while I was participating in a panel of writers at the Y in Princeton. Jenny was the only member of my family there. She was ten. The bear got a big laugh, but cheerlessly I also served up the masochism and the self-inflicted paralysis, causing Jenny to tell me afterward that I was not sketching a complete picture.</p><p>“You know it isn’t all like that,” she said. “You should tell about the good part.”</p><p>She had a point. It isn’t all like that only the first draft. First drafts are slow and develop clumsily, because every sentence affects not only those before it but also those that follow. The first draft of a long piece on California geology took two gloomy years; the second, third, and fourth drafts took about six months altogether. That four-to-one ratio in writing time-first draft versus the other drafts combined–has for me been consistent in projects of any length, even if the first draft takes only a few days or weeks. There are psychological differences from phase to phase, and the first is the phase of the pit and the pendulum. After that, it seems as if a different person is taking over. Dread largely disappears. Problems become less threatening, more interesting. Experience is more helpful, as if an amateur is being replaced by a professional. Days go by quickly, and not a few could be called pleasant, I’ll admit.</p><p>When Jenny was a senior at Princeton High School and much put out by the time it was taking her to start an assigned piece of writing, let alone complete it, she told me one day as I was driving her to school that she felt incompetent and was worried about the difficulty she was having getting things right the first time, worried by her need to revise. I went on to my office and wrote her a note. “Dear Jenny: The way to do a piece of writing is three or four times over, never once. For me, the hardest part comes first, getting something–anything–out in front of me. Sometimes in a nervous frenzy I just fling words as if I were flinging mud at a wall. Blurt out, heave out, babble out something–anything–as a first draft. With that, you have achieved a sort of nucleus. Then, as you work it over and alter it, you begin to shape sentences that score higher with the ear and eye. Edit it again–top to bottom. The chances are that about now you’ll be seeing something that you are sort of eager for others to see. And all that takes time. What I have left out is the interstitial time. You finish that first awful blurting, and then you put the thing aside. You get in your car and drive home. On the way, your mind is still knitting at the words. You think of a better way to say something, a good phrase to correct a certain problem. Without the drafted version–if it did not exist–you obviously would not be thinking of things that would improve it. In short, you may be actually writing only two or three hours a day, but your mind, in one way or another, is working on it twenty-four hours a day–yes, while you sleep–but only if some sort of draft or earlier version already exists. Until it exists, writing has not really begun.”</p><p>The difference between a common writer and an improviser on a stage (or any performing artist) is that writing can be revised. Actually, the essence of the process is revision. The adulating portrait of the perfect writer who never blots a line comes express mail from fairyland.</p><p>Jenny grew up to write novels, and at this point has published three. She keeps everything close-hauled, says nothing and reveals nothing as she goes along. I once asked her if she had been thinking about starting another book, and she said, “I finished it last week.” Her sister Martha, two years younger, has written four novels. Martha calls me up nine times a day to tell me that writing is impossible, that she’s not cut out to do it, that she’ll never finish what she is working on, and so forth and so on, et cetera, et cetera, and I, who am probably disintegrating a third of the way through an impossible first draft, am supposed to turn into the Rock of Gibraltar. The talking rock: “Just stay at it; perseverance will change things.” “You’re so unhappy you sound authentic to me.” “You can’t make a fix unless you know what is broken.”</p><p>When Jenny was ten months out of college, she was beginning to develop some retrospective empathy for me on that day at the Y when she was ten. Now she was in Edinburgh, writing on a fellowship, and she told me in a letter of her continuing doubt and discouragement. Those were the days of paper airmail, and by paper airmail I replied.</p><p>With respect to her wish to become a writer, she said she was asking herself day after day, ’Who am I kidding?”</p><p>I said, “I think I first started saying that to myself almost exactly forty years ago. Before that, when I was twelve, I had no such question. It just seemed dead easy–a rip, a scam–to tickle some machine and cause it to print money. I still ask myself, Who am I kidding?’ Not long ago, that question seemed so pertinent to me that I would bury my head in my office pillow. I was undertaking to write about geology and the question was proper. Who was I to take on that subject? It was terrifYing. One falls into such projects like slipping into caves, and then wonders how to get out. To feel such doubt is a part of the picture–important and inescapable. When I hear some young writer express that sort of doubt, it serves as a checkpoint; if they don’t say something like it they are quite possibly, well, kidding themselves.”</p><p>She said, “My style is always that of what I am reading at the time–or overwhelmingly self-conscious and strained.”</p><p>I said, “How unfortunate that would be if you were fifty-four. At twenty-three, it is not only natural; it is important. The developing writer reacts to excellence as it is discovered–wherever and whenever–and of course does some imitating (unavoidably) in the process of drawing from the admired fabric things to make one’s own. Rapidly, the components of imitation fade. What remains is a new element in your own voice, which is not in any way an imitation. Your manner as a writer takes form in this way, a fragment at a time. A style that lacks strain and self-consciousness is what you seem to aspire to, or you wouldn’t be bringing the matter up. Therefore, your goal is in the right place. So practice taking shots at it. A relaxed, unself-conscious style is not something that one person is born with and another not. Writers do not spring full-blown from the ear of Zeus.”</p><p>Jenny said, “I can’t seem to finish anything.”</p><p>I said, “Neither can I.”</p><p>Then I went back to my own writing, my own inability to get going until five in the afternoon, my animal sense of being hunted, my resemblance to the sand of Gibraltar.</p><p>It is toward the end of the second draft, if I’m lucky, when the feeling comes over me that I have something I want to show to other people, something that seems to be working and is not going to go away. The feeling is more than welcome, yes, but it is hardly euphoria. It’s just a new lease on life, a sense that fm going to survive until the middle of next month. After reading the second draft aloud, and going through the piece for the third time (removing the tin horns and radio static that I heard while reading), I enclose things in boxes for Draft No. 4. If I enjoy anything in this process it is Draft No. 4. I go searching for replacements for the words in the boxes. The final adjustments may be small-scale, but they are large to me, and I love addressing them. You could call this the copy-editing phase if real copy editors were not out there in the future prepared to examine the piece. The basic thing I do with college students is pretend that I’m their editor and their copy editor. In preparation for conferences with them, I draw boxes around words or phrases in the pieces they write. I suggest to them that they might do this for themselves.</p><p>You draw a box not only around any word that does not seem quite right but also around words that fulfill their assignment but seem to present an opportunity. While the word inside the box may be perfectly O.K., there is like]y to be an even better word for this situation, a word right smack on the button, and why don’t you try to find such a word? If none occurs, don’t linger; keep reading and drawing boxes, and later revisit them one by one. If there’s a box around “sensitive,” because it seems pretentious in the context, try “susceptible.” Why “susceptible”? Because you looked up “sensitive” in the dictionary and it said “highly susceptible.” With dictionaries, I spend a great deal more time looking up words I know than words I have never heard of-at least ninety-nine to one. The dictionary definitions of words you are trying to replace are far more likely to help you out than a scattershot wad from a thesaurus. If you use the dictionary after the thesaurus, the thesaurus will not hurt you. So draw a box around “wad.” Webster: “The cotton or silk obtained from the Syrian swallowwort, formerly cultivated in Egypt and im. ported to Europe.” Oh. But read on: “A little mass, tuft, or bundle … a small, compact heap.” Stet that one. I call this “the search for the mot juste,” because when I was in the eighth grade Miss Bartholomew told us that Gustave Flaubert walked around in his garden for days on end searching in his head for <em>le mot juste</em>. Who could forget that? Flaubert seemed heroic. Certain kids considered him weird.</p><p>This, for example, came up while I was writing about the Atchafalaya, the huge river swamp in southern Louisiana, and how it looked from a small plane in the air. Land is growing there as silt arrives from the north. Parts of the swamp are filling in. From the airplane, you could discern where these places were, because, seen through the trees, there would be an interruption of the reflection of sunlight on water. What word or phrase was I going to use for that reflection? I looked up “sparkle” in my old Webster’s Collegiate. It said: “See ‘flash.’” I looked up “flash.” The definitions were followed by a presentation of synonyms: “flash, gleam, glance, glint, sparkle, glitter, scintillate, coruscate, glimmer, shimmer mean to shoot forth light.” I liked that last part, so I changed the manuscript to say, “The reflection of the sun races through the trees and shoots forth light from the water.”</p><p>In the search for words, thesauruses are useful things, but they don’t talk about the words they list. They are also dangerous. They can lead you to choose a polysyllabic and fuzzy word when a simple and clear one is better. The value of a thesaurus is not to make a writer seem to have a vast vocabulary of recondite words. The value of a thesaurus is in the assistance it can give you in finding the best possible word for the mission that the word is supposed to fulfill. Writing teachers and journalism courses have been known to compare them to crutches and to imply that no writer of any character or competence would use them. At best, thesauruses are mere rest stops in the search for the mot juste. Your destination is the dictionary. Suppose you sense an opportunity beyond the word “intention.” You read the dictionary’s thesauri an list of synonyms: “intention, intent, purpose, design, aim, end, object, objective, goal.” But the dictionary doesn’t let it go at that. It goes on to tell you the differences all the way down the line how each listed word differs from all the others. Some dictionaries keep themselves trim by just listing synonyms and not going on to make distinctions. You want the first kind, in which you are not just getting a list of words; you are being told the differences in their hues, as if you were looking at the stripes in an awning, each of a subtly different green. Look up “vertical.” It tells you-believe it or not-that “vertical,” “perpendicular,” and “plumb” differ each from the two others. Ditto “plastic, pliable, pliant, ductile, malleable, adaptable.” Ditto “fidelity, allegiance, fealty, loyalty, devotion, piety.”</p><p>I grew up in canoes on northern lakes and forest rivers. Thirty years later, I was trying to choose a word or words that would explain why anyone in a modern nation would choose to go a long distance by canoe. I was damned if I was going to call it a sport, but nothing else occurred. I looked up “sport.” There were seventeen lines of definition: “1. That which diverts, and makes mirth; pastime; diversion. 2. A diversion of the field.” I stopped there.</p><blockquote><p>His professed criteria were to take it easy, see some wildlife, and travel light with his bark canoes–nothing more–and one could not help but lean his way. I had known of people who took collapsible cots, down pillows, chainsaws, outboard motors, cases of beer, and battery-powered portable refrigerators on canoe trips–even into deep wilderness. You set your own standards. Travel by canoe is not a necessity, and will nevermore be the most efficient way to get from one region to another, or even from one lake to another–anywhere. A canoe trip has become simply a rite of oneness with certain terrain, a diversion of the field, an act performed not because it is necessary but because there is value in the act itself.</p></blockquote><p>If your journey is long enough in wild country, you change, albeit temporarily, while you are there. Writing about a river valley in Arctic Alaska, I was trying to describe that mental change, and I was searching for a word that would represent the idea, catalyze the theme. “Assimilate” came along pretty quickly. But “assimilate,” in the context, was worse than “sport.” So I looked up “assimilate”: “1. To make similar or alike. 2. To liken; to compare . 3. To… incorporate into the substance of the appropriating body.”</p><blockquote><p>We sat around the campfire for at least another hour. We talked of rain and kestrels, oil and antlers, the height and the headwaters of the river. Neither Hession nor Fedeler once mentioned the bear. When I got into my sleeping bag, though, and closed my eyes, there he was, in color, on the side of the hill. The vision was indelible, but fear was not what put it there. More, it was a sense of souvenir, a sense of sheer luck at having chosen in the first place to follow Fedeler and Hession up the river and into the hills, a memento not so much of one moment as of the entire circuit of the long afternoon. It was a vision of a whole land, with an animal in it. This was his country, clearly enough. To be there was to be incorporated, in however small a measure, into its substance–his country, and if you wanted to visit it you had better knock.</p></blockquote><p>I was left, in time that followed, with one huge regret. In three years of Alaska travel, research, and writing, it never occurred to me to wonder why the Arctic was called Arctic. I never thought about it until a few years after the book was published. If only I had looked in the dictionary, I would have incorporated the word’s origin into the substance of the writing. This is how “Arctic” is defined: “Pertaining to, or situated under, the northern constellation called the <em>Bear.</em>”</p><p>It was William Shawn, the editor of <em>The New Yorker</em> for several decades, who first mentioned to me “the irregular restrictive which.” Mr. Shawn explained that under certain unusual and special circumstances the word “which” could be employed at the head of a restrictive clause. Ordinarily, the conjunction “that” would introduce a restrictive clause. Nonrestrictive: This is a baseball, which is spherical and white. Restrictive: This is the baseball that Babe Ruth hit out of the park after pointing at the fence in Chicago. The first ball is unspecific, and the sentence requires a comma if the writer wishes to digress into its shape and color. The second ball is very specific, and the sentence repels commas. There can be situations, though, wherein words or phrases lie between the specific object and the clause that proves its specificity, and would call for the irregular restrictive which. Confronting this memory, I cannot say that it kicks old Buddha’s gong. Yet it has sent me through the entirety of two of my books on a computer search for the irregular restrictive which. In well over a hundred thousand words, I found three:</p><blockquote><p>In 1822, the Belgian stratigrapher J. ]. d’Omalius d’Halloy, working for the French government, put a name on the chalk of Eu- rope which would come to represent an un- gainly share of geologic time.</p></blockquote><blockquote><p>Oakmont uses a <em>Poa amrua</em> of its own creation which bears few seeds and therefore results in what golfers describe as a “less pebbly” surface.</p></blockquote><blockquote><p>Dominy had risen to become U.S. Com- missioner of Reclamation, the agency in the Department of the Interior which impounds water for as much as two hundred miles be- hind such constructions as Glen Canyon Dam, Grand Coulee Dam, Flaming Gorge Dam, Hoover Dam.</p></blockquote><p>As it happens, those excerpts are not from the Shawn era but are all from pieces published in the twenty-first century. <em>The New Yorker</em>, in other words, has by no means forgotten the irregular restrictive which, or the regular earth from which it springs.</p><p>In the same books, incidentally, I also quoted Thoreau and Leviticus, and may have winced in Shawn’s honor.</p><blockquote><p>Four hundred yards above the interstate bridge we came to Carthagina Island, stand- ing in a flatwater pool. Thoreau doesn’t call it by name, but he describes it as “a large and densely wooded island…the fairest which we had met with, with a handsome grove of elms at its head.”</p></blockquote><p>Nothing irregular there, H.D.T. It was the fairest island that you met with.</p><p>Leviticus:</p><blockquote><p>And the Lord spake unto Moses and to Aaron, saying unto them, Speak unto the children of Israel, saying, These are the beasts which ye shall eat among all the beasts that are on the earth.</p></blockquote><p>Actually, Mr. Shawn was just another spear-carrier in the hall of usage and grammar. The dais was occupied for more than half a century by Eleanor Gould, “Miss Gould,” who was Mrs. Packard, and whose wide reputation seeped down even into the awareness of apprentice writers everywhere. I was scarcely eighteen, and already collecting rejection slips, when I heard or read about a twenty-two-year-old Vassar graduate named Eleanor Gould, who, in 1925, bought a copy of the brand-new <em>New Yorker</em>, read it, and then reread it with a blue pencil in her hand. When she finished, the magazine was a mottled blue on every page–a circled embarrassment of dangling modifiers, conflicting pronouns, absent commas, and over-all grammatical hash. She mailed the marked-up copy to Harold Ross, the founding editor, and Ross was said to have bellowed. What he bellowed was “Find this bitch and hire her!”</p><p>In reality, Eleanor Gould was nine years old when Ross invented <em>The New Yorker</em>. She grew up in Ohio, went to Oberlin College, and graduated in 1938. Seven years later, she sought a job at <em>The New Yorker</em>, and in her application she mentioned one or two examples of the sort of help she felt she could provide. For example, something is not different than something else; it is different from something else. It was Shawn, the managing editor, who hired her. There is no compact or simple title for what she did across the following fifty-four years. She was not an editor–not, at any rate, on the higher levels of holding writers’ hands. She was not a fact checker, although she would surely mention any fact she looked upon as suspect. What she did was read the magazine in galley proofs and mark up the proofs. Each galley had a <em>New Yorker</em> column running down the middle and enough margin on either side to park a car. She filled the margins with remarks about usage, diction, indirection, word choice, punctuation, ambiguities, and so forth. Her completed product was sent on to the writer’s editor, who read the marginalia and later brought up selected items with the writer, or just handed the writer the Gould proof, as it was known, and let the writer soak it up. Robert Bingham, who was my principal editor for sixteen years (until brain cancer ended his relatively young life and with it his exceptional capability), always passed the Gould proof along to me, almost always saying, “\Then she says ‘Grammar,’ sit up!”</p><p>On a highly competitive list, her foremost peeve in factual writing was indirection–sliding facts in sideways, expecting a reader to gather rather than receive information. You don’t start off like an atmospheric fictionist: “The house on Lovers’ Lane was where the lovers loved loving.” A Gould proof would have asked, “What house?” “What lovers?” “Where is Lovers’ Lane?” In short, if you are introducing something, introduce it. Don’t get artistic with the definite article. If you say “a house,” you are introducing it. If you say “the house,” the reader knows about it because you mentioned it earlier. Mr. Shawn was influenced by Miss Gould far more than vice versa. He was a bear on indirection.</p><p>Her suggested fixes did not always rise into comparison with invisible mending. Some writers developed reactions in the tantrum range. Nothing, though, was being forced upon the prose. If the writer wished to ignore a salient comment from Miss Gould instead of slapping the forehead and feeling grateful, that was up to the writer. It was the writer’s signed piece. If the writer preferred warts, warts prevailed. A Gould proof rarely endeavored to influence in any manner the structure or thesis of a piece, and was not meant to. Its purpose, according to Miss Gould, was to help a writer achieve an intent in the clearest possible way. She sat you up, let me tell you. And not only did you not have to accept her suggested fixes but also–of course–you were free to fix the fixes according to the sound of things in your own head.</p><p>The general term for all this–from “house style” to a Gould-like proof–is copy editing. Miss Gould accepted the title “grammarian” for several decades, but grammar was only the base of things she reacted to as she monitored the magazine. House style was actually dealt with by others before she saw anything. House style is not a reference to the canard that an entire magazine can be made to sound as if it were written by one writer. House style is a mechanical application of things like spelling and italics. In <em>The New Yorker</em>, “travelling” is spelled with two “l”s. Book titles are framed in quotation marks. The names of magazines are italicized, and if the names are in the possessive-<em>TV Guide’s</em>, <em>National Geographic’s</em>-the “s” is italicized, too. The names of ships are not italicized. It is house style to put the two dots over a second consecutive identical vowel, because the house does not cooperate in deemphasizing diaereses. In articles in the New York <em>Times</em> the name of everybody mentioned is preceded by Mr., Ms., or Mrs. (if not by a lofty title like President, General, Senator, or Cardinal), and, traditionally, if a <em>Times</em> reporter got into a skin boat with an Eskimo in the Chukchi Sea no personal pronoun was ever going to get into that boat. “A visitor” got into that boat. The Chicago Manual of Style is a quixotic attempt at one-style-fits-all for every house in America-newspapers, magazines, book publishers, blogishers.</p><p>Copy editors attend the flow of the prose and watch for leaks. Whatever else she was called, Eleanor Gould was a copy editor. She was one of several in a developing tradition that became a legacy. For a single closing issue, today’s copy editors read <em>New Yorker</em> proofs so many times and in so many ways that they variously subtitle their own efforts. The five incumbents call themselves copy editors, page 0 .K.‘ers, query proofreaders, and second readers. They all do all of it, and that’s four job descriptions each for five people–twenty functionaries at five desks. They also do what Eleanor Gould did, and to this day when they finish working on a galley proof they say that it has been “Goulded.” If they live in her shadow, they lengthen it.</p><p>They can be rarefied. Reading a sentence like “She didn’t know what happened to the other five people travelling with her,” they will see that what the writer could mean is that the traveller was one of eleven people on the trip. This is high-alloy nitpicking, yes. But why not? There is elegance in the less ambiguous way. She didn’t know what happened to the five other people travelling with her.</p><p>To linger in the same thin air, what is the difference between “further” and “farther”? In the dictionary, look up “further.” It says “farther.” Look up “farther.” It says “further.” So you’re safe and can roll over and sleep. But the distinction has a difference and O.K.‘ers know what’s O.K. “Farther” refers to measurable distance. “Further” is a matter of degree. Will you stop pelting me with derision? That’s enough out of you. You’ll go no further.</p><p>Getting into an authentic standoff with this multitalented, multifaceted, proofreading, query-proofing, copy-editing, grammar-wielding corps is difficult to do, and in fifty years I have done so twice. One standoff, which shall not be elaborated here, had to do with my flippant use of scholarly parenthetical in text citations (Mourt, 1622) in a piece in which the works cited did not appear on what scholars call the Works Cited List. There was no Works Cited List. The other standoff–related to the issue of February 23, 1987–had to do with the possessive of the word Corps, It was the piece about southern Louisiana, the Atchafalaya River, the vast swamp, and the levees, spillways, and navigation locks of the U.S. Army Corps of Engineers. It approached twenty thousand words in length, and, as you can imagine, the word Corps was all over the text like an eruption of measles. Often, the word occurred in the possessive. When I was in the eighth grade, Miss Bartholomew told us that a noun ending in “s” could be rendered possessive by an apostrophe alone or by an apostrophe followed by an additional “s,” tie goes to the writer. Now, in the Louisiana piece, I had written Corps’ for each and every possessive Corps, and the copy editors said that the possessive of Corps should be printed as Corps’s. I thought I was in a morgue. I said so. The copy editors phalanxed–me versus the</p><p>whole department. They said that <em>The New Yorker</em> did not use the naked “s” apostrophe except with classical names like Jesus, Aeschylus, and Socrates; and even French names ending in a silent “s” were given the apostrophe “s,” as in “Fran~ois’s,” “<em>les jeunesses’s</em>,” “Epesses’s”also as in” Amiens’s hidden cache” and “<em>le français’s</em> frank mustache.” With regard to Corps’s, the copy editors were uncharacteristically unbending. I said that if Corps’s had to be the form printed, I would have to stop all forward motion and rewrite every sentence in which that possessive occurred-in ways that would avoid using it, in ways that would get rid of” all those corpses.” fm sure I spluttered about “slabsful of recumbents” and said it would be “as if every one of those Corps’s was wired to a cold toe.” This threat was not considered persuasive, but eventually it led to someone’ s remarkable suggestion. Why not call the U.S. Army Corps of Engineers and ask what they do when they need to express themselves in the possessive? I hadn’t known that the Army Corps ofEngineers was steeped in Fowler’s Modem English Usage or Merriam-Webster’s unparalleled English Usage or the flexibilities of grammar. How would the Corps write it? Corps’, said the Corps. Never Corps’s. Never the geminal “s”s.</p><p>Copy editors seldom stray into the realms of others, but when they do, their suggestions and comments are not unwelcome. Mary Norris, who joined <em>The New Yorker</em> in 1978 and has worked on untold numbers of my pieces, is a verbal diagnostician I would tum to for a first, second, or third opinion on just about anything. She doesn’t mind when friends call her the Pencil Lady. In 2003, we were closing the piece that retraced the journey made in 1839 by Henry David Thoreau and his brother, John, down the Concord River to the Merrimack and up the Merrimack through and beyond Manchester, New Hampshire. In manuscript and in the initial galley proofS, there was a sentence (odd out of context) that said:</p><p>In bed at night for three or four months</p><blockquote><p>I’d been listening to Manchester laughing-a chorus of Manchesterians sitting on those steps convulsed by us on the way uphill with our canoe.</p></blockquote><p>Mary Norris wrote on the proof, “Would you like ‘Mancunians’?”</p><p>It was as if she had handed me a rare gold coin. Five years later, when I happened to be writing about lacrosse in Manchester, England, I worked in the word “Mancunian” three times in one short paragraph. It was the second-best demonym r d ever heard, almost matching Vallisoletano (a citizen of Valladolid). The planet, of course, is covered with demonyms, and after scouring the world in conversations on this topic with Mary Norris I began a severely selective, highly subjective A-list, extending Mancunian and V allisoletano through thirty-five others at this writing, including Wulfrunian (Wolverhampton), Novocastrian (Newcasde), Trifluvian (Trois-Rivières), Leodensian (Leeds), Minneapolitan (Minneapolis), Hartlepudlian (Hartlepool), Liverpudlian (you knew it), Haligonian (Halifax), Varsovian (Warsaw), Providentian (Providence), and Tridentine (Trent).</p><p>One can do worse than pretend to be a copy editor. In my role as my students’ editor, I go through their papers with them privately a comma at a time. Much of what I tell them I have learned by osmosis from those O.K. O.K’ers at <em>The New Yorker</em>, not to mention a range of others, from Miss Bartholomew, of Princeton Junior High SchooL to Carmen Gomezplata, of Farrar, Straus & Giroux. The students, picking up the parlance, sometimes go off and copy-edit their roommates. This has led to disputes, and I have been asked to settle the disputes. My name isn’t Strunk. I’m just another editee. But I do what I can, as, for example, after two such people recently got into a squabble over–imagine this–the possessive plural of” attorney general.” The question came to me in an e-mail: “If more than one attorney general possess a number of cars, how would you fill in the blanks (if at all) in the following sentence: ‘the attorney[ ] general[ ] car[ ] were all parked next to one another’?”</p><p>Both Web. II and Random House say flatly that the plural of “attorney general” is both “attorneys general” and “attorney generals.” That being so, I put on my robe, rapped the gavel, and said from the bench, “If you accept that the two forms are equal, I think you would write attorney generals’ cars and not attorneys general’s cars-for obvious reasons (a sense of the sight and sound of words has to kick in somewhere or the writer is missing one or two marbles).” What would I personally do? None of the above. I would refer to “the cars of the attorneys general.” But that’s just a matter of choice.</p><p>I work in a fake medieval turret on the roof of a campus building. When I come out and walk around, bumping into friends, they tend to ask me, “What are you working on?” Which is one reason I don’t often come out and walk around. I always feel like a parrot answering that question, and a nervous ill-humored parrot if I am writing a first draft. A few years ago, I had the luxury of a one-word reply.</p><p>“What are you working on?”</p><p>“Chalk.”</p><p>“Chalk?”</p><p>“Chalk.”</p><p>That did it. That seemed to be one more syllable than anyone wished to pursue.</p><p>But when the question comes in a note from one of your own daughters it is wise not to wax monosyllabic. Jenny, for example, was an assistant editor at Alfred A. Knopf when she innocently asked what I was working on, and got this reply:</p><p>“Dear Jenny: What am I working on? How is it going? Since you asked, at this point I have no confidence in this piece of writing. It tries a number of things I probably shouldn’t be trying. It tries to use the present tense for the immediacy that the present tense develops, but without allowing any verb tense to become befouled in a double orientation of time. It tells its story inside out. Like the ship fm writing about, it may have a crack in its hull. And I’ve barely started. After four months and nine days of staring into this monitor for what has probably amounted in aggregate to something closely approaching a thousand hours, that’s enough. I’m going fishing.”</p>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/projects/burglarAlarm</guid><title>burglarAlarm</title><link>https://www.justinpurnell.com/projects/burglarAlarm</link><description><![CDATA[These files detail the breadboard connections you’ll want to use for a 2-sensor burglar alarm with 2 LEDs and a buzzer.]]></description><pubDate>Sun, 22 Jul 2007 20:00:00 -0400</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[project]]></category><category><![CDATA[burglar alarm]]></category><category><![CDATA[python]]></category><category><![CDATA[pico]]></category><content:encoded><![CDATA[<p>These files detail the breadboard connections you’ll want to use for a 2-sensor burglar alarm with 2 LEDs and a buzzer.</p><p>The final file is micropython code you can copy and paste that will work with the connections seen in the html or pdf file.</p><p>If your pins change from how they’re listed in the diagrams, you’ll want to adjust the code to reflect which pins you’re using.</p><ul><li><a href="https://www.justinpurnell.com/projects/burglarAlarm/burglar.htm">Burglar Alarm Diagram - HTML</a></li><li><a href="https://www.justinpurnell.com/projects/burglarAlarm/burglar.pdf">Burglar Alarm Diagram - PDF</a></li><li><a href="https://www.justinpurnell.com/projects/burglarAlarm/burglarAlarm.py">Burglar Alarm Code - Python</a></li></ul>]]></content:encoded></item></channel></rss>
+</code></pre><hr /><h2>See It In Action</h2><p>This practice is demonstrated in the following technical posts:</p><p><strong>Technical Examples</strong>:</p><ul><li><a href="../01-mon-getting-started"><strong>Getting Started</strong> (Monday)</a>: Shows <code>presentValue</code> implemented test-first</li><li><strong>Time Series Foundation</strong> (Wednesday): Period arithmetic validated with tests</li><li><strong>Time Value of Money</strong> (Week 1 Friday case study): Multiple TVM functions integrated</li></ul><p><strong>Related Practices</strong>:</p><ul><li><strong>Documentation as Design</strong> (Week 2): Write docs before implementation</li><li><strong>Coding Standards</strong> (Week 5): Forbidden patterns caught by tests</li></ul><hr /><h2>Common Pitfalls</h2><h3>❌ Pitfall 1: Writing tests after implementation</h3><p><strong>Problem</strong>: You’ve already invested in understanding AI’s code. Tests feel like busy work.<strong>Solution</strong>: Discipline. Tests first, always. No exceptions.</p><h3>❌ Pitfall 2: Tests that just check “doesn’t crash”</h3><p><strong>Problem</strong>: <code>#expect(result != nil)</code> passes for wrong implementations.<strong>Solution</strong>: Test against known, correct values. Do the math yourself first.</p><h3>❌ Pitfall 3: Skipping edge cases</h3><p><strong>Problem</strong>: AI handles normal cases fine, but crashes on zero/negative/nil.<strong>Solution</strong>: Explicitly enumerate edge cases. Write tests for all of them.</p><hr /><h2>Further Reading</h2><p><strong>Technical foundation</strong>:</p><ul><li>Swift Testing framework documentation</li><li><code>#expect</code> vs <code>XCTAssert</code> differences</li></ul><p><strong>Tools mentioned</strong>:</p><ul><li><a href="https://developer.apple.com/xcode/swift-testing/">Swift Testing</a>: Modern testing framework for Swift</li><li><a href="https://www.swift.org/blog/numerics/">Swift Numerics</a>: Generic numeric protocols (<code>Real</code>, <code>ElementaryFunctions</code>)</li></ul><hr /><h2>Discussion</h2><p><strong>Questions to consider</strong>:</p><ol><li>How does test-first development change when AI is writing the implementation?</li><li>What level of test coverage is “enough” for financial calculations?</li><li>How do you balance test-first discipline with exploration/prototyping?</li></ol><p><strong>Share your experience</strong>: Have you tried test-first development with AI? What worked? What didn’t?</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 2/~48</li><li>Methodology Posts: 1/12</li><li>Practices Covered: Test-First Development</li></ul>]]></content:encoded></item></channel></rss>
