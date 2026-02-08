@@ -59,7 +59,7 @@ struct SectorConstrainedPortfolio {
     let expectedReturns: [Double]
     let covarianceMatrix: Matrix<Double>
 
-    func objectiveFunction(_ weights: Vector<Double>) -> Double {
+    func objectiveFunction(_ weights: VectorN<Double>) -> Double {
         // Minimize variance (maximize negative Sharpe)
         var variance = 0.0
         for i in 0..<numAssets {
@@ -71,7 +71,7 @@ struct SectorConstrainedPortfolio {
         // Penalty for sector limit violations
         var sectorPenalty = 0.0
         for (sectorID, limit) in sectorLimits.enumerated() {
-            let sectorWeight = weights.elements.enumerated()
+            let sectorWeight = weights.toArray().enumerated()
                 .filter { sectors[$0] == sectorID }
                 .map { $1 }
                 .reduce(0, +)
@@ -95,7 +95,7 @@ let portfolio = SectorConstrainedPortfolio(
 )
 
 // Particle Swarm Optimizer
-let pso = ParticleSwarmOptimizer<Vector<Double>>(
+let pso = ParticleSwarmOptimization<VectorN<Double>>(
     swarmSize: 100,  // 100 particles exploring search space
     inertiaWeight: 0.7,  // Balance exploration vs. exploitation
     cognitiveCoefficient: 1.5,  // Attraction to personal best
@@ -120,7 +120,7 @@ print("  Total Evaluations: \(result.iterations * pso.swarmSize)")
 // Verify sector constraints
 print("\nSector Allocations:")
 for sectorID in 0..<5 {
-    let sectorWeight = result.position.elements.enumerated()
+    let sectorWeight = result.position.toArray().enumerated()
         .filter { portfolio.sectors[$0] == sectorID }
         .map { $1 }
         .reduce(0, +)
@@ -144,7 +144,7 @@ for (i, bestValue) in result.convergenceHistory.enumerated().filter({ $0.offset 
 
 ```swift
 // Optimize model hyperparameters: [learningRate, regularization, hiddenLayers, batchSize]
-func modelPerformance(_ hyperparameters: Vector<Double>) -> Double {
+func modelPerformance(_ hyperparameters: VectorN<Double>) -> Double {
     let learningRate = hyperparameters[0]
     let regularization = hyperparameters[1]
     let hiddenLayers = Int(hyperparameters[2].rounded())  // Discrete!
@@ -162,7 +162,7 @@ func modelPerformance(_ hyperparameters: Vector<Double>) -> Double {
     return model.validationError
 }
 
-let hyperparamPSO = ParticleSwarmOptimizer<Vector<Double>>(
+let hyperparamPSO = ParticleSwarmOptimization<VectorN<Double>>(
     swarmSize: 50,
     inertiaWeight: 0.8,
     cognitiveCoefficient: 2.0,
@@ -197,7 +197,7 @@ print("\nHybrid PSO + BFGS Optimization")
 print("═══════════════════════════════════════════════════════════")
 
 // Phase 1: PSO for global search
-let psoPhase1 = ParticleSwarmOptimizer<Vector<Double>>(
+let psoPhase1 = ParticleSwarmOptimization<VectorN<Double>>(
     swarmSize: 50,
     maxIterations: 100  // Moderate iterations
 )
@@ -212,7 +212,7 @@ print("  Best Value: \(globalSearch.value.number(decimalPlaces: 6))")
 print("  Evaluations: \(100 * 50)")
 
 // Phase 2: BFGS for local refinement
-let bfgsPhase2 = BFGSOptimizer<Vector<Double>>()
+let bfgsPhase2 = BFGSOptimizer<VectorN<Double>>()
 
 let localRefinement = try bfgsPhase2.minimize(
     portfolio.objectiveFunction,
@@ -306,7 +306,7 @@ Where:
 
 **Implementation**:
 ```swift
-let windFarmPSO = ParticleSwarmOptimizer<Vector<Double>>(
+let windFarmPSO = ParticleSwarmOptimization<VectorN<Double>>(
     swarmSize: 100,  // 100 candidate layouts
     inertiaWeight: 0.7,
     cognitiveCoefficient: 1.5,
@@ -314,7 +314,7 @@ let windFarmPSO = ParticleSwarmOptimizer<Vector<Double>>(
     parallel: true  // Evaluate all turbines in parallel!
 )
 
-func annualPowerGeneration(_ turbinePositions: Vector<Double>) -> Double {
+func annualPowerGeneration(_ turbinePositions: VectorN<Double>) -> Double {
     // Extract (x, y) pairs for each turbine
     let positions = (0..<50).map { i in
         (x: turbinePositions[2*i], y: turbinePositions[2*i+1])

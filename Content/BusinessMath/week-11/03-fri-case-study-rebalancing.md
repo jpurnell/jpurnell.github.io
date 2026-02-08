@@ -45,7 +45,7 @@ import BusinessMath
 // Actor managing optimization state
 actor RealTimePortfolioOptimizer {
     private var currentIteration = 0
-    private var bestSolution: Vector<Double>?
+    private var bestSolution: VectorN<Double>?
     private var bestValue: Double = .infinity
     private var convergenceHistory: [(iteration: Int, value: Double, timestamp: Date)] = []
     private var isCancelled = false
@@ -56,12 +56,12 @@ actor RealTimePortfolioOptimizer {
 
     // Optimization parameters
     private let numAssets: Int
-    private let targetWeights: Vector<Double>
+    private let targetWeights: VectorN<Double>
     private let constraints: [PortfolioConstraint]
 
     init(
         numAssets: Int,
-        targetWeights: Vector<Double>,
+        targetWeights: VectorN<Double>,
         constraints: [PortfolioConstraint],
         marketData: AsyncMarketDataStream,
         riskMonitor: RiskMonitor
@@ -154,7 +154,7 @@ actor RealTimePortfolioOptimizer {
     }
 
     // Evaluate single particle (async to fetch live prices)
-    private func evaluateParticle(_ weights: Vector<Double>) async -> Double {
+    private func evaluateParticle(_ weights: VectorN<Double>) async -> Double {
         // Fetch current market prices (async!)
         let prices = await marketDataStream.getCurrentPrices()
 
@@ -205,10 +205,10 @@ actor RealTimePortfolioOptimizer {
 
     // Swarm update (PSO algorithm)
     private func updateSwarm(
-        _ swarm: [Vector<Double>],
+        _ swarm: [VectorN<Double>],
         evaluations: [Double],
         iteration: Int
-    ) -> [Vector<Double>] {
+    ) -> [VectorN<Double>] {
         let inertia = 0.9 - (0.5 * Double(iteration) / 200.0)  // Adaptive inertia
 
         return swarm.enumerated().map { index, particle in
@@ -217,7 +217,7 @@ actor RealTimePortfolioOptimizer {
         }
     }
 
-    private func initializeSwarm(size: Int) -> [Vector<Double>] {
+    private func initializeSwarm(size: Int) -> [VectorN<Double>] {
         (0..<size).map { _ in
             Vector((0..<numAssets).map { _ in Double.random(in: 0...1) })
                 .normalized()  // Sum to 1
@@ -225,8 +225,8 @@ actor RealTimePortfolioOptimizer {
     }
 
     private func calculateTrackingError(
-        weights: Vector<Double>,
-        targetWeights: Vector<Double>,
+        weights: VectorN<Double>,
+        targetWeights: VectorN<Double>,
         prices: [Double]
     ) -> Double {
         // Simplified tracking error calculation
@@ -256,7 +256,7 @@ actor RiskMonitor {
     private let varLimit: Double = 0.02  // 2% daily VaR
     private let trackingErrorLimit: Double = 0.005  // 50 bps tracking error
 
-    func checkLimits(_ weights: Vector<Double>) async -> RiskCheckResult {
+    func checkLimits(_ weights: VectorN<Double>) async -> RiskCheckResult {
         // Calculate risk metrics
         let var95 = calculateVaR(weights: weights, confidenceLevel: 0.95)
         let trackingError = calculateTrackingError(weights: weights)
@@ -279,12 +279,12 @@ actor RiskMonitor {
         )
     }
 
-    private func calculateVaR(weights: Vector<Double>, confidenceLevel: Double) -> Double {
+    private func calculateVaR(weights: VectorN<Double>, confidenceLevel: Double) -> Double {
         // Simplified VaR calculation
         0.018  // 1.8% daily VaR
     }
 
-    private func calculateTrackingError(weights: Vector<Double>) -> Double {
+    private func calculateTrackingError(weights: VectorN<Double>) -> Double {
         // Simplified tracking error
         0.0035  // 35 bps
     }
@@ -305,7 +305,7 @@ struct OptimizationProgress {
 }
 
 struct OptimizationResult {
-    let weights: Vector<Double>
+    let weights: VectorN<Double>
     let objectiveValue: Double
     let convergenceHistory: [(iteration: Int, value: Double, timestamp: Date)]
     let elapsedTime: TimeInterval
@@ -412,8 +412,8 @@ struct TradeGenerator {
     let lotSize: Int = 100  // Trade in 100-share lots
 
     func generateTrades(
-        from currentWeights: Vector<Double>,
-        to targetWeights: Vector<Double>,
+        from currentWeights: VectorN<Double>,
+        to targetWeights: VectorN<Double>,
         symbols: [String],
         portfolioValue: Double
     ) -> [Trade] {

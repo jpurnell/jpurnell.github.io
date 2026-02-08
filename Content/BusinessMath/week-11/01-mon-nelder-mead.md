@@ -51,15 +51,33 @@ Nelder-Mead builds a simplex (triangle in 2D, tetrahedron in 3D, etc.) and itera
 ```swift
 import BusinessMath
 
+// Helper: Simulate one year of portfolio returns
+func simulatePortfolioYear(
+    targetReturn: Double,
+    riskTolerance: Double,
+    rebalanceThreshold: Double,
+    marketScenario: Double
+) -> Double {
+    // Adjust actual return based on market scenario and risk tolerance
+    let actualReturn = targetReturn + marketScenario * riskTolerance
+
+    // Transaction costs from rebalancing (lower threshold = more rebalancing = more costs)
+    let rebalanceFrequency = 1.0 / max(rebalanceThreshold, 0.01)
+    let transactionCosts = rebalanceFrequency * 0.001  // 10 bps per rebalance
+
+    // Net return after costs
+    return actualReturn - transactionCosts
+}
+
 // Black-box objective: Monte Carlo portfolio simulation
-func portfolioSimulationObjective(_ parameters: Vector<Double>) -> Double {
+func portfolioSimulationObjective(_ parameters: VectorN<Double>) -> Double {
     // Parameters: [targetReturn, riskTolerance, rebalanceThreshold]
     let targetReturn = parameters[0]
     let riskTolerance = parameters[1]
     let rebalanceThreshold = parameters[2]
 
     // Run Monte Carlo simulation (expensive!)
-    var simulation = MonteCarloSimulation(iterations: 1_000) { inputs in
+    var simulation = MonteCarloSimulation(iterations: 1_000, enableGPU: false) { inputs in
         // Simulate portfolio with these parameters
         let returns = simulatePortfolioYear(
             targetReturn: targetReturn,
@@ -78,44 +96,41 @@ func portfolioSimulationObjective(_ parameters: Vector<Double>) -> Double {
     let results = try! simulation.run()
 
     // Objective: Maximize Sharpe ratio (minimize negative)
-    let meanReturn = results.mean()
-    let stdDev = results.standardDeviation()
+    let meanReturn = results.statistics.mean
+    let stdDev = results.statistics.standardDeviation
     let sharpeRatio = meanReturn / stdDev
 
     return -sharpeRatio  // Minimize negative = maximize positive
 }
 
 // Nelder-Mead optimizer (no gradients needed!)
-let nm = NelderMeadOptimizer<Vector<Double>>()
+let nm = NelderMead<VectorN<Double>>(config: .default)
 
-let initialGuess = Vector([0.10, 0.15, 0.05])  // [target, risk, threshold]
+let initialGuess = VectorN([0.10, 0.15, 0.05])  // [target, risk, threshold]
 
 print("Black-Box Parameter Optimization")
 print("═══════════════════════════════════════════════════════════")
 
+// Note: Nelder-Mead doesn't support bounds directly; use constraints if needed
 let result = try nm.minimize(
     portfolioSimulationObjective,
-    startingAt: initialGuess,
-    bounds: [
-        (0.05, 0.20),   // Target return: 5-20%
-        (0.05, 0.30),   // Risk tolerance: 5-30%
-        (0.01, 0.10)    // Rebalance threshold: 1-10%
-    ]
+    from: initialGuess
 )
 
 print("Optimization Results:")
 print("  Optimal Parameters:")
-print("    Target Return: \((result.position[0] * 100).number(decimalPlaces: 2))%")
-print("    Risk Tolerance: \((result.position[1] * 100).number(decimalPlaces: 2))%")
-print("    Rebalance Threshold: \((result.position[2] * 100).number(decimalPlaces: 2))%")
-print("  Final Sharpe Ratio: \((-result.value).number(decimalPlaces: 3))")
-print("  Function Evaluations: \(result.evaluations)")
-print("  Time: \(result.elapsedTime.number(decimalPlaces: 1))s")
+print("    Target Return: \((result.solution[0] * 100).number(2))%")
+print("    Risk Tolerance: \((result.solution[1] * 100).number(2))%")
+print("    Rebalance Threshold: \((result.solution[2] * 100).number(2))%")
+print("  Final Sharpe Ratio: \((-result.value).number(3))")
 
-// Each evaluation takes ~2 seconds (1,000 MC iterations)
-print("\nEfficiency:")
-print("  Average time/evaluation: \((result.elapsedTime / Double(result.evaluations)).number(decimalPlaces: 2))s")
-print("  Total simulation runs: \(result.evaluations * 1_000)")
+// For detailed metrics, use optimizeDetailed()
+let detailedResult = nm.optimizeDetailed(
+    objective: portfolioSimulationObjective,
+    initialGuess: initialGuess
+)
+print("  Function Evaluations: \(detailedResult.evaluations)")
+print("  Iterations: \(detailedResult.iterations)")
 ```
 
 ### Pattern 2: Non-Smooth Objective (Transaction Costs)
@@ -124,16 +139,16 @@ print("  Total simulation runs: \(result.evaluations * 1_000)")
 
 ```swift
 // Portfolio with discrete lot sizes (non-smooth!)
-func portfolioWithLotSizes(_ weights: Vector<Double>) -> Double {
+func portfolioWithLotSizes(_ weights: VectorN<Double>) -> Double {
     let lotSize = 100.0  // Must trade in multiples of 100 shares
-    let sharesPerAsset = weights.elements.map { weight in
+    let sharesPerAsset = weights.toArray().map { weight in
         let idealShares = weight * 100_000.0  // $100K portfolio
         return (idealShares / lotSize).rounded() * lotSize
     }
 
     // Actual weights after rounding to lot sizes
     let totalValue = sharesPerAsset.reduce(0, +)
-    let actualWeights = Vector(sharesPerAsset.map { $0 / totalValue })
+    let actualWeights = VectorN(sharesPerAsset.map { $0 / totalValue })
 
     // Portfolio variance with actual weights
     var variance = 0.0
@@ -144,14 +159,14 @@ func portfolioWithLotSizes(_ weights: Vector<Double>) -> Double {
     }
 
     // Transaction costs from deviations
-    let deviations = zip(weights.elements, actualWeights.elements)
+    let deviations = zip(weights.toArray(), actualWeights.toArray())
         .map { abs($0 - $1) }
         .reduce(0, +)
 
     return variance + deviations * 0.001  // Penalty for rounding
 }
 
-let nmNonSmooth = NelderMeadOptimizer<Vector<Double>>(
+let nmNonSmooth = NelderMead<VectorN<Double>>(
     reflectionCoefficient: 1.0,
     expansionCoefficient: 2.0,
     contractionCoefficient: 0.5,
@@ -160,11 +175,11 @@ let nmNonSmooth = NelderMeadOptimizer<Vector<Double>>(
 
 let nonSmoothResult = try nmNonSmooth.minimize(
     portfolioWithLotSizes,
-    startingAt: Vector(repeating: 0.10, count: 10)  // 10 assets
+    startingAt: VectorN(repeating: 0.10, count: 10)  // 10 assets
 )
 
 print("\nNon-Smooth Optimization (Lot Sizes):")
-print("  Final Variance: \(nonSmoothResult.value.number(decimalPlaces: 6))")
+print("  Final Variance: \(nonSmoothResult.value.number( 6))")
 print("  Evaluations: \(nonSmoothResult.evaluations)")
 
 // Compare: Gradient method would fail due to discontinuities
@@ -177,7 +192,7 @@ print("  Evaluations: \(nonSmoothResult.evaluations)")
 ```swift
 // Noisy objective: each evaluation adds random noise
 var evaluationCount = 0
-func noisyObjective(_ x: Vector<Double>) -> Double {
+func noisyObjective(_ x: VectorN<Double>) -> Double {
     evaluationCount += 1
 
     // True underlying function (Rosenbrock)
@@ -194,20 +209,20 @@ print("════════════════════════�
 
 evaluationCount = 0
 
-let nmNoisy = NelderMeadOptimizer<Vector<Double>>(
+let nmNoisy = NelderMead<VectorN<Double>>(
     terminationTolerance: 1e-3  // Relaxed tolerance for noisy function
 )
 
 let noisyResult = try nmNoisy.minimize(
     noisyObjective,
-    startingAt: Vector([0.0, 0.0]),
+    startingAt: VectorN([0.0, 0.0]),
     maxEvaluations: 500
 )
 
 print("Results:")
-print("  Final Position: [\(noisyResult.position[0].number(decimalPlaces: 3)), \(noisyResult.position[1].number(decimalPlaces: 3))]")
+print("  Final Position: [\(noisyResult.position[0].number( 3)), \(noisyResult.position[1].number( 3))]")
 print("  True Optimum: [1.0, 1.0]")
-print("  Final Value: \(noisyResult.value.number(decimalPlaces: 3))")
+print("  Final Value: \(noisyResult.value.number( 3))")
 print("  Evaluations: \(evaluationCount)")
 
 // Nelder-Mead is remarkably robust to noise!
@@ -290,11 +305,11 @@ print("  Evaluations: \(evaluationCount)")
 
 **Implementation**:
 ```swift
-let dosingOptimizer = NelderMeadOptimizer<Vector<Double>>(
+let dosingOptimizer = NelderMead<VectorN<Double>>(
     terminationTolerance: 1e-2  // Relaxed for noisy simulation
 )
 
-func patientOutcome(_ dosingParams: Vector<Double>) -> Double {
+func patientOutcome(_ dosingParams: VectorN<Double>) -> Double {
     let doseAmount = dosingParams[0]
     let frequency = dosingParams[1]
     let duration = dosingParams[2]
