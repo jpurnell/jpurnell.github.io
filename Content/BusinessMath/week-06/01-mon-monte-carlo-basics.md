@@ -1,6 +1,6 @@
 ---
 title: Monte Carlo Simulation for Financial Forecasting
-date: 2026-02-10 13:00
+date: 2026-02-10 12:00
 series: BusinessMath Quarterly Series
 week: 6
 post: 1
@@ -37,15 +37,15 @@ Traditional financial forecasts give you a single number: "Revenue next quarter:
 - **What's the downside risk?** In the worst 5% of scenarios, how bad does it get?
 - **How do uncertainties combine?** When both revenue AND costs are uncertain, what's the total impact?
 
-**Single-point forecasts are dangerously misleading**—they hide the uncertainty that decision-makers need to understand.
+**Single-point forecasts can be misleading**—Any forecast is just a data point in actual decision making, but the false certainty of a single point can obscure the broader range of possibilties that can inform a good decision.
 
 ---
 
 ## The Solution
 
-Monte Carlo simulation runs thousands of scenarios, each with different random values from probability distributions. Instead of "Revenue = $1M", you get "Revenue: Mean $1M, 90% CI [$850K, $1.15M]".
+Monte Carlo simulation runs thousands of scenarios, each with different random values from probability distributions (like a roulette wheel, hence the name). Instead of "Revenue = $1M", you get "Revenue: Mean $1M, but with a 90% Confidence Interval ranging from $850K to $1.15M".
 
-BusinessMath provides probabilistic drivers, simulation infrastructure, and statistical analysis to build robust forecasts.
+BusinessMath provides probabilistic drivers, simulation infrastructure, and statistical analysis to enable you to build more robust forecasts based off a range of values.
 
 ### Single Metric with Growth Uncertainty
 
@@ -73,12 +73,12 @@ let iterations = 10_000
 
 // Pre-allocate for performance
 var allValues: [[Double]] = Array(repeating: [], count: quarters.count)
-for i in 0..<quarters.count {
+for i in 0...(quarters.count - 1) {
     allValues[i].reserveCapacity(iterations)
 }
 
 // Generate revenue paths with compounding
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
     var currentRevenue = baseRevenue
 
     for (periodIndex, period) in quarters.enumerated() {
@@ -253,13 +253,13 @@ var revenueValues: [[Double]] = Array(repeating: [], count: periods.count)
 var grossProfitValues: [[Double]] = Array(repeating: [], count: periods.count)
 var opIncomeValues: [[Double]] = Array(repeating: [], count: periods.count)
 
-for i in 0..<periods.count {
+for i in 0...(periods.count - 1) {
     revenueValues[i].reserveCapacity(iterations)
     grossProfitValues[i].reserveCapacity(iterations)
     opIncomeValues[i].reserveCapacity(iterations)
 }
 
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
     for (periodIndex, period) in periods.enumerated() {
         // Sample all drivers
         let units = drivers.unitsSold.sample(for: period)
@@ -413,13 +413,13 @@ Operating Income
 Risk: Probability of profit ~100%
 ```
 
-**The power**: You now have a complete probabilistic P&L showing expected values, confidence intervals, and risk metrics for every line item.
+**The power**: You now have a complete probabilistic P&L showing expected values, confidence intervals, and risk metrics for every line item. But note, this doesn't just have to be done for financial models. Anything that you want to model with uncertainty can be simulated this way
 
 ---
 
 ### Performance Optimization
 
-For large simulations (50K+ iterations), optimize carefully:
+For basic monte carlo simulation runs, optimizations may not be worth the lift, but for large simulations (50K+ iterations), we have some recommendations to really maximize performance:
 
 ```swift
 // 1. Pre-allocate arrays
@@ -446,7 +446,7 @@ let mean = results.statistics.mean  // ✓ Fast (already computed)
 
 ### GPU-Accelerated Expression Models for Single-Period Calculations
 
-For single-period calculations with high iteration counts, BusinessMath provides `MonteCarloExpressionModel` - a GPU-accelerated approach that delivers 10-100× speedup with minimal memory usage.
+For single-period calculations with high iteration counts, BusinessMath provides `MonteCarloExpressionModel` - a GPU-accelerated approach that delivers 10-100× speedup with minimal memory usage. We've got [a deeper dive on GPU acceleration here](../week-06/02-mon-gpu-acceleration).
 
 **When to use expression models:**
 - ✅ Single-period calculations (no compounding across time)
@@ -590,9 +590,9 @@ let revenue = units * price  // ExpressionProxy objects
 let afterTax = revenue * (1.0 - taxRate)  // Use pre-computed constant
 ```
 
-**Critical Rule**: Pre-compute all constants outside the builder using Swift's standard functions (`pow()`, `sqrt()`, `exp()`, etc.). Inside the builder, only use DSL methods (`.exp()`, `.sqrt()`, `.power()`) on variables that depend on random inputs.
+**Critical Rule**: Pre-compute all constants outside the builder using Swift Foundation's standard functions (`pow()`, `sqrt()`, `exp()`, etc.). Inside the builder, only use DSL methods (`.exp()`, `.sqrt()`, `.power()`) on variables that depend on random inputs.
 
-**Why?** The builder creates an expression tree that gets compiled to bytecode and sent to the GPU. Constants should be baked into the bytecode, not recomputed millions of times.
+**Why?** GPU methods have to be pre-compiled for the GPU to do it's magic and optimize calculation. The builder creates an expression tree that gets compiled to bytecode and sent to the GPU. Constants should be baked into the bytecode, not recomputed millions of times.
 
 ```swift
 // ❌ WRONG: Computing constants inside builder
@@ -624,7 +624,7 @@ The revenue growth forecast we showed earlier requires traditional loops:
 
 ```swift
 // This REQUIRES traditional loops (compounding across periods)
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
     var currentRevenue = baseRevenue
     for period in periods {
         let growth = sampleGrowth()
@@ -676,12 +676,12 @@ let iterations = 10_000
 
 // Pre-allocate for performance
 var allValues: [[Double]] = Array(repeating: [], count: quarters.count)
-for i in 0..<quarters.count {
+for i in 0...(quarters.count - 1) {
 	allValues[i].reserveCapacity(iterations)
 }
 
 // Generate revenue paths with compounding
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
 	var currentRevenue = baseRevenue
 
 	for (periodIndex, period) in quarters.enumerated() {
@@ -787,13 +787,13 @@ for quarter in quarters {
 	var grossProfitValues: [[Double]] = Array(repeating: [], count: periods.count)
 	var opIncomeValues: [[Double]] = Array(repeating: [], count: periods.count)
 
-	for i in 0..<periods.count {
+	for i in 0...(periods.count - 1) {
 		revenueValues[i].reserveCapacity(iterations)
 		grossProfitValues[i].reserveCapacity(iterations)
 		opIncomeValues[i].reserveCapacity(iterations)
 	}
 
-	for _ in 0..<iterations {
+	for _ in 0...(iterations - 1) {
 		for (periodIndex, period) in periods.enumerated() {
 			// Sample all drivers
 			let units = drivers.unitsSold.sample(for: period)
@@ -1009,7 +1009,7 @@ Traditional approach: Build 3 scenarios (base, best, worst).
 
 ### 📝 Development Note
 
-The biggest challenge was **balancing ease-of-use with flexibility**. We could have provided:
+The biggest challenge here **balancing ease-of-use with flexibility**. We could have provided:
 
 **Option A**: High-level `forecastRevenue(baseAmount, growthDist, periods)`
 - Pro: Very easy to use
@@ -1019,7 +1019,7 @@ The biggest challenge was **balancing ease-of-use with flexibility**. We could h
 - Pro: Maximum flexibility
 - Con: Users must write boilerplate for every forecast
 
-We chose **Option B with helper types** (`ProbabilisticDriver`, `SimulationResults`) that handle the tedious parts (sampling, statistics) while leaving control over the simulation logic.
+We chose **Option B with helper types** (`ProbabilisticDriver`, `SimulationResults`) that handle the tedious parts (sampling, statistics) while leaving control over the simulation logic. Even though it's a step away from the expressiveness of pure swift functions, the power boost is massive, and while still retaining the benefits of reusability.
 
 **Related Methodology**: [Test-First Development](../week-01/02-tue-test-first-development) (Week 1) - We wrote tests comparing Monte Carlo results to analytical solutions (e.g., normal distribution revenue forecast) before implementing.
 
@@ -1027,9 +1027,9 @@ We chose **Option B with helper types** (`ProbabilisticDriver`, `SimulationResul
 
 ## Next Steps
 
-**Coming up Wednesday**: Scenario Analysis - Building discrete scenarios, sensitivity analysis, and tornado diagrams.
+**Coming up Wednesday**: [Scenario Analysis - Building discrete scenarios, sensitivity analysis, and tornado diagrams](../week-06/02-wed-scenario-analysis).
 
-**Friday**: Case Study #3 - Option Pricing with Monte Carlo.
+**Friday**: Case Study #3 - [Option Pricing with Monte Carlo](../week-06/03-fri-case-study-option-pricing).
 
 ---
 

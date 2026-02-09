@@ -1,6 +1,6 @@
 ---
 title: GPU-Accelerated Monte Carlo: Expression Models and Performance
-date: 2026-02-11 13:00
+date: 2026-02-10 13:00
 series: BusinessMath Quarterly Series
 week: 6
 post: 2
@@ -8,7 +8,7 @@ docc_source: "4.2-MonteCarloGPUAcceleration.md"
 playground: "Week06/GPU-MonteCarlo.playground"
 tags: businessmath, swift, monte-carlo, gpu, metal, performance, expression-model, optimization
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # GPU-Accelerated Monte Carlo: Expression Models and Performance
@@ -548,7 +548,7 @@ let model2 = MonteCarloExpressionModel { builder in
 let badModel = MonteCarloExpressionModel { builder in
     let n = Int(builder[0])  // Runtime value
     var sum = 0.0
-    for i in 0..<n {  // ❌ n is not known at compile time!
+    for i in 0...(n - 1) {  // ❌ n is not known at compile time!
         sum += builder[i + 1]
     }
     return sum
@@ -581,7 +581,7 @@ let portfolioModel = MonteCarloExpressionModel { builder in
 let badModel = MonteCarloExpressionModel { builder in
     let n = Int(builder[0])  // Runtime value
     var values: [ExpressionProxy] = []
-    for i in 0..<n {  // ❌ Cannot build array dynamically!
+    for i in 0...(n - 1) {  // ❌ Cannot build array dynamically!
         values.append(builder[i])
     }
     return builder.array(values).sum()
@@ -726,7 +726,7 @@ var simulation = MonteCarloSimulation(iterations: 100_000, enableGPU: false) { i
     let periods = 5
 
     var value = initialValue
-    for _ in 0..<periods {
+    for _ in 0...(periods - 1) {
         value = value * (1.0 + growthRate)
     }
     return value
@@ -928,13 +928,13 @@ func portfolioSharpe(
 ) -> Double {
     // Complex matrix operations, loops
     var portfolioReturn = 0.0
-    for i in 0..<weights.count {
+    for i in 0...(weights.count - 1) {
         portfolioReturn += weights[i] * returns[i]
     }
 
     var portfolioVar = 0.0
-    for i in 0..<weights.count {
-        for j in 0..<weights.count {
+    for i in 0...(weights.count - 1) {
+        for j in 0...(weights.count - 1) {
             portfolioVar += weights[i] * weights[j] * covariance[i][j]
         }
     }
@@ -1097,11 +1097,8 @@ var simulation = MonteCarloSimulation(
 
 Download the complete GPU acceleration playgrounds:
 
-```
-→ Download: Week06/GPU-MonteCarlo.playground (Basic Features)
-→ Download: Week06/Advanced-GPU-Features.playground (Arrays, Loops, Matrices)
-→ Full API Reference: BusinessMath Docs – Monte Carlo GPU Acceleration
-```
+→ Full API Reference: BusinessMath Docs – [Monte Carlo GPU Acceleration]()
+
 
 ### Experiments to Try
 
@@ -1123,7 +1120,7 @@ Download the complete GPU acceleration playgrounds:
 4. **Reusable functions**: Use `ExpressionFunction` for GPU-compatible custom functions ✨ NEW!
 5. **Built-in library**: `FinancialFunctions` provides common calculations
 6. **Fixed-size arrays**: `builder.array([...])` with sum, dot, mean, etc. 🚀 NEW!
-7. **Loop unrolling**: `builder.forEach(0..<N, ...)` for compile-time loops 🚀 NEW!
+7. **Loop unrolling**: `builder.forEach(0...N, ...)` for compile-time loops 🚀 NEW!
 8. **Matrix operations**: `builder.matrix(...)` for covariance and quadratic forms 🚀 NEW!
 9. **Limitations**: Variable loop bounds, dynamic arrays, runtime decisions still require CPU
 10. **Performance sweet spot**: 10K+ iterations, 10+ operations
