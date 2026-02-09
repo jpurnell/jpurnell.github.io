@@ -269,22 +269,22 @@ PR Merge Rate:       78%
 ## Production Usage
 
 ### Confirmed Users
-
-**By Industry**:
-- FinTech: 42%
-- Asset Management: 28%
-- Corporate Finance: 15%
-- Academic Research: 10%
-- Consulting: 5%
-
-**By Company Size**:
-- Solo/Small (<10 employees): 38%
-- Medium (10-100): 35%
-- Enterprise (>100): 27%
-
-**Assets Under Management** (for investment firms using BusinessMath):
-- Total: ~$18 billion
-- Median per firm: $250 million
+<!---->
+<!--**By Industry**:-->
+<!--- FinTech: 42%-->
+<!--- Asset Management: 28%-->
+<!--- Corporate Finance: 15%-->
+<!--- Academic Research: 10%-->
+<!--- Consulting: 5%-->
+<!---->
+<!--**By Company Size**:-->
+<!--- Solo/Small (<10 employees): 38%-->
+<!--- Medium (10-100): 35%-->
+<!--- Enterprise (>100): 27%-->
+<!---->
+<!--**Assets Under Management** (for investment firms using BusinessMath):-->
+<!--- Total: ~$18 billion-->
+<!--- Median per firm: $250 million-->
 
 ---
 
