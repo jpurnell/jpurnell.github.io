@@ -1,7 +1,767 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</guid><title>Bond Valuation & Credit Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</link><description><![CDATA[Part 19 of 12-Week BusinessMath Series]]></description><pubDate>Fri, 06 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[bonds]]></category><category><![CDATA[fixed-income]]></category><category><![CDATA[credit-risk]]></category><category><![CDATA[duration]]></category><category><![CDATA[convexity]]></category><category><![CDATA[callable-bonds]]></category><category><![CDATA[oas]]></category><content:encoded><![CDATA[<p><strong>Part 19 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Pricing bonds and calculating yield to maturity (YTM)</li><li>Measuring interest rate risk using duration and convexity</li><li>Converting credit metrics (Z-Scores) to default probabilities and spreads</li><li>Valuing callable bonds and calculating Option-Adjusted Spread (OAS)</li><li>Building credit curves to analyze default risk over time</li><li>Calculating expected losses for bond portfolios</li><li>Making informed fixed income investment decisions</li></ul><hr /><h2>The Problem</h2><p>Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:</p><ul><li><strong>How do you price a bond?</strong> It’s not just “divide coupon by yield”—that’s current yield, not price.</li><li><strong>What’s the interest rate risk?</strong> If rates rise 1%, how much does your bond portfolio lose?</li><li><strong>How do you value credit risk?</strong> A BBB-rated bond should yield more than AAA, but how much?</li><li><strong>What about callable bonds?</strong> Issuers can refinance if rates drop—how do you value that option?</li></ul><p><strong>Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive bond valuation and credit analysis: <code>Bond</code> pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.</p><h3>Basic Bond Pricing</h3><p>Price a simple corporate bond:</p><pre><code class="language-swift">import BusinessMath
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/01-mon-monte-carlo-basics</guid><title>Monte Carlo Simulation for Financial Forecasting</title><link>https://www.justinpurnell.com/BusinessMath/week-06/01-mon-monte-carlo-basics</link><description><![CDATA[Part 20 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 10 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[simulation]]></category><category><![CDATA[forecasting]]></category><category><![CDATA[uncertainty]]></category><category><![CDATA[risk-analysis]]></category><content:encoded><![CDATA[<p><strong>Part 20 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building probabilistic forecasts with uncertainty quantification</li><li>Projecting revenue with compounding growth and randomness</li><li>Creating complete income statement forecasts with multiple uncertain drivers</li><li>Calculating confidence intervals (90%, 95%) for projections</li><li>Extracting mean, median, and percentile scenarios</li><li>Optimizing Monte Carlo simulations for performance</li></ul><hr /><h2>The Problem</h2><p>Traditional financial forecasts give you a single number: “Revenue next quarter: $1M.” But reality is uncertain:</p><ul><li><strong>What if growth varies?</strong> Expected 10% growth might be anywhere from 5%-15%.</li><li><strong>How likely is profitability?</strong> Is there a 50% chance or 95% chance we’re profitable?</li><li><strong>What’s the downside risk?</strong> In the worst 5% of scenarios, how bad does it get?</li><li><strong>How do uncertainties combine?</strong> When both revenue AND costs are uncertain, what’s the total impact?</li></ul><p><strong>Single-point forecasts are dangerously misleading</strong>—they hide the uncertainty that decision-makers need to understand.</p><hr /><h2>The Solution</h2><p>Monte Carlo simulation runs thousands of scenarios, each with different random values from probability distributions. Instead of “Revenue = $1M”, you get “Revenue: Mean $1M, 90% CI [$850K, $1.15M]”.</p><p>BusinessMath provides probabilistic drivers, simulation infrastructure, and statistical analysis to build robust forecasts.</p><h3>Single Metric with Growth Uncertainty</h3><p>Start simple: project revenue with uncertain quarterly growth:</p><pre><code class="language-swift">import BusinessMath
+
+// Historical revenue
+let baseRevenue = 1_000_000.0  // $1M
+
+// Growth rate uncertainty: mean 10%, std dev 5%
+let growthDriver = ProbabilisticDriver<Double>.normal(
+    name: "Quarterly Growth",
+    mean: 0.10,      // Expected 10% per quarter
+    stdDev: 0.05     // ±5% uncertainty
+)
+
+// Project 4 quarters
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]
+
+// Run Monte Carlo simulation (10,000 paths)
+let iterations = 10_000
+
+// Pre-allocate for performance
+var allValues: [[Double]] = Array(repeating: [], count: quarters.count)
+for i in 0..<quarters.count {
+    allValues[i].reserveCapacity(iterations)
+}
+
+// Generate revenue paths with compounding
+for _ in 0..<iterations {
+    var currentRevenue = baseRevenue
+
+    for (periodIndex, period) in quarters.enumerated() {
+        let growth = growthDriver.sample(for: period)
+        currentRevenue = currentRevenue * (1.0 + growth)  // Compound!
+        allValues[periodIndex].append(currentRevenue)
+    }
+}
+
+// Calculate statistics for each period
+var statistics: [Period: SimulationStatistics] = [:]
+var percentiles: [Period: Percentiles] = [:]
+
+for (periodIndex, period) in quarters.enumerated() {
+    let results = SimulationResults(values: allValues[periodIndex])
+    statistics[period] = results.statistics
+    percentiles[period] = results.percentiles
+}
+
+// Display results
+print("Revenue Forecast with Compounding Growth")
+print("=========================================")
+print("Base Revenue: \(baseRevenue.currency(0))")
+print("Quarterly Growth: 10% ± 5% (compounding)")
+print()
+print("Quarter  Mean        Median      90% CI                        Growth")
+print("-------  ----------  ----------  ----------------------------  -------")
+
+for quarter in quarters {
+    let stats = statistics[quarter]!
+    let pctiles = percentiles[quarter]!
+    let growth = (stats.mean - baseRevenue) / baseRevenue
+
+    print("\(quarter.label)  \(stats.mean.currency(0))  \(pctiles.p50.currency(0))  [\(pctiles.p5.currency(0)), \(pctiles.p95.currency(0))]  \(growth.percent(1))")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Revenue Forecast with Compounding Growth
+=========================================
+Base Revenue: $1,000,000
+Quarterly Growth: 10% ± 5% (compounding)
+
+Quarter  Mean        Median      90% CI                    Growth
+-------  ----------  ----------  ------------------------  -------
+2025-Q1  $1,098,850  $1,098,794  [$1,017,019, $1,180,785]  9.9%
+2025-Q2  $1,208,699  $1,207,346  [$1,084,379, $1,337,429]  20.9%
+2025-Q3  $1,328,825  $1,325,827  [$1,162,620, $1,506,463]  32.9%
+2025-Q4  $1,462,127  $1,454,999  [$1,250,988, $1,692,565]  46.2%
+</code></pre><p><strong>The insights</strong>:</p><ul><li><strong>Compounding accelerates</strong>: 46.4% total growth (not 40% = 4 × 10%)</li><li><strong>Uncertainty widens</strong>: Q1 CI width = $165K, Q4 = $442K (2.7× wider)</li><li><strong>Assymetric distribution</strong>: Mean slightly > Median (right-skewed from compounding)</li></ul><hr /><p>###Critical Implementation Detail: Compounding</p><p>The key to proper compounding is generating <strong>complete paths</strong> in each iteration:</p><pre><code class="language-swift">// ✓ CORRECT: Complete path per iteration
+for iteration in 1...10_000 {
+    var revenue = baseRevenue
+    for period in periods {
+        revenue *= (1 + sampleGrowth())  // Compounds across periods
+        recordValue(period, revenue)
+    }
+}
+
+// ✗ WRONG: Each period sampled independently
+for period in periods {
+    for iteration in 1...10_000 {
+        let revenue = baseRevenue * (1 + sampleGrowth())  // No compounding!
+        recordValue(period, revenue)
+    }
+}
+</code></pre><p><strong>Why this matters</strong>: In the correct approach, Q2 revenue is based on Q1’s realized revenue, not the original base. This creates path-dependency and realistic compounding.</p><hr /><h3>Extract Scenario Time Series</h3><p>Convert simulation results to concrete scenarios:</p><pre><code class="language-swift">// Build time series at different confidence levels
+let expectedValues = quarters.map { statistics[$0]!.mean }
+let medianValues = quarters.map { percentiles[$0]!.p50 }
+let p5Values = quarters.map { percentiles[$0]!.p5 }
+let p95Values = quarters.map { percentiles[$0]!.p95 }
+
+let expectedRevenue = TimeSeries(periods: quarters, values: expectedValues)
+let medianRevenue = TimeSeries(periods: quarters, values: medianValues)
+let conservativeRevenue = TimeSeries(periods: quarters, values: p5Values)
+let optimisticRevenue = TimeSeries(periods: quarters, values: p95Values)
+
+print("\nScenario Projections:")
+print("Conservative (P5):  \(conservativeRevenue.valuesArray.map { $0.currency(0) })")
+print("Median (P50):       \(medianRevenue.valuesArray.map { $0.currency(0) })")
+print("Expected (mean):    \(expectedRevenue.valuesArray.map { $0.currency(0) })")
+print("Optimistic (P95):   \(optimisticRevenue.valuesArray.map { $0.currency(0) })")
+</code></pre><p><strong>Output:</strong></p><pre><code>Scenario Projections:
+Conservative (P5):  ["$1,018,650", "$1,085,428", "$1,163,683", "$1,252,460"]
+Median (P50):       ["$1,099,356", "$1,208,034", "$1,327,870", "$1,457,335"]
+Expected (mean):    ["$1,099,955", "$1,209,512", "$1,330,944", "$1,463,487"]
+Optimistic (P95):   ["$1,181,847", "$1,339,856", "$1,510,784", "$1,693,091"]
+</code></pre><p><strong>Usage</strong>: These time series can feed into budget planning, NPV calculations, or dashboard visualization.</p><hr /><h3>Complete Income Statement Forecast</h3><p>Now build a full P&L with multiple uncertain drivers:</p><pre><code class="language-swift">// Define probabilistic drivers
+struct IncomeStatementDrivers {
+    let unitsSold: ProbabilisticDriver<Double>
+    let averagePrice: ProbabilisticDriver<Double>
+    let cogs: ProbabilisticDriver<Double>  // % of revenue
+    let opex: ProbabilisticDriver<Double>
+
+    init() {
+        // Units: Normal distribution (mean 10K, std 1K)
+        self.unitsSold = .normal(
+            name: "Units Sold",
+            mean: 10_000.0,
+            stdDev: 1_000.0
+        )
+
+        // Price: Triangular distribution (most likely $100, range $95-$110)
+        self.averagePrice = .triangular(
+            name: "Average Price",
+            low: 95.0,
+            high: 110.0,
+            base: 100.0
+        )
+
+        // COGS as % of revenue: Normal (mean 60%, std 3%)
+        self.cogs = .normal(
+            name: "COGS %",
+            mean: 0.60,
+            stdDev: 0.03
+        )
+
+        // OpEx: Normal (mean $200K, std $20K)
+        self.opex = .normal(
+            name: "Operating Expenses",
+            mean: 200_000.0,
+            stdDev: 20_000.0
+        )
+    }
+}
+
+let drivers = IncomeStatementDrivers()
+let periods = Period.year(2025).quarters()
+
+// Run simulation manually for full control
+var revenueValues: [[Double]] = Array(repeating: [], count: periods.count)
+var grossProfitValues: [[Double]] = Array(repeating: [], count: periods.count)
+var opIncomeValues: [[Double]] = Array(repeating: [], count: periods.count)
+
+for i in 0..<periods.count {
+    revenueValues[i].reserveCapacity(iterations)
+    grossProfitValues[i].reserveCapacity(iterations)
+    opIncomeValues[i].reserveCapacity(iterations)
+}
+
+for _ in 0..<iterations {
+    for (periodIndex, period) in periods.enumerated() {
+        // Sample all drivers
+        let units = drivers.unitsSold.sample(for: period)
+        let price = drivers.averagePrice.sample(for: period)
+        let cogsPercent = drivers.cogs.sample(for: period)
+        let opexAmount = drivers.opex.sample(for: period)
+
+        // Calculate P&L
+        let revenue = units * price
+        let grossProfit = revenue * (1.0 - cogsPercent)
+        let operatingIncome = grossProfit - opexAmount
+
+        // Record
+        revenueValues[periodIndex].append(revenue)
+        grossProfitValues[periodIndex].append(grossProfit)
+        opIncomeValues[periodIndex].append(operatingIncome)
+    }
+}
+
+// Calculate statistics
+var revenueStats: [Period: SimulationStatistics] = [:]
+var revenuePctiles: [Period: Percentiles] = [:]
+var gpStats: [Period: SimulationStatistics] = [:]
+var gpPctiles: [Period: Percentiles] = [:]
+var opStats: [Period: SimulationStatistics] = [:]
+var opPctiles: [Period: Percentiles] = [:]
+
+for (periodIndex, period) in periods.enumerated() {
+    let revResults = SimulationResults(values: revenueValues[periodIndex])
+    revenueStats[period] = revResults.statistics
+    revenuePctiles[period] = revResults.percentiles
+
+    let gpResults = SimulationResults(values: grossProfitValues[periodIndex])
+    gpStats[period] = gpResults.statistics
+    gpPctiles[period] = gpResults.percentiles
+
+    let opResults = SimulationResults(values: opIncomeValues[periodIndex])
+    opStats[period] = opResults.statistics
+    opPctiles[period] = opResults.percentiles
+}
+
+// Display comprehensive forecast
+print("\nIncome Statement Forecast - 2025")
+print("==================================")
+
+for quarter in periods {
+    print("\n\(quarter.label)")
+    print(String(repeating: "-", count: 60))
+
+    // Revenue
+    let revS = revenueStats[quarter]!
+    let revP = revenuePctiles[quarter]!
+    print("Revenue")
+    print("  Expected: \(revS.mean.currency(0))")
+    print("  Std Dev:  \(revS.stdDev.currency(0)) (CoV: \((revS.stdDev / revS.mean).percent(1)))")
+    print("  90% CI:   [\(revP.p5.currency(0)), \(revP.p95.currency(0))]")
+
+    // Gross Profit
+    let gpS = gpStats[quarter]!
+    let gpP = gpPctiles[quarter]!
+    let gpMargin = gpS.mean / revS.mean
+    print("\nGross Profit")
+    print("  Expected: \(gpS.mean.currency(0)) (\(gpMargin.percent(1)) margin)")
+    print("  90% CI:   [\(gpP.p5.currency(0)), \(gpP.p95.currency(0))]")
+
+    // Operating Income
+    let opS = opStats[quarter]!
+    let opP = opPctiles[quarter]!
+    let opMargin = opS.mean / revS.mean
+    print("\nOperating Income")
+    print("  Expected: \(opS.mean.currency(0)) (\(opMargin.percent(1)) margin)")
+    print("  90% CI:   [\(opP.p5.currency(0)), \(opP.p95.currency(0))]")
+
+    // Risk assessment
+    let profitProb = opP.p5 > 0 ? 100 : (opP.p25 > 0 ? 75 : (opP.p50 > 0 ? 50 : 25))
+    print("\nRisk: Probability of profit ~\(profitProb)%")
+}
+</code></pre><p><strong>Output (Q1 sample):</strong></p><pre><code>Income Statement Forecast - 2025
+==================================
+
+2025-Q1
+------------------------------------------------------------
+Revenue
+  Expected: $1,016,299
+  Std Dev:  $107,047 (CoV: 10.5%)
+  90% CI:   [$847,015, $1,196,331]
+
+Gross Profit
+  Expected: $406,751 (40.0% margin)
+  90% CI:   [$323,310, $497,667]
+
+Operating Income
+  Expected: $206,721 (20.3% margin)
+  90% CI:   [$116,827, $302,834]
+
+Risk: Probability of profit ~100%
+
+2025-Q2
+------------------------------------------------------------
+Revenue
+  Expected: $1,015,920
+  Std Dev:  $105,407 (CoV: 10.4%)
+  90% CI:   [$844,988, $1,190,621]
+
+Gross Profit
+  Expected: $406,658 (40.0% margin)
+  90% CI:   [$322,571, $496,529]
+
+Operating Income
+  Expected: $206,519 (20.3% margin)
+  90% CI:   [$118,335, $300,982]
+
+Risk: Probability of profit ~100%
+
+2025-Q3
+------------------------------------------------------------
+Revenue
+  Expected: $1,015,300
+  Std Dev:  $106,692 (CoV: 10.5%)
+  90% CI:   [$842,995, $1,192,164]
+
+Gross Profit
+  Expected: $406,423 (40.0% margin)
+  90% CI:   [$323,562, $496,073]
+
+Operating Income
+  Expected: $206,643 (20.4% margin)
+  90% CI:   [$116,430, $301,980]
+
+Risk: Probability of profit ~100%
+
+2025-Q4
+------------------------------------------------------------
+Revenue
+  Expected: $1,016,188
+  Std Dev:  $106,038 (CoV: 10.4%)
+  90% CI:   [$841,278, $1,188,276]
+
+Gross Profit
+  Expected: $406,515 (40.0% margin)
+  90% CI:   [$323,719, $495,371]
+
+Operating Income
+  Expected: $206,563 (20.3% margin)
+  90% CI:   [$117,112, $302,171]
+
+Risk: Probability of profit ~100%
+</code></pre><p><strong>The power</strong>: You now have a complete probabilistic P&L showing expected values, confidence intervals, and risk metrics for every line item.</p><hr /><h3>Performance Optimization</h3><p>For large simulations (50K+ iterations), optimize carefully:</p><pre><code class="language-swift">// 1. Pre-allocate arrays
+var values: [Double] = []
+values.reserveCapacity(iterations)  // Avoids repeated reallocation
+
+// 2. Store by period, not by path
+// Good: allValues[periodIndex][iterationIndex]
+// Bad:  allPaths[iterationIndex][periodIndex] (poor cache locality)
+
+// 3. Inline calculations instead of function calls
+// The function call overhead matters at 10M+ samples
+
+// 4. Use SimulationResults for statistics
+// It sorts once and calculates all percentiles efficiently
+let results = SimulationResults(values: values)
+let p5 = results.percentiles.p5    // ✓ Fast (already sorted)
+let mean = results.statistics.mean  // ✓ Fast (already computed)
+</code></pre><p><strong>Performance benchmark</strong>: 10,000 iterations × 20 periods = 200K samples runs in < 1 second on modern hardware with these optimizations.</p><hr /><h3>GPU-Accelerated Expression Models for Single-Period Calculations</h3><p>For single-period calculations with high iteration counts, BusinessMath provides <code>MonteCarloExpressionModel</code> - a GPU-accelerated approach that delivers 10-100× speedup with minimal memory usage.</p><p><strong>When to use expression models:</strong></p><ul><li>✅ Single-period calculations (no compounding across time)</li><li>✅ High iteration counts (50,000+)</li><li>✅ Compute-intensive formulas</li><li>✅ Memory-constrained environments</li></ul><p><strong>When to use traditional loops:</strong></p><ul><li>✅ Multi-period compounding (like the revenue growth example above)</li><li>✅ Complex state management across periods</li><li>✅ Path-dependent calculations</li></ul><p>Let’s revisit the income statement forecast using GPU-accelerated expression models:</p><pre><code class="language-swift">import BusinessMath
+
+// Pre-compute any constants
+let taxRate = 0.21
+
+// Define the P&L model using expression builder
+let incomeStatementModel = MonteCarloExpressionModel { builder in
+    // Inputs: units, price, cogsPercent, opex
+    let units = builder[0]
+    let price = builder[1]
+    let cogsPercent = builder[2]
+    let opex = builder[3]
+
+    // Calculate revenue and costs
+    let revenue = units * price
+    let cogs = revenue * cogsPercent
+    let grossProfit = revenue - cogs
+    let ebitda = grossProfit - opex
+
+    // Conditional tax (only pay tax if profitable)
+    let isProfitable = ebitda.greaterThan(0.0)
+    let tax = isProfitable.ifElse(
+        then: ebitda * taxRate,
+        else: 0.0
+    )
+
+    let netIncome = ebitda - tax
+
+    return netIncome  // Return what we're simulating
+}
+
+// Set up high-performance simulation
+var simulation = MonteCarloSimulation(
+    iterations: 100_000,  // 10× more iterations than before
+    enableGPU: true,
+    expressionModel: incomeStatementModel
+)
+
+// Add input distributions (order matches builder[0], builder[1], etc.)
+simulation.addInput(SimulationInput(
+    name: "Units Sold",
+    distribution: DistributionNormal(mean: 10_000, stdDev: 1_000)
+))
+
+simulation.addInput(SimulationInput(
+    name: "Average Price",
+    distribution: DistributionTriangular(low: 95, high: 110, mode: 100)
+))
+
+simulation.addInput(SimulationInput(
+    name: "COGS Percentage",
+    distribution: DistributionNormal(mean: 0.60, stdDev: 0.03)
+))
+
+simulation.addInput(SimulationInput(
+    name: "Operating Expenses",
+    distribution: DistributionNormal(mean: 200_000, stdDev: 20_000)
+))
+
+// Run simulation
+let results = try simulation.run()
+
+// Display results
+print("GPU-Accelerated Income Statement Forecast")
+print("==========================================")
+print("Iterations: \(results.iterations.formatted())")
+print("Compute Time: \(results.computeTime.formatted(.number.precision(.fractionLength(1)))) ms")
+print("GPU Used: \(results.usedGPU ? "Yes" : "No")")
+print()
+print("Net Income After Tax:")
+print("  Mean:     \(results.statistics.mean.currency(0))")
+print("  Median:   \(results.percentiles.p50.currency(0))")
+print("  Std Dev:  \(results.statistics.stdDev.currency(0))")
+print("  95% CI:   [\(results.percentiles.p5.currency(0)), \(results.percentiles.p95.currency(0))]")
+print()
+
+// Risk metrics
+let profitableCount = results.valuesArray.filter { $0 > 0 }.count
+let profitabilityRate = Double(profitableCount) / Double(results.iterations)
+print("Risk Metrics:")
+print("  Probability of Profit: \(profitabilityRate.percent(1))")
+print("  Value at Risk (5%):    \(results.percentiles.p5.currency(0))")
+</code></pre><p><strong>Output:</strong></p><pre><code>GPU-Accelerated Income Statement Forecast
+==========================================
+Iterations: 100,000
+Compute Time: 45.2 ms
+GPU Used: Yes
+
+Net Income After Tax:
+  Mean:     $163,287
+  Median:   $163,402
+  Std Dev:  $66,148
+  95% CI:   [$54,076, $278,331]
+
+Risk Metrics:
+  Probability of Profit: 99.2%
+  Value at Risk (5%):    $54,076
+</code></pre><p><strong>Performance comparison:</strong></p><table><thead><th>Approach</th><th>Iterations</th><th>Time</th><th>Memory</th><th>Speedup</th></thead><tbody><tr><td>Traditional loops</td><td>10,000</td><td>~850 ms</td><td>~15 MB</td><td>1× (baseline)</td></tr><tr><td>GPU Expression Model</td><td>100,000</td><td>~45 ms</td><td>~8 MB</td><td><strong>~189×</strong></td></tr></tbody></table><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Understanding Constants vs Variables in Expression Models</strong></p><p>Expression models use a special DSL (domain-specific language) that compiles to GPU bytecode. This creates two distinct “worlds”:</p><p><strong>Swift World (outside the builder):</strong></p><pre><code class="language-swift">let taxRate = 0.21  // Regular Swift Double
+let multiplier = pow(1.05, 10)  // Use Swift's pow() for constants
+</code></pre><p><strong>DSL World (inside the builder):</strong></p><pre><code class="language-swift">let revenue = units * price  // ExpressionProxy objects
+let afterTax = revenue * (1.0 - taxRate)  // Use pre-computed constant
+</code></pre><p><strong>Critical Rule</strong>: Pre-compute all constants outside the builder using Swift’s standard functions (<code>pow()</code>, <code>sqrt()</code>, <code>exp()</code>, etc.). Inside the builder, only use DSL methods (<code>.exp()</code>, <code>.sqrt()</code>, <code>.power()</code>) on variables that depend on random inputs.</p><p><strong>Why?</strong> The builder creates an expression tree that gets compiled to bytecode and sent to the GPU. Constants should be baked into the bytecode, not recomputed millions of times.</p><pre><code class="language-swift">// ❌ WRONG: Computing constants inside builder
+let wrongModel = MonteCarloExpressionModel { builder in
+    let rate = 0.05
+    let years = 10.0
+    let multiplier = (1.0 + rate).power(years)  // ERROR! Can't call .power() on Double
+    return builder[0] * multiplier
+}
+
+// ✓ CORRECT: Pre-compute constants outside
+let rate = 0.05
+let years = 10.0
+let growthFactor = pow(1.0 + rate, years)  // Swift's pow() for constants
+
+let correctModel = MonteCarloExpressionModel { builder in
+    let principal = builder[0]
+    return principal * growthFactor  // Use pre-computed constant
+}
+</code></pre><p>This design enables the GPU to run at maximum speed - constants are embedded in the bytecode, and only the randomized variables are computed per iteration.</p><p><code>─────────────────────────────────────────────────</code></p><p><strong>When Expression Models Aren’t Appropriate:</strong></p><p>The revenue growth forecast we showed earlier requires traditional loops:</p><pre><code class="language-swift">// This REQUIRES traditional loops (compounding across periods)
+for _ in 0..<iterations {
+    var currentRevenue = baseRevenue
+    for period in periods {
+        let growth = sampleGrowth()
+        currentRevenue *= (1.0 + growth)  // State carries forward!
+        record(period, currentRevenue)
+    }
+}
+</code></pre><p><strong>Why?</strong> Each period’s value depends on the previous period’s outcome. Expression models excel at independent calculations but can’t handle this kind of path-dependent compounding.</p><p><strong>The right tool for the job:</strong></p><ul><li><strong>Compounding forecasts</strong> → Traditional loops</li><li><strong>Single-period high-throughput</strong> → Expression models</li><li><strong>Complex multi-period dependencies</strong> → Traditional loops</li><li><strong>Simple formulas with 100K+ iterations</strong> → Expression models</li></ul><p>For comprehensive coverage of GPU-accelerated Monte Carlo, see the full guide: <a href="doc:4.3-MonteCarloExpressionModelsGuide">doc:4.3-MonteCarloExpressionModelsGuide</a></p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+
+	
+// MARK: - Single Metric with Growth Uncertainty
+
+// Historical revenue
+let baseRevenue = 1_000_000.0  // $1M
+
+// Growth rate uncertainty: mean 10%, std dev 5%
+let growthDriver = ProbabilisticDriver<Double>.normal(
+	name: "Quarterly Growth",
+	mean: 0.10,      // Expected 10% per quarter
+	stdDev: 0.05     // ±5% uncertainty
+)
+
+// Project 4 quarters
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]
+
+// Run Monte Carlo simulation (10,000 paths)
+let iterations = 10_000
+
+// Pre-allocate for performance
+var allValues: [[Double]] = Array(repeating: [], count: quarters.count)
+for i in 0..<quarters.count {
+	allValues[i].reserveCapacity(iterations)
+}
+
+// Generate revenue paths with compounding
+for _ in 0..<iterations {
+	var currentRevenue = baseRevenue
+
+	for (periodIndex, period) in quarters.enumerated() {
+		let growth = growthDriver.sample(for: period)
+		currentRevenue = currentRevenue * (1.0 + growth)  // Compound!
+		allValues[periodIndex].append(currentRevenue)
+	}
+}
+
+// Calculate statistics for each period
+var statistics: [Period: SimulationStatistics] = [:]
+var percentiles: [Period: Percentiles] = [:]
+
+for (periodIndex, period) in quarters.enumerated() {
+	let results = SimulationResults(values: allValues[periodIndex])
+	statistics[period] = results.statistics
+	percentiles[period] = results.percentiles
+}
+
+// Display results
+print("Revenue Forecast with Compounding Growth")
+print("=========================================")
+print("Base Revenue: \(baseRevenue.currency(0))")
+print("Quarterly Growth: 10% ± 5% (compounding)")
+print()
+print("Quarter  Mean        Median      90% CI                    Growth")
+print("-------  ----------  ----------  ------------------------  -------")
+
+for quarter in quarters {
+	let stats = statistics[quarter]!
+	let pctiles = percentiles[quarter]!
+	let growth = (stats.mean - baseRevenue) / baseRevenue
+
+	print("\(quarter.label)  \(stats.mean.currency(0))  \(pctiles.p50.currency(0))  [\(pctiles.p5.currency(0)), \(pctiles.p95.currency(0))]  \(growth.percent(1))")
+}
+
+
+// MARK: - Extract Scenario Time Series
+
+	// Build time series at different confidence levels
+	let expectedValues = quarters.map { statistics[$0]!.mean }
+	let medianValues = quarters.map { percentiles[$0]!.p50 }
+	let p5Values = quarters.map { percentiles[$0]!.p5 }
+	let p95Values = quarters.map { percentiles[$0]!.p95 }
+
+	let expectedRevenue = TimeSeries(periods: quarters, values: expectedValues)
+	let medianRevenue = TimeSeries(periods: quarters, values: medianValues)
+	let conservativeRevenue = TimeSeries(periods: quarters, values: p5Values)
+	let optimisticRevenue = TimeSeries(periods: quarters, values: p95Values)
+
+	print("\nScenario Projections:")
+	print("Conservative (P5):  \(conservativeRevenue.valuesArray.map { $0.currency(0) })")
+	print("Median (P50):       \(medianRevenue.valuesArray.map { $0.currency(0) })")
+	print("Expected (mean):    \(expectedRevenue.valuesArray.map { $0.currency(0) })")
+	print("Optimistic (P95):   \(optimisticRevenue.valuesArray.map { $0.currency(0) })")
+
+// MARK: - Complete Income Statement Forecast
+
+	// Define probabilistic drivers
+	struct IncomeStatementDrivers {
+		let unitsSold: ProbabilisticDriver<Double>
+		let averagePrice: ProbabilisticDriver<Double>
+		let cogs: ProbabilisticDriver<Double>  // % of revenue
+		let opex: ProbabilisticDriver<Double>
+
+		init() {
+			// Units: Normal distribution (mean 10K, std 1K)
+			self.unitsSold = .normal(
+				name: "Units Sold",
+				mean: 10_000.0,
+				stdDev: 1_000.0
+			)
+
+			// Price: Triangular distribution (most likely $100, range $95-$110)
+			self.averagePrice = .triangular(
+				name: "Average Price",
+				low: 95.0,
+				high: 110.0,
+				base: 100.0
+			)
+
+			// COGS as % of revenue: Normal (mean 60%, std 3%)
+			self.cogs = .normal(
+				name: "COGS %",
+				mean: 0.60,
+				stdDev: 0.03
+			)
+
+			// OpEx: Normal (mean $200K, std $20K)
+			self.opex = .normal(
+				name: "Operating Expenses",
+				mean: 200_000.0,
+				stdDev: 20_000.0
+			)
+		}
+	}
+
+	let drivers = IncomeStatementDrivers()
+	let periods = Period.year(2025).quarters()
+
+	// Run simulation manually for full control
+	var revenueValues: [[Double]] = Array(repeating: [], count: periods.count)
+	var grossProfitValues: [[Double]] = Array(repeating: [], count: periods.count)
+	var opIncomeValues: [[Double]] = Array(repeating: [], count: periods.count)
+
+	for i in 0..<periods.count {
+		revenueValues[i].reserveCapacity(iterations)
+		grossProfitValues[i].reserveCapacity(iterations)
+		opIncomeValues[i].reserveCapacity(iterations)
+	}
+
+	for _ in 0..<iterations {
+		for (periodIndex, period) in periods.enumerated() {
+			// Sample all drivers
+			let units = drivers.unitsSold.sample(for: period)
+			let price = drivers.averagePrice.sample(for: period)
+			let cogsPercent = drivers.cogs.sample(for: period)
+			let opexAmount = drivers.opex.sample(for: period)
+
+			// Calculate P&L
+			let revenue = units * price
+			let grossProfit = revenue * (1.0 - cogsPercent)
+			let operatingIncome = grossProfit - opexAmount
+
+			// Record
+			revenueValues[periodIndex].append(revenue)
+			grossProfitValues[periodIndex].append(grossProfit)
+			opIncomeValues[periodIndex].append(operatingIncome)
+		}
+	}
+
+	// Calculate statistics
+	var revenueStats: [Period: SimulationStatistics] = [:]
+	var revenuePctiles: [Period: Percentiles] = [:]
+	var gpStats: [Period: SimulationStatistics] = [:]
+	var gpPctiles: [Period: Percentiles] = [:]
+	var opStats: [Period: SimulationStatistics] = [:]
+	var opPctiles: [Period: Percentiles] = [:]
+
+	for (periodIndex, period) in periods.enumerated() {
+		let revResults = SimulationResults(values: revenueValues[periodIndex])
+		revenueStats[period] = revResults.statistics
+		revenuePctiles[period] = revResults.percentiles
+
+		let gpResults = SimulationResults(values: grossProfitValues[periodIndex])
+		gpStats[period] = gpResults.statistics
+		gpPctiles[period] = gpResults.percentiles
+
+		let opResults = SimulationResults(values: opIncomeValues[periodIndex])
+		opStats[period] = opResults.statistics
+		opPctiles[period] = opResults.percentiles
+	}
+
+	// Display comprehensive forecast
+	print("\nIncome Statement Forecast - 2025")
+	print("==================================")
+
+	for quarter in periods {
+		print("\n\(quarter.label)")
+		print(String(repeating: "-", count: 60))
+
+		// Revenue
+		let revS = revenueStats[quarter]!
+		let revP = revenuePctiles[quarter]!
+		print("Revenue")
+		print("  Expected: \(revS.mean.currency(0))")
+		print("  Std Dev:  \(revS.stdDev.currency(0)) (CoV: \((revS.stdDev / revS.mean).percent(1)))")
+		print("  90% CI:   [\(revP.p5.currency(0)), \(revP.p95.currency(0))]")
+
+		// Gross Profit
+		let gpS = gpStats[quarter]!
+		let gpP = gpPctiles[quarter]!
+		let gpMargin = gpS.mean / revS.mean
+		print("\nGross Profit")
+		print("  Expected: \(gpS.mean.currency(0)) (\(gpMargin.percent(1)) margin)")
+		print("  90% CI:   [\(gpP.p5.currency(0)), \(gpP.p95.currency(0))]")
+
+		// Operating Income
+		let opS = opStats[quarter]!
+		let opP = opPctiles[quarter]!
+		let opMargin = opS.mean / revS.mean
+		print("\nOperating Income")
+		print("  Expected: \(opS.mean.currency(0)) (\(opMargin.percent(1)) margin)")
+		print("  90% CI:   [\(opP.p5.currency(0)), \(opP.p95.currency(0))]")
+
+		// Risk assessment
+		let profitProb = opP.p5 > 0 ? 100 : (opP.p25 > 0 ? 75 : (opP.p50 > 0 ? 50 : 25))
+		print("\nRisk: Probability of profit ~\(profitProb)%")
+	}
+
+// MARK: - GPU-Accelerated Expression Models
+
+	// Pre-compute any constants
+	let taxRate = 0.21
+
+	// Define the P&L model using expression builder
+	let incomeStatementModel = MonteCarloExpressionModel { builder in
+		// Inputs: units, price, cogsPercent, opex
+		let units = builder[0]
+		let price = builder[1]
+		let cogsPercent = builder[2]
+		let opex = builder[3]
+
+		// Calculate revenue and costs
+		let revenue = units * price
+		let cogs = revenue * cogsPercent
+		let grossProfit = revenue - cogs
+		let ebitda = grossProfit - opex
+
+		// Conditional tax (only pay tax if profitable)
+		let isProfitable = ebitda.greaterThan(0.0)
+		let tax = isProfitable.ifElse(
+			then: ebitda * taxRate,
+			else: 0.0
+		)
+
+		let netIncome = ebitda - tax
+
+		return netIncome  // Return what we're simulating
+	}
+
+	// Set up high-performance simulation
+	var gpuSimulation = MonteCarloSimulation(
+		iterations: 100_000,  // 10× more iterations than before
+		enableGPU: true,
+		expressionModel: incomeStatementModel
+	)
+
+	// Add input distributions (order matches builder[0], builder[1], etc.)
+	gpuSimulation.addInput(SimulationInput(
+		name: "Units Sold",
+		distribution: DistributionNormal(mean: 10_000, stdDev: 1_000)
+	))
+
+	gpuSimulation.addInput(SimulationInput(
+		name: "Average Price",
+		distribution: DistributionTriangular(low: 95, high: 110, mode: 100)
+	))
+
+	gpuSimulation.addInput(SimulationInput(
+		name: "COGS Percentage",
+		distribution: DistributionNormal(mean: 0.60, stdDev: 0.03)
+	))
+
+	gpuSimulation.addInput(SimulationInput(
+		name: "Operating Expenses",
+		distribution: DistributionNormal(mean: 200_000, stdDev: 20_000)
+	))
+
+	// Run simulation
+	let gpuResults = try gpuSimulation.run()
+
+	// Display results
+	print("\n\nGPU-Accelerated Income Statement Forecast")
+	print("==========================================")
+	print("Iterations: \(gpuResults.iterations.formatted())")
+	print("Compute Time: \(gpuResults.computeTime.formatted(.number.precision(.fractionLength(1)))) ms")
+	print("GPU Used: \(gpuResults.usedGPU ? "Yes" : "No")")
+	print()
+	print("Net Income After Tax:")
+	print("  Mean:     \(gpuResults.statistics.mean.currency(0))")
+	print("  Median:   \(gpuResults.percentiles.p50.currency(0))")
+	print("  Std Dev:  \(gpuResults.statistics.stdDev.currency(0))")
+	print("  95% CI:   [\(gpuResults.percentiles.p5.currency(0)), \(gpuResults.percentiles.p95.currency(0))]")
+	print()
+
+	// Risk metrics
+	let profitableCount = gpuResults.valuesArray.filter { $0 > 0 }.count
+	let profitabilityRate = Double(profitableCount) / Double(gpuResults.iterations)
+	print("Risk Metrics:")
+	print("  Probability of Profit: \(profitabilityRate.percent(1))")
+	print("  Value at Risk (5%):    \(gpuResults.percentiles.p5.currency(0))")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.1-MonteCarloTimeSeriesGuide.md">BusinessMath Docs – 4.1 Monte Carlo Simulation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add correlation between drivers (revenue and costs often move together)</li><li>Model mean-reverting growth (growth rate reverts to long-term average)</li><li>Add extreme event scenarios (5% chance of 50% revenue drop)</li><li>Build multi-year forecasts with changing distributions over time</li></ol><hr /><h2>Real-World Application</h2><p>Every CFO, risk manager, and strategic planner uses Monte Carlo:</p><ul><li><strong>Annual budgeting</strong>: “What’s the 80% confidence interval for EBITDA?”</li><li><strong>Capital allocation</strong>: “How likely is ROI > 15%?”</li><li><strong>Risk management</strong>: “What’s the worst-case revenue in the bottom 5% of scenarios?”</li><li><strong>Strategic planning</strong>: “If we enter this market, what’s the probability of profitability by year 3?”</li></ul><p><strong>CFO use case</strong>: “Build me a 3-year revenue forecast with 10K Monte Carlo iterations. Show P10, P50, P90 scenarios. I need to present to the board with realistic uncertainty bounds.”</p><p>BusinessMath makes Monte Carlo forecasting programmatic, reproducible, and fast.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Monte Carlo Beats Scenario Analysis</strong></p><p>Traditional approach: Build 3 scenarios (base, best, worst).</p><p><strong>Problems</strong>:</p><ol><li><strong>No probabilities</strong>: Is “best case” 90th percentile or 99th?</li><li><strong>Arbitrary combinations</strong>: Best case has high revenue AND low costs (unlikely!)</li><li><strong>Missed interactions</strong>: When revenue is high, costs often are too (correlation ignored)</li></ol><p><strong>Monte Carlo fixes this</strong>:</p><ol><li><strong>Explicit probabilities</strong>: P90 means “exceeded 90% of the time”</li><li><strong>Natural combinations</strong>: High revenue scenario automatically samples from the high end of the revenue distribution</li><li><strong>Captures correlation</strong>: Model correlated drivers with copulas or factor models</li></ol><p><strong>The lesson</strong>: Monte Carlo provides a <strong>complete probability distribution</strong>, not just 3 data points.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest challenge was <strong>balancing ease-of-use with flexibility</strong>. We could have provided:</p><p><strong>Option A</strong>: High-level <code>forecastRevenue(baseAmount, growthDist, periods)</code></p><ul><li>Pro: Very easy to use</li><li>Con: Inflexible (what if growth depends on prior period revenue?)</li></ul><p><strong>Option B</strong>: Low-level sampling with manual loops</p><ul><li>Pro: Maximum flexibility</li><li>Con: Users must write boilerplate for every forecast</li></ul><p>We chose <strong>Option B with helper types</strong> (<code>ProbabilisticDriver</code>, <code>SimulationResults</code>) that handle the tedious parts (sampling, statistics) while leaving control over the simulation logic.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing Monte Carlo results to analytical solutions (e.g., normal distribution revenue forecast) before implementing.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: Scenario Analysis - Building discrete scenarios, sensitivity analysis, and tornado diagrams.</p><p><strong>Friday</strong>: Case Study #3 - Option Pricing with Monte Carlo.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 20/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + <strong>Simulation (starting)</strong></li><li>Playgrounds: 19 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</guid><title>Bond Valuation & Credit Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</link><description><![CDATA[Part 19 of 12-Week BusinessMath Series]]></description><pubDate>Fri, 06 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[bonds]]></category><category><![CDATA[fixed-income]]></category><category><![CDATA[credit-risk]]></category><category><![CDATA[duration]]></category><category><![CDATA[convexity]]></category><category><![CDATA[callable-bonds]]></category><category><![CDATA[oas]]></category><content:encoded><![CDATA[<p><strong>Part 19 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Pricing bonds and calculating yield to maturity (YTM)</li><li>Measuring interest rate risk using duration and convexity</li><li>Converting credit metrics (Z-Scores) to default probabilities and spreads</li><li>Valuing callable bonds and calculating Option-Adjusted Spread (OAS)</li><li>Building credit curves to analyze default risk over time</li><li>Calculating expected losses for bond portfolios</li><li>Making informed fixed income investment decisions</li></ul><hr /><h2>The Problem</h2><p>Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:</p><ul><li><strong>How do you price a bond?</strong> It’s not just “divide coupon by yield”—that’s current yield, not price.</li><li><strong>What’s the interest rate risk?</strong> If rates rise 1%, how much does your bond portfolio lose?</li><li><strong>How do you value credit risk?</strong> A BBB-rated bond should yield more than AAA, but how much?</li><li><strong>What about callable bonds?</strong> Issuers can refinance if rates drop—how do you value that option?</li></ul><p><strong>Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive bond valuation and credit analysis: <code>Bond</code> pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.</p><h3>Basic Bond Pricing</h3><p>Price a simple corporate bond:</p><pre><code class="language-swift">import BusinessMath
 import Foundation
 
 // 5-year corporate bond
@@ -7819,75 +8579,4 @@ func testEMAFormula() {
     let expected = 12.25  // Calculated manually with this formula
     #expect(abs(ema.last! - expected) < 0.01)
 }
-</code></pre><p>This test not only verifies correctness but documents which variant we’re using.</p><p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Friday’s case study combines Time Series with Time Value of Money to build a retirement planning calculator.</p><p><strong>Case Study #1</strong>: <a href="../04-fri-case-retirement">Retirement Planning Calculator (Friday)</a> - See time series and TVM working together to answer real business questions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 3/~48</li><li>Case Studies: 0/6</li><li>Topics Covered: Getting Started, Test-First Development, Time Series</li><li>Playgrounds: 2 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-01/02-tue-test-first-development</guid><title>Test-First Development with AI</title><link>https://www.justinpurnell.com/BusinessMath/week-01/02-tue-test-first-development</link><description><![CDATA[Development Journey Series]]></description><pubDate>Tue, 06 Jan 2026 07:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[ai-collaboration]]></category><category><![CDATA[tdd]]></category><category><![CDATA[testing]]></category><category><![CDATA[red-green-refactor]]></category><category><![CDATA[development journey]]></category><content:encoded><![CDATA[<p><strong>Development Journey Series</strong></p><hr /><h2>The Context</h2><p>When we began implementing BusinessMath’s TVM (Time Value of Money) functions, we faced a fundamental question: How do we ensure AI-generated code is correct?</p><p>When you set out to build a financial library, errors can cost real money. A bug in present value calculation could lead to bad retirement planning. An error in IRR could result in misallocated capital.</p><p>We needed a way to specify exactly what we wanted and verify that we got it.</p><hr /><h2>The Challenge</h2><p>We’re all coming around to the idea that AI is incredibly powerful at generating code, but we’ve all also heard of it’s dangerous tendency to “hallucinate.” Code can <em>look</em> reasonable but may be subtly wrong.</p><p><strong>The symptoms we encountered</strong>:</p><ul><li>AI might confidently implement simple interest when we needed compound interest</li><li>Generic type constraints would be almost correct but not quite right</li><li>Edge cases (zero rate, negative periods) would be silently mishandled</li></ul><p>A traditional approach—write code, then write tests—simply doesn’t make sense for AI collaboration. If we did it that way, by the time we got around to writing tests, we’d already be invested in understanding and debugging the AI’s output. We needed a better way.</p><hr /><h2>The Solution</h2><p>Instead, we adopted a strict <strong>test-first development</strong> with a specific workflow designed for AI collaboration:</p><h3>The RED-GREEN-REFACTOR Cycle</h3><p><strong>1. RED - Write a Failing Test</strong></p><p>Before asking AI for any implementation, we wrote tests that specified exactly what wanted:</p><pre><code class="language-swift">@Test("Future value compounds correctly")
-func testFutureValue() throws {
-    let fv = calculateFutureValue(
-        presentValue: 100.0,
-        rate: 0.05,
-        periods: 10.0
-    )
-    // Expected: 100 * (1.05)^10 = 162.89
-    #expect(abs(fv - 162.89) < 0.01)
-}
-</code></pre><p>This test will fail—the function doesn’t exist yet. <strong>That’s the point.</strong></p><p><strong>2. GREEN - AI Implements from Specification</strong></p><p>Now you give AI a clear specification:</p><blockquote><p>“Implement <code>calculateFutureValue</code> that makes this test pass. Use compound interest formula: FV = PV × (1 + r)^n. Make it generic over types conforming to <code>Real</code> protocol from swift-numerics.”</p></blockquote><p>AI generates:</p><pre><code class="language-swift">public func calculateFutureValue<T: Real>(
-    presentValue: T,
-    rate: T,
-    periods: T
-) -> T {
-    return presentValue * T.pow((1 + rate), periods)
-}
-</code></pre><p>Run the test. <strong>It passes.</strong> Green!</p><p><strong>3. REFACTOR - Improve with Safety Net</strong></p><p>Now that tests pass, you can refactor fearlessly:</p><pre><code class="language-swift">// Extract reusable compound interest calculation
-private func compoundFactor<T: Real>(rate: T, periods: T) -> T {
-    return T.pow((1 + rate), periods)
-}
-
-public func calculateFutureValue<T: Real>(
-    presentValue: T,
-    rate: T,
-    periods: T
-) -> T {
-    return presentValue * compoundFactor(rate: rate, periods: periods)
-}
-</code></pre><p>Tests still pass. Refactor succeeded.</p><hr /><h2>The Results</h2><p>After implementing BusinessMath using strict test-first development:</p><p><strong>Metrics that improved</strong>:</p><ul><li><strong>0 regression bugs</strong> across 247 tests after major refactorings</li><li><strong>180+ bugs caught</strong> before they reached “implementation” status</li><li><strong>3 API redesigns</strong> caught during test writing (before any code existed)</li></ul><p><strong>Time investment</strong>:</p><ul><li>Initial setup: ~2 hours (learning Swift Testing framework)</li><li>Per-function overhead: ~5-10 minutes (writing tests first)</li><li>ROI: <strong>Massive</strong>—debugging time dropped from hours to minutes</li></ul><hr /><h2>What Worked</h2><p><strong>1. Failing Tests as Specifications</strong></p><p>AI works best when given concrete, executable specifications. A failing test is the clearest possible spec.</p><p><strong>Example</strong>: We wanted NPV calculation. Instead of saying “implement net present value,” we wrote:</p><pre><code class="language-swift">@Test("NPV calculation matches known value")
-func testNPV() throws {
-    let cashFlows = [-100.0, 50.0, 50.0, 50.0]
-    let npv = calculateNPV(rate: 0.10, cashFlows: cashFlows)
-    // Manual calculation: -100 + 50/1.1 + 50/1.1^2 + 50/1.1^3 = 24.34
-    #expect(abs(npv - 24.34) < 0.01)
-}
-</code></pre><p>AI immediately understood: discount each cash flow, sum them. Perfect implementation on first try.</p><p><strong>2. Tests Caught AI Errors Immediately</strong></p><p>First AI attempt at <code>calculateFutureValue</code> used <strong>simple interest</strong>: <code>FV = PV * (1 + rate * periods)</code>.</p><p>Test failed. We saw the error instantly. Corrected the prompt. Next attempt used compound interest correctly.</p><p><strong>Total debugging time</strong>: 30 seconds.</p><p><strong>3. Generic Implementations Validated</strong></p><p>We used the Swift Numerics as our only real dependency, but it allowed us to work generically over and “Real” number. Writing tests for multiple types ensured generics worked:</p><pre><code class="language-swift">@Test("Future value works with Double")
-func testFVDouble() {
-    let fv: Double = calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: 10.0)
-    #expect(abs(fv - 162.89) < 0.01)
-}
-
-@Test("Future value works with Float")
-func testFVFloat() {
-    let fv: Float = calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: 10.0)
-    #expect(abs(fv - 162.89) < 0.1)  // Looser tolerance for Float
-}
-</code></pre><p>Both passed. Generic implementation validated.</p><hr /><h2>What Didn’t Work</h2><p><strong>1. Vague Tests</strong></p><p>A test has to be specific to be useful. A test-driven approach therefore works best when you have domain expertise and can give concrete guidance:</p><pre><code class="language-swift">@Test("Present value works")
-func testPV() {
-    let pv = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0)
-    #expect(pv > 0)  // Too vague!
-}
-</code></pre><p>AI would generate code here that passes, but wouldn’t necessarily be write. Just specifying that the value be positive won’t ensure that it is the <em>correct</em> value.</p><p><strong>Fix</strong>: Always test against known, calculated values.</p><p><strong>2. Missing Edge Cases</strong></p><p>Just getting the right value is great, but you also have to think through and test against edge cases:</p><ul><li>What if rate is zero?</li><li>What if periods is negative?</li><li>What if present value is negative?</li></ul><p>AI would happily implement code that crashed or returned nonsense for these inputs.</p><p><strong>Fix</strong>: Enumerate edge cases explicitly. Write tests for them all.</p><pre><code class="language-swift">@Test("Future value with zero rate")
-func testFVZeroRate() {
-    let fv = calculateFutureValue(presentValue: 100.0, rate: 0.0, periods: 10.0)
-    #expect(fv == 100.0)  // No growth
-}
-
-@Test("Future value with negative periods throws")
-func testFVNegativePeriods() {
-    #expect(throws: FinancialError.self) {
-        try calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: -5.0)
-    }
-}
-</code></pre><hr /><h2>Key Takeaway</h2><p>We’re not in a place to just trust AI to do what you’re thinking. But by specifying test-first development, you can use AI not as a code generator, but instead into a <strong>specification executor</strong>.</p><p><strong>Without tests first</strong>: “Implement present value calculation” → AI guesses what you mean → You debug AI’s interpretation</p><p><strong>With tests first</strong>: <em>Failing test shows exactly what you want</em> → AI implements to spec → Tests verify correctness</p><blockquote><p><strong>Key Takeaway</strong>: AI works best when given failing tests as specifications. Vague requests produce vague code. Concrete, executable specs produce correct code.</p></blockquote><hr /><h2>How to Apply This</h2><p><strong>For your next project</strong>:</p><p><strong>1. Write the Test First (RED)</strong></p><ul><li>Before asking AI for implementation, write the failing test</li><li>Include expected values calculated manually or from reference</li><li>Cover edge cases explicitly</li></ul><p><strong>2. Give AI the Test as Specification (GREEN)</strong></p><ul><li>Paste the test into your AI prompt</li><li>Say: “Implement this function to make the test pass”</li><li>Run the test to verify</li></ul><p><strong>3. Refactor with Confidence (REFACTOR)</strong></p><ul><li>Extract patterns, improve names, optimize</li><li>Tests protect against regressions</li><li>If tests still pass, refactor succeeded</li></ul><p><strong>Starting template</strong>:</p><pre><code># For each new function:
-
-1. Write failing test with expected value
-2. Prompt AI: "Implement [function name] to make this test pass: [paste test]"
-3. Run test, verify it passes
-4. Add edge case tests
-5. Refactor if needed
-</code></pre><hr /><h2>See It In Action</h2><p>This practice is demonstrated in the following technical posts:</p><p><strong>Technical Examples</strong>:</p><ul><li><a href="../01-mon-getting-started"><strong>Getting Started</strong> (Monday)</a>: Shows <code>presentValue</code> implemented test-first</li><li><strong>Time Series Foundation</strong> (Wednesday): Period arithmetic validated with tests</li><li><strong>Time Value of Money</strong> (Week 1 Friday case study): Multiple TVM functions integrated</li></ul><p><strong>Related Practices</strong>:</p><ul><li><strong>Documentation as Design</strong> (Week 2): Write docs before implementation</li><li><strong>Coding Standards</strong> (Week 5): Forbidden patterns caught by tests</li></ul><hr /><h2>Common Pitfalls</h2><h3>❌ Pitfall 1: Writing tests after implementation</h3><p><strong>Problem</strong>: You’ve already invested in understanding AI’s code. Tests feel like busy work.<strong>Solution</strong>: Discipline. Tests first, always. No exceptions.</p><h3>❌ Pitfall 2: Tests that just check “doesn’t crash”</h3><p><strong>Problem</strong>: <code>#expect(result != nil)</code> passes for wrong implementations.<strong>Solution</strong>: Test against known, correct values. Do the math yourself first.</p><h3>❌ Pitfall 3: Skipping edge cases</h3><p><strong>Problem</strong>: AI handles normal cases fine, but crashes on zero/negative/nil.<strong>Solution</strong>: Explicitly enumerate edge cases. Write tests for all of them.</p><hr /><h2>Further Reading</h2><p><strong>Technical foundation</strong>:</p><ul><li>Swift Testing framework documentation</li><li><code>#expect</code> vs <code>XCTAssert</code> differences</li></ul><p><strong>Tools mentioned</strong>:</p><ul><li><a href="https://developer.apple.com/xcode/swift-testing/">Swift Testing</a>: Modern testing framework for Swift</li><li><a href="https://www.swift.org/blog/numerics/">Swift Numerics</a>: Generic numeric protocols (<code>Real</code>, <code>ElementaryFunctions</code>)</li></ul><hr /><h2>Discussion</h2><p><strong>Questions to consider</strong>:</p><ol><li>How does test-first development change when AI is writing the implementation?</li><li>What level of test coverage is “enough” for financial calculations?</li><li>How do you balance test-first discipline with exploration/prototyping?</li></ol><p><strong>Share your experience</strong>: Have you tried test-first development with AI? What worked? What didn’t?</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 2/~48</li><li>Methodology Posts: 1/12</li><li>Practices Covered: Test-First Development</li></ul>]]></content:encoded></item></channel></rss>
+</code></pre><p>This test not only verifies correctness but documents which variant we’re using.</p><p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Friday’s case study combines Time Series with Time Value of Money to build a retirement planning calculator.</p><p><strong>Case Study #1</strong>: <a href="../04-fri-case-retirement">Retirement Planning Calculator (Friday)</a> - See time series and TVM working together to answer real business questions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 3/~48</li><li>Case Studies: 0/6</li><li>Topics Covered: Getting Started, Test-First Development, Time Series</li><li>Playgrounds: 2 available</li></ul>]]></content:encoded></item></channel></rss>

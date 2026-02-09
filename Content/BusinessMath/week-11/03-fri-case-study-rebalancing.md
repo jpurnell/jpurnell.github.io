@@ -29,7 +29,7 @@ published: false
 4. **Risk Monitoring**: Check VaR/tracking error limits continuously during optimization
 5. **Trade Generation**: Output executable trades with lot sizes and limit prices
 
-**The Stakes**: Poor rebalancing costs millions annually in tracking error and missed alpha. Slow optimization means stale decisions.
+**The Stakes**: Poor rebalancing costs ~$2M annually in tracking error and transaction costs. Slow optimization means stale decisions.
 
 ---
 
@@ -707,26 +707,26 @@ Task {
 
 **Before Real-Time Optimization**:
 - Rebalancing: Once per week, manual spreadsheet analysis
-- Time to decision: 4-6 hours (stale prices, manual trade list)
-- Tracking error: 75-90 bps average
-- Transaction costs: High (suboptimal trade sizing)
+- Time to decision: 5 hours (stale prices, manual trade list)
+- Tracking error: 82 bps average
+- Transaction costs: 35 bps
 
 **After Real-Time Optimization**:
 - Rebalancing: Continuously throughout day as needed
 - Time to decision: 18 seconds (live prices, automated)
-- Tracking error: 42 bps average (43% improvement)
+- Tracking error: 42 bps average (49% improvement)
 - Transaction costs: Reduced 28% (optimal lot sizing, better execution)
 
 **Annual Impact**:
-- Tracking error reduction value: ~$1.2M/year (on $250M portfolio)
-- Transaction cost savings: ~$350K/year
+- Tracking error reduction value: ~$1,012,500/year (on $250M portfolio)
+- Transaction cost savings: ~$1,000,000/year
 - Operational efficiency: 95% reduction in analyst time
-- **Total annual value: $1.55M**
+- **Total annual value: $2,012,500**
 
 **Technology ROI**:
 - Development cost: 3 engineer-months (~$75K)
-- Payback period: 18 days
-- 5-year NPV: $6.8M
+- Payback period: 13 days
+- 5-year NPV: $9,987,500
 
 ---
 
