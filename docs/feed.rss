@@ -1,7 +1,639 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/01-mon-monte-carlo-basics</guid><title>Monte Carlo Simulation for Financial Forecasting</title><link>https://www.justinpurnell.com/BusinessMath/week-06/01-mon-monte-carlo-basics</link><description><![CDATA[Part 20 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 10 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[simulation]]></category><category><![CDATA[forecasting]]></category><category><![CDATA[uncertainty]]></category><category><![CDATA[risk-analysis]]></category><content:encoded><![CDATA[<p><strong>Part 20 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building probabilistic forecasts with uncertainty quantification</li><li>Projecting revenue with compounding growth and randomness</li><li>Creating complete income statement forecasts with multiple uncertain drivers</li><li>Calculating confidence intervals (90%, 95%) for projections</li><li>Extracting mean, median, and percentile scenarios</li><li>Optimizing Monte Carlo simulations for performance</li></ul><hr /><h2>The Problem</h2><p>Traditional financial forecasts give you a single number: “Revenue next quarter: $1M.” But reality is uncertain:</p><ul><li><strong>What if growth varies?</strong> Expected 10% growth might be anywhere from 5%-15%.</li><li><strong>How likely is profitability?</strong> Is there a 50% chance or 95% chance we’re profitable?</li><li><strong>What’s the downside risk?</strong> In the worst 5% of scenarios, how bad does it get?</li><li><strong>How do uncertainties combine?</strong> When both revenue AND costs are uncertain, what’s the total impact?</li></ul><p><strong>Single-point forecasts are dangerously misleading</strong>—they hide the uncertainty that decision-makers need to understand.</p><hr /><h2>The Solution</h2><p>Monte Carlo simulation runs thousands of scenarios, each with different random values from probability distributions. Instead of “Revenue = $1M”, you get “Revenue: Mean $1M, 90% CI [$850K, $1.15M]”.</p><p>BusinessMath provides probabilistic drivers, simulation infrastructure, and statistical analysis to build robust forecasts.</p><h3>Single Metric with Growth Uncertainty</h3><p>Start simple: project revenue with uncertain quarterly growth:</p><pre><code class="language-swift">import BusinessMath
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/02-mon-gpu-acceleration</guid><title>GPU-Accelerated Monte Carlo: Expression Models and Performance</title><link>https://www.justinpurnell.com/BusinessMath/week-06/02-mon-gpu-acceleration</link><description><![CDATA[Part 21 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 10 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[gpu]]></category><category><![CDATA[metal]]></category><category><![CDATA[performance]]></category><category><![CDATA[expression-model]]></category><category><![CDATA[optimization]]></category><content:encoded><![CDATA[<p><strong>Part 21 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding GPU acceleration for Monte Carlo simulations (10-100× speedup)</li><li>What can and cannot be modeled with <code>MonteCarloExpressionModel</code></li><li>Converting closure-based models to GPU-compatible expression models</li><li>When to use CPU vs GPU execution</li><li>Expression builder DSL for natural mathematical syntax</li><li>Practical patterns for financial models</li></ul><hr /><h2>The Problem</h2><p>You’ve built a Monte Carlo simulation with custom logic:</p><pre><code class="language-swift">var simulation = MonteCarloSimulation(iterations: 100_000) { inputs in
+    let returns = simulatePortfolioYear(
+        targetReturn: inputs[0],
+        riskTolerance: inputs[1],
+        marketScenario: inputs[2]
+    )
+    return returns
+}
+</code></pre><p><strong>Result</strong>: ⚠️ Warning: “Could not compile model for GPU (model uses unsupported operations or is closure-based)”</p><p>Your simulation runs on CPU, taking 45 seconds for 100,000 iterations. <strong>You want GPU acceleration for 10× speedup</strong>, but the API has non-obvious limitations.</p><hr /><h2>The Solution</h2><p>BusinessMath provides two Monte Carlo APIs:</p><ol><li><strong>Closure-Based Models</strong> (CPU only)<ul><li>Natural Swift closures with any custom logic</li><li>Calls external functions, uses loops, conditionals</li><li>Flexible but cannot compile to GPU bytecode</li></ul></li><li><strong>Expression-Based Models</strong> (GPU-accelerated)<ul><li>Uses <code>MonteCarloExpressionModel</code> DSL</li><li>Restricted to mathematical expressions</li><li>Compiles to Metal GPU shaders for 10-100× speedup</li></ul></li></ol><p><strong>The key insight</strong>: GPU shaders require static, compilable operations. Custom functions like <code>simulatePortfolioYear()</code> cannot run on GPU—they must be rewritten as mathematical expressions.</p><hr /><h2>What CAN Be Modeled (GPU-Compatible)</h2><h3>Core Supported Operations</h3><p><code>MonteCarloExpressionModel</code> supports all standard mathematical operations:</p><h4>1. Arithmetic Operations</h4><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let costs = builder[1]
+    let taxRate = builder[2]
+
+    // +, -, *, /
+    let profit = revenue - costs
+    let netProfit = profit * (1.0 - taxRate)
+
+    return netProfit
+}
+</code></pre><h4>2. Mathematical Functions</h4><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let stockPrice = builder[0]
+    let volatility = builder[1]
+    let time = builder[2]
+
+    // sqrt, log, exp, abs, power
+    let drift = stockPrice.exp()
+    let diffusion = volatility * time.sqrt()
+    let finalPrice = (drift + diffusion).abs()
+
+    return finalPrice
+}
+</code></pre><h4>3. Trigonometric Functions</h4><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let angle = builder[0]
+    let amplitude = builder[1]
+
+    // sin, cos, tan
+    let wave = amplitude * angle.sin()
+
+    return wave
+}
+</code></pre><h4>4. Comparison Operations</h4><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let price = builder[0]
+    let strike = builder[1]
+
+    // greaterThan, lessThan, equal, etc.
+    // Returns 1.0 (true) or 0.0 (false)
+    let isInTheMoney = price.greaterThan(strike)
+
+    return isInTheMoney
+}
+</code></pre><h4>5. Conditional Expressions (Ternary)</h4><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let demand = builder[0]
+    let capacity = builder[1]
+    let price = builder[2]
+
+    // condition.ifElse(then: value1, else: value2)
+    let exceedsCapacity = demand.greaterThan(capacity)
+    let actualSales = exceedsCapacity.ifElse(then: capacity, else: demand)
+    let revenue = actualSales * price
+
+    return revenue
+}
+</code></pre><h4>6. Min/Max Operations</h4><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let profit = builder[0]
+    let targetProfit = builder[1]
+
+    // min, max
+    let cappedProfit = profit.min(targetProfit)
+    let nonNegative = profit.max(0.0)
+
+    return nonNegative
+}
+</code></pre><h3>Complete Example: Option Pricing</h3><pre><code class="language-swift">// Black-Scholes call option payoff (GPU-compatible!)
+let callOption = MonteCarloExpressionModel { builder in
+    let spotPrice = builder[0]
+    let strike = builder[1]
+    let riskFreeRate = builder[2]
+    let volatility = builder[3]
+    let time = builder[4]
+    let randomNormal = builder[5]
+
+    // Geometric Brownian Motion
+    let drift = (riskFreeRate - volatility * volatility * 0.5) * time
+    let diffusion = volatility * time.sqrt() * randomNormal
+    let finalPrice = spotPrice * (drift + diffusion).exp()
+
+    // Call option payoff: max(S - K, 0)
+    let payoff = (finalPrice - strike).max(0.0)
+
+    return payoff
+}
+
+var simulation = MonteCarloSimulation(
+    iterations: 100_000,
+    enableGPU: true,
+    expressionModel: callOption
+)
+
+simulation.addInput(SimulationInput(name: "SpotPrice", distribution: DistributionNormal(100, 0)))
+simulation.addInput(SimulationInput(name: "Strike", distribution: DistributionNormal(100, 0)))
+simulation.addInput(SimulationInput(name: "RiskFreeRate", distribution: DistributionNormal(0.05, 0)))
+simulation.addInput(SimulationInput(name: "Volatility", distribution: DistributionNormal(0.20, 0)))
+simulation.addInput(SimulationInput(name: "Time", distribution: DistributionNormal(1.0, 0)))
+simulation.addInput(SimulationInput(name: "RandomNormal", distribution: DistributionNormal(0, 1)))
+
+let results = try simulation.run()
+
+print("Call Option Value: $\(results.statistics.mean.number(2))")
+print("Executed on: \(results.usedGPU ? "GPU ⚡" : "CPU")")
+// Output: Call Option Value: $10.45
+//         Executed on: GPU ⚡
+</code></pre><hr /><h2>Reusable Expression Functions</h2><h3>The Solution to “External Functions”</h3><p>While arbitrary Swift functions can’t compile to GPU, you <strong>can</strong> define reusable expression functions using the same DSL:</p><pre><code class="language-swift">import BusinessMath
+
+// Define a reusable tax calculation function
+let calculateTax = ExpressionFunction(inputs: 2) { builder in
+    let income = builder[0]
+    let rate = builder[1]
+    return income * rate
+}
+
+// Use it in a model (compiles to GPU!)
+let profitModel = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let costs = builder[1]
+    let taxRate = builder[2]
+
+    let profit = revenue - costs
+    let taxes = calculateTax.call(profit, taxRate)  // ✓ Reusable!
+
+    return profit - taxes
+}
+</code></pre><p><strong>Key Benefit</strong>: Code reuse with GPU compatibility. The function is “inlined” during expression tree construction.</p><h3>Built-In Financial Function Library</h3><p>BusinessMath includes common financial functions:</p><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let initialInvestment = builder[0]
+    let annualReturn = builder[1]
+    let taxRate = builder[2]
+    let years = builder[3]
+
+    // Use pre-built financial functions
+    let futureValue = FinancialFunctions.compoundGrowth.call(
+        initialInvestment,
+        annualReturn,
+        years
+    )
+
+    let afterTaxValue = FinancialFunctions.afterTax.call(
+        futureValue,
+        taxRate
+    )
+
+    return afterTaxValue
+}
+</code></pre><p><strong>Available Functions</strong>:</p><ul><li><code>FinancialFunctions.percentChange(old, new)</code></li><li><code>FinancialFunctions.compoundGrowth(principal, rate, periods)</code></li><li><code>FinancialFunctions.presentValue(futureValue, rate, periods)</code></li><li><code>FinancialFunctions.afterTax(amount, taxRate)</code></li><li><code>FinancialFunctions.blackScholesDrift(r, σ, t)</code></li><li><code>FinancialFunctions.blackScholesDiffusion(σ, t, Z)</code></li><li><code>FinancialFunctions.sharpeRatio(return, riskFree, volatility)</code></li><li><code>FinancialFunctions.valueAtRisk(mean, stdDev, zScore)</code></li><li><code>FinancialFunctions.portfolioVariance2Asset(w1, w2, var1, var2, covar)</code></li><li><code>FinancialFunctions.diversificationRatio2Asset(...)</code></li></ul><hr /><h2>Advanced GPU Features (NEW!) 🚀</h2><p>The following advanced features enable sophisticated financial models while maintaining GPU compatibility:</p><h3>1. Fixed-Size Array Operations</h3><p><strong>Use fixed-size arrays for portfolio calculations</strong>:</p><pre><code class="language-swift">let portfolioModel = MonteCarloExpressionModel { builder in
+    // 5-asset portfolio
+    let weights = builder.array([0, 1, 2, 3, 4])
+
+    // Expected returns
+    let returns = builder.array([0.08, 0.10, 0.12, 0.09, 0.11])
+
+    // Portfolio return: dot product
+    let portfolioReturn = weights.dot(returns)
+
+    // Validation: weights sum to 1
+    let totalWeight = weights.sum()
+
+    return portfolioReturn
+}
+</code></pre><p><strong>Supported Array Operations</strong>:</p><ul><li><strong>Reduction</strong>: <code>sum()</code>, <code>product()</code>, <code>min()</code>, <code>max()</code>, <code>mean()</code></li><li><strong>Element-wise</strong>: <code>map()</code>, <code>zipWith()</code></li><li><strong>Linear algebra</strong>: <code>dot()</code>, <code>norm()</code>, <code>normalize()</code></li><li><strong>Statistical</strong>: <code>variance()</code>, <code>stdDev()</code></li></ul><p><strong>Example - Weighted Average</strong>:</p><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let values = builder.array([0, 1, 2, 3, 4])
+    let weights = builder.array([0.1, 0.2, 0.3, 0.2, 0.2])
+
+    let weightedAvg = values.zipWith(weights) { v, w in v * w }.sum()
+
+    return weightedAvg
+}
+</code></pre><hr /><h3>2. Loop Unrolling (Fixed-Size Loops)</h3><p><strong>Multi-period calculations with compile-time unrolling</strong>:</p><pre><code class="language-swift">let compoundingModel = MonteCarloExpressionModel { builder in
+    let principal = builder[0]
+    let annualRate = builder[1]
+
+    // Compound for 10 years (unrolled at compile time)
+    let finalValue = builder.forEach(0..<10, initial: principal) { year, value in
+        return value * (1.0 + annualRate)
+    }
+
+    return finalValue
+}
+</code></pre><p><strong>How It Works</strong>:</p><ul><li>Loop is <strong>completely unrolled</strong> at compile time</li><li>Generates 10 explicit operations (no runtime iteration)</li><li>Compiles to GPU bytecode</li><li><strong>Zero performance overhead</strong> vs inline code</li></ul><p><strong>Example - NPV with Growing Cash Flows</strong>:</p><pre><code class="language-swift">let npvModel = MonteCarloExpressionModel { builder in
+    let initialCost = builder[0]
+    let annualCashFlow = builder[1]
+    let discountRate = builder[2]
+    let growthRate = builder[3]
+
+    // Calculate NPV for 5 years
+    let npv = builder.forEach(1...5, initial: -initialCost) { year, accumulated in
+        let cf = annualCashFlow * (1.0 + growthRate).power(Double(year - 1))
+        let pv = cf / (1.0 + discountRate).power(Double(year))
+        return accumulated + pv
+    }
+
+    return npv
+}
+</code></pre><p><strong>Practical Limit</strong>: Up to ~20 iterations recommended (compile time grows linearly)</p><hr /><h3>3. Matrix Operations (Portfolio Optimization)</h3><p><strong>Fixed-size matrices for covariance calculations</strong>:</p><pre><code class="language-swift">let portfolioVarianceModel = MonteCarloExpressionModel { builder in
+    let w1 = builder[0]
+    let w2 = builder[1]
+    let w3 = 1.0 - w1 - w2  // Budget constraint
+
+    let weights = builder.array([w1, w2, w3])
+
+    // 3×3 covariance matrix
+    let covariance = builder.matrix(rows: 3, cols: 3, values: [
+        [0.04, 0.01, 0.02],
+        [0.01, 0.05, 0.015],
+        [0.02, 0.015, 0.03]
+    ])
+
+    // Portfolio variance: w^T Σ w (quadratic form)
+    let variance = covariance.quadraticForm(weights)
+
+    return variance.sqrt()  // Return volatility
+}
+</code></pre><p><strong>Supported Matrix Operations</strong>:</p><ul><li><strong>Matrix-vector</strong>: <code>multiply(vector)</code>, <code>quadraticForm(vector)</code></li><li><strong>Matrix-matrix</strong>: <code>multiply(matrix)</code>, <code>add(matrix)</code>, <code>transpose()</code></li><li><strong>Statistical</strong>: <code>trace()</code>, <code>diagonal()</code></li><li><strong>Accessors</strong>: <code>matrix[row, col]</code></li></ul><p><strong>Example - Portfolio Diversification</strong>:</p><pre><code class="language-swift">let diversificationModel = MonteCarloExpressionModel { builder in
+    let weights = builder.array([0, 1, 2])
+
+    let covariance = builder.matrix(rows: 3, cols: 3, values: [ ... ])
+
+    // Portfolio variance
+    let portfolioVar = covariance.quadraticForm(weights)
+
+    // Individual asset variances
+    let assetVars = covariance.diagonal()
+
+    // Weighted sum of individual variances
+    let undiversifiedVar = weights.zipWith(assetVars) { w, v in w * w * v }.sum()
+
+    // Diversification benefit
+    let diversificationBenefit = (undiversifiedVar - portfolioVar) / undiversifiedVar
+
+    return diversificationBenefit
+}
+</code></pre><hr /><h3>4. Complete Example: All Features Combined</h3><p><strong>Realistic portfolio model using arrays, loops, and matrices</strong>:</p><pre><code class="language-swift">let completeModel = MonteCarloExpressionModel { builder in
+    // Inputs: 5 asset weights
+    let weights = builder.array([0, 1, 2, 3, 4])
+
+    // Expected returns
+    let returns = builder.array([0.08, 0.10, 0.12, 0.09, 0.11])
+
+    // 5×5 covariance matrix
+    let covariance = builder.matrix(rows: 5, cols: 5, values: [
+        [0.0400, 0.0100, 0.0150, 0.0080, 0.0120],
+        [0.0100, 0.0625, 0.0200, 0.0100, 0.0150],
+        [0.0150, 0.0200, 0.0900, 0.0180, 0.0220],
+        [0.0080, 0.0100, 0.0180, 0.0361, 0.0100],
+        [0.0120, 0.0150, 0.0220, 0.0100, 0.0484]
+    ])
+
+    // 1. Portfolio return (array operation)
+    let portfolioReturn = weights.dot(returns)
+
+    // 2. Portfolio volatility (matrix operation)
+    let portfolioVol = covariance.quadraticForm(weights).sqrt()
+
+    // 3. Sharpe ratio
+    let riskFreeRate = 0.03
+    let sharpe = (portfolioReturn - riskFreeRate) / portfolioVol
+
+    // 4. 10-year wealth accumulation (loop unrolling)
+    let initialInvestment = 1_000_000.0
+    let finalWealth = builder.forEach(0..<10, initial: initialInvestment) { year, wealth in
+        wealth * (1.0 + portfolioReturn)
+    }
+
+    return finalWealth
+}
+</code></pre><p><strong>Performance</strong>: 100,000 iterations in ~0.8s on M2 Max GPU ⚡</p><hr /><h2>What CANNOT Be Modeled (CPU Only)</h2><h3>Truly Unsupported Operations</h3><p>These patterns <strong>still cannot</strong> compile to GPU:</p><h4>1. ❌ Swift Functions (Closure-Based)</h4><pre><code class="language-swift">// WRONG: Cannot call closure-based Swift functions on GPU
+func calculateTax(_ income: Double, _ rate: Double) -> Double {
+    return income * rate
+}
+
+let model = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let taxRate = builder[1]
+    return calculateTax(revenue, taxRate)  // ❌ Won't compile!
+}
+</code></pre><p><strong>Fix Option 1</strong>: Inline the logic</p><pre><code class="language-swift">// CORRECT: Inline the calculation
+let model = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let taxRate = builder[1]
+    return revenue * taxRate  // ✓ GPU-compatible
+}
+</code></pre><p><strong>Fix Option 2 (Better)</strong>: Use ExpressionFunction for reusability</p><pre><code class="language-swift">// BEST: Define reusable expression function
+let calculateTax = ExpressionFunction(inputs: 2) { builder in
+    let income = builder[0]
+    let rate = builder[1]
+    return income * rate
+}
+
+let model = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let taxRate = builder[1]
+    let taxes = calculateTax.call(revenue, taxRate)  // ✓ GPU-compatible!
+    return revenue - taxes
+}
+</code></pre><h4>2. ✅ Fixed-Size Loops</h4><pre><code class="language-swift">// OLD: Loops were not supported
+// NEW: Fixed-size loops are unrolled at compile time!
+
+// CORRECT: Use forEach for fixed-size loops
+let model = MonteCarloExpressionModel { builder in
+    let sum = builder.forEach(0..<10, initial: 0.0) { i, accumulated in
+        accumulated + builder[i]
+    }
+    return sum
+}
+
+// Also works: array operations
+let model2 = MonteCarloExpressionModel { builder in
+    let values = builder.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    return values.sum()
+}
+</code></pre><p><strong>Limitation</strong>: Loop bounds must be <strong>compile-time constants</strong>. Variable loop bounds still require CPU.</p><pre><code class="language-swift">// ❌ Still not supported: Variable loop bounds
+let badModel = MonteCarloExpressionModel { builder in
+    let n = Int(builder[0])  // Runtime value
+    var sum = 0.0
+    for i in 0...(n - 1) {  // ❌ n is not known at compile time!
+        sum += builder[i + 1]
+    }
+    return sum
+}
+</code></pre><h4>3. ✅ Fixed-Size Arrays</h4><pre><code class="language-swift">// OLD: Dynamic arrays were not supported
+// NEW: Fixed-size arrays work with GPU!
+
+// CORRECT: Use ExpressionArray
+let model = MonteCarloExpressionModel { builder in
+    let values = builder.array([0, 1, 2])
+    return values.sum()  // ✓ GPU-compatible!
+}
+
+// Supported operations: sum, product, min, max, mean, dot, etc.
+let portfolioModel = MonteCarloExpressionModel { builder in
+    let weights = builder.array([0, 1, 2])
+    let returns = builder.array([0.08, 0.10, 0.12])
+    return weights.dot(returns)  // ✓ Portfolio return
+}
+</code></pre><p><strong>Limitation</strong>: Array size must be <strong>compile-time constant</strong>. Dynamic arrays still require CPU.</p><pre><code class="language-swift">// ❌ Still not supported: Dynamic arrays
+let badModel = MonteCarloExpressionModel { builder in
+    let n = Int(builder[0])  // Runtime value
+    var values: [ExpressionProxy] = []
+    for i in 0...(n - 1) {  // ❌ Cannot build array dynamically!
+        values.append(builder[i])
+    }
+    return builder.array(values).sum()
+}
+</code></pre><h4>4. ❌ External State/Variables</h4><pre><code class="language-swift">// WRONG: Cannot access external variables
+let globalTaxRate = 0.21
+
+let model = MonteCarloExpressionModel { builder in
+    let profit = builder[0]
+    return profit * (1.0 - globalTaxRate)  // ❌ External reference!
+}
+</code></pre><p><strong>Fix</strong>: Pass as input</p><pre><code class="language-swift">// CORRECT: Pass as simulation input
+let model = MonteCarloExpressionModel { builder in
+    let profit = builder[0]
+    let taxRate = builder[1]  // From simulation input
+    return profit * (1.0 - taxRate)  // ✓ GPU-compatible
+}
+</code></pre><h4>5. ❌ Complex Control Flow</h4><pre><code class="language-swift">// WRONG: Complex if-else chains
+let model = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+
+    if revenue < 100_000 {
+        return revenue * 0.10
+    } else if revenue < 500_000 {
+        return revenue * 0.15
+    } else {
+        return revenue * 0.20
+    }  // ❌ Cannot use if-else!
+}
+</code></pre><p><strong>Fix</strong>: Use nested ternary expressions</p><pre><code class="language-swift">// CORRECT: Nested ifElse
+let model = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+
+    let tier1 = revenue.lessThan(100_000)
+    let tier2 = revenue.lessThan(500_000)
+
+    let rate = tier1.ifElse(
+        then: 0.10,
+        else: tier2.ifElse(then: 0.15, else: 0.20)
+    )
+
+    return revenue * rate  // ✓ GPU-compatible
+}
+</code></pre><hr /><h2>Converting Closure-Based to Expression-Based</h2><h3>Pattern 1: Simple Calculation</h3><p><strong>Closure-Based (CPU only)</strong>:</p><pre><code class="language-swift">var simulation = MonteCarloSimulation(iterations: 100_000, enableGPU: false) { inputs in
+    let revenue = inputs[0]
+    let costs = inputs[1]
+    let profit = revenue - costs
+    return profit
+}
+</code></pre><p><strong>Expression-Based (GPU-accelerated)</strong>:</p><pre><code class="language-swift">let profitModel = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let costs = builder[1]
+    return revenue - costs
+}
+
+var simulation = MonteCarloSimulation(
+    iterations: 100_000,
+    enableGPU: true,
+    expressionModel: profitModel
+)
+</code></pre><p><strong>Speedup</strong>: 2-3× for simple models</p><hr /><h3>Pattern 2: Conditional Logic</h3><p><strong>Closure-Based (CPU only)</strong>:</p><pre><code class="language-swift">var simulation = MonteCarloSimulation(iterations: 100_000, enableGPU: false) { inputs in
+    let demand = inputs[0]
+    let capacity = inputs[1]
+    let price = inputs[2]
+
+    let actualSales = demand > capacity ? capacity : demand
+    return actualSales * price
+}
+</code></pre><p><strong>Expression-Based (GPU-accelerated)</strong>:</p><pre><code class="language-swift">let revenueModel = MonteCarloExpressionModel { builder in
+    let demand = builder[0]
+    let capacity = builder[1]
+    let price = builder[2]
+
+    let exceedsCapacity = demand.greaterThan(capacity)
+    let actualSales = exceedsCapacity.ifElse(then: capacity, else: demand)
+
+    return actualSales * price
+}
+
+var simulation = MonteCarloSimulation(
+    iterations: 100_000,
+    enableGPU: true,
+    expressionModel: revenueModel
+)
+</code></pre><p><strong>Speedup</strong>: 5-10× for models with conditionals</p><hr /><h3>Pattern 3: Multi-Period Compounding</h3><p><strong>Closure-Based (CPU only)</strong> - Uses loop:</p><pre><code class="language-swift">var simulation = MonteCarloSimulation(iterations: 100_000, enableGPU: false) { inputs in
+    let initialValue = inputs[0]
+    let growthRate = inputs[1]
+    let periods = 5
+
+    var value = initialValue
+    for _ in 0...(periods - 1) {
+        value = value * (1.0 + growthRate)
+    }
+    return value
+}
+</code></pre><p><strong>Expression-Based (GPU-accelerated)</strong> - Explicit compounding:</p><pre><code class="language-swift">let compoundingModel = MonteCarloExpressionModel { builder in
+    let initialValue = builder[0]
+    let growthRate = builder[1]
+
+    // Explicit 5-period compounding
+    let growthFactor = (1.0 + growthRate)
+    let finalValue = initialValue * growthFactor.power(5.0)
+
+    return finalValue
+}
+
+var simulation = MonteCarloSimulation(
+    iterations: 100_000,
+    enableGPU: true,
+    expressionModel: compoundingModel
+)
+</code></pre><p><strong>Speedup</strong>: 8-15× for mathematical models</p><hr /><h3>Pattern 4: Custom Function Library</h3><p><strong>Build Your Own Reusable Functions</strong>:</p><pre><code class="language-swift">// Define your business logic once
+struct MyFinancialFunctions {
+    static let grossProfit = ExpressionFunction(inputs: 3) { builder in
+        let revenue = builder[0]
+        let cogs = builder[1]
+        let operatingExpenses = builder[2]
+        return revenue - cogs - operatingExpenses
+    }
+
+    static let netProfit = ExpressionFunction(inputs: 2) { builder in
+        let grossProfit = builder[0]
+        let taxRate = builder[1]
+        return grossProfit * (1.0 - taxRate)
+    }
+
+    static let returnOnEquity = ExpressionFunction(inputs: 2) { builder in
+        let netIncome = builder[0]
+        let equity = builder[1]
+        return netIncome / equity
+    }
+}
+
+// Use across multiple models (all GPU-compatible!)
+let incomeStatementModel = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let cogs = builder[1]
+    let opex = builder[2]
+    let taxRate = builder[3]
+
+    let gross = MyFinancialFunctions.grossProfit.call(revenue, cogs, opex)
+    let net = MyFinancialFunctions.netProfit.call(gross, taxRate)
+
+    return net
+}
+
+let roeModel = MonteCarloExpressionModel { builder in
+    let netIncome = builder[0]
+    let equity = builder[1]
+
+    let roe = MyFinancialFunctions.returnOnEquity.call(netIncome, equity)
+
+    return roe
+}
+</code></pre><p><strong>Speedup</strong>: Same as inline code (functions are substituted at compile time)</p><hr /><hr /><h3>Pattern 5: Cannot Convert (Stay on CPU)</h3><p><strong>Closure-Based (CPU only)</strong> - Complex external function with dynamic logic:</p><pre><code class="language-swift">// External function with complex logic
+func calculateProjectNPV(
+    cashFlows: [Double],
+    discountRate: Double,
+    riskAdjustment: Double
+) -> Double {
+    var npv = 0.0
+    for (year, cf) in cashFlows.enumerated() {
+        let adjustedRate = discountRate + riskAdjustment * Double(year)
+        npv += cf / pow(1.0 + adjustedRate, Double(year + 1))
+    }
+    return npv
+}
+
+var simulation = MonteCarloSimulation(iterations: 10_000, enableGPU: false) { inputs in
+    let initialCost = inputs[0]
+    let annualRevenue = inputs[1]
+    let discountRate = inputs[2]
+
+    let cashFlows = [
+        -initialCost,
+        annualRevenue,
+        annualRevenue * 1.1,
+        annualRevenue * 1.2,
+        annualRevenue * 1.3
+    ]
+
+    return calculateProjectNPV(
+        cashFlows: cashFlows,
+        discountRate: discountRate,
+        riskAdjustment: 0.02
+    )
+}
+</code></pre><p><strong>Cannot convert</strong>: This requires dynamic arrays, loops with variable iteration counts, and external function calls. <strong>Solution</strong>: Accept CPU execution or redesign to use fixed expressions.</p><hr /><h2>Performance Comparison</h2><h3>Real-World Benchmarks (M2 Max, 100K iterations)</h3><table><thead><th>Model Complexity</th><th>Closure (CPU)</th><th>Expression (GPU)</th><th>Speedup</th></thead><tbody><tr><td>Simple (2-5 ops)</td><td>0.8s</td><td>0.4s</td><td><strong>2×</strong></td></tr><tr><td>Medium (10-15 ops)</td><td>3.2s</td><td>0.4s</td><td><strong>8×</strong></td></tr><tr><td>Complex (20+ ops)</td><td>12.5s</td><td>0.6s</td><td><strong>21×</strong></td></tr><tr><td>Option Pricing</td><td>8.7s</td><td>0.5s</td><td><strong>17×</strong></td></tr><tr><td>Portfolio VaR</td><td>45.2s</td><td>2.1s</td><td><strong>22×</strong></td></tr></tbody></table><p><strong>Key Insight</strong>: GPU overhead (buffer allocation, data transfer) is ~0.3s regardless of complexity. Simple models see modest gains, but complex models achieve dramatic speedups.</p><hr /><h2>When to Use Each Approach</h2><h3>Use Closure-Based (CPU) When:</h3><ol><li><strong>Small simulations</strong> (< 10,000 iterations)<ul><li>GPU overhead dominates, CPU is faster</li></ul></li><li><strong>Custom logic required</strong><ul><li>External functions</li><li>Loops with variable bounds</li><li>Array operations</li><li>Complex control flow</li></ul></li><li><strong>Rapid prototyping</strong><ul><li>Natural Swift syntax</li><li>Full language features</li><li>Easier debugging</li></ul></li><li><strong>Correlated inputs</strong><ul><li>GPU doesn’t support Iman-Conover correlation</li><li>CPU required for <code>correlationMatrix</code></li></ul></li></ol><h3>Use Expression-Based (GPU) When:</h3><ol><li><strong>Large simulations</strong> (≥ 10,000 iterations)<ul><li>GPU parallelism shines</li></ul></li><li><strong>Mathematical models</strong><ul><li>Arithmetic, functions, comparisons</li><li>Fixed-size expressions</li><li>No external dependencies</li></ul></li><li><strong>Production performance critical</strong><ul><li>Real-time risk systems</li><li>High-frequency rebalancing</li><li>Large-scale backtests</li></ul></li><li><strong>Repeated execution</strong><ul><li>Model compiled once, reused</li><li>Amortize compilation cost</li></ul></li></ol><hr /><h2>Practical Example: Portfolio Sharpe Ratio</h2><h3>Closure-Based (Flexible, CPU)</h3><pre><code class="language-swift">import BusinessMath
+
+func portfolioSharpe(
+    weights: [Double],
+    returns: [Double],
+    covariance: [[Double]]
+) -> Double {
+    // Complex matrix operations, loops
+    var portfolioReturn = 0.0
+    for i in 0...(weights.count - 1) {
+        portfolioReturn += weights[i] * returns[i]
+    }
+
+    var portfolioVar = 0.0
+    for i in 0...(weights.count - 1) {
+        for j in 0...(weights.count - 1) {
+            portfolioVar += weights[i] * weights[j] * covariance[i][j]
+        }
+    }
+
+    let portfolioStdDev = sqrt(portfolioVar)
+    return portfolioReturn / portfolioStdDev
+}
+
+var simulation = MonteCarloSimulation(iterations: 10_000, enableGPU: false) { inputs in
+    let asset1Weight = inputs[0]
+    let asset2Weight = inputs[1]
+    let asset3Weight = 1.0 - asset1Weight - asset2Weight
+
+    let weights = [asset1Weight, asset2Weight, asset3Weight]
+    let returns = [0.10, 0.12, 0.08]
+    let cov = [
+        [0.04, 0.01, 0.02],
+        [0.01, 0.05, 0.015],
+        [0.02, 0.015, 0.03]
+    ]
+
+    return portfolioSharpe(weights: weights, returns: returns, covariance: cov)
+}
+</code></pre><p><strong>Runtime</strong>: 4.2s for 10,000 iterations</p><h3>Expression-Based (Fast, GPU) - Simplified 2-Asset</h3><pre><code class="language-swift">// For 2-asset case, can express without loops
+let sharpeModel = MonteCarloExpressionModel { builder in
+    let weight1 = builder[0]
+    let weight2 = 1.0 - weight1  // Budget constraint
+
+    // Expected returns
+    let return1 = 0.10
+    let return2 = 0.12
+    let portfolioReturn = weight1 * return1 + weight2 * return2
+
+    // Variance (2×2 covariance)
+    let var1 = 0.04
+    let var2 = 0.05
+    let cov12 = 0.01
+
+    let term1 = weight1 * weight1 * var1
+    let term2 = weight2 * weight2 * var2
+    let term3 = 2.0 * weight1 * weight2 * cov12
+
+    let portfolioVar = term1 + term2 + term3
+    let portfolioStdDev = portfolioVar.sqrt()
+
+    return portfolioReturn / portfolioStdDev
+}
+
+var simulation = MonteCarloSimulation(
+    iterations: 100_000,  // 10× more iterations!
+    enableGPU: true,
+    expressionModel: sharpeModel
+)
+</code></pre><p><strong>Runtime</strong>: 0.5s for 100,000 iterations (84× faster, 10× more iterations!)</p><p><strong>Tradeoff</strong>: GPU version limited to 2-3 assets (fixed expressions). CPU version handles any number (dynamic loops).</p><hr /><h2>Best Practices</h2><h3>1. Start with Closures, Optimize to Expressions</h3><pre><code class="language-swift">// Phase 1: Prototype with closure (fast development)
+var simulation = MonteCarloSimulation(iterations: 1_000, enableGPU: false) { inputs in
+    // Your complex logic here
+    return calculateSomething(inputs)
+}
+
+// Phase 2: Profile and identify bottlenecks
+// Phase 3: Convert hot paths to expression models
+</code></pre><h3>2. Use <code>evaluate()</code> for Testing</h3><pre><code class="language-swift">let model = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let costs = builder[1]
+    return revenue - costs
+}
+
+// Test model before running full simulation
+let testResult = try model.evaluate(inputs: [1_000_000, 700_000])
+print("Test result: $\(testResult)")  // $300,000
+</code></pre><h3>3. Check GPU Usage</h3><pre><code class="language-swift">let results = try simulation.run()
+
+if results.usedGPU {
+    print("✓ GPU acceleration active")
+} else {
+    print("⚠️ Running on CPU (check model compatibility)")
+}
+</code></pre><h3>4. Disable GPU for Small Simulations</h3><pre><code class="language-swift">// For < 1000 iterations, explicitly use CPU
+var simulation = MonteCarloSimulation(
+    iterations: 500,
+    enableGPU: false,  // CPU faster for small runs
+    model: { inputs in ... }
+)
+</code></pre><hr /><h2>Quick Reference: What’s GPU-Compatible</h2><h3>✅ Fully Supported (GPU)</h3><table><thead><th>Feature</th><th>Example</th><th>New?</th></thead><tbody><tr><td><strong>Arithmetic</strong></td><td><code>a + b</code>, <code>a * b</code>, <code>a / b</code></td><td>Core</td></tr><tr><td><strong>Math functions</strong></td><td><code>sqrt()</code>, <code>log()</code>, <code>exp()</code>, <code>abs()</code></td><td>Core</td></tr><tr><td><strong>Comparisons</strong></td><td><code>a.greaterThan(b)</code></td><td>Core</td></tr><tr><td><strong>Conditionals</strong></td><td><code>condition.ifElse(then: a, else: b)</code></td><td>Core</td></tr><tr><td><strong>Min/Max</strong></td><td><code>a.min(b)</code>, <code>a.max(b)</code></td><td>Core</td></tr><tr><td><strong>Custom functions</strong></td><td><code>ExpressionFunction(...)</code></td><td>✨ NEW</td></tr><tr><td><strong>Fixed-size arrays</strong></td><td><code>builder.array([0, 1, 2]).sum()</code></td><td>🚀 NEW</td></tr><tr><td><strong>Fixed-size loops</strong></td><td><code>builder.forEach(0..<10, ...)</code></td><td>🚀 NEW</td></tr><tr><td><strong>Matrix operations</strong></td><td><code>matrix.quadraticForm(weights)</code></td><td>🚀 NEW</td></tr></tbody></table><h3>⚠️ Partially Supported (Compile-Time Only)</h3><table><thead><th>Feature</th><th>Limitation</th><th>Workaround</th></thead><tbody><tr><td><strong>Loops</strong></td><td>Bounds must be compile-time constants</td><td>Use <code>forEach</code> with literal ranges</td></tr><tr><td><strong>Arrays</strong></td><td>Size must be compile-time constant</td><td>Use <code>builder.array([...])</code></td></tr><tr><td><strong>Matrices</strong></td><td>Dimensions must be compile-time constant</td><td>Use <code>builder.matrix(...)</code></td></tr></tbody></table><h3>❌ Not Supported (CPU Only)</h3><table><thead><th>Feature</th><th>Why</th><th>Alternative</th></thead><tbody><tr><td><strong>Swift closures</strong></td><td>Can’t compile to Metal</td><td>Use <code>ExpressionFunction</code></td></tr><tr><td><strong>Variable loops</strong></td><td><code>for i in 0..<n</code> where n is runtime</td><td>Redesign or use CPU</td></tr><tr><td><strong>Dynamic arrays</strong></td><td><code>Array(repeating: ..., count: n)</code></td><td>Use fixed-size arrays</td></tr><tr><td><strong>Recursion</strong></td><td>GPU shaders don’t support recursion</td><td>Unroll manually</td></tr><tr><td><strong>External state</strong></td><td>Can’t access global variables</td><td>Pass as inputs</td></tr></tbody></table><hr /><h2>Try It Yourself</h2><p>Download the complete GPU acceleration playgrounds:</p><p>→ Full API Reference: BusinessMath Docs – <a href="#">Monte Carlo GPU Acceleration</a></p><h3>Experiments to Try</h3><ol><li><strong>Benchmark Comparison</strong>: Run same model (closure vs expression) at 1K, 10K, 100K iterations</li><li><strong>Complexity Scaling</strong>: Add operations one-by-one, measure GPU speedup</li><li><strong>Conversion Challenge</strong>: Take a closure-based model and convert to expression-based</li><li><strong>Array Performance</strong>: Compare array operations vs manual unrolling</li><li><strong>Matrix Sizes</strong>: Test 3×3, 5×5, 10×10 covariance matrices</li><li><strong>Loop Unrolling Limits</strong>: Find the practical limit (compile time vs performance)</li><li><strong>Hybrid Approach</strong>: Use GPU for inner loop, CPU for outer optimization</li></ol><hr /><h2>Key Takeaways</h2><ol><li><strong>GPU acceleration provides 10-100× speedup</strong> for large Monte Carlo simulations</li><li><strong>Expression models compile to GPU</strong>, closure models run on CPU</li><li><strong>Core operations</strong>: Arithmetic, math functions, comparisons, ternary conditionals</li><li><strong>Reusable functions</strong>: Use <code>ExpressionFunction</code> for GPU-compatible custom functions ✨ NEW!</li><li><strong>Built-in library</strong>: <code>FinancialFunctions</code> provides common calculations</li><li><strong>Fixed-size arrays</strong>: <code>builder.array([...])</code> with sum, dot, mean, etc. 🚀 NEW!</li><li><strong>Loop unrolling</strong>: <code>builder.forEach(0...N, ...)</code> for compile-time loops 🚀 NEW!</li><li><strong>Matrix operations</strong>: <code>builder.matrix(...)</code> for covariance and quadratic forms 🚀 NEW!</li><li><strong>Limitations</strong>: Variable loop bounds, dynamic arrays, runtime decisions still require CPU</li><li><strong>Performance sweet spot</strong>: 10K+ iterations, 10+ operations</li><li><strong>When in doubt</strong>: Start with closures (flexibility), optimize to expressions (performance)</li><li><strong>Code reuse</strong>: Build your own function library for domain-specific calculations</li><li><strong>Portfolio models</strong>: Arrays + matrices enable sophisticated multi-asset calculations on GPU</li></ol><hr /><p><strong>Next</strong>: Wednesday covers <strong>Scenario Analysis and Sensitivity Testing</strong>, building on Monte Carlo foundations with structured scenario generation.</p><hr /><p><strong>Series</strong>: [Week 6 of 12] | <strong>Topic</strong>: [Part 2 - Monte Carlo & Simulation] | <strong>Speedup</strong>: [Up to 100× with GPU]</p><p><strong>Topics Covered</strong>: GPU acceleration • Expression models • Metal compute shaders • Performance optimization • Model conversion</p>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/01-mon-monte-carlo-basics</guid><title>Monte Carlo Simulation for Financial Forecasting</title><link>https://www.justinpurnell.com/BusinessMath/week-06/01-mon-monte-carlo-basics</link><description><![CDATA[Part 20 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 10 Feb 2026 07:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[simulation]]></category><category><![CDATA[forecasting]]></category><category><![CDATA[uncertainty]]></category><category><![CDATA[risk-analysis]]></category><content:encoded><![CDATA[<p><strong>Part 20 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building probabilistic forecasts with uncertainty quantification</li><li>Projecting revenue with compounding growth and randomness</li><li>Creating complete income statement forecasts with multiple uncertain drivers</li><li>Calculating confidence intervals (90%, 95%) for projections</li><li>Extracting mean, median, and percentile scenarios</li><li>Optimizing Monte Carlo simulations for performance</li></ul><hr /><h2>The Problem</h2><p>Traditional financial forecasts give you a single number: “Revenue next quarter: $1M.” But reality is uncertain:</p><ul><li><strong>What if growth varies?</strong> Expected 10% growth might be anywhere from 5%-15%.</li><li><strong>How likely is profitability?</strong> Is there a 50% chance or 95% chance we’re profitable?</li><li><strong>What’s the downside risk?</strong> In the worst 5% of scenarios, how bad does it get?</li><li><strong>How do uncertainties combine?</strong> When both revenue AND costs are uncertain, what’s the total impact?</li></ul><p><strong>Single-point forecasts can be misleading</strong>—Any forecast is just a data point in actual decision making, but the false certainty of a single point can obscure the broader range of possibilties that can inform a good decision.</p><hr /><h2>The Solution</h2><p>Monte Carlo simulation runs thousands of scenarios, each with different random values from probability distributions (like a roulette wheel, hence the name). Instead of “Revenue = $1M”, you get “Revenue: Mean $1M, but with a 90% Confidence Interval ranging from $850K to $1.15M”.</p><p>BusinessMath provides probabilistic drivers, simulation infrastructure, and statistical analysis to enable you to build more robust forecasts based off a range of values.</p><h3>Single Metric with Growth Uncertainty</h3><p>Start simple: project revenue with uncertain quarterly growth:</p><pre><code class="language-swift">import BusinessMath
 
 // Historical revenue
 let baseRevenue = 1_000_000.0  // $1M
@@ -22,12 +654,12 @@ let iterations = 10_000
 
 // Pre-allocate for performance
 var allValues: [[Double]] = Array(repeating: [], count: quarters.count)
-for i in 0..<quarters.count {
+for i in 0...(quarters.count - 1) {
     allValues[i].reserveCapacity(iterations)
 }
 
 // Generate revenue paths with compounding
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
     var currentRevenue = baseRevenue
 
     for (periodIndex, period) in quarters.enumerated() {
@@ -158,13 +790,13 @@ var revenueValues: [[Double]] = Array(repeating: [], count: periods.count)
 var grossProfitValues: [[Double]] = Array(repeating: [], count: periods.count)
 var opIncomeValues: [[Double]] = Array(repeating: [], count: periods.count)
 
-for i in 0..<periods.count {
+for i in 0...(periods.count - 1) {
     revenueValues[i].reserveCapacity(iterations)
     grossProfitValues[i].reserveCapacity(iterations)
     opIncomeValues[i].reserveCapacity(iterations)
 }
 
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
     for (periodIndex, period) in periods.enumerated() {
         // Sample all drivers
         let units = drivers.unitsSold.sample(for: period)
@@ -312,7 +944,7 @@ Operating Income
   90% CI:   [$117,112, $302,171]
 
 Risk: Probability of profit ~100%
-</code></pre><p><strong>The power</strong>: You now have a complete probabilistic P&L showing expected values, confidence intervals, and risk metrics for every line item.</p><hr /><h3>Performance Optimization</h3><p>For large simulations (50K+ iterations), optimize carefully:</p><pre><code class="language-swift">// 1. Pre-allocate arrays
+</code></pre><p><strong>The power</strong>: You now have a complete probabilistic P&L showing expected values, confidence intervals, and risk metrics for every line item. But note, this doesn’t just have to be done for financial models. Anything that you want to model with uncertainty can be simulated this way</p><hr /><h3>Performance Optimization</h3><p>For basic monte carlo simulation runs, optimizations may not be worth the lift, but for large simulations (50K+ iterations), we have some recommendations to really maximize performance:</p><pre><code class="language-swift">// 1. Pre-allocate arrays
 var values: [Double] = []
 values.reserveCapacity(iterations)  // Avoids repeated reallocation
 
@@ -328,7 +960,7 @@ values.reserveCapacity(iterations)  // Avoids repeated reallocation
 let results = SimulationResults(values: values)
 let p5 = results.percentiles.p5    // ✓ Fast (already sorted)
 let mean = results.statistics.mean  // ✓ Fast (already computed)
-</code></pre><p><strong>Performance benchmark</strong>: 10,000 iterations × 20 periods = 200K samples runs in < 1 second on modern hardware with these optimizations.</p><hr /><h3>GPU-Accelerated Expression Models for Single-Period Calculations</h3><p>For single-period calculations with high iteration counts, BusinessMath provides <code>MonteCarloExpressionModel</code> - a GPU-accelerated approach that delivers 10-100× speedup with minimal memory usage.</p><p><strong>When to use expression models:</strong></p><ul><li>✅ Single-period calculations (no compounding across time)</li><li>✅ High iteration counts (50,000+)</li><li>✅ Compute-intensive formulas</li><li>✅ Memory-constrained environments</li></ul><p><strong>When to use traditional loops:</strong></p><ul><li>✅ Multi-period compounding (like the revenue growth example above)</li><li>✅ Complex state management across periods</li><li>✅ Path-dependent calculations</li></ul><p>Let’s revisit the income statement forecast using GPU-accelerated expression models:</p><pre><code class="language-swift">import BusinessMath
+</code></pre><p><strong>Performance benchmark</strong>: 10,000 iterations × 20 periods = 200K samples runs in < 1 second on modern hardware with these optimizations.</p><hr /><h3>GPU-Accelerated Expression Models for Single-Period Calculations</h3><p>For single-period calculations with high iteration counts, BusinessMath provides <code>MonteCarloExpressionModel</code> - a GPU-accelerated approach that delivers 10-100× speedup with minimal memory usage. We’ve got <a href="../week-06/02-mon-gpu-acceleration">a deeper dive on GPU acceleration here</a>.</p><p><strong>When to use expression models:</strong></p><ul><li>✅ Single-period calculations (no compounding across time)</li><li>✅ High iteration counts (50,000+)</li><li>✅ Compute-intensive formulas</li><li>✅ Memory-constrained environments</li></ul><p><strong>When to use traditional loops:</strong></p><ul><li>✅ Multi-period compounding (like the revenue growth example above)</li><li>✅ Complex state management across periods</li><li>✅ Path-dependent calculations</li></ul><p>Let’s revisit the income statement forecast using GPU-accelerated expression models:</p><pre><code class="language-swift">import BusinessMath
 
 // Pre-compute any constants
 let taxRate = 0.21
@@ -429,7 +1061,7 @@ Risk Metrics:
 let multiplier = pow(1.05, 10)  // Use Swift's pow() for constants
 </code></pre><p><strong>DSL World (inside the builder):</strong></p><pre><code class="language-swift">let revenue = units * price  // ExpressionProxy objects
 let afterTax = revenue * (1.0 - taxRate)  // Use pre-computed constant
-</code></pre><p><strong>Critical Rule</strong>: Pre-compute all constants outside the builder using Swift’s standard functions (<code>pow()</code>, <code>sqrt()</code>, <code>exp()</code>, etc.). Inside the builder, only use DSL methods (<code>.exp()</code>, <code>.sqrt()</code>, <code>.power()</code>) on variables that depend on random inputs.</p><p><strong>Why?</strong> The builder creates an expression tree that gets compiled to bytecode and sent to the GPU. Constants should be baked into the bytecode, not recomputed millions of times.</p><pre><code class="language-swift">// ❌ WRONG: Computing constants inside builder
+</code></pre><p><strong>Critical Rule</strong>: Pre-compute all constants outside the builder using Swift Foundation’s standard functions (<code>pow()</code>, <code>sqrt()</code>, <code>exp()</code>, etc.). Inside the builder, only use DSL methods (<code>.exp()</code>, <code>.sqrt()</code>, <code>.power()</code>) on variables that depend on random inputs.</p><p><strong>Why?</strong> GPU methods have to be pre-compiled for the GPU to do it’s magic and optimize calculation. The builder creates an expression tree that gets compiled to bytecode and sent to the GPU. Constants should be baked into the bytecode, not recomputed millions of times.</p><pre><code class="language-swift">// ❌ WRONG: Computing constants inside builder
 let wrongModel = MonteCarloExpressionModel { builder in
     let rate = 0.05
     let years = 10.0
@@ -447,7 +1079,7 @@ let correctModel = MonteCarloExpressionModel { builder in
     return principal * growthFactor  // Use pre-computed constant
 }
 </code></pre><p>This design enables the GPU to run at maximum speed - constants are embedded in the bytecode, and only the randomized variables are computed per iteration.</p><p><code>─────────────────────────────────────────────────</code></p><p><strong>When Expression Models Aren’t Appropriate:</strong></p><p>The revenue growth forecast we showed earlier requires traditional loops:</p><pre><code class="language-swift">// This REQUIRES traditional loops (compounding across periods)
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
     var currentRevenue = baseRevenue
     for period in periods {
         let growth = sampleGrowth()
@@ -481,12 +1113,12 @@ let iterations = 10_000
 
 // Pre-allocate for performance
 var allValues: [[Double]] = Array(repeating: [], count: quarters.count)
-for i in 0..<quarters.count {
+for i in 0...(quarters.count - 1) {
 	allValues[i].reserveCapacity(iterations)
 }
 
 // Generate revenue paths with compounding
-for _ in 0..<iterations {
+for _ in 0...(iterations - 1) {
 	var currentRevenue = baseRevenue
 
 	for (periodIndex, period) in quarters.enumerated() {
@@ -592,13 +1224,13 @@ for quarter in quarters {
 	var grossProfitValues: [[Double]] = Array(repeating: [], count: periods.count)
 	var opIncomeValues: [[Double]] = Array(repeating: [], count: periods.count)
 
-	for i in 0..<periods.count {
+	for i in 0...(periods.count - 1) {
 		revenueValues[i].reserveCapacity(iterations)
 		grossProfitValues[i].reserveCapacity(iterations)
 		opIncomeValues[i].reserveCapacity(iterations)
 	}
 
-	for _ in 0..<iterations {
+	for _ in 0...(iterations - 1) {
 		for (periodIndex, period) in periods.enumerated() {
 			// Sample all drivers
 			let units = drivers.unitsSold.sample(for: period)
@@ -761,7 +1393,7 @@ for quarter in quarters {
 	print("  Value at Risk (5%):    \(gpuResults.percentiles.p5.currency(0))")
 
 </code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.1-MonteCarloTimeSeriesGuide.md">BusinessMath Docs – 4.1 Monte Carlo Simulation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add correlation between drivers (revenue and costs often move together)</li><li>Model mean-reverting growth (growth rate reverts to long-term average)</li><li>Add extreme event scenarios (5% chance of 50% revenue drop)</li><li>Build multi-year forecasts with changing distributions over time</li></ol><hr /><h2>Real-World Application</h2><p>Every CFO, risk manager, and strategic planner uses Monte Carlo:</p><ul><li><strong>Annual budgeting</strong>: “What’s the 80% confidence interval for EBITDA?”</li><li><strong>Capital allocation</strong>: “How likely is ROI > 15%?”</li><li><strong>Risk management</strong>: “What’s the worst-case revenue in the bottom 5% of scenarios?”</li><li><strong>Strategic planning</strong>: “If we enter this market, what’s the probability of profitability by year 3?”</li></ul><p><strong>CFO use case</strong>: “Build me a 3-year revenue forecast with 10K Monte Carlo iterations. Show P10, P50, P90 scenarios. I need to present to the board with realistic uncertainty bounds.”</p><p>BusinessMath makes Monte Carlo forecasting programmatic, reproducible, and fast.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Monte Carlo Beats Scenario Analysis</strong></p><p>Traditional approach: Build 3 scenarios (base, best, worst).</p><p><strong>Problems</strong>:</p><ol><li><strong>No probabilities</strong>: Is “best case” 90th percentile or 99th?</li><li><strong>Arbitrary combinations</strong>: Best case has high revenue AND low costs (unlikely!)</li><li><strong>Missed interactions</strong>: When revenue is high, costs often are too (correlation ignored)</li></ol><p><strong>Monte Carlo fixes this</strong>:</p><ol><li><strong>Explicit probabilities</strong>: P90 means “exceeded 90% of the time”</li><li><strong>Natural combinations</strong>: High revenue scenario automatically samples from the high end of the revenue distribution</li><li><strong>Captures correlation</strong>: Model correlated drivers with copulas or factor models</li></ol><p><strong>The lesson</strong>: Monte Carlo provides a <strong>complete probability distribution</strong>, not just 3 data points.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest challenge was <strong>balancing ease-of-use with flexibility</strong>. We could have provided:</p><p><strong>Option A</strong>: High-level <code>forecastRevenue(baseAmount, growthDist, periods)</code></p><ul><li>Pro: Very easy to use</li><li>Con: Inflexible (what if growth depends on prior period revenue?)</li></ul><p><strong>Option B</strong>: Low-level sampling with manual loops</p><ul><li>Pro: Maximum flexibility</li><li>Con: Users must write boilerplate for every forecast</li></ul><p>We chose <strong>Option B with helper types</strong> (<code>ProbabilisticDriver</code>, <code>SimulationResults</code>) that handle the tedious parts (sampling, statistics) while leaving control over the simulation logic.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing Monte Carlo results to analytical solutions (e.g., normal distribution revenue forecast) before implementing.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: Scenario Analysis - Building discrete scenarios, sensitivity analysis, and tornado diagrams.</p><p><strong>Friday</strong>: Case Study #3 - Option Pricing with Monte Carlo.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 20/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + <strong>Simulation (starting)</strong></li><li>Playgrounds: 19 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</guid><title>Bond Valuation & Credit Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</link><description><![CDATA[Part 19 of 12-Week BusinessMath Series]]></description><pubDate>Fri, 06 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[bonds]]></category><category><![CDATA[fixed-income]]></category><category><![CDATA[credit-risk]]></category><category><![CDATA[duration]]></category><category><![CDATA[convexity]]></category><category><![CDATA[callable-bonds]]></category><category><![CDATA[oas]]></category><content:encoded><![CDATA[<p><strong>Part 19 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Pricing bonds and calculating yield to maturity (YTM)</li><li>Measuring interest rate risk using duration and convexity</li><li>Converting credit metrics (Z-Scores) to default probabilities and spreads</li><li>Valuing callable bonds and calculating Option-Adjusted Spread (OAS)</li><li>Building credit curves to analyze default risk over time</li><li>Calculating expected losses for bond portfolios</li><li>Making informed fixed income investment decisions</li></ul><hr /><h2>The Problem</h2><p>Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:</p><ul><li><strong>How do you price a bond?</strong> It’s not just “divide coupon by yield”—that’s current yield, not price.</li><li><strong>What’s the interest rate risk?</strong> If rates rise 1%, how much does your bond portfolio lose?</li><li><strong>How do you value credit risk?</strong> A BBB-rated bond should yield more than AAA, but how much?</li><li><strong>What about callable bonds?</strong> Issuers can refinance if rates drop—how do you value that option?</li></ul><p><strong>Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive bond valuation and credit analysis: <code>Bond</code> pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.</p><h3>Basic Bond Pricing</h3><p>Price a simple corporate bond:</p><pre><code class="language-swift">import BusinessMath
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.1-MonteCarloTimeSeriesGuide.md">BusinessMath Docs – 4.1 Monte Carlo Simulation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add correlation between drivers (revenue and costs often move together)</li><li>Model mean-reverting growth (growth rate reverts to long-term average)</li><li>Add extreme event scenarios (5% chance of 50% revenue drop)</li><li>Build multi-year forecasts with changing distributions over time</li></ol><hr /><h2>Real-World Application</h2><p>Every CFO, risk manager, and strategic planner uses Monte Carlo:</p><ul><li><strong>Annual budgeting</strong>: “What’s the 80% confidence interval for EBITDA?”</li><li><strong>Capital allocation</strong>: “How likely is ROI > 15%?”</li><li><strong>Risk management</strong>: “What’s the worst-case revenue in the bottom 5% of scenarios?”</li><li><strong>Strategic planning</strong>: “If we enter this market, what’s the probability of profitability by year 3?”</li></ul><p><strong>CFO use case</strong>: “Build me a 3-year revenue forecast with 10K Monte Carlo iterations. Show P10, P50, P90 scenarios. I need to present to the board with realistic uncertainty bounds.”</p><p>BusinessMath makes Monte Carlo forecasting programmatic, reproducible, and fast.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Monte Carlo Beats Scenario Analysis</strong></p><p>Traditional approach: Build 3 scenarios (base, best, worst).</p><p><strong>Problems</strong>:</p><ol><li><strong>No probabilities</strong>: Is “best case” 90th percentile or 99th?</li><li><strong>Arbitrary combinations</strong>: Best case has high revenue AND low costs (unlikely!)</li><li><strong>Missed interactions</strong>: When revenue is high, costs often are too (correlation ignored)</li></ol><p><strong>Monte Carlo fixes this</strong>:</p><ol><li><strong>Explicit probabilities</strong>: P90 means “exceeded 90% of the time”</li><li><strong>Natural combinations</strong>: High revenue scenario automatically samples from the high end of the revenue distribution</li><li><strong>Captures correlation</strong>: Model correlated drivers with copulas or factor models</li></ol><p><strong>The lesson</strong>: Monte Carlo provides a <strong>complete probability distribution</strong>, not just 3 data points.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest challenge here <strong>balancing ease-of-use with flexibility</strong>. We could have provided:</p><p><strong>Option A</strong>: High-level <code>forecastRevenue(baseAmount, growthDist, periods)</code></p><ul><li>Pro: Very easy to use</li><li>Con: Inflexible (what if growth depends on prior period revenue?)</li></ul><p><strong>Option B</strong>: Low-level sampling with manual loops</p><ul><li>Pro: Maximum flexibility</li><li>Con: Users must write boilerplate for every forecast</li></ul><p>We chose <strong>Option B with helper types</strong> (<code>ProbabilisticDriver</code>, <code>SimulationResults</code>) that handle the tedious parts (sampling, statistics) while leaving control over the simulation logic. Even though it’s a step away from the expressiveness of pure swift functions, the power boost is massive, and while still retaining the benefits of reusability.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing Monte Carlo results to analytical solutions (e.g., normal distribution revenue forecast) before implementing.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: <a href="../week-06/02-wed-scenario-analysis">Scenario Analysis - Building discrete scenarios, sensitivity analysis, and tornado diagrams</a>.</p><p><strong>Friday</strong>: Case Study #3 - <a href="../week-06/03-fri-case-study-option-pricing">Option Pricing with Monte Carlo</a>.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 20/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + <strong>Simulation (starting)</strong></li><li>Playgrounds: 19 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</guid><title>Bond Valuation & Credit Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</link><description><![CDATA[Part 19 of 12-Week BusinessMath Series]]></description><pubDate>Fri, 06 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[bonds]]></category><category><![CDATA[fixed-income]]></category><category><![CDATA[credit-risk]]></category><category><![CDATA[duration]]></category><category><![CDATA[convexity]]></category><category><![CDATA[callable-bonds]]></category><category><![CDATA[oas]]></category><content:encoded><![CDATA[<p><strong>Part 19 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Pricing bonds and calculating yield to maturity (YTM)</li><li>Measuring interest rate risk using duration and convexity</li><li>Converting credit metrics (Z-Scores) to default probabilities and spreads</li><li>Valuing callable bonds and calculating Option-Adjusted Spread (OAS)</li><li>Building credit curves to analyze default risk over time</li><li>Calculating expected losses for bond portfolios</li><li>Making informed fixed income investment decisions</li></ul><hr /><h2>The Problem</h2><p>Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:</p><ul><li><strong>How do you price a bond?</strong> It’s not just “divide coupon by yield”—that’s current yield, not price.</li><li><strong>What’s the interest rate risk?</strong> If rates rise 1%, how much does your bond portfolio lose?</li><li><strong>How do you value credit risk?</strong> A BBB-rated bond should yield more than AAA, but how much?</li><li><strong>What about callable bonds?</strong> Issuers can refinance if rates drop—how do you value that option?</li></ul><p><strong>Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive bond valuation and credit analysis: <code>Bond</code> pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.</p><h3>Basic Bond Pricing</h3><p>Price a simple corporate bond:</p><pre><code class="language-swift">import BusinessMath
 import Foundation
 
 // 5-year corporate bond
@@ -8348,235 +8980,4 @@ print()
 
 print("Try It: Adjust the parameters and re-run!")
 </code></pre></details>
-<h3>Modifications to Try</h3><ol><li><strong>Change Sarah’s age to 45</strong><ul><li>How does the required contribution change?</li><li>What happens to success probability?</li></ul></li><li><strong>Increase target to $3 million</strong><ul><li>Calculate new monthly contribution</li><li>How does probability change?</li></ul></li><li><strong>Add a $500/month current contribution</strong><ul><li>Modify the calculator to include ongoing contributions</li><li>How much does this reduce the required increase?</li></ul></li><li><strong>Model inflation</strong><ul><li>Adjust the target amount for 2% annual inflation</li><li>How does the “real” retirement goal change?</li></ul></li></ol><hr /><h2>Technical Deep Dives</h2><p>Want to understand the individual components better?</p><p><strong>DocC Tutorials Used</strong>:</p><ul><li><strong>Time Series</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md">BusinessMath Docs – 1.2</a> - Period arithmetic and temporal data</li><li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">BusinessMath Docs – 1.3</a> - TVM functions (<code>futureValue</code>, <code>payment</code>)</li><li><strong>Statistical Distributions</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md">BusinessMath Docs – 2.3</a> - <code>normalCDF</code> for probability</li></ul><p><strong>API References</strong>:</p><ul><li><code>futureValue(presentValue:rate:periods:)</code></li><li><code>payment(presentValue:futureValue:rate:periods:type:)</code></li><li><code>normalCDF(x:mean:standardDeviation:)</code></li></ul><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Week 2 explores analysis tools—data tables, financial ratios, and risk analytics.</p><p><strong>Related Case Studies</strong>:</p><ul><li><strong>Case Study #2: Capital Equipment Decision</strong> (Week 3) - Combines depreciation with TVM for capital budgeting</li><li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration showing all core topics working together</li></ul><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 4/~48</li><li><strong>Case Studies: 1/6 Complete</strong> 🎯</li><li>Topics Combined: TVM + Time Series + Distributions</li><li>Playgrounds: 4 available (3 technical + 1 case study)</li></ul><hr />]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-01/03-wed-time-series</guid><title>Time Series Foundation</title><link>https://www.justinpurnell.com/BusinessMath/week-01/03-wed-time-series</link><description><![CDATA[Part 3 of 12-Week BusinessMath Series]]></description><pubDate>Wed, 07 Jan 2026 07:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[time-series]]></category><category><![CDATA[periods]]></category><category><![CDATA[temporal-data]]></category><content:encoded><![CDATA[<p><strong>Part 3 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How periods provide type-safe temporal identifiers</li><li>Period arithmetic and subdivision operations</li><li>Creating and manipulating time series data</li><li>Real-world time series workflows</li></ul><hr /><h2>The Problem</h2><p>Business data is inherently temporal. Revenue happens in months, quarters, and years. Stock prices change daily. Forecasts project into future periods.</p><p>But handling temporal data correctly is tricky. What happens when you add a month to January 31st? How do you align quarterly data with monthly data? How do you ensure you’re not accidentally comparing January 2024 revenue with January 2025?</p><p>Arrays with dates are fragile—index mistakes are silent, type mixing goes undetected, and time arithmetic is error-prone. Getting the data model right requires a thoughtful execution and a better abstraction.</p><hr /><h2>The Solution</h2><p>BusinessMath provides <strong>Periods</strong> and <strong>TimeSeries</strong> for type-safe temporal data:</p><h3>Periods: Type-Safe Time Identifiers</h3><pre><code class="language-swift">import Foundation
-import BusinessMath
-
-// Create periods at different granularities
-let jan2025 = Period.month(year: 2025, month: 1)
-let q1_2025 = Period.quarter(year: 2025, quarter: 1)
-let fy2025 = Period.year(2025)
-let today = Period.day(Date())
-
-// Period arithmetic
-let feb2025 = jan2025 + 1          // Next month
-let dec2024 = jan2025 - 1          // Previous month
-let yearRange = jan2025...jan2025 + 11  // 12 months
-
-// Distance between periods
-let months = try jan2025.distance(to: Period.month(year: 2025, month: 6))
-print("Months: \(months)")  // Output: 5
-</code></pre><h3>Period Properties and Formatting</h3><pre><code class="language-swift">let period = Period.month(year: 2025, month: 3)
-
-// Get boundary dates
-let start = period.startDate  // March 1, 2025 00:00:00
-let end = period.endDate      // March 31, 2025 23:59:59
-
-// Built-in label
-let label = period.label      // "2025-03"
-
-// Custom formatting
-let formatter = DateFormatter()
-formatter.dateFormat = "MMMM yyyy"
-let formatted = period.formatted(using: formatter)
-print(formatted)  // Output: "March 2025"
-</code></pre><h3>Period Subdivision</h3><p>Larger periods subdivide into smaller ones:</p><pre><code class="language-swift">// Year to quarters
-let year = Period.year(2025)
-let quarters = year.quarters()
-// Result: [Q1 2025, Q2 2025, Q3 2025, Q4 2025]
-
-// Year to months
-let months = year.months()
-// Result: [Jan 2025, Feb 2025, ..., Dec 2025]
-
-// Quarter to months
-let q1 = Period.quarter(year: 2025, quarter: 1)
-let q1Months = q1.months()
-// Result: [Jan 2025, Feb 2025, Mar 2025]
-
-// Month to days (leap year aware)
-let feb2024 = Period.month(year: 2024, month: 2)
-let days = feb2024.days()
-// Result: [Feb 1, Feb 2, ..., Feb 29]  (2024 is a leap year)
-</code></pre><h3>Creating Time Series</h3><p>Associate values with periods:</p><pre><code class="language-swift">// From parallel arrays
-let periods = [
-    Period.month(year: 2025, month: 1),
-    Period.month(year: 2025, month: 2),
-    Period.month(year: 2025, month: 3)
-]
-let revenue: [Double] = [100_000, 120_000, 115_000]
-
-let ts = TimeSeries(periods: periods, values: revenue)
-
-// From dictionary
-let data: [Period: Double] = [
-    Period.month(year: 2025, month: 1): 100_000,
-    Period.month(year: 2025, month: 2): 120_000,
-    Period.month(year: 2025, month: 3): 115_000
-]
-let ts2 = TimeSeries(data: data)
-</code></pre><h3>Working with Time Series</h3><pre><code class="language-swift">// Access by period
-if let janRevenue = ts[periods[0]] {
-    print("January: $\(janRevenue.formatted(.number))")
-}
-
-// Iterate over period-value pairs
-for (period, value) in zip(periods, ts) {
-	print("\(period.label): \(ts[period]!.currency())")
-}
-// Output:
-// 2025-01: $100,000
-// 2025-02: $120,000
-// 2025-03: $115,000
-
-// Get all values as array
-let values = ts.valuesArray  // [100000.0, 120000.0, 115000.0]
-
-// Get all periods
-let allPeriods = ts.periods  // [Jan 2025, Feb 2025, Mar 2025]
-</code></pre><hr /><h2>How It Works</h2><h3>Type-First Period Ordering</h3><p>Periods use a clever ordering strategy:</p><pre><code class="language-swift">let daily = Period.day(Date())
-let monthly = Period.month(year: 2025, month: 1)
-let quarterly = Period.quarter(year: 2025, quarter: 1)
-let annual = Period.year(2025)
-
-// Type comes before chronology
-daily < monthly      // true (day < month in hierarchy)
-monthly < quarterly  // true (month < quarter in hierarchy)
-quarterly < annual   // true (quarter < year in hierarchy)
-
-// Within same type, chronological order
-Period.month(year: 2025, month: 1) < Period.month(year: 2025, month: 2)  // true
-</code></pre><p>This prevents accidental mixing of granularities while maintaining intuitive ordering.</p><h3>Period Arithmetic Safety</h3><p>Period arithmetic is safe and predictable:</p><pre><code class="language-swift">// Adding months handles year boundaries
-let dec2024 = Period.month(year: 2024, month: 12)
-let jan2025 = dec2024 + 1  // Automatically → January 2025
-
-// Adding months handles varying lengths correctly
-let jan31 = Period.day(DateComponents(year: 2025, month: 1, day: 31)!)
-// Can't add "month" to day period - compile error!
-// Must work at month granularity:
-let janMonth = Period.month(year: 2025, month: 1)
-let febMonth = janMonth + 1  // → February 2025
-</code></pre><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-// Create periods at different granularities
-let jan2025 = Period.month(year: 2025, month: 1)
-let q1_2025 = Period.quarter(year: 2025, quarter: 1)
-let fy2025 = Period.year(2025)
-let today = Period.day(Date())
-
-// Period arithmetic
-let feb2025 = jan2025 + 1          // Next month
-let dec2024 = jan2025 - 1          // Previous month
-let yearRange = jan2025...jan2025 + 11  // 12 months
-
-// Distance between periods
-//let months = try jan2025.distance(to: Period.month(year: 2025, month: 6))
-//print("Months: \(months)")  // Output: 5
-
-let period = Period.month(year: 2025, month: 3)
-
-// Get boundary dates
-let start = period.startDate  // March 1, 2025 00:00:00
-let end = period.endDate      // March 31, 2025 23:59:59
-
-// Built-in label
-let label = period.label      // "2025-03"
-
-// Custom formatting
-let formatter = DateFormatter()
-formatter.dateFormat = "MMMM yyyy"
-let formatted = period.formatted(using: formatter)
-print(formatted)  // Output: "March 2025"
-
-	// Year to quarters
-	let year = Period.year(2025)
-	let quarters = year.quarters()
-	// Result: [Q1 2025, Q2 2025, Q3 2025, Q4 2025]
-
-	// Year to months
-	let months = year.months()
-	// Result: [Jan 2025, Feb 2025, ..., Dec 2025]
-
-	// Quarter to months
-	let q1 = Period.quarter(year: 2025, quarter: 1)
-	let q1Months = q1.months()
-	// Result: [Jan 2025, Feb 2025, Mar 2025]
-
-	// Month to days (leap year aware)
-	let feb2024 = Period.month(year: 2024, month: 2)
-	let days = feb2024.days()
-	// Result: [Feb 1, Feb 2, ..., Feb 29]  (2024 is a leap year)
-
-	// From parallel arrays
-	let periods = [
-		Period.month(year: 2025, month: 1),
-		Period.month(year: 2025, month: 2),
-		Period.month(year: 2025, month: 3)
-	]
-	let revenue: [Double] = [100_000, 120_000, 115_000]
-
-	let ts = TimeSeries(periods: periods, values: revenue)
-
-	// From dictionary
-	let data: [Period: Double] = [
-		Period.month(year: 2025, month: 1): 100_000,
-		Period.month(year: 2025, month: 2): 120_000,
-		Period.month(year: 2025, month: 3): 115_000
-	]
-	let ts2 = TimeSeries(data: data)
-
-	// Access by period
-	if let janRevenue = ts[periods[0]] {
-		print("January: $\(janRevenue.formatted(.number))")
-	}
-
-
-	// Iterate over period-value pairs
-	for (period, value) in zip(periods, ts) {
-		print("\(period.label): \(ts[period]!.currency())")
-	}
-	// Output:
-	// 2025-01: $100,000
-	// 2025-02: $120,000
-	// 2025-03: $115,000
-
-	// Get all values as array
-	let values = ts.valuesArray  // [100000.0, 120000.0, 115000.0]
-
-	// Get all periods
-	let allPeriods = ts.periods  // [Jan 2025, Feb 2025, Mar 2025]
-
-	// Monthly revenue data
-	let monthlyRevenue = TimeSeries(
-		periods: (1...12).map { Period.month(year: 2024, month: $0) },
-		values: [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]
-	)
-
-	// Group into quarters
-	let q1Monthss = Period.quarter(year: 2024, quarter: 1).months()
-	let q1Revenue = q1Monthss.compactMap { monthlyRevenue[$0] }.reduce(0, +)
-	print("Q1 Revenue: \(q1Revenue.currency(0))")  // $315K
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md"><strong>BusinessMath Docs – Time Series Analysis</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Create a time series for quarterly revenue and subdivide to monthly</li><li>Calculate the distance between two periods in different years</li><li>Build a time series from Q1 2024 to Q4 2025 (8 quarters)</li></ol><hr /><h2>Real-World Application</h2><p>Financial analysts work with time series constantly. Internal revenue data may come monthly, but executives want quarterly summaries. Historical analysis might span years, but forecasts may project only 3 or 6 months.</p><p>Period subdivision makes aggregation simple:</p><pre><code class="language-swift">// Monthly revenue data
-let monthlyRevenue = TimeSeries(
-    periods: (1...12).map { Period.month(year: 2024, month: $0) },
-    values: [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]
-)
-
-// Group into quarters
-let q1Months = Period.quarter(year: 2024, quarter: 1).months()
-let q1Revenue = q1Months.compactMap { monthlyRevenue[$0] }.reduce(0, +)
-print("Q1 Revenue: \(q1Revenue.currency(0))")  // $315K
-</code></pre><hr /><h3>📝 Development Note</h3><p>During development of the time series functionality, we discovered that multiple statistical formulas have different variants. For example, there are at least three common definitions of “exponential moving average.”</p><p>Without explicit documentation of <em>which</em> variant we chose, tests would pass but results wouldn’t match external tools like Excel, which is the defacto standard for the financial community. This led to a practice: when implementing any algorithm with multiple valid interpretations, we document the exact formula in both the code and DocC.</p><p>“AI will confidently implement <em>a</em> version of the algorithm. Your job is to ensure it’s the <em>right</em> version for your use case.”</p><p>The fix: Include the formula in the test itself:</p><pre><code class="language-swift">@Test("EMA uses alpha = 2/(window+1) formula")
-func testEMAFormula() {
-    let prices = [10.0, 11.0, 12.0, 11.5, 13.0]
-    let ema = calculateEMA(values: prices, window: 3)
-
-    // Explicitly verify formula: EMA(t) = α×P(t) + (1-α)×EMA(t-1)
-    // where α = 2 / (3 + 1) = 0.5
-    let expected = 12.25  // Calculated manually with this formula
-    #expect(abs(ema.last! - expected) < 0.01)
-}
-</code></pre><p>This test not only verifies correctness but documents which variant we’re using.</p><p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Friday’s case study combines Time Series with Time Value of Money to build a retirement planning calculator.</p><p><strong>Case Study #1</strong>: <a href="../04-fri-case-retirement">Retirement Planning Calculator (Friday)</a> - See time series and TVM working together to answer real business questions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 3/~48</li><li>Case Studies: 0/6</li><li>Topics Covered: Getting Started, Test-First Development, Time Series</li><li>Playgrounds: 2 available</li></ul>]]></content:encoded></item></channel></rss>
+<h3>Modifications to Try</h3><ol><li><strong>Change Sarah’s age to 45</strong><ul><li>How does the required contribution change?</li><li>What happens to success probability?</li></ul></li><li><strong>Increase target to $3 million</strong><ul><li>Calculate new monthly contribution</li><li>How does probability change?</li></ul></li><li><strong>Add a $500/month current contribution</strong><ul><li>Modify the calculator to include ongoing contributions</li><li>How much does this reduce the required increase?</li></ul></li><li><strong>Model inflation</strong><ul><li>Adjust the target amount for 2% annual inflation</li><li>How does the “real” retirement goal change?</li></ul></li></ol><hr /><h2>Technical Deep Dives</h2><p>Want to understand the individual components better?</p><p><strong>DocC Tutorials Used</strong>:</p><ul><li><strong>Time Series</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md">BusinessMath Docs – 1.2</a> - Period arithmetic and temporal data</li><li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">BusinessMath Docs – 1.3</a> - TVM functions (<code>futureValue</code>, <code>payment</code>)</li><li><strong>Statistical Distributions</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md">BusinessMath Docs – 2.3</a> - <code>normalCDF</code> for probability</li></ul><p><strong>API References</strong>:</p><ul><li><code>futureValue(presentValue:rate:periods:)</code></li><li><code>payment(presentValue:futureValue:rate:periods:type:)</code></li><li><code>normalCDF(x:mean:standardDeviation:)</code></li></ul><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Week 2 explores analysis tools—data tables, financial ratios, and risk analytics.</p><p><strong>Related Case Studies</strong>:</p><ul><li><strong>Case Study #2: Capital Equipment Decision</strong> (Week 3) - Combines depreciation with TVM for capital budgeting</li><li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration showing all core topics working together</li></ul><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 4/~48</li><li><strong>Case Studies: 1/6 Complete</strong> 🎯</li><li>Topics Combined: TVM + Time Series + Distributions</li><li>Playgrounds: 4 available (3 technical + 1 case study)</li></ul><hr />]]></content:encoded></item></channel></rss>
