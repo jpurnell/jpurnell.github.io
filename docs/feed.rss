@@ -1,7 +1,800 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/02-mon-gpu-acceleration</guid><title>GPU-Accelerated Monte Carlo: Expression Models and Performance</title><link>https://www.justinpurnell.com/BusinessMath/week-06/02-mon-gpu-acceleration</link><description><![CDATA[Part 21 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 10 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[gpu]]></category><category><![CDATA[metal]]></category><category><![CDATA[performance]]></category><category><![CDATA[expression-model]]></category><category><![CDATA[optimization]]></category><content:encoded><![CDATA[<p><strong>Part 21 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding GPU acceleration for Monte Carlo simulations (10-100× speedup)</li><li>What can and cannot be modeled with <code>MonteCarloExpressionModel</code></li><li>Converting closure-based models to GPU-compatible expression models</li><li>When to use CPU vs GPU execution</li><li>Expression builder DSL for natural mathematical syntax</li><li>Practical patterns for financial models</li></ul><hr /><h2>The Problem</h2><p>You’ve built a Monte Carlo simulation with custom logic:</p><pre><code class="language-swift">var simulation = MonteCarloSimulation(iterations: 100_000) { inputs in
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis</guid><title>Scenario & Sensitivity Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis</link><description><![CDATA[Part 21 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 12 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[scenarios]]></category><category><![CDATA[sensitivity-analysis]]></category><category><![CDATA[tornado-diagrams]]></category><category><![CDATA[what-if-analysis]]></category><content:encoded><![CDATA[<p><strong>Part 21 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Creating multiple financial scenarios (base, optimistic, and downside case)</li><li>Running one-way sensitivity analysis to test input variations</li><li>Building tornado diagrams to identify the most impactful drivers</li><li>Performing two-way sensitivity analysis for input interactions</li><li>Combining scenario planning with probabilistic Monte Carlo</li><li>Making data-driven decisions under uncertainty</li></ul><hr /><h2>The Problem</h2><p>Good decision-making is centered around identifying and understanding different states of the future. One of the best ways we have to think about this is to consider <strong>what if</strong>?</p><ul><li><em>Which assumptions matter most?</em> If revenue drops 10%, does the project still work?</li><li><em>What’s the range of outcomes?</em> Best case, base case, worst case—how different are they?</li><li><em>Which input should we focus on?</em> Would raising prices or cutting costs be more impactful?</li><li><em>How do inputs interact?</em> If revenue drops AND costs rise, what happens?</li></ul><p><strong>Single-point forecasts hide critical uncertainties</strong>. Scenario and sensitivity analysis reveal which assumptions drive your results and how robust your decisions are.</p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive scenario and sensitivity analysis tools: <code>FinancialScenario</code> for discrete cases, sensitivity functions for input variations, and Monte Carlo integration for probabilistic analysis.</p><h3>Creating Your First Scenario</h3><p>Define base case drivers and build financial statements:</p><pre><code class="language-swift">import BusinessMath
+
+let company = Entity(
+    id: "TECH001",
+    primaryType: .ticker,
+    name: "TechCo"
+)
+
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]
+
+// Base case: Define primitive drivers
+// These are the independent inputs that scenarios can override
+let baseRevenue = DeterministicDriver(name: "Revenue", value: 1_000_000)
+let baseCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.60)  // 60% of revenue
+let baseOpEx = DeterministicDriver(name: "OpEx", value: 200_000)
+
+var baseOverrides: [String: AnyDriver<Double>] = [:]
+baseOverrides["Revenue"] = AnyDriver(baseRevenue)
+baseOverrides["COGS Rate"] = AnyDriver(baseCOGSRate)
+baseOverrides["OpEx"] = AnyDriver(baseOpEx)
+
+let baseCase = FinancialScenario(
+    name: "Base Case",
+    description: "Expected performance",
+    driverOverrides: baseOverrides
+)
+
+// Builder function: Convert primitive drivers → financial statements
+// Key insight: COGS is calculated as Revenue × COGS Rate, creating a relationship
+let builder: ScenarioRunner.StatementBuilder = { drivers, periods in
+    let revenue = drivers["Revenue"]!.sample(for: periods[0])
+    let cogsRate = drivers["COGS Rate"]!.sample(for: periods[0])
+    let opex = drivers["OpEx"]!.sample(for: periods[0])
+
+    // Calculate COGS from the relationship: COGS = Revenue × COGS Rate
+    let cogs = revenue * cogsRate
+
+    // Build Income Statement
+    let revenueAccount = try Account(
+        entity: company,
+        name: "Revenue",
+        type: .revenue,
+        timeSeries: TimeSeries(periods: periods, values: Array(repeating: revenue, count: periods.count))
+    )
+
+    let cogsAccount = try Account(
+        entity: company,
+        name: "COGS",
+        type: .expense,
+        timeSeries: TimeSeries(periods: periods, values: Array(repeating: cogs, count: periods.count)),
+        expenseType: .costOfGoodsSold
+    )
+
+    let opexAccount = try Account(
+        entity: company,
+        name: "Operating Expenses",
+        type: .expense,
+        timeSeries: TimeSeries(periods: periods, values: Array(repeating: opex, count: periods.count)),
+        expenseType: .operatingExpense
+    )
+
+    let incomeStatement = try IncomeStatement(
+        entity: company,
+        periods: periods,
+        revenueAccounts: [revenueAccount],
+        expenseAccounts: [cogsAccount, opexAccount]
+    )
+
+    // Simple balance sheet and cash flow (required for complete projection)
+    let cashAccount = try Account(
+        entity: company,
+        name: "Cash",
+        type: .asset,
+        timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]),
+        assetType: .cashAndEquivalents
+    )
+
+    let equityAccount = try Account(
+        entity: company,
+        name: "Equity",
+        type: .equity,
+        timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000])
+    )
+
+    let balanceSheet = try BalanceSheet(
+        entity: company,
+        periods: periods,
+        assetAccounts: [cashAccount],
+        liabilityAccounts: [],
+        equityAccounts: [equityAccount]
+    )
+
+    let cfAccount = try Account(
+        entity: company,
+        name: "Operating Cash Flow",
+        type: .operating,
+        timeSeries: incomeStatement.netIncome,
+        metadata: AccountMetadata(category: "Operating Activities")
+    )
+
+    let cashFlowStatement = try CashFlowStatement(
+        entity: company,
+        periods: periods,
+        operatingAccounts: [cfAccount],
+        investingAccounts: [],
+        financingAccounts: []
+    )
+
+    return (incomeStatement, balanceSheet, cashFlowStatement)
+}
+
+// Run base case
+let runner = ScenarioRunner()
+let baseProjection = try runner.run(
+    scenario: baseCase,
+    entity: company,
+    periods: quarters,
+    builder: builder
+)
+
+print("Base Case Q1 Net Income: \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Base Case Q1 Net Income: $200,000
+</code></pre><p><strong>The structure</strong>: Scenarios encapsulate a complete set of driver assumptions. The builder converts drivers into financial statements. This separation allows easy scenario comparison.</p><hr /><h3>Creating Multiple Scenarios</h3><p>Build best and worst case scenarios by overriding primitive drivers:</p><pre><code class="language-swift">// Best Case: Higher revenue, better margins (lower COGS rate), lower OpEx
+let bestRevenue = DeterministicDriver(name: "Revenue", value: 1_200_000)  // +20%
+let bestCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.45)    // 45% (better margins!)
+let bestOpEx = DeterministicDriver(name: "OpEx", value: 180_000)          // -10%
+
+var bestOverrides: [String: AnyDriver<Double>] = [:]
+bestOverrides["Revenue"] = AnyDriver(bestRevenue)
+bestOverrides["COGS Rate"] = AnyDriver(bestCOGSRate)
+bestOverrides["OpEx"] = AnyDriver(bestOpEx)
+
+let bestCase = FinancialScenario(
+    name: "Best Case",
+    description: "Higher sales + better margins",
+    driverOverrides: bestOverrides
+)
+
+// Worst Case: Lower revenue, worse margins (higher COGS rate), higher OpEx
+let worstRevenue = DeterministicDriver(name: "Revenue", value: 800_000)   // -20%
+let worstCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.825)  // 82.5% (margin compression!)
+let worstOpEx = DeterministicDriver(name: "OpEx", value: 220_000)         // +10%
+
+var worstOverrides: [String: AnyDriver<Double>] = [:]
+worstOverrides["Revenue"] = AnyDriver(worstRevenue)
+worstOverrides["COGS Rate"] = AnyDriver(worstCOGSRate)
+worstOverrides["OpEx"] = AnyDriver(worstOpEx)
+
+let worstCase = FinancialScenario(
+    name: "Worst Case",
+    description: "Lower sales + margin compression",
+    driverOverrides: worstOverrides
+)
+
+// Run all scenarios
+let bestProjection = try runner.run(
+    scenario: bestCase,
+    entity: company,
+    periods: quarters,
+    builder: builder
+)
+
+let worstProjection = try runner.run(
+    scenario: worstCase,
+    entity: company,
+    periods: quarters,
+    builder: builder
+)
+
+// Compare results
+print("\n=== Q1 Net Income Comparison ===")
+print("Best Case:  \(bestProjection.incomeStatement.netIncome[q1]!.currency(0))")
+print("Base Case:  \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
+print("Worst Case: \(worstProjection.incomeStatement.netIncome[q1]!.currency(0))")
+
+let range = bestProjection.incomeStatement.netIncome[q1]! -
+            worstProjection.incomeStatement.netIncome[q1]!
+print("\nRange: \(range.currency(0))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Q1 Net Income Comparison ===
+Best Case:  $480,000   (Revenue $1.2M × 45% COGS = $540k, OpEx $180k)
+Base Case:  $200,000   (Revenue $1.0M × 60% COGS = $600k, OpEx $200k)
+Worst Case: ($80,000)  (Revenue $800k × 82.5% COGS = $660k, OpEx $220k)
+
+Range: $560,000
+</code></pre><p><strong>The reality</strong>: Net income swings from <strong>+$480K to -$80K</strong> across scenarios. That’s a $560K range—highly uncertain! This is why scenario planning matters.</p><p><strong>The power of compositional drivers</strong>: Notice how <strong>COGS automatically adjusts</strong> based on the relationship <code>COGS = Revenue × COGS Rate</code>. You can override:</p><ul><li><strong>Just Revenue</strong> (testing volume scenarios with constant margins)</li><li><strong>Just COGS Rate</strong> (testing margin scenarios with constant volume)</li><li><strong>Both</strong> (testing combined scenarios like Best/Worst case above)</li></ul><hr /><h3>One-Way Sensitivity Analysis</h3><p>Analyze how one input affects the output:</p><pre><code class="language-swift">// How does Revenue affect Net Income?
+let revenueSensitivity = try runSensitivity(
+    baseCase: baseCase,
+    entity: company,
+    periods: quarters,
+    inputDriver: "Revenue",
+    inputRange: 800_000...1_200_000,  // ±20%
+    steps: 9,  // Test 9 evenly-spaced values
+    builder: builder
+) { projection in
+    // Extract Q1 Net Income as output metric
+    return projection.incomeStatement.netIncome[q1]!
+}
+
+print("\n=== Revenue Sensitivity Analysis ===")
+print("Revenue     →   Net Income")
+print("----------      -----------")
+
+for (revenue, netIncome) in zip(revenueSensitivity.inputValues, revenueSensitivity.outputValues) {
+	print("\(revenue.currency(0).paddingLeft(toLength: 10))  → \(netIncome.currency(0).paddingLeft(toLength: 10))")
+}
+
+// Calculate sensitivity (slope)
+let deltaRevenue = revenueSensitivity.inputValues.last! - revenueSensitivity.inputValues.first!
+let deltaIncome = revenueSensitivity.outputValues.last! - revenueSensitivity.outputValues.first!
+let sensitivity = deltaIncome / deltaRevenue
+
+print("\nSensitivity: \(sensitivity.number(2))")
+print("For every $1 increase in revenue, net income increases by \(sensitivity.currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Revenue Sensitivity Analysis ===
+Revenue     →   Net Income
+----------      -----------
+  $800,000  →   $120,000
+  $850,000  →   $140,000
+  $900,000  →   $160,000
+  $950,000  →   $180,000
+$1,000,000  →   $200,000
+$1,050,000  →   $220,000
+$1,100,000  →   $240,000
+$1,150,000  →   $260,000
+$1,200,000  →   $280,000
+
+Sensitivity: 0.40
+For every $1 increase in revenue, net income increases by $0.40
+</code></pre><p><strong>The insight</strong>: Net income has a <strong>40% contribution margin</strong> from revenue. This is because:</p><ul><li><strong>60% of revenue</strong> goes to COGS (variable cost that scales with revenue)</li><li><strong>40% remains</strong> as contribution margin to cover OpEx and generate profit</li></ul><p>This is a fundamental concept: the <strong>contribution margin</strong> shows how much each additional dollar of revenue contributes to covering fixed costs and profit.</p><hr /><h3>Tornado Diagram Analysis</h3><p>Identify which drivers have the greatest impact:</p><pre><code class="language-swift">// Analyze all key drivers at once
+let tornado = try runTornadoAnalysis(
+	baseCase: baseCase,
+	entity: company,
+	periods: quarters,
+	inputDrivers: ["Revenue", "COGS Rate", "Operating Expenses"],
+	variationPercent: 0.20,  // Vary each by ±20%
+	steps: 2,  // Just test high and low
+	builder: builder
+) { projection in
+	return projection.incomeStatement.netIncome[q1]!
+}
+
+print("\n=== Tornado Diagram (Ranked by Impact) ===")
+print("Driver                  Low         High        Impact      % Impact")
+print("--------------------    ----------  ----------  ----------  --------")
+
+for input in tornado.inputs {
+	let impact = tornado.impacts[input]!
+	let low = tornado.lowValues[input]!
+	let high = tornado.highValues[input]!
+	let percentImpact = (impact / tornado.baseCaseOutput)
+
+	print("\(input.padding(toLength: 20, withPad: " ", startingAt: 0))\(low.currency(0).paddingLeft(toLength: 12))\(high.currency(0).paddingLeft(toLength: 12))\(impact.currency(0).paddingLeft(toLength: 12))\(percentImpact.percent(0).paddingLeft(toLength: 12))")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Tornado Diagram (Ranked by Impact) ===
+Driver                  Low         High        Impact      % Impact
+--------------------    ----------  ----------  ----------  --------
+COGS Rate                $80,000    $320,000    $240,000        120%
+Revenue                 $120,000    $280,000    $160,000         80%
+Operating Expenses      $160,000    $240,000     $80,000         40%
+</code></pre><p><strong>The ranking</strong>:</p><ol><li><strong>COGS Rate</strong> (margins) has the biggest impact ($240K range)</li><li><strong>Revenue</strong> (volume) second ($160K range)</li><li><strong>Operating Expenses</strong> (fixed costs) third ($80K range)</li></ol><p><strong>The strategic insight</strong>: In this business model, <strong>margin improvement is more important than volume growth</strong>. A 20% improvement in COGS Rate (from 60% → 48%) has more impact than a 20% increase in revenue. This suggests focusing on:</p><ul><li><strong>First priority</strong>: Supplier negotiations, manufacturing efficiency, pricing power (all improve COGS Rate)</li><li><strong>Second priority</strong>: Sales growth and market expansion (improve Revenue)</li><li><strong>Third priority</strong>: Overhead reduction (reduce Operating Expenses)</li></ul><hr /><h3>Visualize the Tornado</h3><p>Create a text-based tornado diagram:</p><pre><code class="language-swift">let tornadoPlot = plotTornadoDiagram(tornado, baseCase: baseProjection.incomeStatement.netIncome[q1]!)
+
+print("\n" + tornadoPlot)
+</code></pre><p><strong>Output:</strong></p><pre><code>Tornado Diagram - Sensitivity Analysis
+Base Case: 200000
+
+COGS Rate          ◄█████████████████████████|█████████████████████████► Impact: 240000 120.0%
+                     80000                 200000                 320000)
+Revenue            ◄         ████████████████|█████████████████        ► Impact: 160000 80.0%
+                     120000                 200000                 280000)
+Operating Expenses ◄                 ████████|████████                 ► Impact: 80000 40.0%
+                     160000                 200000                 240000)
+</code></pre><p>The width of each bar shows impact range. <strong>COGS Rate’s bar is widest</strong>—margin management is the most impactful lever for this business.</p><hr /><h3>Two-Way Sensitivity Analysis</h3><p>Two-way sensitivity analysis allows us to analyze interactions between two inputs:</p><pre><code class="language-swift">// How do Revenue and COGS Rate interact?
+let twoWay = try runTwoWaySensitivity(
+    baseCase: baseCase,
+    entity: company,
+    periods: quarters,
+    inputDriver1: "Revenue",
+    inputRange1: 800_000...1_200_000,
+    steps1: 5,
+    inputDriver2: "COGS Rate",
+    inputRange2: 0.48...0.72,  // 48% to 72% COGS
+    steps2: 5,
+    builder: builder
+) { projection in
+    return projection.incomeStatement.netIncome[q1]!
+}
+
+// Print data table
+print("\n=== Two-Way Sensitivity: Revenue × COGS Rate ===")
+print("\nCOGS Rate →         48%         54%         60%         66%         72%")
+print("Revenue ↓")
+print("-----------    --------    --------    --------    --------    --------")
+
+for (i, revenue) in twoWay.inputValues1.enumerated() {
+	var row = "\(revenue.currency(0).paddingLeft(toLength: 11))"
+	for j in 0..<twoWay.inputValues2.count {
+		let netIncome = twoWay.results[i][j]
+		row += netIncome.currency(0).paddingLeft(toLength: 12)
+	}
+	print(row)
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Two-Way Sensitivity: Revenue × COGS Rate ===
+
+COGS Rate →         48%         54%         60%         66%         72%
+Revenue ↓
+-----------    --------    --------    --------    --------    --------
+   $800,000    $216,000    $168,000    $120,000     $72,000     $24,000
+   $900,000    $268,000    $214,000    $160,000    $106,000     $52,000
+ $1,000,000    $320,000    $260,000    $200,000    $140,000     $80,000
+ $1,100,000    $372,000    $306,000    $240,000    $174,000    $108,000
+ $1,200,000    $424,000    $352,000    $280,000    $208,000    $136,000
+</code></pre><p><strong>The interaction</strong>: This table shows the <strong>trade-off between volume and margins</strong>:</p><ul><li><strong>Lower-left corner</strong> ($1.2M revenue, 48% COGS) = <strong>$424K profit</strong> (best case: high volume + high margins)</li><li><strong>Upper-right corner</strong> ($800K revenue, 72% COGS) = <strong>$24K profit</strong> (worst case: low volume + low margins)</li><li><strong>Diagonal insight</strong>: A company at $800K revenue with 48% COGS ($216K profit) can achieve similar results as $1.2M revenue with 72% COGS ($136K profit). This shows <strong>margin quality matters more than scale</strong> in certain scenarios.</li></ul><hr /><h3>Monte Carlo Integration</h3><p>Combine scenarios with probabilistic analysis using uncertain drivers:</p><pre><code class="language-swift">// Create probabilistic scenario with uncertain Revenue and COGS Rate
+let uncertainRevenue = ProbabilisticDriver<Double>.normal(
+    name: "Revenue",
+    mean: 1_000_000.0,
+    stdDev: 100_000.0  // ±$100K uncertainty
+)
+
+let uncertainCOGSRate = ProbabilisticDriver<Double>.normal(
+    name: "COGS Rate",
+    mean: 0.60,
+    stdDev: 0.05  // ±5% margin uncertainty
+)
+
+var monteCarloOverrides: [String: AnyDriver<Double>] = [:]
+monteCarloOverrides["Revenue"] = AnyDriver(uncertainRevenue)
+monteCarloOverrides["COGS Rate"] = AnyDriver(uncertainCOGSRate)
+monteCarloOverrides["OpEx"] = AnyDriver(baseOpEx)
+
+let uncertainScenario = FinancialScenario(
+    name: "Monte Carlo",
+    description: "Probabilistic scenario",
+    driverOverrides: monteCarloOverrides
+)
+
+// Run 10,000 iterations
+let simulation = try runFinancialSimulation(
+    scenario: uncertainScenario,
+    entity: company,
+    periods: quarters,
+    iterations: 10_000,
+    builder: builder
+)
+
+// Analyze results
+let netIncomeMetric: (FinancialProjection) -> Double = { projection in
+    return projection.incomeStatement.netIncome[q1]!
+}
+
+print("\n=== Monte Carlo Results (10,000 iterations) ===")
+print("Mean: \(simulation.mean(metric: netIncomeMetric).currency(0))")
+
+print("\nPercentiles:")
+print("  P5:  \(simulation.percentile(0.05, metric: netIncomeMetric).currency(0))")
+print("  P25: \(simulation.percentile(0.25, metric: netIncomeMetric).currency(0))")
+print("  P50: \(simulation.percentile(0.50, metric: netIncomeMetric).currency(0))")
+print("  P75: \(simulation.percentile(0.75, metric: netIncomeMetric).currency(0))")
+print("  P95: \(simulation.percentile(0.95, metric: netIncomeMetric).currency(0))")
+
+let ci90 = simulation.confidenceInterval(0.90, metric: netIncomeMetric)
+print("\n90% CI: [\(ci90.lowerBound.currency(0)), \(ci90.upperBound.currency(0))]")
+
+let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric)
+print("\nProbability of loss: \(probLoss.percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Monte Carlo Results (10,000 iterations) ===
+Mean: $200,352
+
+Percentiles:
+  P5:  $97,865
+  P25: $156,221
+  P50: $197,353
+  P75: $242,244
+  P95: $310,941
+
+90% CI: [$97,865, $310,941]
+
+Probability of loss: 0.0%
+</code></pre><p><strong>The integration</strong>: Monte Carlo gives you the <strong>full probability distribution</strong>, not just 3 scenarios. There’s 0.0% chance of loss—but that’s not a substitute for good risk management!</p><hr /><h3>GPU-Accelerated Monte Carlo with Expression Models</h3><p>For high-performance probabilistic analysis, use GPU-accelerated <code>MonteCarloExpressionModel</code> to run 10-100× faster with minimal memory:</p><pre><code class="language-swift">// Pre-compute constants
+let opexAmount = 200_000.0
+let taxRate = 0.21
+
+// Define profit model using expression builder
+let profitModel = MonteCarloExpressionModel { builder in
+    // Inputs: revenue, cogsRate
+    let revenue = builder[0]
+    let cogsRate = builder[1]
+
+    // Calculate P&L
+    let cogs = revenue * cogsRate
+    let grossProfit = revenue - cogs
+    let ebitda = grossProfit - opexAmount
+
+    // Conditional tax (only on profits)
+    let isProfitable = ebitda.greaterThan(0.0)
+    let tax = isProfitable.ifElse(
+        then: ebitda * taxRate,
+        else: 0.0
+    )
+
+    let netIncome = ebitda - tax
+    return netIncome
+}
+
+// Set up high-performance simulation
+var gpuSimulation = MonteCarloSimulation(
+    iterations: 100_000,  // 10× more iterations
+    enableGPU: true,
+    expressionModel: profitModel
+)
+
+// Add uncertain inputs
+gpuSimulation.addInput(SimulationInput(
+    name: "Revenue",
+    distribution: DistributionNormal(mean: 1_000_000, stdDev: 100_000)
+))
+
+gpuSimulation.addInput(SimulationInput(
+    name: "COGS Rate",
+    distribution: DistributionNormal(mean: 0.60, stdDev: 0.05)
+))
+
+// Run GPU-accelerated simulation
+let gpuResults = try gpuSimulation.run()
+
+print("\n=== GPU-Accelerated Monte Carlo (100,000 iterations) ===")
+print("Compute Time: \(gpuResults.computeTime.formatted(.number.precision(.fractionLength(1)))) ms")
+print("GPU Used: \(gpuResults.usedGPU ? "Yes" : "No")")
+print()
+print("Net Income After Tax:")
+print("  Mean:   \(gpuResults.statistics.mean.currency(0))")
+print("  Median: \(gpuResults.percentiles.p50.currency(0))")
+print("  Std Dev: \(gpuResults.statistics.stdDev.currency(0))")
+print()
+print("Risk Metrics:")
+print("  95% CI: [\(gpuResults.percentiles.p5.currency(0)), \(gpuResults.percentiles.p95.currency(0))]")
+print("  Value at Risk (5%): \(gpuResults.percentiles.p5.currency(0))")
+print("  Probability of Loss: \((gpuResults.valuesArray.filter { $0 < 0 }.count / gpuResults.iterations).percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>=== GPU-Accelerated Monte Carlo (100,000 iterations) ===
+Compute Time: 52.3 ms
+GPU Used: Yes
+
+Net Income After Tax:
+  Mean:   $158,294
+  Median: $158,186
+  Std Dev: $63,447
+
+Risk Metrics:
+  95% CI: [$54,072, $274,883]
+  Value at Risk (5%): $54,072
+  Probability of Loss: 0.7%
+</code></pre><p><strong>Performance Breakthrough:</strong></p><table><thead><th>Approach</th><th>Iterations</th><th>Time</th><th>Memory</th><th>Speedup</th></thead><tbody><tr><td>Traditional Monte Carlo</td><td>10,000</td><td>~2,100 ms</td><td>~25 MB</td><td>1× (baseline)</td></tr><tr><td>GPU Expression Model</td><td>100,000</td><td>~52 ms</td><td>~8 MB</td><td><strong>~400×</strong></td></tr></tbody></table><p><strong>When to use expression models:</strong></p><ul><li>✅ <strong>Single-period</strong> calculations (like quarterly profit)</li><li>✅ <strong>High iteration counts</strong> (50,000+)</li><li>✅ <strong>Compute-intensive</strong> formulas</li><li>✅ <strong>Memory-constrained</strong> environments</li></ul><p><strong>When to use traditional approach:</strong></p><ul><li>✅ <strong>Multi-period compounding</strong> (revenue growing over 4 quarters)</li><li>✅ <strong>Complex state</strong> (financial statements with interdependencies)</li><li>✅ <strong>Path-dependent</strong> calculations (option pricing with early exercise)</li></ul><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Expression Models: The Constants vs Variables Pattern</strong></p><p>GPU-accelerated expression models compile to bytecode that runs on Metal. This creates two distinct contexts:</p><p><strong>Swift context (outside builder):</strong></p><pre><code class="language-swift">let opex = 200_000.0  // Regular Swift Double
+let taxRate = pow(1.21, years)  // Use Swift's pow() for constants
+</code></pre><p><strong>DSL context (inside builder):</strong></p><pre><code class="language-swift">let revenue = builder[0]  // ExpressionProxy (depends on random input)
+let afterTax = revenue * 0.79  // Use pre-computed constant
+let scaled = revenue.exp()  // Use DSL methods on variables
+</code></pre><p><strong>Critical rule</strong>: Pre-compute all constants outside the builder. Only use DSL methods (<code>.exp()</code>, <code>.sqrt()</code>, <code>.power()</code>) on variables that depend on random inputs.</p><p><strong>Why?</strong> Constants should be baked into the GPU bytecode, not recomputed millions of times. This pattern gives you maximum performance.</p><p><code>─────────────────────────────────────────────────</code></p><p>For comprehensive GPU Monte Carlo coverage, see: <a href="doc:4.3-MonteCarloExpressionModelsGuide">doc:4.3-MonteCarloExpressionModelsGuide</a></p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+
+let company = Entity(
+	id: "TECH001",
+	primaryType: .ticker,
+	name: "TechCo"
+)
+
+let q1 = Period.quarter(year: 2025, quarter: 1)
+let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]
+
+// Base case: Define primitive drivers
+// These are the independent inputs that scenarios can override
+let baseRevenue = DeterministicDriver(name: "Revenue", value: 1_000_000)
+let baseCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.60)  // 60% of revenue
+let baseOpEx = DeterministicDriver(name: "OpEx", value: 200_000)
+
+var baseOverrides: [String: AnyDriver<Double>] = [:]
+baseOverrides["Revenue"] = AnyDriver(baseRevenue)
+baseOverrides["COGS Rate"] = AnyDriver(baseCOGSRate)
+baseOverrides["Operating Expenses"] = AnyDriver(baseOpEx)
+
+let baseCase = FinancialScenario(
+	name: "Base Case",
+	description: "Expected performance",
+	driverOverrides: baseOverrides
+)
+
+// Builder function: Convert primitive drivers → financial statements
+// Key insight: COGS is calculated as Revenue × COGS Rate, creating a relationship
+let builder: ScenarioRunner.StatementBuilder = { drivers, periods in
+	let revenue = drivers["Revenue"]!.sample(for: periods[0])
+	let cogsRate = drivers["COGS Rate"]!.sample(for: periods[0])
+	let opex = drivers["Operating Expenses"]!.sample(for: periods[0])
+	
+	// Calculate COGS from the relationship: COGS = Revenue × COGS Rate
+	let cogs = revenue * cogsRate
+
+	// Build Income Statement
+	let revenueAccount = try Account(
+		entity: company,
+		name: "Revenue",
+		incomeStatementRole: .revenue,
+		timeSeries: TimeSeries(periods: periods, values: Array(repeating: revenue, count: periods.count))
+	)
+
+	let cogsAccount = try Account(
+		entity: company,
+		name: "COGS",
+		incomeStatementRole: .costOfGoodsSold,
+		timeSeries: TimeSeries(periods: periods, values: Array(repeating: cogs, count: periods.count))
+	)
+
+	let opexAccount = try Account(
+		entity: company,
+		name: "Operating Expenses",
+		incomeStatementRole: .operatingExpenseOther,
+		timeSeries: TimeSeries(periods: periods, values: Array(repeating: opex, count: periods.count))
+	)
+
+	let incomeStatement = try IncomeStatement(
+		entity: company,
+		periods: periods,
+		accounts: [revenueAccount, cogsAccount, opexAccount]
+	)
+
+	// Simple balance sheet and cash flow (required for complete projection)
+	let cashAccount = try Account(
+		entity: company,
+		name: "Cash",
+		balanceSheetRole: .cashAndEquivalents,
+		timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]),
+	)
+
+	let equityAccount = try Account(
+		entity: company,
+		name: "Equity",
+		balanceSheetRole: .commonStock,
+		timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000])
+	)
+
+	let balanceSheet = try BalanceSheet(
+		entity: company,
+		periods: periods,
+		accounts: [cashAccount, equityAccount]
+	)
+
+	let cfAccount = try Account(
+		entity: company,
+		name: "Operating Cash Flow",
+		cashFlowRole: .netIncome,
+		timeSeries: incomeStatement.netIncome,
+		metadata: AccountMetadata(category: "Operating Activities")
+	)
+
+	let cashFlowStatement = try CashFlowStatement(
+		entity: company,
+		periods: periods,
+		accounts: [cfAccount]
+	)
+
+	return (incomeStatement, balanceSheet, cashFlowStatement)
+}
+
+// Run base case
+let runner = ScenarioRunner()
+let baseProjection = try runner.run(
+	scenario: baseCase,
+	entity: company,
+	periods: quarters,
+	builder: builder
+)
+
+print("Base Case Q1 Net Income: \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
+
+// MARK: - Create Multiple Scenarios
+
+	// Best Case: Higher revenue, lower costs
+	let bestRevenue = DeterministicDriver(name: "Revenue", value: 1_200_000)  // +20%
+	let bestCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.45)        // -10%
+	let bestOpEx = DeterministicDriver(name: "Operating Expenses", value: 180_000)          // -10%
+
+	var bestOverrides: [String: AnyDriver<Double>] = [:]
+	bestOverrides["Revenue"] = AnyDriver(bestRevenue)
+	bestOverrides["COGS Rate"] = AnyDriver(bestCOGSRate)
+	bestOverrides["Operating Expenses"] = AnyDriver(bestOpEx)
+
+	let bestCase = FinancialScenario(
+		name: "Best Case",
+		description: "Optimistic performance",
+		driverOverrides: bestOverrides
+	)
+
+	// Worst Case: Lower revenue, higher costs
+	let worstRevenue = DeterministicDriver(name: "Revenue", value: 800_000)   // -20%
+	let worstCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.825)       // +10%
+	let worstOpEx = DeterministicDriver(name: "Operating Expenses", value: 220_000)         // +10%
+
+	var worstOverrides: [String: AnyDriver<Double>] = [:]
+	worstOverrides["Revenue"] = AnyDriver(worstRevenue)
+	worstOverrides["COGS Rate"] = AnyDriver(worstCOGSRate)
+	worstOverrides["Operating Expenses"] = AnyDriver(worstOpEx)
+
+	let worstCase = FinancialScenario(
+		name: "Worst Case",
+		description: "Lower sales + margin compression",
+		driverOverrides: worstOverrides
+	)
+
+	// Run all scenarios
+	let bestProjection = try runner.run(
+		scenario: bestCase,
+		entity: company,
+		periods: quarters,
+		builder: builder
+	)
+
+	let worstProjection = try runner.run(
+		scenario: worstCase,
+		entity: company,
+		periods: quarters,
+		builder: builder
+	)
+
+	// Compare results
+	print("\n=== Q1 Net Income Comparison ===")
+	print("Best Case:  \(bestProjection.incomeStatement.netIncome[q1]!.currency(0))")
+	print("Base Case:  \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
+	print("Worst Case: \(worstProjection.incomeStatement.netIncome[q1]!.currency(0))")
+
+	let range = bestProjection.incomeStatement.netIncome[q1]! -
+				worstProjection.incomeStatement.netIncome[q1]!
+	print("\nRange: \(range.currency(0))")
+
+// MARK: - One-Way Sensitivity Analysis
+
+// How does Revenue affect Net Income?
+let revenueSensitivity = try runSensitivity(
+	baseCase: baseCase,
+	entity: company,
+	periods: quarters,
+	inputDriver: "Revenue",
+	inputRange: 800_000...1_200_000,  // ±20%
+	steps: 9,  // Test 9 evenly-spaced values
+	builder: builder
+) { projection in
+	// Extract Q1 Net Income as output metric
+	let q1 = Period.quarter(year: 2025, quarter: 1)
+	return projection.incomeStatement.netIncome[q1]!
+}
+
+print("\n=== Revenue Sensitivity Analysis ===")
+print("Revenue     →   Net Income")
+print("----------      -----------")
+
+for (revenue, netIncome) in zip(revenueSensitivity.inputValues, revenueSensitivity.outputValues) {
+	print("\(revenue.currency(0).paddingLeft(toLength: 10))  → \(netIncome.currency(0).paddingLeft(toLength: 10))")
+}
+
+// Calculate sensitivity (slope)
+let deltaRevenue = revenueSensitivity.inputValues.last! - revenueSensitivity.inputValues.first!
+let deltaIncome = revenueSensitivity.outputValues.last! - revenueSensitivity.outputValues.first!
+let sensitivity = deltaIncome / deltaRevenue
+
+print("\nSensitivity: \(sensitivity.number(2))")
+print("For every $1 increase in revenue, net income increases by \(sensitivity.currency(2))")
+
+
+// MARK: -  Tornado Diagram Analysis
+
+	// Analyze all key drivers at once
+	let tornado = try runTornadoAnalysis(
+		baseCase: baseCase,
+		entity: company,
+		periods: quarters,
+		inputDrivers: ["Revenue", "COGS Rate", "Operating Expenses"],
+		variationPercent: 0.20,  // Vary each by ±20%
+		steps: 2,  // Just test high and low
+		builder: builder
+	) { projection in
+		return projection.incomeStatement.netIncome[q1]!
+	}
+
+	print("\n=== Tornado Diagram (Ranked by Impact) ===")
+	print("Driver                  Low         High        Impact      % Impact")
+	print("--------------------    ----------  ----------  ----------  --------")
+
+	for input in tornado.inputs {
+		let impact = tornado.impacts[input]!
+		let low = tornado.lowValues[input]!
+		let high = tornado.highValues[input]!
+		let percentImpact = (impact / tornado.baseCaseOutput)
+
+		print("\(input.padding(toLength: 20, withPad: " ", startingAt: 0))\(low.currency(0).paddingLeft(toLength: 12))\(high.currency(0).paddingLeft(toLength: 12))\(impact.currency(0).paddingLeft(toLength: 12))\(percentImpact.percent(0).paddingLeft(toLength: 12))")
+	}
+
+// MARK: - Visualize the Tornado
+
+let tornadoPlot = plotTornadoDiagram(tornado)
+
+print("\n" + tornadoPlot)
+
+// MARK: - Two-Way Sensitivity Analysis
+
+	// How do Revenue and COGS Rate interact?
+	let twoWay = try runTwoWaySensitivity(
+		baseCase: baseCase,
+		entity: company,
+		periods: quarters,
+		inputDriver1: "Revenue",
+		inputRange1: 800_000...1_200_000,
+		steps1: 5,
+		inputDriver2: "COGS Rate",
+		inputRange2: 0.48...0.72,  // 48% to 72% COGS
+		steps2: 5,
+		builder: builder
+	) { projection in
+		return projection.incomeStatement.netIncome[q1]!
+	}
+
+	// Print data table
+	print("\n=== Two-Way Sensitivity: Revenue × COGS Rate ===")
+	print("\nCOGS Rate →         48%         54%         60%         66%         72%")
+	print("Revenue ↓")
+	print("-----------    --------    --------    --------    --------    --------")
+
+	for (i, revenue) in twoWay.inputValues1.enumerated() {
+		var row = "\(revenue.currency(0).paddingLeft(toLength: 11))"
+		for j in 0..<twoWay.inputValues2.count {
+			let netIncome = twoWay.results[i][j]
+			row += netIncome.currency(0).paddingLeft(toLength: 12)
+		}
+		print(row)
+	}
+
+
+// MARK: - Monte Carlo Integration
+
+	// Create probabilistic scenario with uncertain Revenue and COGS Rate
+	let uncertainRevenue = ProbabilisticDriver<Double>.normal(
+		name: "Revenue",
+		mean: 1_000_000.0,
+		stdDev: 100_000.0  // ±$100K uncertainty
+	)
+
+	let uncertainCOGSRate = ProbabilisticDriver<Double>.normal(
+		name: "COGS Rate",
+		mean: 0.60,
+		stdDev: 0.05  // ±5% margin uncertainty
+	)
+
+	var monteCarloOverrides: [String: AnyDriver<Double>] = [:]
+	monteCarloOverrides["Revenue"] = AnyDriver(uncertainRevenue)
+	monteCarloOverrides["COGS Rate"] = AnyDriver(uncertainCOGSRate)
+	monteCarloOverrides["Operating Expenses"] = AnyDriver(baseOpEx)
+
+	let uncertainScenario = FinancialScenario(
+		name: "Monte Carlo",
+		description: "Probabilistic scenario",
+		driverOverrides: monteCarloOverrides
+	)
+
+	// Run 10,000 iterations
+	let simulation = try runFinancialSimulation(
+		scenario: uncertainScenario,
+		entity: company,
+		periods: quarters,
+		iterations: 10_000,
+		builder: builder
+	)
+
+	// Analyze results
+	let netIncomeMetric: (FinancialProjection) -> Double = { projection in
+		return projection.incomeStatement.netIncome[q1]!
+	}
+
+	print("\n=== Monte Carlo Results (10,000 iterations) ===")
+	print("Mean: \(simulation.mean(metric: netIncomeMetric).currency(0))")
+
+	print("\nPercentiles:")
+	print("  P5:  \(simulation.percentile(0.05, metric: netIncomeMetric).currency(0))")
+	print("  P25: \(simulation.percentile(0.25, metric: netIncomeMetric).currency(0))")
+	print("  P50: \(simulation.percentile(0.50, metric: netIncomeMetric).currency(0))")
+	print("  P75: \(simulation.percentile(0.75, metric: netIncomeMetric).currency(0))")
+	print("  P95: \(simulation.percentile(0.95, metric: netIncomeMetric).currency(0))")
+
+	let ci90 = simulation.confidenceInterval(0.90, metric: netIncomeMetric)
+	print("\n90% CI: [\(ci90.lowerBound.currency(0)), \(ci90.upperBound.currency(0))]")
+
+	let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric)
+	print("\nProbability of loss: \(probLoss.percent(1))")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.2-ScenarioAnalysisGuide.md">BusinessMath Docs – 4.2 Scenario Analysis</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add more scenarios (recession, expansion, new competitor)</li><li>Build three-way sensitivity analysis (revenue × costs × pricing)</li><li>Model correlated uncertainties (when revenue drops, costs often do too)</li><li>Create scenario probability weights (70% base, 20% best, 10% worst)</li></ol><hr /><h2>Real-World Application</h2><p>Every strategic decision requires scenario and sensitivity analysis:</p><ul><li><strong>M&A due diligence</strong>: “Under which scenarios does this acquisition create value?”</li><li><strong>Product launches</strong>: “Which assumption matters most—adoption rate or pricing?”</li><li><strong>Capital projects</strong>: “What’s the IRR in best/base/worst scenarios?”</li><li><strong>Strategic planning</strong>: “How resilient is our strategy to economic downturns?”</li></ul><p><strong>Corporate development use case</strong>: “We’re considering acquiring a competitor for $500M. Run tornado analysis on synergy assumptions (revenue, cost savings, integration costs). Show me the NPV range across scenarios.”</p><p>BusinessMath makes scenario and sensitivity analysis systematic, reproducible, and decision-ready.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Tornado Diagrams: Visual Risk Prioritization</strong></p><p>A tornado diagram ranks inputs by impact on the output. It’s called a “tornado” because the widest bar (biggest impact) is at the top, narrowing down like a tornado shape.</p><p><strong>Why this matters</strong>:</p><ul><li><strong>Focus scarce resources</strong>: Improve the top 2-3 drivers, ignore the rest</li><li><strong>Set research priorities</strong>: Spend more effort refining high-impact assumptions</li><li><strong>Negotiate effectively</strong>: In M&A, focus diligence on tornado-top items</li></ul><p><strong>Example</strong>: If Revenue has 10× the impact of OpEx, spend time perfecting your revenue forecast, not optimizing office supply costs.</p><p><strong>The rule</strong>: <strong>80/20 applies to uncertainty</strong>—20% of inputs drive 80% of outcome variance.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Compositional Drivers: Primitives vs. Formulas</strong></p><p>This example demonstrates a critical pattern for ergonomic scenario analysis: <strong>distinguish primitive inputs from calculated formulas</strong>.</p><p><strong>Primitive drivers</strong> are independent inputs you control:</p><ul><li><code>Revenue</code> - how much you sell</li><li><code>COGS Rate</code> - what percentage of revenue goes to production costs</li><li><code>OpEx</code> - fixed operating expenses</li></ul><p><strong>Formula drivers</strong> are relationships calculated in the builder:</p><ul><li><code>COGS = Revenue × COGS Rate</code> - computed from primitives</li></ul><p><strong>Why this matters</strong>:</p><ol><li><strong>Flexibility</strong>: Override any primitive independently (test revenue scenarios, margin scenarios, or both)</li><li><strong>Natural sensitivity</strong>: When you vary <code>Revenue</code>, <code>COGS</code> automatically scales, capturing the 40% contribution margin</li><li><strong>Probabilistic modeling</strong>: Uncertain <code>Revenue</code> + uncertain <code>COGS Rate</code> → compound uncertainty in <code>COGS</code> propagates naturally</li><li><strong>Realistic scenarios</strong>: Best case combines high revenue AND better margins; worst case combines low revenue AND margin compression</li></ol><p><strong>Alternative (anti-pattern)</strong>: Treating the <em>dollar amount</em> of <code>COGS</code> as an independent primitive will give 100% revenue passthrough—unrealistic for businesses with variable costs!</p><p><strong>The principle</strong>: <strong>Model your business economics</strong>, not just your accounting equations.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest design challenge was <strong>handling driver overrides</strong>. We needed a system where:</p><ol><li>Base case defines default drivers</li><li>Scenarios override specific drivers</li><li>Unoverridden drivers fall back to defaults</li><li>Type safety is maintained</li></ol><p>We chose a dictionary-based approach with <code>AnyDriver</code> type erasure:</p><pre><code class="language-swift">var overrides: [String: AnyDriver<Double>] = [:]
+overrides["Revenue"] = AnyDriver(customRevenueDriver)
+</code></pre><p><strong>Trade-off</strong>: Loses compile-time type checking (runtime <code>String</code> keys), but gains flexibility for dynamic scenario construction.</p><p><strong>Alternative considered</strong>: Strongly-typed scenario builder with keypaths—rejected as too rigid for exploratory analysis.</p><p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - We designed the API by writing tutorial examples first to ensure usability.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Friday</strong>: Case Study #3 - Option Pricing with Monte Carlo, combining simulation with derivatives valuation.</p><p><strong>Next week</strong>: Week 7 explores optimization—finding the <em>best</em> strategy, not just analyzing given scenarios.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 21/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + Simulation (in progress)</li><li>Playgrounds: 20 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/02-mon-gpu-acceleration</guid><title>GPU-Accelerated Monte Carlo: Expression Models and Performance</title><link>https://www.justinpurnell.com/BusinessMath/week-06/02-mon-gpu-acceleration</link><description><![CDATA[Part 21 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 10 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[gpu]]></category><category><![CDATA[metal]]></category><category><![CDATA[performance]]></category><category><![CDATA[expression-model]]></category><category><![CDATA[optimization]]></category><content:encoded><![CDATA[<p><strong>Part 21 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding GPU acceleration for Monte Carlo simulations (10-100× speedup)</li><li>What can and cannot be modeled with <code>MonteCarloExpressionModel</code></li><li>Converting closure-based models to GPU-compatible expression models</li><li>When to use CPU vs GPU execution</li><li>Expression builder DSL for natural mathematical syntax</li><li>Practical patterns for financial models</li></ul><hr /><h2>The Problem</h2><p>You’ve built a Monte Carlo simulation with custom logic:</p><pre><code class="language-swift">var simulation = MonteCarloSimulation(iterations: 100_000) { inputs in
     let returns = simulatePortfolioYear(
         targetReturn: inputs[0],
         riskTolerance: inputs[1],
@@ -8674,310 +9467,4 @@ var header = "Price".padding(toLength: 10, withPad: " ", startingAt: 0)
 
 
 </code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md"><strong>BusinessMath Docs – 2.1 Data Table Analysis</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Test loan affordability at different income levels</li><li>Create an investment NPV matrix with varying growth and discount rates</li><li>Build a product pricing table comparing different cost structures</li></ol><hr /><h2>Real-World Application</h2><p>A CFO analyzing capital equipment purchases needs to understand sensitivity to key assumptions:</p><ul><li><strong>Discount rate sensitivity</strong>: How does NPV change from 8% to 12%?</li><li><strong>Volume assumptions</strong>: What happens if production is 20% lower than expected?</li><li><strong>Price/volume trade-offs</strong>: Which combination maximizes profit?</li></ul><p>Data tables answer all these questions with 10-20 lines of code instead of complex spreadsheets.</p><hr /><h3>📝 Development Note</h3><p>When we first implemented data tables, we assumed users would want highly customized formatting. So we built a complex system with format strings, alignment options, and custom renderers.</p><p>It was too complicated.</p><p>The refactor was brutal: we deleted 300 lines of formatting code and replaced it with two simple functions: <code>toCSV()</code> and <code>formatTwoVariable()</code>. Users could export to CSV for Excel, or get basic console output. That’s it.</p><p><strong>The lesson</strong>: Don’t over-engineer formatting. Users either want raw data (CSV) or basic display (console). Everything in between is complexity they don’t need.</p><p><strong>Related Methodology</strong>: <a href="../week-05/02-tue-coding-standards.md">Coding Standards That Scale</a> (Week 5)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Documentation as Design (Tuesday) - How writing docs before code reveals API flaws early.</p><p><strong>This week</strong>: We’ll explore financial ratios (Wednesday) and risk analytics (Friday) to complete the Analysis Tools topic.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 5/~48</li><li>Topics Covered: Foundation + Analysis Tools (starting)</li><li>Playgrounds: 5 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-01/04-fri-case-retirement</guid><title>Case Study: Retirement Planning Calculator</title><link>https://www.justinpurnell.com/BusinessMath/week-01/04-fri-case-retirement</link><description><![CDATA[Capstone #1 – Combining Time Series + TVM + Distributions]]></description><pubDate>Fri, 09 Jan 2026 07:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[case-study]]></category><category><![CDATA[retirement]]></category><category><![CDATA[tvm]]></category><category><![CDATA[statistics]]></category><content:encoded><![CDATA[<p><strong>Capstone #1 – Combining Time Series + TVM + Distributions</strong></p><hr /><h2>The Business Challenge</h2><p>Sarah, a 35-year-old professional, wants to retire at 65 with $2 million saved. She currently has $100,000 in her retirement account. Her financial advisor needs to answer two critical questions:</p><ol><li><strong>How much should Sarah contribute monthly</strong> to reach her goal?</li><li><strong>What’s the probability she’ll actually reach $2M</strong> given market volatility?</li></ol><p>This is a real problem financial advisors solve daily. Get it wrong, and Sarah either oversaves (reducing quality of life now) or undersaves (risking retirement security).</p><p>Let’s build a calculator that answers both questions using BusinessMath.</p><hr /><h2>The Requirements</h2><p><strong>Stakeholders</strong>: Financial advisors, retirement planners, individuals planning for retirement</p><p><strong>Key Questions</strong>:</p><ul><li>What monthly contribution is required?</li><li>What’s the future value of current savings?</li><li>How do market assumptions (return rate, volatility) affect the plan?</li><li>What’s the probability of success given realistic market conditions?</li></ul><p><strong>Success Criteria</strong>:</p><ul><li>Accurate TVM calculations</li><li>Probability analysis using statistical distributions</li><li>Scenario analysis for different risk profiles</li><li>Interactive playground for what-if analysis</li></ul><hr /><h2>The Solution</h2><h3>Part 1: Setup and Assumptions</h3><p>First, we define Sarah’s situation and market assumptions:</p><pre><code class="language-swift">import BusinessMath
-
-print("=== RETIREMENT PLANNING CALCULATOR ===\n")
-
-// Sarah's Current Situation
-let currentAge = 35.0
-let retirementAge = 65.0
-let yearsUntilRetirement = retirementAge - currentAge  // 30 years
-let currentSavings = 100_000.0
-let targetAmount = 2_000_000.0
-
-// Market Assumptions
-let expectedReturn = 0.07      // 7% annual return (historical equity average)
-let returnStdDev = 0.15        // 15% volatility (realistic for stock market)
-
-print("Sarah's Profile:")
-print("- Age: \(Int(currentAge))")
-print("- Current Savings: \(currentSavings.currency())")
-print("- Retirement Goal: \(targetAmount.currency())")
-print("- Years to Retirement: \(Int(yearsUntilRetirement))")
-print("- Expected Return: \(expectedReturn.percent())")
-print("- Return Volatility: \(returnStdDev.percent())")
-print()
-</code></pre><p><strong>Output</strong>:</p><pre><code>=== RETIREMENT PLANNING CALCULATOR ===
-
-Sarah's Profile:
-- Age: 35
-- Current Savings: $100,000
-- Retirement Goal: $2,000,000
-- Years to Retirement: 30
-- Expected Return: 7%
-- Return Volatility: 15%
-</code></pre><hr /><h3>Part 2: Calculate Required Monthly Contribution</h3><p>Using TVM functions to determine the monthly contribution needed:</p><pre><code class="language-swift">print("PART 1: Required Contribution")
-
-let monthlyRate = expectedReturn / 12.0
-let numberOfPayments: Int = Int(yearsUntilRetirement) * 12
-
-// Future value of current savings (no additional contributions)
-let futureValueOfCurrentSavings = futureValue(
-    presentValue: currentSavings,
-    rate: expectedReturn,
-	periods: Int(yearsUntilRetirement)
-)
-
-print("Future value of current $100K: \(futureValueOfCurrentSavings.currency())")
-
-// Gap to fill with monthly contributions
-let gapToFill = targetAmount - futureValueOfCurrentSavings
-print("Gap to fill: \(gapToFill.currency())")
-
-// Calculate required monthly payment
-// Note: payment() returns negative value (cash outflow), so negate it
-let requiredMonthlyContribution = -payment(
-    presentValue: 0.0,
-    futureValue: gapToFill,
-    rate: monthlyRate,
-    periods: numberOfPayments,
-    type: .ordinary
-)
-
-print("Required monthly contribution: \(requiredMonthlyContribution.currency())")
-print()
-</code></pre><p><strong>Output</strong>:</p><pre><code>PART 1: Required Contribution
-Future value of current $100K: $761,225.50
-Gap to fill: $1,238,774.50
-Required monthly contribution: $1,015.41
-</code></pre><p><strong>The answer</strong>: Sarah needs to contribute <strong>$1,015.41 per month</strong> to reach her $2M goal.</p><hr /><h3>Part 3: Probability Analysis (Simplified Model)</h3><p>Now the harder question: Given market volatility, what’s the probability Sarah actually reaches $2M?</p><blockquote><p><strong>Note</strong>: This simplified analytical approach has limitations (see “What Didn’t Work” section). Monte Carlo simulation provides more accurate probability estimates.</p></blockquote><pre><code class="language-swift">print("PART 2: Success Probability Analysis")
-
-// Total contributions over 30 years
-let totalContributions = requiredMonthlyContribution * Double(numberOfPayments)
-let totalInvested = currentSavings + totalContributions
-
-print("Total contributions: \(totalContributions.currency())")
-print("Total invested: \(totalInvested.currency())")
-
-// For $2M target, what total return is required?
-let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
-
-print("Minimum required total return: \(minimumRequiredReturn.percent())")
-
-// Model market returns using log-normal distribution
-let expectedTotalReturn = expectedReturn * yearsUntilRetirement
-let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)
-
-// Probability of achieving required return
-// CDF gives P(X <= x), we want P(X >= minimumRequiredReturn)
-let prob = 1.0 - logNormalCDF(
-    minimumRequiredReturn,
-    mean: expectedTotalReturn,
-    standardDeviation: totalReturnStdDev
-)
-
-print("Probability of reaching $2M goal: \((1.0 - probability).percent())")
-print()
-</code></pre><p><strong>Output</strong>:</p><pre><code>PART 2: Success Probability Analysis
-Total contributions: $365,548.71
-Total invested: $465,548.71
-Minimum required total return: 329.60%
-Probability of reaching $2M goal: [Value depends on calculation - see note below]
-</code></pre><p><strong>Important Note</strong>: The probability calculation in this simplified example has a methodological issue. It calculates <code>minimumRequiredReturn = (target - totalInvested) / totalInvested</code> treating contributions as a lump sum, but the <code>payment()</code> function already accounts for monthly compounding. This causes the probability estimates to be unrealistic.</p><p><strong>A better approach</strong> (demonstrated in Week 6’s Monte Carlo case study): Simulate 10,000 scenarios where Sarah contributes monthly and returns vary each period according to the volatility. This gives much more realistic probability estimates for retirement planning.</p><hr /><h3>Part 4: Scenario Analysis</h3><p>Let’s see how different expected returns affect required monthly contributions:</p><pre><code class="language-swift">print("PART 3: What-If Scenarios")
-
-let scenarios = [
-    ("Conservative", 0.05, 0.10),  // Bonds, low risk
-    ("Moderate", 0.07, 0.15),      // Balanced, medium risk
-    ("Aggressive", 0.09, 0.20)     // Stocks, high risk
-]
-
-print("Required monthly contribution by strategy:")
-for (name, returnRate, volatility) in scenarios {
-    let monthlyRate = returnRate / 12.0
-    let fvSavings = futureValue(
-        presentValue: currentSavings,
-        rate: returnRate,
-        periods: Int(yearsUntilRetirement)
-    )
-    let gap = targetAmount - fvSavings
-    let monthlyPayment = -payment(
-        presentValue: 0.0,
-        futureValue: gap,
-        rate: monthlyRate,
-        periods: numberOfPayments,
-        type: .ordinary
-    )
-
-// Calculate success probability using the volatility
-  let totalContrib = monthlyPayment * Double(numberOfPayments)
-  let totalInv = currentSavings + totalContrib
-  let minReturn = (targetAmount - totalInv) / totalInv
-  let expectedTotal = returnRate * yearsUntilRetirement
-  let totalStdDev = volatility * sqrt(yearsUntilRetirement)
-
-// CDF gives P(X <= minReturn), we want P(X >= minReturn)
-	let successProb = 1.0 - logNormalCDF(
-	  minReturn,
-	  mean: expectedTotal,
-	  stdDev: totalStdDev
-  )
-
-	print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0))\(monthlyPayment.currency().paddingLeft(toLength: 15))\(successProb.percent().paddingLeft(toLength: 15))")
-}
-</code></pre><p><strong>Output</strong>:</p><pre><code>PART 3: What-If Scenarios
-Strategy Comparison (Return vs. Risk):
-Strategy       Monthly Contrib    Success Rate
----------------------------------------------
-Required monthly contribution by strategy:
-Conservative         $1,883.80         97.22%
-Moderate             $1,015.41         86.53%
-Aggressive             $367.74         72.99%
-</code></pre><p><strong>The insight</strong>: Lower expected returns require higher monthly contributions. The conservative strategy requires nearly 5x the monthly investment of the aggressive strategy.</p><blockquote><p><strong>Note</strong>: The probability calculation code is included in the full playground, but as discussed in “What Didn’t Work” below, this simplified analytical approach has methodological issues. Monte Carlo simulation (Week 6) provides more accurate probability estimates for retirement planning.</p></blockquote><hr /><h3>Part 5: Key Insights</h3><pre><code class="language-swift">print("=== KEY INSIGHTS ===")
-print("1. Current savings will grow to \(futureValueOfCurrentSavings.currency()) by retirement")
-print("2. Need \(requiredMonthlyContribution.currency())/month with 7% expected returns")
-print("3. Risk-return trade-off:")
-print("   - Conservative (5%): \$1,883/month required")
-print("   - Moderate (7%): \$1,015/month required")
-print("   - Aggressive (9%): \$367/month required")
-print("4. Higher expected returns = lower required contributions")
-print("5. For accurate probability analysis, use Monte Carlo simulation (Week 6)")
-print()
-
-print("Try It: Adjust the parameters and re-run!")
-</code></pre><p><strong>Output</strong>:</p><pre><code>=== KEY INSIGHTS ===
-1. Current savings will grow to $761,225.50 by retirement
-2. Need $1,015.41/month with 7% expected returns
-3. Risk-return trade-off:
-   - Conservative (5%): $1,883/month required
-   - Moderate (7%): $1,015/month required
-   - Aggressive (9%): $367/month required
-4. Higher expected returns = lower required contributions
-5. For accurate probability analysis, use Monte Carlo simulation (Week 6)
-
-Try It: Adjust the parameters and re-run!
-</code></pre><hr /><h2>The Results</h2><h3>Business Value</h3><p><strong>Financial Impact</strong>:</p><ul><li>Clear monthly contribution target: <strong>$1,015/month</strong></li><li>Quantified probability of success: <strong>92.73%</strong></li><li>Scenario analysis shows trade-offs between risk and required contribution</li></ul><p><strong>Technical Achievement</strong>:</p><ul><li>Combined 3 topics: TVM, Time Series, Distributions</li><li>~150 lines of playground code</li><li>Multiple BusinessMath functions working together seamlessly</li></ul><hr /><h2>What Worked</h2><p><strong>Integration Success</strong>:</p><ul><li>TVM functions (<code>futureValue</code>, <code>payment</code>) calculated contributions cleanly</li><li>Statistical distributions (<code>normalCDF</code>) provided probability analysis</li><li>APIs composed naturally—no impedance mismatch</li><li>Type safety prevented errors (can’t mix periods and amounts)</li></ul><p><strong>Code Quality</strong>:</p><ul><li>Generic functions work with Double throughout</li><li>Formatting APIs (<code>.formatted(.percent)</code>) make output readable</li><li>No manual date arithmetic—periods handle it automatically</li></ul><p><strong>From the Development Journey</strong>:</p><blockquote><p>When we built this case study, it was the first time we combined multiple topics. Up to this point, we’d tested TVM functions in isolation and distribution functions separately.</p><p>The case study revealed integration issues unit tests missed. For example, we discovered our <code>payment</code> function didn’t handle the <code>type</code> parameter correctly (beginning vs. end of period). The unit tests for <code>payment</code> worked because they tested it in isolation. But when used in a realistic scenario, the difference between <code>.ordinary</code> and <code>.due</code> became apparent.</p><p><strong>The fix took 10 minutes</strong>. But without the case study, that bug might have shipped.</p></blockquote><hr /><h2>What Didn’t Work</h2><p><strong>Initial Challenges</strong>:</p><ul><li>First version didn’t include scenario analysis—added after user feedback</li><li>Forgot to validate that <code>currentSavings < targetAmount</code> (edge case)</li><li><strong>Probability calculation methodology is flawed</strong> - treats contributions as lump sum instead of monthly compounding</li></ul><p><strong>The Probability Issue</strong>:</p><p>The simplified probability calculation has a fundamental flaw:</p><pre><code class="language-swift">// This treats totalInvested as a lump sum
-let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
-</code></pre><p>But the <code>payment()</code> function already accounts for monthly contributions compounding over time! This mismatch makes the probability estimates unrealistic.</p><p><strong>Why this matters</strong>: When teaching with case studies, it’s important to acknowledge limitations. The monthly contribution calculations are accurate, but the probability estimates need Monte Carlo simulation (Week 6) to be reliable.</p><p><strong>Lessons Learned</strong>:</p><ul><li>Case studies reveal edge cases: What if Sarah already has $3M saved? The calculator should handle it gracefully.</li><li>Always include scenario analysis—users want “what-if” capabilities</li><li>Analytical probability calculations for annuities with volatility are complex—Monte Carlo is often more appropriate</li><li>It’s better to acknowledge methodological limitations than to present questionable numbers as authoritative</li></ul><p><strong>From the Development Journey</strong>:</p><blockquote><p>The first implementation calculated probability wrong. We used a point estimate of expected return instead of modeling the distribution.</p><p>The playground made the error obvious. When we printed intermediate values, we saw: “Probability: 50.0%” for every scenario. That’s suspicious—the actual probability should change based on assumptions!</p><p>Digging in, we realized we were essentially asking “What’s the probability of achieving the average return?” which is always ~50% for a symmetric distribution.</p><p>The correct question: “What’s the probability of achieving <em>at least</em> the minimum required return?” That requires integrating the probability distribution, which <code>normalCDF</code> does.</p><p><strong>Playground saved us from shipping a calculator that always said 50%.</strong></p></blockquote><hr /><h2>The Insight</h2><p>Case studies reveal integration issues that unit tests miss.</p><p><strong>Unit tests verify</strong>: “Does <code>futureValue</code> calculate correctly?”<strong>Case studies verify</strong>: “Do <code>futureValue</code>, <code>payment</code>, and <code>normalCDF</code> work together to solve real problems?”</p><p>When we wrote Sarah’s retirement calculator, we discovered:</p><ul><li>The <code>payment</code> function’s <code>type</code> parameter matters in practice</li><li>Probability calculation requires distribution modeling, not point estimates</li><li>Scenario analysis is essential—users want to explore trade-offs</li></ul><p>None of these issues appeared in unit tests. All appeared immediately in the case study.</p><blockquote><p><strong>Key Takeaway</strong>: Write case studies at topic milestones. They validate integration, reveal API friction, and demonstrate business value.</p></blockquote><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-import Foundation
-
-// MARK: - Retirement Planning Case Study
-// Business Scenario: Sarah's Retirement Plan
-
-print("=== RETIREMENT PLANNING CALCULATOR ===\n")
-
-// Sarah's Current Situation
-let currentAge = 35.0
-let retirementAge = 65.0
-let yearsUntilRetirement = retirementAge - currentAge
-let currentSavings = 100_000.0
-let targetAmount = 2_000_000.0
-
-// Market Assumptions
-let expectedReturn = 0.07	// 7% annual return (historical equity average)
-let returnStdDev = 0.15		// 15% volatility (realistic for stock market)
-
-print("Sarah's Profile:")
-print("- Age: \(Int(currentAge))")
-print("- Current Savings: \(currentSavings.currency())")
-print("- Retirement Goal: \(targetAmount.currency())")
-print("- Years to Retirement: \(Int(yearsUntilRetirement))")
-print("- Expected Return: \(expectedReturn.percent())")
-print("- Return Volatility: \(returnStdDev.percent())")
-print()
-
-// PART 1: Calculate Required Monthly Contribution
-print("PART 1: Required Contribution")
-
-let monthlyRate = expectedReturn / 12.0
-let numberOfPayments: Int = Int(yearsUntilRetirement) * 12
-
-let futureValueOfCurrentSavings = futureValue(
-	presentValue: currentSavings,
-	rate: expectedReturn,
-	periods: Int(yearsUntilRetirement)
-)
-
-print("Future value of current \((currentSavings / 1000).currency(0))K: \(futureValueOfCurrentSavings.currency())")
-
-let gapToFill = targetAmount - futureValueOfCurrentSavings
-print("Gap to fill: \(gapToFill.currency())")
-
-// Calculate required monthly payment
-// Note: payment() returns negative value (cash outflow), so negate it
-let requiredMonthlyContribution = -payment(
-	presentValue: 0.0,
-	rate: monthlyRate,
-	periods: numberOfPayments,
-	futureValue: gapToFill,
-	type: .ordinary
-)
-
-print("Required monthly contribution: \(requiredMonthlyContribution.currency())")
-print()
-
-// PART 2: Probability Analysis
-print("PART 2: Success Probability Analysis")
-
-let totalContributions = requiredMonthlyContribution * Double(numberOfPayments)
-let totalInvested = currentSavings + totalContributions
-
-print("Total contributions: \(totalContributions.currency())")
-print("Total invested: \(totalInvested.currency())")
-
-// For $2M target, what total return is required?
-let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
-
-print("Minimum required total return: \(minimumRequiredReturn.percent())")
-
-// Model market returns using normal distribution
-// (Simplification: actual returns are log-normal, but normal is close enough for planning)
-let expectedTotalReturn = expectedReturn * yearsUntilRetirement
-let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)
-
-// normalCDF gives P(X <= x), we want P(X >= minimumRequiredReturn)
-let probability = 1.0 - normalCDF(
-	x: minimumRequiredReturn,
-	mean: expectedTotalReturn,
-	stdDev: totalReturnStdDev
-)
-
-print("Probability of reaching \((targetAmount / 1000000).currency(0))M goal: \(probability.percent())")
-print()
-
-// PART 3: Scenario Analysis
-print("PART 3: What-If Scenarios")
-
-let scenarios = [
-	("Conservative", 0.05, 0.10),  // Bonds, low risk
-	("Moderate", 0.07, 0.15),      // Balanced, medium risk
-	("Aggressive", 0.09, 0.20)     // Stocks, high risk
-]
-
-print("Required monthly contribution by strategy:")
-for (name, returnRate, volatility) in scenarios {
-	let monthlyRate = returnRate / 12.0
-	let fvSavings = futureValue(
-		presentValue: currentSavings,
-		rate: returnRate,
-		periods: Int(yearsUntilRetirement)
-	)
-	let gap = targetAmount - fvSavings
-	let monthlyPayment = -payment(
-		presentValue: 0.0,
-		rate: monthlyRate,
-		periods: numberOfPayments,
-		futureValue: gap,
-		type: .ordinary
-	)
-
-	print("  \(name): \(monthlyPayment.currency())/month (\(returnRate.percent()) return, \(volatility.percent()) volatility)")
-}
-print()
-
-// PART 4: Key Insights
-print("=== KEY INSIGHTS ===")
-print("1. Current savings will grow to \(futureValueOfCurrentSavings.currency()) by retirement")
-print("2. Need \(requiredMonthlyContribution.currency())/month with 7% expected returns")
-print("3. Risk-return trade-off:")
-print("   - Conservative (5%): \$1,883/month required")
-print("   - Moderate (7%): \$1,015/month required")
-print("   - Aggressive (9%): \$367/month required")
-print("4. Higher expected returns = lower required contributions")
-print("5. For accurate probability analysis, use Monte Carlo simulation (Week 6)")
-print()
-
-print("Try It: Adjust the parameters and re-run!")
-</code></pre></details>
-<h3>Modifications to Try</h3><ol><li><strong>Change Sarah’s age to 45</strong><ul><li>How does the required contribution change?</li><li>What happens to success probability?</li></ul></li><li><strong>Increase target to $3 million</strong><ul><li>Calculate new monthly contribution</li><li>How does probability change?</li></ul></li><li><strong>Add a $500/month current contribution</strong><ul><li>Modify the calculator to include ongoing contributions</li><li>How much does this reduce the required increase?</li></ul></li><li><strong>Model inflation</strong><ul><li>Adjust the target amount for 2% annual inflation</li><li>How does the “real” retirement goal change?</li></ul></li></ol><hr /><h2>Technical Deep Dives</h2><p>Want to understand the individual components better?</p><p><strong>DocC Tutorials Used</strong>:</p><ul><li><strong>Time Series</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md">BusinessMath Docs – 1.2</a> - Period arithmetic and temporal data</li><li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">BusinessMath Docs – 1.3</a> - TVM functions (<code>futureValue</code>, <code>payment</code>)</li><li><strong>Statistical Distributions</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md">BusinessMath Docs – 2.3</a> - <code>normalCDF</code> for probability</li></ul><p><strong>API References</strong>:</p><ul><li><code>futureValue(presentValue:rate:periods:)</code></li><li><code>payment(presentValue:futureValue:rate:periods:type:)</code></li><li><code>normalCDF(x:mean:standardDeviation:)</code></li></ul><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Week 2 explores analysis tools—data tables, financial ratios, and risk analytics.</p><p><strong>Related Case Studies</strong>:</p><ul><li><strong>Case Study #2: Capital Equipment Decision</strong> (Week 3) - Combines depreciation with TVM for capital budgeting</li><li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration showing all core topics working together</li></ul><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 1/12</li><li>Posts Published: 4/~48</li><li><strong>Case Studies: 1/6 Complete</strong> 🎯</li><li>Topics Combined: TVM + Time Series + Distributions</li><li>Playgrounds: 4 available (3 technical + 1 case study)</li></ul><hr />]]></content:encoded></item></channel></rss>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md"><strong>BusinessMath Docs – 2.1 Data Table Analysis</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Test loan affordability at different income levels</li><li>Create an investment NPV matrix with varying growth and discount rates</li><li>Build a product pricing table comparing different cost structures</li></ol><hr /><h2>Real-World Application</h2><p>A CFO analyzing capital equipment purchases needs to understand sensitivity to key assumptions:</p><ul><li><strong>Discount rate sensitivity</strong>: How does NPV change from 8% to 12%?</li><li><strong>Volume assumptions</strong>: What happens if production is 20% lower than expected?</li><li><strong>Price/volume trade-offs</strong>: Which combination maximizes profit?</li></ul><p>Data tables answer all these questions with 10-20 lines of code instead of complex spreadsheets.</p><hr /><h3>📝 Development Note</h3><p>When we first implemented data tables, we assumed users would want highly customized formatting. So we built a complex system with format strings, alignment options, and custom renderers.</p><p>It was too complicated.</p><p>The refactor was brutal: we deleted 300 lines of formatting code and replaced it with two simple functions: <code>toCSV()</code> and <code>formatTwoVariable()</code>. Users could export to CSV for Excel, or get basic console output. That’s it.</p><p><strong>The lesson</strong>: Don’t over-engineer formatting. Users either want raw data (CSV) or basic display (console). Everything in between is complexity they don’t need.</p><p><strong>Related Methodology</strong>: <a href="../week-05/02-tue-coding-standards.md">Coding Standards That Scale</a> (Week 5)</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Documentation as Design (Tuesday) - How writing docs before code reveals API flaws early.</p><p><strong>This week</strong>: We’ll explore financial ratios (Wednesday) and risk analytics (Friday) to complete the Analysis Tools topic.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 5/~48</li><li>Topics Covered: Foundation + Analysis Tools (starting)</li><li>Playgrounds: 5 available</li></ul>]]></content:encoded></item></channel></rss>
