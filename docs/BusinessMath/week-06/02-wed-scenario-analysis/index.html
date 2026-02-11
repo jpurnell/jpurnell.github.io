@@ -1,56 +1,13 @@
----
-title: Scenario & Sensitivity Analysis
-date: 2026-02-12 13:00
-series: BusinessMath Quarterly Series
-week: 6
-post: 2
-docc_source: "4.2-ScenarioAnalysisGuide.md"
-playground: "Week06/ScenarioAnalysis.playground"
-tags: businessmath, swift, scenarios, sensitivity-analysis, tornado-diagrams, what-if-analysis
-layout: BlogPostLayout
-published: true
----
-
-# Scenario & Sensitivity Analysis
-
-**Part 21 of 12-Week BusinessMath Series**
-
----
-
-## What You'll Learn
-
-- Creating multiple financial scenarios (base, optimistic, and downside case)
-- Running one-way sensitivity analysis to test input variations
-- Building tornado diagrams to identify the most impactful drivers
-- Performing two-way sensitivity analysis for input interactions
-- Combining scenario planning with probabilistic Monte Carlo
-- Making data-driven decisions under uncertainty
-
----
-
-## The Problem
-
-Good decision-making is centered around identifying and understanding different states of the future. One of the best ways we have to think about this is to consider **what if**?
-
-- _Which assumptions matter most?_ If revenue drops 10%, does the project still work?
-- _What's the range of outcomes?_ Best case, base case, worst case—how different are they?
-- _Which input should we focus on?_ Would raising prices or cutting costs be more impactful?
-- _How do inputs interact?_ If revenue drops AND costs rise, what happens?
-
-**Single-point forecasts hide critical uncertainties**. Scenario and sensitivity analysis reveal which assumptions drive your results and how robust your decisions are.
-
----
-
-## The Solution
-
-BusinessMath provides comprehensive scenario and sensitivity analysis tools: `FinancialScenario` for discrete cases, sensitivity functions for input variations, and Monte Carlo integration for probabilistic analysis.
-
-### Creating Your First Scenario
-
-Define base case drivers and build financial statements:
-
-```swift
-import BusinessMath
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 21 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Scenario & Sensitivity Analysis</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Scenario & Sensitivity Analysis"><meta property="twitter:title" content="Scenario & Sensitivity Analysis"><meta property="og:description" content="Scenario & Sensitivity Analysis"><meta name="twitter:description" content="Scenario & Sensitivity Analysis"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Scenario & Sensitivity Analysis</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">21 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 21 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Creating multiple financial scenarios (base, optimistic, and downside case)</li><li>Running one-way sensitivity analysis to test input variations</li><li>Building tornado diagrams to identify the most impactful drivers</li><li>Performing two-way sensitivity analysis for input interactions</li><li>Combining scenario planning with probabilistic Monte Carlo</li><li>Making data-driven decisions under uncertainty</li></ul><hr /><h2>The Problem</h2><p>Good decision-making is centered around identifying and understanding different states of the future. One of the best ways we have to think about this is to consider <strong>what if</strong>?</p><ul><li><em>Which assumptions matter most?</em> If revenue drops 10%, does the project still work?</li><li><em>What’s the range of outcomes?</em> Best case, base case, worst case—how different are they?</li><li><em>Which input should we focus on?</em> Would raising prices or cutting costs be more impactful?</li><li><em>How do inputs interact?</em> If revenue drops AND costs rise, what happens?</li></ul><p><strong>Single-point forecasts hide critical uncertainties</strong>. Scenario and sensitivity analysis reveal which assumptions drive your results and how robust your decisions are.</p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive scenario and sensitivity analysis tools: <code>FinancialScenario</code> for discrete cases, sensitivity functions for input variations, and Monte Carlo integration for probabilistic analysis.</p><h3>Creating Your First Scenario</h3><p>Define base case drivers and build financial statements:</p><pre><code class="language-swift">import BusinessMath
 
 let company = Entity(
     id: "TECH001",
@@ -172,23 +129,8 @@ let baseProjection = try runner.run(
 )
 
 print("Base Case Q1 Net Income: \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
-```
-
-**Output:**
-```
-Base Case Q1 Net Income: $200,000
-```
-
-**The structure**: Scenarios encapsulate a complete set of driver assumptions. The builder converts drivers into financial statements. This separation allows easy scenario comparison.
-
----
-
-### Creating Multiple Scenarios
-
-Build best and worst case scenarios by overriding primitive drivers:
-
-```swift
-// Best Case: Higher revenue, better margins (lower COGS rate), lower OpEx
+</code></pre><p><strong>Output:</strong></p><pre><code>Base Case Q1 Net Income: $200,000
+</code></pre><p><strong>The structure</strong>: Scenarios encapsulate a complete set of driver assumptions. The builder converts drivers into financial statements. This separation allows easy scenario comparison.</p><hr /><h3>Creating Multiple Scenarios</h3><p>Build best and worst case scenarios by overriding primitive drivers:</p><pre><code class="language-swift">// Best Case: Higher revenue, better margins (lower COGS rate), lower OpEx
 let bestRevenue = DeterministicDriver(name: "Revenue", value: 1_200_000)  // +20%
 let bestCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.45)    // 45% (better margins!)
 let bestOpEx = DeterministicDriver(name: "OpEx", value: 180_000)          // -10%
@@ -244,33 +186,13 @@ print("Worst Case: \(worstProjection.incomeStatement.netIncome[q1]!.currency(0))
 let range = bestProjection.incomeStatement.netIncome[q1]! -
             worstProjection.incomeStatement.netIncome[q1]!
 print("\nRange: \(range.currency(0))")
-```
-
-**Output:**
-```
-=== Q1 Net Income Comparison ===
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Q1 Net Income Comparison ===
 Best Case:  $480,000   (Revenue $1.2M × 45% COGS = $540k, OpEx $180k)
 Base Case:  $200,000   (Revenue $1.0M × 60% COGS = $600k, OpEx $200k)
 Worst Case: ($80,000)  (Revenue $800k × 82.5% COGS = $660k, OpEx $220k)
 
 Range: $560,000
-```
-
-**The reality**: Net income swings from **+$480K to -$80K** across scenarios. That's a $560K range—highly uncertain! This is why scenario planning matters.
-
-**The power of compositional drivers**: Notice how **COGS automatically adjusts** based on the relationship `COGS = Revenue × COGS Rate`. You can override:
-- **Just Revenue** (testing volume scenarios with constant margins)
-- **Just COGS Rate** (testing margin scenarios with constant volume)
-- **Both** (testing combined scenarios like Best/Worst case above)
-
----
-
-### One-Way Sensitivity Analysis
-
-Analyze how one input affects the output:
-
-```swift
-// How does Revenue affect Net Income?
+</code></pre><p><strong>The reality</strong>: Net income swings from <strong>+$480K to -$80K</strong> across scenarios. That’s a $560K range—highly uncertain! This is why scenario planning matters.</p><p><strong>The power of compositional drivers</strong>: Notice how <strong>COGS automatically adjusts</strong> based on the relationship <code>COGS = Revenue × COGS Rate</code>. You can override:</p><ul><li><strong>Just Revenue</strong> (testing volume scenarios with constant margins)</li><li><strong>Just COGS Rate</strong> (testing margin scenarios with constant volume)</li><li><strong>Both</strong> (testing combined scenarios like Best/Worst case above)</li></ul><hr /><h3>One-Way Sensitivity Analysis</h3><p>Analyze how one input affects the output:</p><pre><code class="language-swift">// How does Revenue affect Net Income?
 let revenueSensitivity = try runSensitivity(
     baseCase: baseCase,
     entity: company,
@@ -299,11 +221,7 @@ let sensitivity = deltaIncome / deltaRevenue
 
 print("\nSensitivity: \(sensitivity.number(2))")
 print("For every $1 increase in revenue, net income increases by \(sensitivity.currency(2))")
-```
-
-**Output:**
-```
-=== Revenue Sensitivity Analysis ===
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Revenue Sensitivity Analysis ===
 Revenue     →   Net Income
 ----------      -----------
   $800,000  →   $120,000
@@ -318,22 +236,7 @@ $1,200,000  →   $280,000
 
 Sensitivity: 0.40
 For every $1 increase in revenue, net income increases by $0.40
-```
-
-**The insight**: Net income has a **40% contribution margin** from revenue. This is because:
-- **60% of revenue** goes to COGS (variable cost that scales with revenue)
-- **40% remains** as contribution margin to cover OpEx and generate profit
-
-This is a fundamental concept: the **contribution margin** shows how much each additional dollar of revenue contributes to covering fixed costs and profit.
-
----
-
-### Tornado Diagram Analysis
-
-Identify which drivers have the greatest impact:
-
-```swift
-// Analyze all key drivers at once
+</code></pre><p><strong>The insight</strong>: Net income has a <strong>40% contribution margin</strong> from revenue. This is because:</p><ul><li><strong>60% of revenue</strong> goes to COGS (variable cost that scales with revenue)</li><li><strong>40% remains</strong> as contribution margin to cover OpEx and generate profit</li></ul><p>This is a fundamental concept: the <strong>contribution margin</strong> shows how much each additional dollar of revenue contributes to covering fixed costs and profit.</p><hr /><h3>Tornado Diagram Analysis</h3><p>Identify which drivers have the greatest impact:</p><pre><code class="language-swift">// Analyze all key drivers at once
 let tornado = try runTornadoAnalysis(
 	baseCase: baseCase,
 	entity: company,
@@ -358,43 +261,16 @@ for input in tornado.inputs {
 
 	print("\(input.padding(toLength: 20, withPad: " ", startingAt: 0))\(low.currency(0).paddingLeft(toLength: 12))\(high.currency(0).paddingLeft(toLength: 12))\(impact.currency(0).paddingLeft(toLength: 12))\(percentImpact.percent(0).paddingLeft(toLength: 12))")
 }
-```
-
-**Output:**
-```
-=== Tornado Diagram (Ranked by Impact) ===
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Tornado Diagram (Ranked by Impact) ===
 Driver                  Low         High        Impact      % Impact
 --------------------    ----------  ----------  ----------  --------
 COGS Rate                $80,000    $320,000    $240,000        120%
 Revenue                 $120,000    $280,000    $160,000         80%
 Operating Expenses      $160,000    $240,000     $80,000         40%
-```
-
-**The ranking**:
-1. **COGS Rate** (margins) has the biggest impact ($240K range)
-2. **Revenue** (volume) second ($160K range)
-3. **Operating Expenses** (fixed costs) third ($80K range)
-
-**The strategic insight**: In this business model, **margin improvement is more important than volume growth**. A 20% improvement in COGS Rate (from 60% → 48%) has more impact than a 20% increase in revenue. This suggests focusing on:
-- **First priority**: Supplier negotiations, manufacturing efficiency, pricing power (all improve COGS Rate)
-- **Second priority**: Sales growth and market expansion (improve Revenue)
-- **Third priority**: Overhead reduction (reduce Operating Expenses)
-
----
-
-### Visualize the Tornado
-
-Create a text-based tornado diagram:
-
-```swift
-let tornadoPlot = plotTornadoDiagram(tornado, baseCase: baseProjection.incomeStatement.netIncome[q1]!)
+</code></pre><p><strong>The ranking</strong>:</p><ol><li><strong>COGS Rate</strong> (margins) has the biggest impact ($240K range)</li><li><strong>Revenue</strong> (volume) second ($160K range)</li><li><strong>Operating Expenses</strong> (fixed costs) third ($80K range)</li></ol><p><strong>The strategic insight</strong>: In this business model, <strong>margin improvement is more important than volume growth</strong>. A 20% improvement in COGS Rate (from 60% → 48%) has more impact than a 20% increase in revenue. This suggests focusing on:</p><ul><li><strong>First priority</strong>: Supplier negotiations, manufacturing efficiency, pricing power (all improve COGS Rate)</li><li><strong>Second priority</strong>: Sales growth and market expansion (improve Revenue)</li><li><strong>Third priority</strong>: Overhead reduction (reduce Operating Expenses)</li></ul><hr /><h3>Visualize the Tornado</h3><p>Create a text-based tornado diagram:</p><pre><code class="language-swift">let tornadoPlot = plotTornadoDiagram(tornado, baseCase: baseProjection.incomeStatement.netIncome[q1]!)
 
 print("\n" + tornadoPlot)
-```
-
-**Output:**
-```
-Tornado Diagram - Sensitivity Analysis
+</code></pre><p><strong>Output:</strong></p><pre><code>Tornado Diagram - Sensitivity Analysis
 Base Case: 200000
 
 COGS Rate          ◄█████████████████████████|█████████████████████████► Impact: 240000 120.0%
@@ -403,18 +279,7 @@ Revenue            ◄         ████████████████|
                      120000                 200000                 280000)
 Operating Expenses ◄                 ████████|████████                 ► Impact: 80000 40.0%
                      160000                 200000                 240000)
-```
-
-The width of each bar shows impact range. **COGS Rate's bar is widest**—margin management is the most impactful lever for this business.
-
----
-
-### Two-Way Sensitivity Analysis
-
-Two-way sensitivity analysis allows us to analyze interactions between two inputs:
-
-```swift
-// How do Revenue and COGS Rate interact?
+</code></pre><p>The width of each bar shows impact range. <strong>COGS Rate’s bar is widest</strong>—margin management is the most impactful lever for this business.</p><hr /><h3>Two-Way Sensitivity Analysis</h3><p>Two-way sensitivity analysis allows us to analyze interactions between two inputs:</p><pre><code class="language-swift">// How do Revenue and COGS Rate interact?
 let twoWay = try runTwoWaySensitivity(
     baseCase: baseCase,
     entity: company,
@@ -444,11 +309,7 @@ for (i, revenue) in twoWay.inputValues1.enumerated() {
 	}
 	print(row)
 }
-```
-
-**Output:**
-```
-=== Two-Way Sensitivity: Revenue × COGS Rate ===
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Two-Way Sensitivity: Revenue × COGS Rate ===
 
 COGS Rate →         48%         54%         60%         66%         72%
 Revenue ↓
@@ -458,21 +319,7 @@ Revenue ↓
  $1,000,000    $320,000    $260,000    $200,000    $140,000     $80,000
  $1,100,000    $372,000    $306,000    $240,000    $174,000    $108,000
  $1,200,000    $424,000    $352,000    $280,000    $208,000    $136,000
-```
-
-**The interaction**: This table shows the **trade-off between volume and margins**:
-- **Lower-left corner** ($1.2M revenue, 48% COGS) = **$424K profit** (best case: high volume + high margins)
-- **Upper-right corner** ($800K revenue, 72% COGS) = **$24K profit** (worst case: low volume + low margins)
-- **Diagonal insight**: A company at $800K revenue with 48% COGS ($216K profit) can achieve similar results as $1.2M revenue with 72% COGS ($136K profit). This shows **margin quality matters more than scale** in certain scenarios.
-
----
-
-### Monte Carlo Integration
-
-Combine scenarios with probabilistic analysis using uncertain drivers:
-
-```swift
-// Create probabilistic scenario with uncertain Revenue and COGS Rate
+</code></pre><p><strong>The interaction</strong>: This table shows the <strong>trade-off between volume and margins</strong>:</p><ul><li><strong>Lower-left corner</strong> ($1.2M revenue, 48% COGS) = <strong>$424K profit</strong> (best case: high volume + high margins)</li><li><strong>Upper-right corner</strong> ($800K revenue, 72% COGS) = <strong>$24K profit</strong> (worst case: low volume + low margins)</li><li><strong>Diagonal insight</strong>: A company at $800K revenue with 48% COGS ($216K profit) can achieve similar results as $1.2M revenue with 72% COGS ($136K profit). This shows <strong>margin quality matters more than scale</strong> in certain scenarios.</li></ul><hr /><h3>Monte Carlo Integration</h3><p>Combine scenarios with probabilistic analysis using uncertain drivers:</p><pre><code class="language-swift">// Create probabilistic scenario with uncertain Revenue and COGS Rate
 let uncertainRevenue = ProbabilisticDriver<Double>.normal(
     name: "Revenue",
     mean: 1_000_000.0,
@@ -525,11 +372,7 @@ print("\n90% CI: [\(ci90.lowerBound.currency(0)), \(ci90.upperBound.currency(0))
 
 let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric)
 print("\nProbability of loss: \(probLoss.percent(1))")
-```
-
-**Output:**
-```
-=== Monte Carlo Results (10,000 iterations) ===
+</code></pre><p><strong>Output:</strong></p><pre><code>=== Monte Carlo Results (10,000 iterations) ===
 Mean: $200,352
 
 Percentiles:
@@ -542,18 +385,7 @@ Percentiles:
 90% CI: [$97,865, $310,941]
 
 Probability of loss: 0.0%
-```
-
-**The integration**: Monte Carlo gives you the **full probability distribution**, not just 3 scenarios. There's 0.0% chance of loss—but that's not a substitute for good risk management!
-
----
-
-### GPU-Accelerated Monte Carlo with Expression Models
-
-For high-performance probabilistic analysis, use GPU-accelerated `MonteCarloExpressionModel` to run 10-100× faster with minimal memory:
-
-```swift
-// Pre-compute constants
+</code></pre><p><strong>The integration</strong>: Monte Carlo gives you the <strong>full probability distribution</strong>, not just 3 scenarios. There’s 0.0% chance of loss—but that’s not a substitute for good risk management!</p><hr /><h3>GPU-Accelerated Monte Carlo with Expression Models</h3><p>For high-performance probabilistic analysis, use GPU-accelerated <code>MonteCarloExpressionModel</code> to run 10-100× faster with minimal memory:</p><pre><code class="language-swift">// Pre-compute constants
 let opexAmount = 200_000.0
 let taxRate = 0.21
 
@@ -613,11 +445,7 @@ print("Risk Metrics:")
 print("  95% CI: [\(gpuResults.percentiles.p5.currency(0)), \(gpuResults.percentiles.p95.currency(0))]")
 print("  Value at Risk (5%): \(gpuResults.percentiles.p5.currency(0))")
 print("  Probability of Loss: \((gpuResults.valuesArray.filter { $0 < 0 }.count / gpuResults.iterations).percent(1))")
-```
-
-**Output:**
-```
-=== GPU-Accelerated Monte Carlo (100,000 iterations) ===
+</code></pre><p><strong>Output:</strong></p><pre><code>=== GPU-Accelerated Monte Carlo (100,000 iterations) ===
 Compute Time: 52.3 ms
 GPU Used: Yes
 
@@ -630,62 +458,14 @@ Risk Metrics:
   95% CI: [$54,072, $274,883]
   Value at Risk (5%): $54,072
   Probability of Loss: 0.7%
-```
-
-**Performance Breakthrough:**
-
-| Approach | Iterations | Time | Memory | Speedup |
-|----------|-----------|------|--------|---------|
-| Traditional Monte Carlo | 10,000 | ~2,100 ms | ~25 MB | 1× (baseline) |
-| GPU Expression Model | 100,000 | ~52 ms | ~8 MB | **~400×** |
-
-**When to use expression models:**
-- ✅ **Single-period** calculations (like quarterly profit)
-- ✅ **High iteration counts** (50,000+)
-- ✅ **Compute-intensive** formulas
-- ✅ **Memory-constrained** environments
-
-**When to use traditional approach:**
-- ✅ **Multi-period compounding** (revenue growing over 4 quarters)
-- ✅ **Complex state** (financial statements with interdependencies)
-- ✅ **Path-dependent** calculations (option pricing with early exercise)
-
-`★ Insight ─────────────────────────────────────`
-
-**Expression Models: The Constants vs Variables Pattern**
-
-GPU-accelerated expression models compile to bytecode that runs on Metal. This creates two distinct contexts:
-
-**Swift context (outside builder):**
-```swift
-let opex = 200_000.0  // Regular Swift Double
+</code></pre><p><strong>Performance Breakthrough:</strong></p><table><thead><th>Approach</th><th>Iterations</th><th>Time</th><th>Memory</th><th>Speedup</th></thead><tbody><tr><td>Traditional Monte Carlo</td><td>10,000</td><td>~2,100 ms</td><td>~25 MB</td><td>1× (baseline)</td></tr><tr><td>GPU Expression Model</td><td>100,000</td><td>~52 ms</td><td>~8 MB</td><td><strong>~400×</strong></td></tr></tbody></table><p><strong>When to use expression models:</strong></p><ul><li>✅ <strong>Single-period</strong> calculations (like quarterly profit)</li><li>✅ <strong>High iteration counts</strong> (50,000+)</li><li>✅ <strong>Compute-intensive</strong> formulas</li><li>✅ <strong>Memory-constrained</strong> environments</li></ul><p><strong>When to use traditional approach:</strong></p><ul><li>✅ <strong>Multi-period compounding</strong> (revenue growing over 4 quarters)</li><li>✅ <strong>Complex state</strong> (financial statements with interdependencies)</li><li>✅ <strong>Path-dependent</strong> calculations (option pricing with early exercise)</li></ul><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Expression Models: The Constants vs Variables Pattern</strong></p><p>GPU-accelerated expression models compile to bytecode that runs on Metal. This creates two distinct contexts:</p><p><strong>Swift context (outside builder):</strong></p><pre><code class="language-swift">let opex = 200_000.0  // Regular Swift Double
 let taxRate = pow(1.21, years)  // Use Swift's pow() for constants
-```
-
-**DSL context (inside builder):**
-```swift
-let revenue = builder[0]  // ExpressionProxy (depends on random input)
+</code></pre><p><strong>DSL context (inside builder):</strong></p><pre><code class="language-swift">let revenue = builder[0]  // ExpressionProxy (depends on random input)
 let afterTax = revenue * 0.79  // Use pre-computed constant
 let scaled = revenue.exp()  // Use DSL methods on variables
-```
-
-**Critical rule**: Pre-compute all constants outside the builder. Only use DSL methods (`.exp()`, `.sqrt()`, `.power()`) on variables that depend on random inputs.
-
-**Why?** Constants should be baked into the GPU bytecode, not recomputed millions of times. This pattern gives you maximum performance.
-
-`─────────────────────────────────────────────────`
-
-For comprehensive GPU Monte Carlo coverage, see: <doc:4.3-MonteCarloExpressionModelsGuide>
-
----
-
-## Try It Yourself
-
-<details>
+</code></pre><p><strong>Critical rule</strong>: Pre-compute all constants outside the builder. Only use DSL methods (<code>.exp()</code>, <code>.sqrt()</code>, <code>.power()</code>) on variables that depend on random inputs.</p><p><strong>Why?</strong> Constants should be baked into the GPU bytecode, not recomputed millions of times. This pattern gives you maximum performance.</p><p><code>─────────────────────────────────────────────────</code></p><p>For comprehensive GPU Monte Carlo coverage, see: <a href="doc:4.3-MonteCarloExpressionModelsGuide">doc:4.3-MonteCarloExpressionModelsGuide</a></p><hr /><h2>Try It Yourself</h2><details>
 <summary>Click to expand full playground code</summary>
-
-```swift
-import BusinessMath
+<pre><code class="language-swift">import BusinessMath
 
 let company = Entity(
 	id: "TECH001",
@@ -1017,114 +797,7 @@ print("\n" + tornadoPlot)
 	let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric)
 	print("\nProbability of loss: \(probLoss.percent(1))")
 
-```
-</details>
-
-→ Full API Reference: [BusinessMath Docs – 4.2 Scenario Analysis](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.2-ScenarioAnalysisGuide.md)
-
-
-**Modifications to try**:
-1. Add more scenarios (recession, expansion, new competitor)
-2. Build three-way sensitivity analysis (revenue × costs × pricing)
-3. Model correlated uncertainties (when revenue drops, costs often do too)
-4. Create scenario probability weights (70% base, 20% best, 10% worst)
-
----
-
-## Real-World Application
-
-Every strategic decision requires scenario and sensitivity analysis:
-
-- **M&A due diligence**: "Under which scenarios does this acquisition create value?"
-- **Product launches**: "Which assumption matters most—adoption rate or pricing?"
-- **Capital projects**: "What's the IRR in best/base/worst scenarios?"
-- **Strategic planning**: "How resilient is our strategy to economic downturns?"
-
-**Corporate development use case**: "We're considering acquiring a competitor for $500M. Run tornado analysis on synergy assumptions (revenue, cost savings, integration costs). Show me the NPV range across scenarios."
-
-BusinessMath makes scenario and sensitivity analysis systematic, reproducible, and decision-ready.
-
----
-
-`★ Insight ─────────────────────────────────────`
-
-**Tornado Diagrams: Visual Risk Prioritization**
-
-A tornado diagram ranks inputs by impact on the output. It's called a "tornado" because the widest bar (biggest impact) is at the top, narrowing down like a tornado shape.
-
-**Why this matters**:
-- **Focus scarce resources**: Improve the top 2-3 drivers, ignore the rest
-- **Set research priorities**: Spend more effort refining high-impact assumptions
-- **Negotiate effectively**: In M&A, focus diligence on tornado-top items
-
-**Example**: If Revenue has 10× the impact of OpEx, spend time perfecting your revenue forecast, not optimizing office supply costs.
-
-**The rule**: **80/20 applies to uncertainty**—20% of inputs drive 80% of outcome variance.
-
-`─────────────────────────────────────────────────`
-
----
-
-`★ Insight ─────────────────────────────────────`
-
-**Compositional Drivers: Primitives vs. Formulas**
-
-This example demonstrates a critical pattern for ergonomic scenario analysis: **distinguish primitive inputs from calculated formulas**.
-
-**Primitive drivers** are independent inputs you control:
-- `Revenue` - how much you sell
-- `COGS Rate` - what percentage of revenue goes to production costs
-- `OpEx` - fixed operating expenses
-
-**Formula drivers** are relationships calculated in the builder:
-- `COGS = Revenue × COGS Rate` - computed from primitives
-
-**Why this matters**:
-1. **Flexibility**: Override any primitive independently (test revenue scenarios, margin scenarios, or both)
-2. **Natural sensitivity**: When you vary `Revenue`, `COGS` automatically scales, capturing the 40% contribution margin
-3. **Probabilistic modeling**: Uncertain `Revenue` + uncertain `COGS Rate` → compound uncertainty in `COGS` propagates naturally
-4. **Realistic scenarios**: Best case combines high revenue AND better margins; worst case combines low revenue AND margin compression
-
-**Alternative (anti-pattern)**: Treating the _dollar amount_ of `COGS` as an independent primitive will give 100% revenue passthrough—unrealistic for businesses with variable costs!
-
-**The principle**: **Model your business economics**, not just your accounting equations.
-
-`─────────────────────────────────────────────────`
-
----
-
-### 📝 Development Note
-
-The biggest design challenge was **handling driver overrides**. We needed a system where:
-1. Base case defines default drivers
-2. Scenarios override specific drivers
-3. Unoverridden drivers fall back to defaults
-4. Type safety is maintained
-
-We chose a dictionary-based approach with `AnyDriver` type erasure:
-```swift
-var overrides: [String: AnyDriver<Double>] = [:]
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.2-ScenarioAnalysisGuide.md">BusinessMath Docs – 4.2 Scenario Analysis</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add more scenarios (recession, expansion, new competitor)</li><li>Build three-way sensitivity analysis (revenue × costs × pricing)</li><li>Model correlated uncertainties (when revenue drops, costs often do too)</li><li>Create scenario probability weights (70% base, 20% best, 10% worst)</li></ol><hr /><h2>Real-World Application</h2><p>Every strategic decision requires scenario and sensitivity analysis:</p><ul><li><strong>M&A due diligence</strong>: “Under which scenarios does this acquisition create value?”</li><li><strong>Product launches</strong>: “Which assumption matters most—adoption rate or pricing?”</li><li><strong>Capital projects</strong>: “What’s the IRR in best/base/worst scenarios?”</li><li><strong>Strategic planning</strong>: “How resilient is our strategy to economic downturns?”</li></ul><p><strong>Corporate development use case</strong>: “We’re considering acquiring a competitor for $500M. Run tornado analysis on synergy assumptions (revenue, cost savings, integration costs). Show me the NPV range across scenarios.”</p><p>BusinessMath makes scenario and sensitivity analysis systematic, reproducible, and decision-ready.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Tornado Diagrams: Visual Risk Prioritization</strong></p><p>A tornado diagram ranks inputs by impact on the output. It’s called a “tornado” because the widest bar (biggest impact) is at the top, narrowing down like a tornado shape.</p><p><strong>Why this matters</strong>:</p><ul><li><strong>Focus scarce resources</strong>: Improve the top 2-3 drivers, ignore the rest</li><li><strong>Set research priorities</strong>: Spend more effort refining high-impact assumptions</li><li><strong>Negotiate effectively</strong>: In M&A, focus diligence on tornado-top items</li></ul><p><strong>Example</strong>: If Revenue has 10× the impact of OpEx, spend time perfecting your revenue forecast, not optimizing office supply costs.</p><p><strong>The rule</strong>: <strong>80/20 applies to uncertainty</strong>—20% of inputs drive 80% of outcome variance.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Compositional Drivers: Primitives vs. Formulas</strong></p><p>This example demonstrates a critical pattern for ergonomic scenario analysis: <strong>distinguish primitive inputs from calculated formulas</strong>.</p><p><strong>Primitive drivers</strong> are independent inputs you control:</p><ul><li><code>Revenue</code> - how much you sell</li><li><code>COGS Rate</code> - what percentage of revenue goes to production costs</li><li><code>OpEx</code> - fixed operating expenses</li></ul><p><strong>Formula drivers</strong> are relationships calculated in the builder:</p><ul><li><code>COGS = Revenue × COGS Rate</code> - computed from primitives</li></ul><p><strong>Why this matters</strong>:</p><ol><li><strong>Flexibility</strong>: Override any primitive independently (test revenue scenarios, margin scenarios, or both)</li><li><strong>Natural sensitivity</strong>: When you vary <code>Revenue</code>, <code>COGS</code> automatically scales, capturing the 40% contribution margin</li><li><strong>Probabilistic modeling</strong>: Uncertain <code>Revenue</code> + uncertain <code>COGS Rate</code> → compound uncertainty in <code>COGS</code> propagates naturally</li><li><strong>Realistic scenarios</strong>: Best case combines high revenue AND better margins; worst case combines low revenue AND margin compression</li></ol><p><strong>Alternative (anti-pattern)</strong>: Treating the <em>dollar amount</em> of <code>COGS</code> as an independent primitive will give 100% revenue passthrough—unrealistic for businesses with variable costs!</p><p><strong>The principle</strong>: <strong>Model your business economics</strong>, not just your accounting equations.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest design challenge was <strong>handling driver overrides</strong>. We needed a system where:</p><ol><li>Base case defines default drivers</li><li>Scenarios override specific drivers</li><li>Unoverridden drivers fall back to defaults</li><li>Type safety is maintained</li></ol><p>We chose a dictionary-based approach with <code>AnyDriver</code> type erasure:</p><pre><code class="language-swift">var overrides: [String: AnyDriver<Double>] = [:]
 overrides["Revenue"] = AnyDriver(customRevenueDriver)
-```
-
-**Trade-off**: Loses compile-time type checking (runtime `String` keys), but gains flexibility for dynamic scenario construction.
-
-**Alternative considered**: Strongly-typed scenario builder with keypaths—rejected as too rigid for exploratory analysis.
-
-**Related Methodology**: [Documentation as Design](../week-02/02-tue-documentation-as-design) (Week 2) - We designed the API by writing tutorial examples first to ensure usability.
-
----
-
-## Next Steps
-
-**Coming up Friday**: Case Study #3 - Option Pricing with Monte Carlo, combining simulation with derivatives valuation.
-
-**Next week**: Week 7 explores optimization—finding the *best* strategy, not just analyzing given scenarios.
-
----
-
-**Series Progress**:
-- Week: 6/12
-- Posts Published: 21/~48
-- Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + Simulation (in progress)
-- Playgrounds: 20 available
+</code></pre><p><strong>Trade-off</strong>: Loses compile-time type checking (runtime <code>String</code> keys), but gains flexibility for dynamic scenario construction.</p><p><strong>Alternative considered</strong>: Strongly-typed scenario builder with keypaths—rejected as too rigid for exploratory analysis.</p><p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - We designed the API by writing tutorial examples first to ensure usability.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Friday</strong>: Case Study #3 - Option Pricing with Monte Carlo, combining simulation with derivatives valuation.</p><p><strong>Next week</strong>: Week 7 explores optimization—finding the <em>best</em> strategy, not just analyzing given scenarios.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 21/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + Simulation (in progress)</li><li>Playgrounds: 20 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, scenarios, sensitivity-analysis, tornado-diagrams, what-if-analysis</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
