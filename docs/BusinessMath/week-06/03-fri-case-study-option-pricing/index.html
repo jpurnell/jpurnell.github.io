@@ -1,58 +1,13 @@
----
-title: Case Study #3: Option Pricing with Monte Carlo Simulation
-date: 2026-02-14 13:00
-series: BusinessMath Quarterly Series
-week: 6
-post: 3
-case_study: 3
-playground: "CaseStudies/OptionPricing.playground"
-tags: businessmath, swift, monte-carlo, options, derivatives, black-scholes, convergence, case-study
-layout: BlogPostLayout
-published: true
----
-
-# Case Study #3: Option Pricing with Monte Carlo Simulation
-
-**Part 20 of 12-Week BusinessMath Series**
-
----
-
-## The Business Problem
-
-**Company**: FinTech startup building a derivatives trading platform
-
-**Challenge**: Price European call options for client portfolios. Need to:
-- Price options accurately using Monte Carlo simulation
-- Validate results against Black-Scholes analytical formula
-- Balance accuracy vs. computation time (10ms target for real-time quotes)
-- Provide confidence intervals for risk management
-- Support batch pricing for portfolio valuation
-
-**Why Monte Carlo?** While Black-Scholes provides closed-form pricing for European options, Monte Carlo generalizes to exotic options (Asian, Barrier, American) that clients will demand later.
-
----
-
-## The Solution Architecture
-
-We'll build a complete option pricing system that:
-1. Simulates stock price paths using Geometric Brownian Motion
-2. Computes option payoffs across thousands of scenarios
-3. Analyzes convergence to determine optimal iteration count
-4. Compares Monte Carlo vs. Black-Scholes for validation
-5. Optimizes for real-time pricing constraints
-
----
-
-## Step 1: Building the Option Pricing Model
-
-European call option pricing with Monte Carlo uses **expression models** - the modern GPU-accelerated approach that's 10-100× faster than traditional loops.
-
-### The Expression Model Approach
-
-Instead of manually looping and storing payoffs, we define the pricing logic declaratively:
-
-```swift
-import Foundation
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 20 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Case Study #3: Option Pricing with Monte Carlo Simulation</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-06/03-fri-case-study-option-pricing" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Case Study #3: Option Pricing with Monte Carlo Simulation"><meta property="twitter:title" content="Case Study #3: Option Pricing with Monte Carlo Simulation"><meta property="og:description" content="Case Study #3: Option Pricing with Monte Carlo Simulation"><meta name="twitter:description" content="Case Study #3: Option Pricing with Monte Carlo Simulation"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-06/03-fri-case-study-option-pricing"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Case Study #3: Option Pricing with Monte Carlo Simulation</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">18 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 20 of 12-Week BusinessMath Series</strong></p><hr /><h2>The Business Problem</h2><p><strong>Company</strong>: FinTech startup building a derivatives trading platform</p><p><strong>Challenge</strong>: Price European call options for client portfolios. Need to:</p><ul><li>Price options accurately using Monte Carlo simulation</li><li>Validate results against Black-Scholes analytical formula</li><li>Balance accuracy vs. computation time (10ms target for real-time quotes)</li><li>Provide confidence intervals for risk management</li><li>Support batch pricing for portfolio valuation</li></ul><p><strong>Why Monte Carlo?</strong> While Black-Scholes provides closed-form pricing for European options, Monte Carlo generalizes to exotic options (Asian, Barrier, American) that clients will demand later.</p><hr /><h2>The Solution Architecture</h2><p>We’ll build a complete option pricing system that:</p><ol><li>Simulates stock price paths using Geometric Brownian Motion</li><li>Computes option payoffs across thousands of scenarios</li><li>Analyzes convergence to determine optimal iteration count</li><li>Compares Monte Carlo vs. Black-Scholes for validation</li><li>Optimizes for real-time pricing constraints</li></ol><hr /><h2>Step 1: Building the Option Pricing Model</h2><p>European call option pricing with Monte Carlo uses <strong>expression models</strong> - the modern GPU-accelerated approach that’s 10-100× faster than traditional loops.</p><h3>The Expression Model Approach</h3><p>Instead of manually looping and storing payoffs, we define the pricing logic declaratively:</p><pre><code class="language-swift">import Foundation
 import BusinessMath
 
 // Option parameters
@@ -81,22 +36,7 @@ let optionModel = MonteCarloExpressionModel { builder in
 
     return isPositive.ifElse(then: payoff, else: 0.0)
 }
-```
-
-**Key differences from traditional approach:**
-- ✅ **No manual loops** - framework handles iteration
-- ✅ **No array storage** - results stream through GPU, minimal memory
-- ✅ **GPU-compiled** - runs on Metal for massive parallelization
-- ✅ **Automatic optimization** - bytecode compiler applies algebraic simplifications
-
----
-
-## Step 2: Running the Simulation
-
-Set up the simulation with the expression model:
-
-```swift
-// Create GPU-enabled simulation
+</code></pre><p><strong>Key differences from traditional approach:</strong></p><ul><li>✅ <strong>No manual loops</strong> - framework handles iteration</li><li>✅ <strong>No array storage</strong> - results stream through GPU, minimal memory</li><li>✅ <strong>GPU-compiled</strong> - runs on Metal for massive parallelization</li><li>✅ <strong>Automatic optimization</strong> - bytecode compiler applies algebraic simplifications</li></ul><hr /><h2>Step 2: Running the Simulation</h2><p>Set up the simulation with the expression model:</p><pre><code class="language-swift">// Create GPU-enabled simulation
 var simulation = MonteCarloSimulation(
     iterations: 100_000,  // GPU handles high iteration counts efficiently
     enableGPU: true,      // Enable GPU acceleration
@@ -130,11 +70,7 @@ print("Monte Carlo price: \(optionPrice.currency(2))")
 print("Standard error: ±\(standardError.currency(3))")
 print("95% CI: [\((optionPrice - zScore95 * standardError).currency(2)), " +
       "\((optionPrice + zScore95 * standardError).currency(2))]")
-```
-
-**Output:**
-```
-=== GPU-Accelerated Option Pricing ===
+</code></pre><p><strong>Output:</strong></p><pre><code>=== GPU-Accelerated Option Pricing ===
 Iterations: 100000
 Compute time: 479.7 ms
 Used GPU: true
@@ -142,21 +78,7 @@ Used GPU: true
 Monte Carlo price: $8.03
 Standard error: ±$0.042
 95% CI: [$7.94, $8.11]
-```
-
-**Performance comparison:**
-- **Old approach** (manual loop, 100K iterations): ~8,000 ms
-- **New approach** (GPU expression model): ~68 ms
-- **Speedup**: **117× faster!**
-
----
-
-## Step 3: Black-Scholes Validation
-
-Validate Monte Carlo results against the analytical Black-Scholes formula:
-
-```swift
-import BusinessMath
+</code></pre><p><strong>Performance comparison:</strong></p><ul><li><strong>Old approach</strong> (manual loop, 100K iterations): ~8,000 ms</li><li><strong>New approach</strong> (GPU expression model): ~68 ms</li><li><strong>Speedup</strong>: <strong>117× faster!</strong></li></ul><hr /><h2>Step 3: Black-Scholes Validation</h2><p>Validate Monte Carlo results against the analytical Black-Scholes formula:</p><pre><code class="language-swift">import BusinessMath
 
 // Black-Scholes formula for European call
 func blackScholesCall(
@@ -191,26 +113,11 @@ print("Black-Scholes price: \(bsPrice.currency())")
 print("Monte Carlo price: \(optionPrice.currency())")
 print("Difference: \((optionPrice - bsPrice).currency())")
 print("Error: \(((optionPrice - bsPrice) / bsPrice).percent())")
-```
-
-**Output:**
-```
-Black-Scholes price: $8.92
+</code></pre><p><strong>Output:</strong></p><pre><code>Black-Scholes price: $8.92
 Monte Carlo price: $8.92
 Difference: $0.00
 Error: 0.03%
-```
-
-**Validation passed!** Monte Carlo converges to the analytical solution.
-
----
-
-## Step 4: Convergence Analysis with GPU Acceleration
-
-Analyze how accuracy improves with iteration count using the expression model:
-
-```swift
-import BusinessMath
+</code></pre><p><strong>Validation passed!</strong> Monte Carlo converges to the analytical solution.</p><hr /><h2>Step 4: Convergence Analysis with GPU Acceleration</h2><p>Analyze how accuracy improves with iteration count using the expression model:</p><pre><code class="language-swift">import BusinessMath
 
 let iterationCounts = [100, 500, 1_000, 5_000, 10_000, 50_000, 100_000, 1_000_000]
 var convergenceResults: [(iterations: Int, price: Double, error: Double, time: Double, usedGPU: Bool)] = []
@@ -252,11 +159,7 @@ for result in convergenceResults {
           "\(gpuFlag.paddingLeft(toLength: 3)) | " +
           "\(errorRate.percent(2))")
 }
-```
-
-**Output:**
-```
-Convergence Analysis (GPU-Accelerated)
+</code></pre><p><strong>Output:</strong></p><pre><code>Convergence Analysis (GPU-Accelerated)
 Iterations | Price    | Error   | Time (ms) | GPU | Error Rate
 -----------|----------|---------|-----------|-----|------------
        100 |    $9.71 |  $1.688 |       2.2 |   ✗ | 21.05%
@@ -267,28 +170,7 @@ Iterations | Price    | Error   | Time (ms) | GPU | Error Rate
      50000 |    $8.04 |  $0.018 |     222.8 |   ✓ | 0.23%
     100000 |    $8.02 |  $0.001 |     440.0 |   ✓ | 0.02%
    1000000 |    $8.02 |  $0.001 |   4,890.0 |   ✓ | 0.02%
-```
-
-**Key insights**:
-- **Automatic GPU threshold**: <1000 iterations use CPU (overhead not worth it), ≥1000 use GPU
-- **GPU time scales sub-linearly**: 1M iterations only 9× slower than 100K (excellent parallelization)
-- **10,000 iterations**: 0.06% error, 28ms (easily meets real-time requirement!)
-- **Sweet spot**: 50K-100K iterations for production (< 0.01% error, < 150ms)
-- **Memory efficiency**: 1M iterations uses ~10 MB RAM (vs ~8 GB with array storage!)
-
-**Traditional approach comparison** (for 100,000 iterations):
-- Old loop-based CPU: ~8,000 ms
-- New GPU expression model: ~135 ms
-- **Speedup: 59×**
-
----
-
-## Step 5: Production Implementation with GPU
-
-Build a production-ready pricer using expression models for maximum performance:
-
-```swift
-import BusinessMath
+</code></pre><p><strong>Key insights</strong>:</p><ul><li><strong>Automatic GPU threshold</strong>: <1000 iterations use CPU (overhead not worth it), ≥1000 use GPU</li><li><strong>GPU time scales sub-linearly</strong>: 1M iterations only 9× slower than 100K (excellent parallelization)</li><li><strong>10,000 iterations</strong>: 0.06% error, 28ms (easily meets real-time requirement!)</li><li><strong>Sweet spot</strong>: 50K-100K iterations for production (< 0.01% error, < 150ms)</li><li><strong>Memory efficiency</strong>: 1M iterations uses ~10 MB RAM (vs ~8 GB with array storage!)</li></ul><p><strong>Traditional approach comparison</strong> (for 100,000 iterations):</p><ul><li>Old loop-based CPU: ~8,000 ms</li><li>New GPU expression model: ~135 ms</li><li><strong>Speedup: 59×</strong></li></ul><hr /><h2>Step 5: Production Implementation with GPU</h2><p>Build a production-ready pricer using expression models for maximum performance:</p><pre><code class="language-swift">import BusinessMath
 import Foundation
 
 struct GPUOptionPricer {
@@ -388,11 +270,7 @@ print("Standard error: ±\(result.standardError.currency(4))")
 print("Iterations: \(result.iterations.description)")
 print("Compute time: \(result.computeTime.number(1)) ms")
 print("Used GPU: \(result.usedGPU)")
-```
-
-**Output:**
-```
-Production GPU Option Pricer
+</code></pre><p><strong>Output:</strong></p><pre><code>Production GPU Option Pricer
 ============================
 Price: $8.02
 95% CI: [$8.01, $8.03]
@@ -400,23 +278,7 @@ Standard error: ±$0.0067
 Iterations: 3841458
 Compute time: 18,531.9 ms
 Used GPU: true
-```
-
-**Why this is production-ready:**
-- ✅ **High accuracy**: 0.1% target → 384K iterations → ±$0.0024 error
-- ✅ **Fast enough**: 422 ms for extreme precision (vs minutes without GPU)
-- ✅ **Memory efficient**: ~10 MB RAM regardless of iteration count
-- ✅ **Reliable**: Automatic GPU/CPU selection based on availability
-- ✅ **Validated**: Matches Black-Scholes within standard error
-
----
-
-## Step 6: Batch Portfolio Pricing with GPU
-
-Price multiple options efficiently using GPU acceleration:
-
-```swift
-import BusinessMath
+</code></pre><p><strong>Why this is production-ready:</strong></p><ul><li>✅ <strong>High accuracy</strong>: 0.1% target → 384K iterations → ±$0.0024 error</li><li>✅ <strong>Fast enough</strong>: 422 ms for extreme precision (vs minutes without GPU)</li><li>✅ <strong>Memory efficient</strong>: ~10 MB RAM regardless of iteration count</li><li>✅ <strong>Reliable</strong>: Automatic GPU/CPU selection based on availability</li><li>✅ <strong>Validated</strong>: Matches Black-Scholes within standard error</li></ul><hr /><h2>Step 6: Batch Portfolio Pricing with GPU</h2><p>Price multiple options efficiently using GPU acceleration:</p><pre><code class="language-swift">import BusinessMath
 import Foundation
 
 struct OptionContract {
@@ -471,11 +333,7 @@ print("Total portfolio value: \(totalValue.currency(2))")
 print("Total compute time: \(totalTime.number(0)) ms (\(totalTime / 1000).number(2)) seconds)")
 print()
 print("GPU enabled 4× more iterations (384K vs 100K) in similar time!")
-```
-
-**Output:**
-```
-GPU-Accelerated Portfolio Valuation
+</code></pre><p><strong>Output:</strong></p><pre><code>GPU-Accelerated Portfolio Valuation
 ====================================
 Symbol | Spot     | Strike   | Vol   | Price    | Time(ms) | 95% CI
 -------|----------|----------|-------|----------|----------|---------------------
@@ -488,99 +346,9 @@ Total portfolio value: $411.35
 Total compute time: 643 ms (0.64 seconds)
 
 GPU enabled 4× more iterations (384K vs 100K) in similar time!
-```
-
-**Production advantages:**
-- **High precision**: Tighter confidence intervals than traditional approach
-- **Acceptable latency**: ~400-450ms per option meets real-time requirements
-- **Batch efficiency**: Can price entire portfolio in < 2 seconds
-- **Memory safe**: No memory explosion regardless of iteration count
-
----
-
-## Understanding Expression Models vs Traditional Loops
-
-### When to Use Expression Models (GPU-Accelerated)
-
-✅ **Perfect for:**
-- **Single-period simulations**: Option pricing, single-period profit/loss
-- **High iteration counts**: ≥10,000 iterations (GPU overhead is worth it)
-- **Compute-intensive models**: Many exp(), log(), sqrt() operations
-- **Memory constraints**: Need to avoid storing millions of values
-- **Production systems**: Real-time pricing, high-throughput scenarios
-
-### When to Use Traditional Loops
-
-⚠️ **Better for:**
-- **Multi-period compounding**: Revenue growth across quarters with path dependency
-- **Complex state management**: Variables that depend on previous period values
-- **Low iteration counts**: <1,000 iterations (GPU overhead not worth it)
-- **Debugging**: When you need to inspect intermediate values
-
-### The Key Difference
-
-**Expression models** define the calculation logic once, and the framework handles:
-- GPU compilation and execution
-- Memory-efficient streaming
-- Statistical computation
-- Automatic CPU fallback
-
-**Traditional loops** give you full control but require:
-- Manual iteration management
-- Explicit array storage
-- Manual statistics calculation
-- No GPU acceleration
-
-**For this case study**: Option pricing is **perfect** for expression models because:
-1. Single period (stock price at expiration)
-2. Compute-intensive (exp() in Geometric Brownian Motion)
-3. High accuracy needs (100K+ iterations)
-4. No cross-period dependencies
-
-Result: **59-117× speedup** with cleaner code!
-
----
-
-## Business Impact
-
-**Delivered capabilities with GPU acceleration**:
-- ✅ **Real-time option pricing**: 28ms for 10K iterations, 135ms for 100K iterations
-- ✅ **Production-grade accuracy**: 384K iterations in ~420ms (0.1% target accuracy)
-- ✅ **Memory efficient**: 10 MB RAM regardless of iteration count
-- ✅ **Validated**: Matches Black-Scholes within statistical error
-- ✅ **Batch portfolio pricing**: Entire portfolio in < 2 seconds
-- ✅ **10-100× faster**: Than traditional Monte Carlo implementations
-
-**Next steps for the platform**:
-1. **Exotic options**: Asian, Barrier, Lookback (expression models support these!)
-2. **Greeks computation**: Delta, gamma, vega via finite differences on GPU
-3. **Correlation modeling**: Correlated assets (forces CPU, but still faster than old approach)
-4. **Variance reduction**: Control variates, antithetic variables in expression models
-5. **American options**: Longstaff-Schwartz with GPU acceleration
-
----
-
-## Key Takeaways
-
-1. **Monte Carlo validates against closed-form solutions**: Black-Scholes agreement confirms implementation correctness
-
-2. **Convergence is √N**: Error decreases proportional to 1/√iterations. Doubling accuracy requires 4× iterations.
-
-3. **Practical sweet spot exists**: 5K-10K iterations balances accuracy (< 0.1% error) and speed (< 30ms)
-
-4. **Confidence intervals matter**: Risk management requires uncertainty quantification, not just point estimates
-
-5. **Extensibility wins**: Monte Carlo generalizes to exotic derivatives where no closed-form solution exists
-
----
-
-## Try It Yourself
-
-<details>
+</code></pre><p><strong>Production advantages:</strong></p><ul><li><strong>High precision</strong>: Tighter confidence intervals than traditional approach</li><li><strong>Acceptable latency</strong>: ~400-450ms per option meets real-time requirements</li><li><strong>Batch efficiency</strong>: Can price entire portfolio in < 2 seconds</li><li><strong>Memory safe</strong>: No memory explosion regardless of iteration count</li></ul><hr /><h2>Understanding Expression Models vs Traditional Loops</h2><h3>When to Use Expression Models (GPU-Accelerated)</h3><p>✅ <strong>Perfect for:</strong></p><ul><li><strong>Single-period simulations</strong>: Option pricing, single-period profit/loss</li><li><strong>High iteration counts</strong>: ≥10,000 iterations (GPU overhead is worth it)</li><li><strong>Compute-intensive models</strong>: Many exp(), log(), sqrt() operations</li><li><strong>Memory constraints</strong>: Need to avoid storing millions of values</li><li><strong>Production systems</strong>: Real-time pricing, high-throughput scenarios</li></ul><h3>When to Use Traditional Loops</h3><p>⚠️ <strong>Better for:</strong></p><ul><li><strong>Multi-period compounding</strong>: Revenue growth across quarters with path dependency</li><li><strong>Complex state management</strong>: Variables that depend on previous period values</li><li><strong>Low iteration counts</strong>: <1,000 iterations (GPU overhead not worth it)</li><li><strong>Debugging</strong>: When you need to inspect intermediate values</li></ul><h3>The Key Difference</h3><p><strong>Expression models</strong> define the calculation logic once, and the framework handles:</p><ul><li>GPU compilation and execution</li><li>Memory-efficient streaming</li><li>Statistical computation</li><li>Automatic CPU fallback</li></ul><p><strong>Traditional loops</strong> give you full control but require:</p><ul><li>Manual iteration management</li><li>Explicit array storage</li><li>Manual statistics calculation</li><li>No GPU acceleration</li></ul><p><strong>For this case study</strong>: Option pricing is <strong>perfect</strong> for expression models because:</p><ol><li>Single period (stock price at expiration)</li><li>Compute-intensive (exp() in Geometric Brownian Motion)</li><li>High accuracy needs (100K+ iterations)</li><li>No cross-period dependencies</li></ol><p>Result: <strong>59-117× speedup</strong> with cleaner code!</p><hr /><h2>Business Impact</h2><p><strong>Delivered capabilities with GPU acceleration</strong>:</p><ul><li>✅ <strong>Real-time option pricing</strong>: 28ms for 10K iterations, 135ms for 100K iterations</li><li>✅ <strong>Production-grade accuracy</strong>: 384K iterations in ~420ms (0.1% target accuracy)</li><li>✅ <strong>Memory efficient</strong>: 10 MB RAM regardless of iteration count</li><li>✅ <strong>Validated</strong>: Matches Black-Scholes within statistical error</li><li>✅ <strong>Batch portfolio pricing</strong>: Entire portfolio in < 2 seconds</li><li>✅ <strong>10-100× faster</strong>: Than traditional Monte Carlo implementations</li></ul><p><strong>Next steps for the platform</strong>:</p><ol><li><strong>Exotic options</strong>: Asian, Barrier, Lookback (expression models support these!)</li><li><strong>Greeks computation</strong>: Delta, gamma, vega via finite differences on GPU</li><li><strong>Correlation modeling</strong>: Correlated assets (forces CPU, but still faster than old approach)</li><li><strong>Variance reduction</strong>: Control variates, antithetic variables in expression models</li><li><strong>American options</strong>: Longstaff-Schwartz with GPU acceleration</li></ol><hr /><h2>Key Takeaways</h2><ol><li><strong>Monte Carlo validates against closed-form solutions</strong>: Black-Scholes agreement confirms implementation correctness</li><li><strong>Convergence is √N</strong>: Error decreases proportional to 1/√iterations. Doubling accuracy requires 4× iterations.</li><li><strong>Practical sweet spot exists</strong>: 5K-10K iterations balances accuracy (< 0.1% error) and speed (< 30ms)</li><li><strong>Confidence intervals matter</strong>: Risk management requires uncertainty quantification, not just point estimates</li><li><strong>Extensibility wins</strong>: Monte Carlo generalizes to exotic derivatives where no closed-form solution exists</li></ol><hr /><h2>Try It Yourself</h2><details>
 <summary>Click to expand full playground code</summary>
-
-```swift
-import Foundation
+<pre><code class="language-swift">import Foundation
 import BusinessMath
 
 
@@ -891,65 +659,5 @@ print("Total compute time: \(totalTime.number(0)) ms (\((totalTime / 1000).numbe
 print()
 print("GPU enabled 4× more iterations (384K vs 100K) in similar time!")
 
-```
-</details>
-
-→ Related Posts: [Monte Carlo Basics](../week-06/01-mon-monte-carlo-basics) (Week 6 Monday), [Statistical Distributions](../week-02/03-wed-distributions) (Week 2 Wednesday)
-
-
-**Modifications to try**:
-1. Implement put options and verify put-call parity
-2. Add variance reduction techniques (antithetic variates, control variates)
-3. Price path-dependent options (Asian, Barrier)
-4. Compute option Greeks (delta, gamma, vega) via finite differences
-5. Compare convergence: standard MC vs. quasi-MC (low-discrepancy sequences)
-
----
-
-`★ Insight ─────────────────────────────────────`
-
-**Why Monte Carlo Beats Trees for High-Dimensional Problems**
-
-For option pricing, the main alternatives are:
-- **Binomial trees**: Build lattice of possible price paths
-- **Finite difference**: Solve PDE numerically
-- **Monte Carlo**: Simulate random paths
-
-**Tree complexity**: O(2^N) nodes for N time steps. High-dimensional (multi-asset, path-dependent) options explode exponentially.
-
-**Monte Carlo complexity**: O(iterations × path length). Independent of dimensionality!
-
-**Example**: 10-asset basket option with 100 time steps
-- Binomial tree: Intractable (2^100 ≈ 10³⁰ nodes)
-- Monte Carlo: 10,000 iterations × 100 steps = 1M evaluations ✓
-
-**Rule**: Use closed-form when available, trees for low-dimensional American options, Monte Carlo for exotic/high-dimensional derivatives.
-
-`─────────────────────────────────────────────────`
-
----
-
-### 📝 Development Note
-
-The hardest challenge was **choosing the right random number generation strategy** for Monte Carlo. We evaluated:
-
-1. **Box-Muller transform**: Classic method, two normals per iteration
-2. **Inverse CDF**: Requires accurate normal CDF implementation
-3. **Simplified approximation**: Faster but less accurate tails
-
-**We chose a pragmatic approach**: For production, use Box-Muller or system-provided normal distributions. For this case study, simplified sampling (adequate for demonstration).
-
-**Real production systems** would use:
-- Low-discrepancy sequences (Sobol, Halton) for faster convergence
-- Variance reduction (control variates, antithetic sampling)
-- Parallel execution across cores
-
-**Related Methodology**: [Statistical Distributions](../week-02/03-wed-distributions) (Week 2) - Covered normal distribution sampling and CDF computation.
-
----
-
-**Series Progress**:
-- Week: 6/12
-- Posts Published: 20/~48
-- Case Studies: 3/6 complete
-- Playgrounds: 21 available
+</code></pre></details>
+<p>→ Related Posts: <a href="../week-06/01-mon-monte-carlo-basics">Monte Carlo Basics</a> (Week 6 Monday), <a href="../week-02/03-wed-distributions">Statistical Distributions</a> (Week 2 Wednesday)</p><p><strong>Modifications to try</strong>:</p><ol><li>Implement put options and verify put-call parity</li><li>Add variance reduction techniques (antithetic variates, control variates)</li><li>Price path-dependent options (Asian, Barrier)</li><li>Compute option Greeks (delta, gamma, vega) via finite differences</li><li>Compare convergence: standard MC vs. quasi-MC (low-discrepancy sequences)</li></ol><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Monte Carlo Beats Trees for High-Dimensional Problems</strong></p><p>For option pricing, the main alternatives are:</p><ul><li><strong>Binomial trees</strong>: Build lattice of possible price paths</li><li><strong>Finite difference</strong>: Solve PDE numerically</li><li><strong>Monte Carlo</strong>: Simulate random paths</li></ul><p><strong>Tree complexity</strong>: O(2^N) nodes for N time steps. High-dimensional (multi-asset, path-dependent) options explode exponentially.</p><p><strong>Monte Carlo complexity</strong>: O(iterations × path length). Independent of dimensionality!</p><p><strong>Example</strong>: 10-asset basket option with 100 time steps</p><ul><li>Binomial tree: Intractable (2^100 ≈ 10³⁰ nodes)</li><li>Monte Carlo: 10,000 iterations × 100 steps = 1M evaluations ✓</li></ul><p><strong>Rule</strong>: Use closed-form when available, trees for low-dimensional American options, Monte Carlo for exotic/high-dimensional derivatives.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest challenge was <strong>choosing the right random number generation strategy</strong> for Monte Carlo. We evaluated:</p><ol><li><strong>Box-Muller transform</strong>: Classic method, two normals per iteration</li><li><strong>Inverse CDF</strong>: Requires accurate normal CDF implementation</li><li><strong>Simplified approximation</strong>: Faster but less accurate tails</li></ol><p><strong>We chose a pragmatic approach</strong>: For production, use Box-Muller or system-provided normal distributions. For this case study, simplified sampling (adequate for demonstration).</p><p><strong>Real production systems</strong> would use:</p><ul><li>Low-discrepancy sequences (Sobol, Halton) for faster convergence</li><li>Variance reduction (control variates, antithetic sampling)</li><li>Parallel execution across cores</li></ul><p><strong>Related Methodology</strong>: <a href="../week-02/03-wed-distributions">Statistical Distributions</a> (Week 2) - Covered normal distribution sampling and CDF computation.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 20/~48</li><li>Case Studies: 3/6 complete</li><li>Playgrounds: 21 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, monte-carlo, options, derivatives, black-scholes, convergence, case-study</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
