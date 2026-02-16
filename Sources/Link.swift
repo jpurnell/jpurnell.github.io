@@ -18,7 +18,7 @@ let github: offsiteLink = offsiteLink(title: "github", url: "https://github.com/
 let bsky: offsiteLink = offsiteLink(title: "bsky", url: "https://bsky.app/profile/justinpurnell.com")
 let mastodon: offsiteLink = offsiteLink(title: "mastodon", url: "https://mastodon.social/@jpurnell")
 let radio: offsiteLink = offsiteLink(title: "radio", url: "https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f")
-let rss: offsiteLink = offsiteLink(title: "rss", url: "http://blog.justinpurnell.com/rss")
+let rss: offsiteLink = offsiteLink(title: "rss", url: "https://www.justinpurnell.com/feed.rss")
 let tumblr: offsiteLink = offsiteLink(title: "blog", url: "http://blog.justinpurnell.com")
 let theme: offsiteLink = offsiteLink(title: "theme", url: "#")
 
