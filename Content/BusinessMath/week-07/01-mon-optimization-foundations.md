@@ -8,7 +8,7 @@ docc_source: "5.1-OptimizationGuide.md"
 playground: "Week07/Optimization.playground"
 tags: businessmath, swift, optimization, goal-seek, gradient-descent, bfgs, newton-raphson
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Optimization Foundations: From Goal-Seeking to Multivariate

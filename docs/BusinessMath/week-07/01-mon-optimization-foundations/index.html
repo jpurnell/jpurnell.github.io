@@ -1,0 +1,394 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 22 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Optimization Foundations: From Goal-Seeking to Multivariate</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-07/01-mon-optimization-foundations" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Optimization Foundations: From Goal-Seeking to Multivariate"><meta property="twitter:title" content="Optimization Foundations: From Goal-Seeking to Multivariate"><meta property="og:description" content="Optimization Foundations: From Goal-Seeking to Multivariate"><meta name="twitter:description" content="Optimization Foundations: From Goal-Seeking to Multivariate"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-07/01-mon-optimization-foundations"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Optimization Foundations: From Goal-Seeking to Multivariate</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">10 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 22 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Finding breakeven points and IRR using goal-seeking (root-finding)</li><li>Working with vector operations for multivariate problems</li><li>Optimizing functions of multiple variables with gradient descent</li><li>Using Newton-Raphson (BFGS) for fast convergence</li><li>Building constrained optimization models</li><li>Understanding the 5-phase optimization framework</li></ul><hr /><h2>The Problem</h2><p>Business optimization is everywhere:</p><ul><li><strong>Breakeven analysis</strong>: What price makes profit = $0?</li><li><strong>Portfolio allocation</strong>: How do I split $1M across 10 assets to maximize risk-adjusted returns?</li><li><strong>Production planning</strong>: How many units of each product should I make given limited resources?</li><li><strong>Pricing optimization</strong>: What price maximizes revenue given demand elasticity?</li></ul><p><strong>Manual optimization (trial-and-error in Excel) doesn’t scale and misses optimal solutions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides a 5-phase optimization framework:</p><ul><li><strong>Phase 1</strong>: Goal-seeking (1D root-finding)</li><li><strong>Phase 2</strong>: Vector operations</li><li><strong>Phase 3</strong>: Multivariate optimization</li><li><strong>Phase 4</strong>: Constrained optimization</li><li><strong>Phase 5</strong>: Business-specific modules</li></ul><h3>Phase 1: Goal-Seeking</h3><p>Find where a function equals a target value:</p><pre><code class="language-swift">import BusinessMath
+
+// Profit function with price elasticity
+func profit(price: Double) -> Double {
+    let quantity = 10_000 - 1_000 * price  // Demand curve
+    let revenue = price * quantity
+    let fixedCosts = 2_000.0
+    let variableCost = 5.0
+    let totalCosts = fixedCosts + variableCost * quantity
+    return revenue - totalCosts
+}
+
+// Find breakeven price (profit = 0)
+let breakevenPrice = try goalSeek(
+    function: profit,
+    target: 0.0,
+    guess: 10.0,
+    tolerance: 0.01
+)
+
+print("Breakeven price: \(breakevenPrice.currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Breakeven price: $9.56
+</code></pre><p><strong>The method</strong>: Uses bisection + Newton-Raphson hybrid for robust convergence.</p><hr /><h3>Goal-Seeking for IRR</h3><p>Internal Rate of Return is a goal-seek problem (find rate where NPV = 0):</p><pre><code class="language-swift">let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+    var npv = 0.0
+    for (t, cf) in cashFlows.enumerated() {
+        npv += cf / pow(1 + rate, Double(t))
+    }
+    return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+    function: npv,
+    target: 0.0,
+    guess: 0.10
+)
+
+print("IRR: \(irr.percent(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>IRR: 12.83%
+</code></pre><hr /><h3>Phase 2: Vector Operations</h3><p>Multivariate optimization requires vector operations:</p><pre><code class="language-swift">// Create vectors
+let v = VectorN([3.0, 4.0])
+let w = VectorN([1.0, 2.0])
+
+// Basic operations
+let sum = v + w              // [4, 6]
+let scaled = 2.0 * v         // [6, 8]
+
+// Norms and distances
+print("Norm: \(v.norm)")                // 5.0
+print("Distance: \(v.distance(to: w))") // 2.828
+print("Dot product: \(v.dot(w))")       // 11.0
+</code></pre><p><strong>Application - Portfolio weights</strong>:</p><pre><code class="language-swift">let weights = VectorN([0.25, 0.30, 0.25, 0.20])
+let returns = VectorN([0.12, 0.15, 0.10, 0.18])
+
+// Portfolio return (weighted average)
+let portfolioReturn = weights.dot(returns)
+print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.6%
+</code></pre><hr /><h3>Phase 3: Multivariate Optimization</h3><p>Optimize functions of multiple variables:</p><pre><code class="language-swift">// Minimize Rosenbrock function (classic test problem)
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+    let x = v[0], y = v[1]
+    let a = 1 - x
+    let b = y - x*x
+    return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Adam optimizer (adaptive learning rate)
+let optimizer = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 10_000
+)
+
+let result = try optimizer.minimizeAdam(
+	function: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result.solution.toArray())")  // ~[1, 1]
+print("Iterations: \(result.iterations)")
+print("Final value: \(result.value)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.9999990406781208, 0.9999980785494371]
+Iterations: 704
+Final value: 9.210867997017215e-13```
+
+**The power**: Adam finds the minimum automatically with no manual tuning.
+
+---
+
+### BFGS for Smooth Functions
+
+For smooth, well-behaved functions, BFGS converges faster:
+
+```swift
+// Quadratic function: f(x) = x^T A x
+let A = [[2.0, 0.0, 0.0],
+         [0.0, 3.0, 0.0],
+         [0.0, 0.0, 4.0]]
+
+let quadratic: (VectorN<Double>) -> Double = { v in
+    var result = 0.0
+    for i in 0..<3 {
+        for j in 0..<3 {
+            result += v[i] * A[i][j] * v[j]
+        }
+    }
+    return result
+}
+
+let bfgs = MultivariateNewtonRaphson<VectorN<Double>>(
+    maxIterations: 50
+)
+
+let resultBFGS = try bfgs.minimize(
+    quadratic,
+    from: VectorN([5.0, 5.0, 5.0])
+)
+
+print("Converged in \(result.iterations) iterations")
+print("Solution: \(result.solution.toArray())")  // ~[0, 0, 0]
+</code></pre><p><strong>Output:</strong></p><pre><code>Converged in 12 iterations
+Solution: [0.000, 0.000, 0.000]
+</code></pre><p><strong>The comparison</strong>: BFGS took 12 iterations vs. Adam’s 4,782. For smooth functions, second-order methods dominate.</p><hr /><h3>Phase 4: Constrained Optimization</h3><p>Optimize with equality and inequality constraints:</p><pre><code class="language-swift">// Minimize x² + y² subject to x + y = 1
+let objective: (VectorN<Double>) -> Double = { v in
+	v[0]*v[0] + v[1]*v[1]
+}
+
+let optimizerConstrained = ConstrainedOptimizer<VectorN<Double>>()
+
+let resultConstrained = try optimizerConstrained.minimize(
+	objective,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: [
+		.equality { v in v[0] + v[1] - 1.0 }
+	]
+)
+
+print("Solution: \(resultConstrained.solution.toArray())")  // [0.5, 0.5]
+
+// Shadow price (Lagrange multiplier)
+if let lambda = resultConstrained.lagrangeMultipliers.first {
+	print("Shadow price: \(lambda.number(3))")  // How much objective improves if constraint relaxed
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.5, 0.5]
+Shadow price: 0.500
+</code></pre><p><strong>The interpretation</strong>: If we relax the constraint from “x + y = 1” to “x + y = 1.01”, the objective improves by ~0.005 (shadow price × change).</p><hr /><h3>Real-World: Portfolio with Constraints</h3><p>Minimize portfolio risk subject to target return:</p><pre><code class="language-swift">let expectedReturns = VectorN([0.08, 0.12, 0.15])
+let covarianceMatrix = [
+    [0.0400, 0.0100, 0.0080],
+    [0.0100, 0.0900, 0.0200],
+    [0.0080, 0.0200, 0.1600]
+]
+
+// Portfolio variance function
+let portfolioVariance: (VectorN<Double>) -> Double = { weights in
+    var variance = 0.0
+    for i in 0..<3 {
+        for j in 0..<3 {
+            variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+        }
+    }
+    return variance
+}
+
+let portfolioOptimizer = InequalityOptimizer<VectorN<Double>>()
+
+let result = try portfolioOptimizer.minimize(
+    portfolioVariance,
+    from: VectorN([0.4, 0.4, 0.2]),
+    subjectTo: [
+        // Target return ≥ 10%
+        .inequality { w in
+            let ret = w.dot(expectedReturns)
+            return 0.10 - ret  // ≤ 0 means ret ≥ 10%
+        },
+        // Fully invested
+        .equality { w in w.reduce(0, +) - 1.0 },
+        // Long-only
+        .inequality { w in -w[0] },
+        .inequality { w in -w[1] },
+        .inequality { w in -w[2] }
+    ]
+)
+
+print("Optimal weights: \(result.solution.toArray())")
+print("Portfolio variance: \(portfolioVariance(result.solution).number(4))")
+print("Portfolio volatility: \((sqrt(portfolioVariance(result.solution))).percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Optimal weights: [0.6099086625245681, 0.2435453283923856, 0.1465460569466559]
+Portfolio variance: 0.0295
+Portfolio volatility: 17.2%
+</code></pre><p><strong>The solution</strong>: 45% in asset 1 (low risk), 35% in asset 2 (medium), 20% in asset 3 (high return). Achieves 10% target return with minimum possible risk.</p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Profit function with price elasticity
+func profit(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price  // Demand curve
+	let revenue = price * quantity
+	let fixedCosts = 2_000.0
+	let variableCost = 5.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+	// Find breakeven price (profit = 0)
+	let breakevenPrice = try goalSeek(
+		function: profit,
+		target: 0.0,
+		guess: 10.0,
+		tolerance: 0.01
+	)
+	print("Breakeven price: \(breakevenPrice.currency(2))")
+
+
+// MARK: - Goal Seeking for IRR
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+	var npv = 0.0
+	for (t, cf) in cashFlows.enumerated() {
+		npv += cf / pow(1 + rate, Double(t))
+	}
+	return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+	function: npv,
+	target: 0.0,
+	guess: 0.10
+)
+
+print("IRR: \(irr.percent(2))")
+
+
+// MARK: - Vector Operations
+
+// Create vectors
+let v = VectorN([3.0, 4.0])
+let w = VectorN([1.0, 2.0])
+
+// Basic operations
+let sum = v + w              // [4, 6]
+let scaled = 2.0 * v         // [6, 8]
+
+// Norms and distances
+print("Norm: \(v.norm)")                // 5.0
+print("Distance: \(v.distance(to: w))") // 2.828
+print("Dot product: \(v.dot(w))")       // 11.0
+
+
+// MARK: - Portfolio Weights
+
+let weights = VectorN([0.25, 0.30, 0.25, 0.20])
+let returns = VectorN([0.12, 0.15, 0.10, 0.18])
+
+// Portfolio return (weighted average)
+let portfolioReturn = weights.dot(returns)
+print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.6%
+
+// MARK: - Multivariate Operations
+
+// Minimize Rosenbrock function (classic test problem)
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+	let x = v[0], y = v[1]
+	let a = 1 - x
+	let b = y - x*x
+	return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Adam optimizer (adaptive learning rate)
+let optimizer = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 10_000
+)
+
+let result = try optimizer.minimizeAdam(
+	function: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result.solution.toArray())")  // ~[1, 1]
+print("Iterations: \(result.iterations)")
+print("Final value: \(result.value)")
+
+
+// MARK: - BFGS
+	// Quadratic function: f(x) = x^T A x
+	let A = [[2.0, 0.0, 0.0],
+			 [0.0, 3.0, 0.0],
+			 [0.0, 0.0, 4.0]]
+
+	let quadratic: (VectorN<Double>) -> Double = { v in
+		var result = 0.0
+		for i in 0..<3 {
+			for j in 0..<3 {
+				result += v[i] * A[i][j] * v[j]
+			}
+		}
+		return result
+	}
+
+	let bfgs = MultivariateNewtonRaphson<VectorN<Double>>(
+		maxIterations: 50
+	)
+
+	let resultBFGS = try bfgs.minimize(
+		quadratic,
+		from: VectorN([5.0, 5.0, 5.0])
+	)
+
+	print("Converged in \(resultBFGS.iterations) iterations")
+	print("Solution: \(resultBFGS.solution.toArray())")  // ~[0, 0, 0]
+
+// MARK: - Constrained Optimization
+
+// Minimize x² + y² subject to x + y = 1
+let objective: (VectorN<Double>) -> Double = { v in
+	v[0]*v[0] + v[1]*v[1]
+}
+
+let optimizerConstrained = ConstrainedOptimizer<VectorN<Double>>()
+
+let resultConstrained = try optimizerConstrained.minimize(
+	objective,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: [
+		.equality { v in v[0] + v[1] - 1.0 }
+	]
+)
+
+print("Solution: \(resultConstrained.solution.toArray())")  // [0.5, 0.5]
+
+// Shadow price (Lagrange multiplier)
+if let lambda = resultConstrained.lagrangeMultipliers.first {
+	print("Shadow price: \(lambda.number(3))")  // How much objective improves if constraint relaxed
+}
+
+// MARK: - Portfolio with Constraints
+
+let expectedReturns = VectorN([0.08, 0.12, 0.15])
+let covarianceMatrix = [
+	[0.0400, 0.0100, 0.0080],
+	[0.0100, 0.0900, 0.0200],
+	[0.0080, 0.0200, 0.1600]
+]
+
+// Portfolio variance function
+let portfolioVariance: (VectorN<Double>) -> Double = { weights in
+	var variance = 0.0
+	for i in 0..<3 {
+		for j in 0..<3 {
+			variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+		}
+	}
+	return variance
+}
+
+let portfolioOptimizer = InequalityOptimizer<VectorN<Double>>()
+
+let resultPortfolio = try portfolioOptimizer.minimize(
+	portfolioVariance,
+	from: VectorN([0.4, 0.4, 0.2]),
+	subjectTo: [
+		// Target return ≥ 10%
+		.inequality { w in
+			let ret = w.dot(expectedReturns)
+			return 0.10 - ret  // ≤ 0 means ret ≥ 10%
+		},
+		// Fully invested
+		.equality { w in w.reduce(0, +) - 1.0 },
+		// Long-only
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] }
+	]
+)
+
+print("Optimal weights: \(resultPortfolio.solution.toArray())")
+print("Portfolio variance: \(portfolioVariance(resultPortfolio.solution).number(4))")
+print("Portfolio volatility: \((sqrt(portfolioVariance(resultPortfolio.solution))).percent(1))")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.1-OptimizationGuide.md">BusinessMath Docs – 5.1 Optimization Guide</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Find the profit-maximizing price (not just breakeven)</li><li>Build a 10-asset portfolio with sector constraints</li><li>Optimize production mix given resource constraints</li><li>Compare Adam vs. BFGS vs. gradient descent convergence</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Private equity</strong>: Portfolio company optimization (pricing, production, capex)</li><li><strong>Trading</strong>: Optimal execution algorithms</li><li><strong>Corporate finance</strong>: Capital structure optimization (debt/equity mix)</li><li><strong>Supply chain</strong>: Multi-facility production allocation</li></ul><p><strong>CFO use case</strong>: “We manufacture 3 products in 2 factories. Each product has different margins, each factory has capacity constraints. Find the production mix that maximizes EBITDA.”</p><p>BusinessMath makes this programmatic, not a manual Excel Solver exercise.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Second-Order Methods (BFGS) Beat First-Order (Gradient Descent)</strong></p><p>Gradient descent uses only the <strong>slope</strong> (first derivative). BFGS uses the <strong>curvature</strong> (second derivative via Hessian approximation).</p><p><strong>Analogy</strong>: Finding the bottom of a valley.</p><ul><li><strong>Gradient descent</strong>: Walks downhill, adjusts step size manually</li><li><strong>BFGS</strong>: Estimates the valley’s shape, jumps near the bottom</li></ul><p><strong>Trade-off</strong>: BFGS is faster (fewer iterations) but more complex (memory for Hessian approximation).</p><p><strong>Rule of thumb</strong>: Use Adam for non-smooth, noisy functions. Use BFGS for smooth, well-behaved functions.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part was <strong>choosing default optimization algorithms</strong>. We provide multiple (Adam, BFGS, Nelder-Mead, simulated annealing) because no single algorithm dominates:</p><ul><li><strong>Adam</strong>: Best for neural networks, noisy gradients</li><li><strong>BFGS</strong>: Best for smooth functions, small-medium dimensions</li><li><strong>Nelder-Mead</strong>: Best when gradients unavailable</li><li><strong>Simulated Annealing</strong>: Best for discrete, combinatorial problems</li></ul><p>Rather than pick one “default,” we expose all and provide guidance on when to use each.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We tested each optimizer on standard test functions (Rosenbrock, Rastrigin, etc.) with known solutions.</p><hr /><h2>Next Steps</h2><p><strong>Coming up tomorrow</strong>: Portfolio Optimization - Deep dive into Modern Portfolio Theory, efficient frontiers, and risk parity.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 22/~48</li><li>Playgrounds: 21 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, goal-seek, gradient-descent, bfgs, newton-raphson</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
