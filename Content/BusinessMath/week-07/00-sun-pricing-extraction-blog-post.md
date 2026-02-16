@@ -145,50 +145,50 @@ The simplest approach is to use BusinessMath's production-ready `multipleLinearR
 import BusinessMath
 
 // Prepare data for regression
-var X: [[Double]] = []  // Independent variables (token counts)
-var y: [Double] = []     // Dependent variable (costs)
+var xValuesBuiltIn: [[Double]] = []  // Independent variables (token counts)
+var yValuesBuiltIn: [Double] = []     // Dependent variable (costs)
 
 for record in usageData {
-    X.append([
-        record.inputTokens,
-        record.outputTokens,
-        record.cacheCreateTokens,
-        record.cacheReadTokens
-    ])
-    y.append(record.totalCost)
+	xValuesBuiltIn.append([
+		record.inputTokens,
+		record.outputTokens,
+		record.cacheCreateTokens,
+		record.cacheReadTokens
+	])
+	yValuesBuiltIn.append(record.totalCost)
 }
 
 // Run multiple linear regression
 // Note: We don't use includeIntercept because zero tokens = zero cost
-let result = try multipleLinearRegression(X: X, y: y)
+let resultBuiltIn = try multipleLinearRegression(X: xValuesBuiltIn, y: yValuesBuiltIn)
 
 // Extract per-token pricing (in dollars)
-let pricePerInputToken = result.coefficients[0]
-let pricePerOutputToken = result.coefficients[1]
-let pricePerCacheCreateToken = result.coefficients[2]
-let pricePerCacheReadToken = result.coefficients[3]
+let pricePerInputTokenBuiltIn = resultBuiltIn.coefficients[0]
+let pricePerOutputTokenBuiltIn = resultBuiltIn.coefficients[1]
+let pricePerCacheCreateTokenBuiltIn = resultBuiltIn.coefficients[2]
+let pricePerCacheReadTokenBuiltIn = resultBuiltIn.coefficients[3]
 
 print("🎯 Extracted Pricing Structure")
 print(String(repeating: "=", count: 50))
-print("Input tokens:        $\(String(format: "%.6f", pricePerInputToken)) per token")
-print("Output tokens:       $\(String(format: "%.6f", pricePerOutputToken)) per token")
-print("Cache Create tokens: $\(String(format: "%.6f", pricePerCacheCreateToken)) per token")
-print("Cache Read tokens:   $\(String(format: "%.6f", pricePerCacheReadToken)) per token")
+print("Input tokens:        \(pricePerInputTokenBuiltIn.currency(6)) per token")
+print("Output tokens:       \(pricePerOutputTokenBuiltIn.currency(6)) per token")
+print("Cache Create tokens: \(pricePerCacheCreateTokenBuiltIn.currency(6)) per token")
+print("Cache Read tokens:   \(pricePerCacheReadTokenBuiltIn.currency(6)) per token")
 print()
 
 // Bonus: Get comprehensive diagnostics automatically!
 print("📊 Model Diagnostics")
 print(String(repeating: "=", count: 50))
-print("R² = \(String(format: "%.6f", result.rSquared)) (\(String(format: "%.2f", result.rSquared * 100))% variance explained)")
-print("F-statistic p-value = \(String(format: "%.8f", result.fStatisticPValue))")
+print("R² = \(resultBuiltIn.rSquared.currency(6)) (\(resultBuiltIn.rSquared.percent(2)) variance explained)")
+print("F-statistic p-value = \(resultBuiltIn.fStatisticPValue.number(8))")
 print()
 
 // Check if each predictor is statistically significant
 let predictorNames = ["Input", "Output", "Cache Create", "Cache Read"]
 for (i, name) in predictorNames.enumerated() {
-    let pValue = result.pValues[i + 1]  // +1 because index 0 is intercept
-    let significant = pValue < 0.05 ? "✓" : "✗"
-    print("\(name): p = \(String(format: "%.6f", pValue)) \(significant)")
+	let pValue = resultBuiltIn.pValues[i + 1]  // +1 because index 0 is intercept
+	let significant = pValue < 0.05 ? "✓" : "✗"
+	print("\(name): p = \(pValue.number(6)) \(significant)")
 }
 ```
 
@@ -222,110 +222,110 @@ import Numerics
 ///
 /// - Returns: Array of coefficients [β₀, β₁, β₂, ..., βₙ] where β₀ is intercept
 ///
-func multipleLinearRegression(
-    independentVars: [[Double]],
-    dependentVar: [Double],
-    includeIntercept: Bool = true
+func multipleLinearRegressionManual(
+	independentVars: [[Double]],
+	dependentVar: [Double],
+	includeIntercept: Bool = true
 ) -> [Double] {
-    let n = independentVars.count  // Number of observations
-    let p = independentVars[0].count  // Number of predictors
+	let n = independentVars.count  // Number of observations
+	let p = independentVars[0].count  // Number of predictors
 
-    guard n == dependentVar.count else {
-        fatalError("Number of observations must match dependent variable count")
-    }
+	guard n == dependentVar.count else {
+		fatalError("Number of observations must match dependent variable count")
+	}
 
-    // Build design matrix X
-    var X: [[Double]] = []
-    for i in 0..<n {
-        var row: [Double] = []
-        if includeIntercept {
-            row.append(1.0)  // Add intercept column
-        }
-        row.append(contentsOf: independentVars[i])
-        X.append(row)
-    }
+	// Build design matrix X
+	var X: [[Double]] = []
+	for i in 0..<n {
+		var row: [Double] = []
+		if includeIntercept {
+			row.append(1.0)  // Add intercept column
+		}
+		row.append(contentsOf: independentVars[i])
+		X.append(row)
+	}
 
-    let cols = X[0].count
+	let cols = X[0].count
 
-    // Compute XᵀX (transpose of X times X)
-    var XtX = Array(repeating: Array(repeating: 0.0, count: cols), count: cols)
-    for i in 0..<cols {
-        for j in 0..<cols {
-            var sum = 0.0
-            for k in 0..<n {
-                sum += X[k][i] * X[k][j]
-            }
-            XtX[i][j] = sum
-        }
-    }
+	// Compute XᵀX (transpose of X times X)
+	var XtX = Array(repeating: Array(repeating: 0.0, count: cols), count: cols)
+	for i in 0..<cols {
+		for j in 0..<cols {
+			var sum = 0.0
+			for k in 0..<n {
+				sum += X[k][i] * X[k][j]
+			}
+			XtX[i][j] = sum
+		}
+	}
 
-    // Compute Xᵀy (transpose of X times y)
-    var Xty = Array(repeating: 0.0, count: cols)
-    for i in 0..<cols {
-        var sum = 0.0
-        for j in 0..<n {
-            sum += X[j][i] * dependentVar[j]
-        }
-        Xty[i] = sum
-    }
+	// Compute Xᵀy (transpose of X times y)
+	var Xty = Array(repeating: 0.0, count: cols)
+	for i in 0..<cols {
+		var sum = 0.0
+		for j in 0..<n {
+			sum += X[j][i] * dependentVar[j]
+		}
+		Xty[i] = sum
+	}
 
-    // Solve XᵀX β = Xᵀy using Gaussian elimination
-    let beta = solveLinearSystem(A: XtX, b: Xty)
+	// Solve XᵀX β = Xᵀy using Gaussian elimination
+	let beta = solveLinearSystemManual(A: XtX, b: Xty)
 
-    return beta
+	return beta
 }
 
 /// Solves a system of linear equations Ax = b using Gaussian elimination
-func solveLinearSystem(A: [[Double]], b: [Double]) -> [Double] {
-    let n = A.count
-    var augmented = A
+func solveLinearSystemManual(A: [[Double]], b: [Double]) -> [Double] {
+	let n = A.count
+	var augmented = A
 
-    // Augment matrix with b
-    for i in 0..<n {
-        augmented[i].append(b[i])
-    }
+	// Augment matrix with b
+	for i in 0..<n {
+		augmented[i].append(b[i])
+	}
 
-    // Forward elimination
-    for i in 0..<n {
-        // Find pivot
-        var maxRow = i
-        for k in (i+1)..<n {
-            if abs(augmented[k][i]) > abs(augmented[maxRow][i]) {
-                maxRow = k
-            }
-        }
+	// Forward elimination
+	for i in 0..<n {
+		// Find pivot
+		var maxRow = i
+		for k in (i+1)..<n {
+			if abs(augmented[k][i]) > abs(augmented[maxRow][i]) {
+				maxRow = k
+			}
+		}
 
-        // Swap rows
-        if maxRow != i {
-            let temp = augmented[i]
-            augmented[i] = augmented[maxRow]
-            augmented[maxRow] = temp
-        }
+		// Swap rows
+		if maxRow != i {
+			let temp = augmented[i]
+			augmented[i] = augmented[maxRow]
+			augmented[maxRow] = temp
+		}
 
-        // Make all rows below this one 0 in current column
-        for k in (i+1)..<n {
-            let factor = augmented[k][i] / augmented[i][i]
-            for j in i..<(n+1) {
-                if i == j {
-                    augmented[k][j] = 0.0
-                } else {
-                    augmented[k][j] -= factor * augmented[i][j]
-                }
-            }
-        }
-    }
+		// Make all rows below this one 0 in current column
+		for k in (i+1)..<n {
+			let factor = augmented[k][i] / augmented[i][i]
+			for j in i..<(n+1) {
+				if i == j {
+					augmented[k][j] = 0.0
+				} else {
+					augmented[k][j] -= factor * augmented[i][j]
+				}
+			}
+		}
+	}
 
-    // Back substitution
-    var x = Array(repeating: 0.0, count: n)
-    for i in (0..<n).reversed() {
-        x[i] = augmented[i][n]
-        for j in (i+1)..<n {
-            x[i] -= augmented[i][j] * x[j]
-        }
-        x[i] /= augmented[i][i]
-    }
+	// Back substitution
+	var x = Array(repeating: 0.0, count: n)
+	for i in (0..<n).reversed() {
+		x[i] = augmented[i][n]
+		for j in (i+1)..<n {
+			x[i] -= augmented[i][j] * x[j]
+		}
+		x[i] /= augmented[i][i]
+	}
 
-    return x
+	return x
 }
 ```
 
@@ -337,47 +337,47 @@ Now we can apply our manual regression to the usage data:
 
 ```swift
 // Prepare data for regression
-var X: [[Double]] = []  // Independent variables (token counts)
-var y: [Double] = []     // Dependent variable (costs)
+var xValuesManual: [[Double]] = []  // Independent variables (token counts)
+var yValuesManual: [Double] = []     // Dependent variable (costs)
 
 for record in usageData {
-    X.append([
-        record.inputTokens,
-        record.outputTokens,
-        record.cacheCreateTokens,
-        record.cacheReadTokens
-    ])
-    y.append(record.totalCost)
+	xValuesManual.append([
+		record.inputTokens,
+		record.outputTokens,
+		record.cacheCreateTokens,
+		record.cacheReadTokens
+	])
+	yValuesManual.append(record.totalCost)
 }
 
 // Run multiple linear regression (no intercept - zero tokens = zero cost)
-let coefficients = multipleLinearRegression(
-    independentVars: X,
-    dependentVar: y,
-    includeIntercept: false
+let coefficientsManual = multipleLinearRegressionManual(
+	independentVars: xValuesManual,
+	dependentVar: yValuesManual,
+	includeIntercept: false
 )
 
 // Extract per-token pricing (in dollars)
-let pricePerInputToken = coefficients[0]
-let pricePerOutputToken = coefficients[1]
-let pricePerCacheCreateToken = coefficients[2]
-let pricePerCacheReadToken = coefficients[3]
+let pricePerInputTokenManual = coefficientsManual[0]
+let pricePerOutputTokenManual = coefficientsManual[1]
+let pricePerCacheCreateTokenManual = coefficientsManual[2]
+let pricePerCacheReadTokenManual = coefficientsManual[3]
 
 print("🎯 Extracted Pricing Structure")
-print("=" * 50)
-print("Input tokens:        $\(String(format: "%.6f", pricePerInputToken)) per token")
-print("Output tokens:       $\(String(format: "%.6f", pricePerOutputToken)) per token")
-print("Cache Create tokens: $\(String(format: "%.6f", pricePerCacheCreateToken)) per token")
-print("Cache Read tokens:   $\(String(format: "%.6f", pricePerCacheReadToken)) per token")
+print(String(repeating: "=", count: 50))
+print("Input tokens:        \(pricePerInputTokenManual.currency(6)) per token")
+print("Output tokens:       \(pricePerOutputTokenManual.currency(6)) per token")
+print("Cache Create tokens: \(pricePerCacheCreateTokenManual.currency(6)) per token")
+print("Cache Read tokens:   \(pricePerCacheReadTokenManual.currency(6)) per token")
 print()
 
 // Convert to per-million tokens for readability (industry standard)
 print("📊 Per Million Tokens (MTok):")
-print("=" * 50)
-print("Input:        $\(String(format: "%.2f", pricePerInputToken * 1_000_000)) / MTok")
-print("Output:       $\(String(format: "%.2f", pricePerOutputToken * 1_000_000)) / MTok")
-print("Cache Create: $\(String(format: "%.2f", pricePerCacheCreateToken * 1_000_000)) / MTok")
-print("Cache Read:   $\(String(format: "%.2f", pricePerCacheReadToken * 1_000_000)) / MTok")
+print(String(repeating: "=", count: 50))
+print("Input:        \((pricePerInputTokenManual * 1_000_000).currency(2)) / MTok")
+print("Output:       \((pricePerOutputTokenManual * 1_000_000).currency(2)) / MTok")
+print("Cache Create: \((pricePerCacheCreateTokenManual * 1_000_000).currency(2)) / MTok")
+print("Cache Read:   \((pricePerCacheReadTokenManual * 1_000_000).currency(2)) / MTok")
 ```
 
 **Expected Output:**
@@ -450,39 +450,36 @@ Let's verify our pricing model by calculating predicted costs and comparing with
 
 ```swift
 print("\n✅ Model Validation")
-print("=" * 80)
-print(String(format: "%-12s %10s %10s %10s %8s",
-             "Date", "Actual $", "Predicted $", "Diff $", "Error %"))
-print("-" * 80)
+print(String(repeating: "=", count: 80))
+print("\("Date".padding(toLength: 12, withPad: " ", startingAt: 0))\("Actual $".paddingLeft(toLength: 10))\("Predicted $".paddingLeft(toLength: 14))\("Diff $".paddingLeft(toLength: 14))\("Error %".paddingLeft(toLength: 14))")
+print(String(repeating: "-", count: 80))
 
 var totalError = 0.0
 var totalSquaredError = 0.0
 
 for record in usageData {
-    let predicted =
-        record.inputTokens * pricePerInputToken +
-        record.outputTokens * pricePerOutputToken +
-        record.cacheCreateTokens * pricePerCacheCreateToken +
-        record.cacheReadTokens * pricePerCacheReadToken
+	let predicted =
+		record.inputTokens * pricePerInputTokenManual +
+		record.outputTokens * pricePerOutputTokenManual +
+		record.cacheCreateTokens * pricePerCacheCreateTokenManual +
+		record.cacheReadTokens * pricePerCacheReadTokenManual
 
-    let difference = predicted - record.totalCost
-    let percentError = abs(difference / record.totalCost) * 100
+	let difference = predicted - record.totalCost
+	let percentError = abs(difference / record.totalCost)
 
-    totalError += abs(difference)
-    totalSquaredError += difference * difference
+	totalError += abs(difference)
+	totalSquaredError += difference * difference
 
-    print(String(format: "%-12s %10.2f %10.2f %10.2f %7.2f%%",
-                 record.date, record.totalCost, predicted, difference, percentError))
+	print("\(record.date.padding(toLength: 12, withPad: " ", startingAt: 0))\(record.totalCost.number(3).paddingLeft(toLength: 10))\(predicted.number(3).paddingLeft(toLength: 14))\(difference.number(3).paddingLeft(toLength: 14))\(percentError.percent(2).paddingLeft(toLength: 14))")
 }
 
 let meanAbsoluteError = totalError / Double(usageData.count)
 let rootMeanSquaredError = sqrt(totalSquaredError / Double(usageData.count))
 
-print("-" * 80)
-print(String(format: "Mean Absolute Error (MAE):  $%.4f", meanAbsoluteError))
-print(String(format: "Root Mean Squared Error:    $%.4f", rootMeanSquaredError))
-print(String(format: "Average cost per day:       $%.2f",
-             usageData.map { $0.totalCost }.reduce(0, +) / Double(usageData.count)))
+print(String(repeating: "-", count: 80))
+print("Mean Absolute Error (MAE):  \(meanAbsoluteError.currency(4))")
+print("Root Mean Squared Error:    \(rootMeanSquaredError.currency(4))")
+print("Average cost per day:       \((usageData.map { $0.totalCost }.reduce(0, +) / Double(usageData.count)).currency(2))")
 ```
 
 ## Step 5: Calculate R² and Diagnostics
@@ -496,28 +493,27 @@ let result = try multipleLinearRegression(X: X, y: y)
 
 print("\n📈 Model Quality")
 print(String(repeating: "=", count: 50))
-print(String(format: "R² = %.6f (%.2f%% variance explained)",
-             result.rSquared, result.rSquared * 100))
-print(String(format: "Adjusted R² = %.6f", result.adjustedRSquared))
-print(String(format: "F-statistic = %.2f (p = %.8f)",
-             result.fStatistic, result.fStatisticPValue))
+//print(String(format: "R² = %.6f (%.2f%% variance explained)",
+//			 resultBuiltIn.rSquared, resultBuiltIn.rSquared * 100))
+print("R² = \(resultBuiltIn.rSquared.number(6)) \(resultBuiltIn.rSquared.percent(2))")
+print("Adjusted R² = \(resultBuiltIn.adjustedRSquared.number(6))")
+print("F-statistic = \(resultBuiltIn.fStatistic.number(2)) (p = \(resultBuiltIn.fStatisticPValue.number(8))")
 print()
 
 // Check individual predictors
 print("Predictor Significance:")
 let names = ["Input", "Output", "Cache Create", "Cache Read"]
 for (i, name) in names.enumerated() {
-    let coef = result.coefficients[i]
-    let se = result.standardErrors[i + 1]
-    let pValue = result.pValues[i + 1]
-    let ci = result.confidenceIntervals[i + 1]
+	let coef = resultBuiltIn.coefficients[i]
+	let se = resultBuiltIn.standardErrors[i + 1]
+	let pValue = resultBuiltIn.pValues[i + 1]
+	let ci = resultBuiltIn.confidenceIntervals[i + 1]
 
-    print(String(format: "  %15s: β=%.8f, SE=%.8f, p=%.6f, 95%% CI=[%.8f, %.8f]",
-                 name, coef, se, pValue, ci.lower, ci.upper))
+	print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0)): β=\(coef.number(8)), SE=\(se.number(8)), p=\(pValue.number(6)), 95%% CI=[\(ci.lower.number(8)), \(ci.upper.number(8))]")
 }
 
-if result.rSquared > 0.99 {
-    print("\n✅ Excellent fit! Model explains \(String(format: "%.2f", result.rSquared * 100))% of variance")
+if resultBuiltIn.rSquared > 0.99 {
+	print("\n✅ Excellent fit! Model explains \(resultBuiltIn.rSquared.percent(2)) of variance")
 }
 ```
 
@@ -529,10 +525,10 @@ For the manual implementation, calculate R² yourself:
 // Calculate R² to measure how well our model explains the variance
 let actualCosts = usageData.map { $0.totalCost }
 let predictedCosts = usageData.map { record in
-    record.inputTokens * pricePerInputToken +
-    record.outputTokens * pricePerOutputToken +
-    record.cacheCreateTokens * pricePerCacheCreateToken +
-    record.cacheReadTokens * pricePerCacheReadToken
+	record.inputTokens * pricePerInputTokenManual +
+	record.outputTokens * pricePerOutputTokenManual +
+	record.cacheCreateTokens * pricePerCacheCreateTokenManual +
+	record.cacheReadTokens * pricePerCacheReadTokenManual
 }
 
 let meanActual = actualCosts.reduce(0, +) / Double(actualCosts.count)
@@ -541,11 +537,11 @@ let ssResidual = zip(actualCosts, predictedCosts).map { pow($0 - $1, 2) }.reduce
 let r2 = 1.0 - (ssResidual / ssTotal)
 
 print("\n📈 Model Quality")
-print(String(repeating: "=", count: 50))
-print(String(format: "R² (coefficient of determination): %.6f", r2))
+print(String(repeating: "=", count: 80))
+print("R² (coefficient of determination): \(r2.number(6))")
 print()
 if r2 > 0.99 {
-    print("✅ Excellent fit! Model explains \(String(format: "%.2f", r2 * 100))% of variance")
+	print("✅ Excellent fit! Model explains \(r2.percent(2)) of variance")
 }
 ```
 
@@ -609,16 +605,16 @@ Use BusinessMath's `DataTable` to explore how costs vary with usage:
 // How does cost scale with output length?
 let outputLengths = [100.0, 500.0, 1_000.0, 2_000.0, 5_000.0]
 let costTable = DataTable<Double, Double>.oneVariable(
-    inputs: outputLengths,
-    calculate: { tokens in
-        estimateAPICost(inputTokens: 1_000, outputTokens: tokens)
-    }
+	inputs: outputLengths,
+	calculate: { tokens in
+		estimateAPICost(inputTokens: 1_000, outputTokens: tokens)
+	}
 )
 
 print("\n📊 Cost vs Output Length Sensitivity")
-print("=" * 50)
+print(String(repeating: "=", count: 80))
 for (tokens, cost) in costTable {
-    print(String(format: "%8.0f tokens → $%.4f", tokens, cost))
+	print("\(tokens.number(0).paddingLeft(toLength: 6)) tokens → \(cost.currency(4))")
 }
 
 // Two-variable analysis: Input vs Output tokens
@@ -626,22 +622,24 @@ let inputSizes = [500.0, 1_000.0, 2_000.0, 5_000.0]
 let outputSizes = [250.0, 500.0, 1_000.0, 2_000.0]
 
 let costMatrix = DataTable<Double, Double>.twoVariable(
-    rowInputs: inputSizes,
-    columnInputs: outputSizes,
-    calculate: { input, output in
-        estimateAPICost(inputTokens: input, outputTokens: output)
-    }
+	rowInputs: inputSizes,
+	columnInputs: outputSizes,
+	calculate: { input, output in
+		estimateAPICost(inputTokens: input, outputTokens: output)
+	}
 )
 
 print("\n📊 Two-Variable Cost Analysis")
-print("=" * 50)
+print(String(repeating: "=", count: 80))
 print("Rows = Input Tokens | Columns = Output Tokens")
 print()
 print(DataTable<Double, Double>.formatTwoVariable(
-    costMatrix,
-    rowInputs: inputSizes,
-    columnInputs: outputSizes
+	costMatrix,
+	rowInputs: inputSizes,
+	columnInputs: outputSizes,
+	formatOutput: { $0.currency(4) }
 ))
+
 ```
 
 ## Key Insights from This Analysis
