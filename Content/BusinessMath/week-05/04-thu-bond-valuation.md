@@ -1,5 +1,5 @@
 ---
-title: Bond Valuation & Credit Analysis
+title: Bond Valuation and Credit Analysis
 date: 2026-02-06 13:00
 series: BusinessMath Quarterly Series
 week: 5

@@ -1,5 +1,5 @@
 ---
-title: Scenario & Sensitivity Analysis
+title: Scenario and Sensitivity Analysis
 date: 2026-02-12 13:00
 series: BusinessMath Quarterly Series
 week: 6
@@ -11,7 +11,7 @@ layout: BlogPostLayout
 published: true
 ---
 
-# Scenario & Sensitivity Analysis
+# Scenario and Sensitivity Analysis
 
 **Part 21 of 12-Week BusinessMath Series**
 
