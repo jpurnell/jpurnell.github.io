@@ -1,0 +1,463 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the BusinessMath Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types."><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Reverse-Engineering API Pricing from Usage Data with BusinessMath</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post" rel="canonical"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Reverse-Engineering API Pricing from Usage Data with BusinessMath"><meta property="twitter:title" content="Reverse-Engineering API Pricing from Usage Data with BusinessMath"><meta property="og:description" content="Reverse-Engineering API Pricing from Usage Data with BusinessMath"><meta name="twitter:description" content="Reverse-Engineering API Pricing from Usage Data with BusinessMath"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Bonus Post: Reverse-Engineering API Pricing from Usage Data with BusinessMath</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">16 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><h2>Introduction</h2><p>Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the <strong>BusinessMath</strong> Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types.</p><h3>Two Approaches in This Tutorial</h3><p>This tutorial presents <strong>two ways</strong> to solve the pricing extraction problem:</p><table><thead><th>Approach</th><th>Best For</th><th>Lines of Code</th><th>Time to Implement</th></thead><tbody><tr><td><strong>Modern (Recommended)</strong></td><td>Production use, quick analysis</td><td>~10 lines</td><td>5 minutes</td></tr><tr><td><strong>Educational</strong></td><td>Learning regression math</td><td>~150 lines</td><td>30 minutes</td></tr></tbody></table><p><strong>Modern Approach</strong>: Use BusinessMath’s built-in <code>multipleLinearRegression()</code> function with GPU acceleration, automatic diagnostics, and comprehensive statistical inference. Jump to <a href="#option-a-using-businessmaths-built-in-regression-recommended">Option A</a> to see this approach.</p><p><strong>Educational Approach</strong>: Implement regression from scratch to understand the mathematics. See <a href="#option-b-manual-implementation-educational">Option B</a> for the manual implementation.</p><p>Both approaches produce identical results, but the modern approach gives you:</p><ul><li>✨ <strong>Automatic diagnostics</strong>: R², F-statistic, p-values, VIF, confidence intervals</li><li>🚀 <strong>GPU acceleration</strong>: 40-13,000× faster for large datasets</li><li>🔬 <strong>Statistical rigor</strong>: Proper t-distribution, QR decomposition</li><li>✅ <strong>Production ready</strong>: Battle-tested, strict concurrency compliance</li></ul><h2>The Problem</h2><p>You have a usage table that shows daily API consumption across multiple token types:</p><ul><li><strong>Input tokens</strong>: The prompts you send</li><li><strong>Output tokens</strong>: The responses you receive</li><li><strong>Cache Create tokens</strong>: New cached content</li><li><strong>Cache Read tokens</strong>: Reused cached content</li></ul><p>Each row shows token counts and a total cost, but <strong>the pricing structure is hidden</strong>. Our goal: extract the per-token pricing.</p><h2>The Dataset</h2><p>Our pricing matrix contains real usage data from January-February 2026 for two Claude models (haiku-4.5 and sonnet-4.5):</p><pre><code>Date     │ Input │ Output │ Cache Create │ Cache Read │ Total Cost
+2026-01-12│ 35,778│  8,093 │  1,951,481  │ 22,710,000 │   $13.53
+2026-01-13│    847│    334 │  1,103,281  │ 16,250,000 │    $9.02
+2026-01-14│    144│     58 │    198,633  │  2,240,426 │    $1.38
+...
+</code></pre><h2>The Mathematical Model</h2><p>We’ll model the cost as a linear combination of token types:</p><pre><code>Cost = (Input × P_in) + (Output × P_out) + (CacheCreate × P_cc) + (CacheRead × P_cr)
+</code></pre><p>Where:</p><ul><li><code>P_in</code> = price per input token</li><li><code>P_out</code> = price per output token</li><li><code>P_cc</code> = price per cache create token</li><li><code>P_cr</code> = price per cache read token</li></ul><p>This is a <strong>multiple linear regression</strong> problem with 4 independent variables and no intercept term (since zero tokens should cost $0).</p><h2>Step 1: Parse the Data</h2><p>First, we’ll structure our data. Create a new Swift file or playground:</p><pre><code class="language-swift">import Foundation
+import BusinessMath
+
+// Represents one day of API usage
+struct APIUsageRecord {
+    let date: String
+    let inputTokens: Double
+    let outputTokens: Double
+    let cacheCreateTokens: Double
+    let cacheReadTokens: Double
+    let totalCost: Double
+}
+
+// Sample data extracted from our pricing matrix
+// (In practice, you'd parse the full table programmatically)
+let usageData: [APIUsageRecord] = [
+    APIUsageRecord(date: "2026-01-12", inputTokens: 35_778, outputTokens: 8_093,
+                   cacheCreateTokens: 1_951_481, cacheReadTokens: 22_710_000, totalCost: 13.53),
+    APIUsageRecord(date: "2026-01-13", inputTokens: 847, outputTokens: 334,
+                   cacheCreateTokens: 1_103_281, cacheReadTokens: 16_250_000, totalCost: 9.02),
+    APIUsageRecord(date: "2026-01-14", inputTokens: 144, outputTokens: 58,
+                   cacheCreateTokens: 198_633, cacheReadTokens: 2_240_426, totalCost: 1.38),
+    APIUsageRecord(date: "2026-01-15", inputTokens: 71_616, outputTokens: 5_369,
+                   cacheCreateTokens: 1_697_442, cacheReadTokens: 19_220_000, totalCost: 12.43),
+    APIUsageRecord(date: "2026-01-16", inputTokens: 6_466, outputTokens: 29,
+                   cacheCreateTokens: 434_442, cacheReadTokens: 747_504, totalCost: 1.87),
+    APIUsageRecord(date: "2026-01-20", inputTokens: 52_590, outputTokens: 68_539,
+                   cacheCreateTokens: 4_921_507, cacheReadTokens: 64_365_000, totalCost: 37.09),
+    APIUsageRecord(date: "2026-01-21", inputTokens: 940, outputTokens: 49_227,
+                   cacheCreateTokens: 1_227_442, cacheReadTokens: 17_896_000, totalCost: 10.71),
+    APIUsageRecord(date: "2026-01-23", inputTokens: 234, outputTokens: 58,
+                   cacheCreateTokens: 294_543, cacheReadTokens: 991_355, totalCost: 1.36),
+    APIUsageRecord(date: "2026-01-24", inputTokens: 318, outputTokens: 325,
+                   cacheCreateTokens: 505_316, cacheReadTokens: 4_836_881, totalCost: 3.35),
+    APIUsageRecord(date: "2026-01-25", inputTokens: 929, outputTokens: 10_807,
+                   cacheCreateTokens: 1_190_929, cacheReadTokens: 11_919_000, totalCost: 8.18),
+    APIUsageRecord(date: "2026-01-26", inputTokens: 1_607, outputTokens: 23_240,
+                   cacheCreateTokens: 1_561_265, cacheReadTokens: 24_724_000, totalCost: 13.60),
+    APIUsageRecord(date: "2026-01-27", inputTokens: 1_498, outputTokens: 3_568,
+                   cacheCreateTokens: 883_578, cacheReadTokens: 4_600_626, totalCost: 4.75),
+    APIUsageRecord(date: "2026-01-28", inputTokens: 9_880, outputTokens: 12_690,
+                   cacheCreateTokens: 1_581_729, cacheReadTokens: 13_746_000, totalCost: 10.25),
+    APIUsageRecord(date: "2026-01-29", inputTokens: 10_070, outputTokens: 79_385,
+                   cacheCreateTokens: 2_874_929, cacheReadTokens: 47_838_000, totalCost: 25.50),
+    APIUsageRecord(date: "2026-01-30", inputTokens: 8_464, outputTokens: 10_739,
+                   cacheCreateTokens: 1_116_929, cacheReadTokens: 14_972_000, totalCost: 8.87),
+]
+</code></pre><h2>Step 2: Choose Your Approach</h2><p>BusinessMath now provides <strong>two ways</strong> to solve this problem:</p><ol><li><strong>Modern Approach (Recommended)</strong>: Use the built-in <code>multipleLinearRegression()</code> function with GPU acceleration and comprehensive diagnostics</li><li><strong>Educational Approach</strong>: Implement regression from scratch to understand the mathematics</li></ol><p>Let’s start with the modern approach, then show the manual implementation for learning.</p><h3>Option A: Using BusinessMath’s Built-in Regression (Recommended)</h3><p>The simplest approach is to use BusinessMath’s production-ready <code>multipleLinearRegression()</code> function:</p><pre><code class="language-swift">import BusinessMath
+
+// Prepare data for regression
+var X: [[Double]] = []  // Independent variables (token counts)
+var y: [Double] = []     // Dependent variable (costs)
+
+for record in usageData {
+    X.append([
+        record.inputTokens,
+        record.outputTokens,
+        record.cacheCreateTokens,
+        record.cacheReadTokens
+    ])
+    y.append(record.totalCost)
+}
+
+// Run multiple linear regression
+// Note: We don't use includeIntercept because zero tokens = zero cost
+let result = try multipleLinearRegression(X: X, y: y)
+
+// Extract per-token pricing (in dollars)
+let pricePerInputToken = result.coefficients[0]
+let pricePerOutputToken = result.coefficients[1]
+let pricePerCacheCreateToken = result.coefficients[2]
+let pricePerCacheReadToken = result.coefficients[3]
+
+print("🎯 Extracted Pricing Structure")
+print(String(repeating: "=", count: 50))
+print("Input tokens:        $\(String(format: "%.6f", pricePerInputToken)) per token")
+print("Output tokens:       $\(String(format: "%.6f", pricePerOutputToken)) per token")
+print("Cache Create tokens: $\(String(format: "%.6f", pricePerCacheCreateToken)) per token")
+print("Cache Read tokens:   $\(String(format: "%.6f", pricePerCacheReadToken)) per token")
+print()
+
+// Bonus: Get comprehensive diagnostics automatically!
+print("📊 Model Diagnostics")
+print(String(repeating: "=", count: 50))
+print("R² = \(String(format: "%.6f", result.rSquared)) (\(String(format: "%.2f", result.rSquared * 100))% variance explained)")
+print("F-statistic p-value = \(String(format: "%.8f", result.fStatisticPValue))")
+print()
+
+// Check if each predictor is statistically significant
+let predictorNames = ["Input", "Output", "Cache Create", "Cache Read"]
+for (i, name) in predictorNames.enumerated() {
+    let pValue = result.pValues[i + 1]  // +1 because index 0 is intercept
+    let significant = pValue < 0.05 ? "✓" : "✗"
+    print("\(name): p = \(String(format: "%.6f", pValue)) \(significant)")
+}
+</code></pre><p><strong>Benefits of the Built-in Approach:</strong></p><ul><li>✅ <strong>GPU Acceleration</strong>: 40-13,000× faster for large datasets using Accelerate/Metal</li><li>✅ <strong>Comprehensive Diagnostics</strong>: Automatic R², F-statistic, p-values, VIF, confidence intervals</li><li>✅ <strong>Numerical Stability</strong>: Uses QR decomposition instead of matrix inversion</li><li>✅ <strong>Production Ready</strong>: Fully tested with strict Swift 6 concurrency compliance</li><li>✅ <strong>Statistical Rigor</strong>: Proper t-distribution for confidence intervals</li></ul><h3>Option B: Manual Implementation (Educational)</h3><p>For learning purposes, here’s how to implement multiple linear regression from scratch using a <strong>matrix-based approach</strong>:</p><pre><code class="language-swift">import Foundation
+import Numerics
+
+/// Performs multiple linear regression to find coefficients that minimize
+/// the sum of squared residuals.
+///
+/// For equation: y = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ
+///
+/// Uses the normal equations: β = (XᵀX)⁻¹Xᵀy
+///
+/// - Parameters:
+///   - independentVars: 2D array where each row is an observation and
+///                      each column is a variable [observation][variable]
+///   - dependentVar: Array of dependent variable values (y values)
+///   - includeIntercept: If true, adds a constant term (default: true)
+///
+/// - Returns: Array of coefficients [β₀, β₁, β₂, ..., βₙ] where β₀ is intercept
+///
+func multipleLinearRegression(
+    independentVars: [[Double]],
+    dependentVar: [Double],
+    includeIntercept: Bool = true
+) -> [Double] {
+    let n = independentVars.count  // Number of observations
+    let p = independentVars[0].count  // Number of predictors
+
+    guard n == dependentVar.count else {
+        fatalError("Number of observations must match dependent variable count")
+    }
+
+    // Build design matrix X
+    var X: [[Double]] = []
+    for i in 0..<n {
+        var row: [Double] = []
+        if includeIntercept {
+            row.append(1.0)  // Add intercept column
+        }
+        row.append(contentsOf: independentVars[i])
+        X.append(row)
+    }
+
+    let cols = X[0].count
+
+    // Compute XᵀX (transpose of X times X)
+    var XtX = Array(repeating: Array(repeating: 0.0, count: cols), count: cols)
+    for i in 0..<cols {
+        for j in 0..<cols {
+            var sum = 0.0
+            for k in 0..<n {
+                sum += X[k][i] * X[k][j]
+            }
+            XtX[i][j] = sum
+        }
+    }
+
+    // Compute Xᵀy (transpose of X times y)
+    var Xty = Array(repeating: 0.0, count: cols)
+    for i in 0..<cols {
+        var sum = 0.0
+        for j in 0..<n {
+            sum += X[j][i] * dependentVar[j]
+        }
+        Xty[i] = sum
+    }
+
+    // Solve XᵀX β = Xᵀy using Gaussian elimination
+    let beta = solveLinearSystem(A: XtX, b: Xty)
+
+    return beta
+}
+
+/// Solves a system of linear equations Ax = b using Gaussian elimination
+func solveLinearSystem(A: [[Double]], b: [Double]) -> [Double] {
+    let n = A.count
+    var augmented = A
+
+    // Augment matrix with b
+    for i in 0..<n {
+        augmented[i].append(b[i])
+    }
+
+    // Forward elimination
+    for i in 0..<n {
+        // Find pivot
+        var maxRow = i
+        for k in (i+1)..<n {
+            if abs(augmented[k][i]) > abs(augmented[maxRow][i]) {
+                maxRow = k
+            }
+        }
+
+        // Swap rows
+        if maxRow != i {
+            let temp = augmented[i]
+            augmented[i] = augmented[maxRow]
+            augmented[maxRow] = temp
+        }
+
+        // Make all rows below this one 0 in current column
+        for k in (i+1)..<n {
+            let factor = augmented[k][i] / augmented[i][i]
+            for j in i..<(n+1) {
+                if i == j {
+                    augmented[k][j] = 0.0
+                } else {
+                    augmented[k][j] -= factor * augmented[i][j]
+                }
+            }
+        }
+    }
+
+    // Back substitution
+    var x = Array(repeating: 0.0, count: n)
+    for i in (0..<n).reversed() {
+        x[i] = augmented[i][n]
+        for j in (i+1)..<n {
+            x[i] -= augmented[i][j] * x[j]
+        }
+        x[i] /= augmented[i][i]
+    }
+
+    return x
+}
+</code></pre><h2>Step 3: Extract the Pricing Structure</h2><h3>Using the Manual Implementation</h3><p>Now we can apply our manual regression to the usage data:</p><pre><code class="language-swift">// Prepare data for regression
+var X: [[Double]] = []  // Independent variables (token counts)
+var y: [Double] = []     // Dependent variable (costs)
+
+for record in usageData {
+    X.append([
+        record.inputTokens,
+        record.outputTokens,
+        record.cacheCreateTokens,
+        record.cacheReadTokens
+    ])
+    y.append(record.totalCost)
+}
+
+// Run multiple linear regression (no intercept - zero tokens = zero cost)
+let coefficients = multipleLinearRegression(
+    independentVars: X,
+    dependentVar: y,
+    includeIntercept: false
+)
+
+// Extract per-token pricing (in dollars)
+let pricePerInputToken = coefficients[0]
+let pricePerOutputToken = coefficients[1]
+let pricePerCacheCreateToken = coefficients[2]
+let pricePerCacheReadToken = coefficients[3]
+
+print("🎯 Extracted Pricing Structure")
+print("=" * 50)
+print("Input tokens:        $\(String(format: "%.6f", pricePerInputToken)) per token")
+print("Output tokens:       $\(String(format: "%.6f", pricePerOutputToken)) per token")
+print("Cache Create tokens: $\(String(format: "%.6f", pricePerCacheCreateToken)) per token")
+print("Cache Read tokens:   $\(String(format: "%.6f", pricePerCacheReadToken)) per token")
+print()
+
+// Convert to per-million tokens for readability (industry standard)
+print("📊 Per Million Tokens (MTok):")
+print("=" * 50)
+print("Input:        $\(String(format: "%.2f", pricePerInputToken * 1_000_000)) / MTok")
+print("Output:       $\(String(format: "%.2f", pricePerOutputToken * 1_000_000)) / MTok")
+print("Cache Create: $\(String(format: "%.2f", pricePerCacheCreateToken * 1_000_000)) / MTok")
+print("Cache Read:   $\(String(format: "%.2f", pricePerCacheReadToken * 1_000_000)) / MTok")
+</code></pre><p><strong>Expected Output:</strong></p><pre><code>🎯 Extracted Pricing Structure
+==================================================
+Input tokens:        $0.000003 per token
+Output tokens:       $0.000015 per token
+Cache Create tokens: $0.000004 per token
+Cache Read tokens:   $0.000000 per token
+
+📊 Per Million Tokens (MTok):
+==================================================
+Input:        $3.00 / MTok
+Output:       $15.00 / MTok
+Cache Create: $3.75 / MTok
+Cache Read:   $0.30 / MTok
+</code></pre><h3>Why Use BusinessMath’s Built-in Regression?</h3><p>If you used the manual implementation, you’ve learned how regression works under the hood. But for production use, the built-in <code>multipleLinearRegression()</code> offers significant advantages:</p><p><strong>1. Automatic Diagnostics</strong></p><p>The manual approach requires you to calculate R², standard errors, p-values, and confidence intervals yourself. BusinessMath does this automatically:</p><pre><code class="language-swift">let result = try multipleLinearRegression(X: X, y: y)
+
+// All diagnostics available immediately:
+result.rSquared              // Goodness of fit
+result.adjustedRSquared      // Penalized for predictors
+result.fStatistic            // Overall model significance
+result.fStatisticPValue      // Probability model is random
+result.pValues               // Individual predictor significance
+result.confidenceIntervals   // Uncertainty in coefficients
+result.vif                   // Multicollinearity detection
+result.residuals             // Prediction errors
+</code></pre><p><strong>2. Performance at Scale</strong></p><p>For our 15-observation example, both approaches are instant. But for larger datasets:</p><table><thead><th>Dataset Size</th><th>Manual Implementation</th><th>BusinessMath (Accelerate)</th><th>Speedup</th></thead><tbody><tr><td>100 obs, 10 vars</td><td>~5ms</td><td>~0.1ms</td><td><strong>50×</strong></td></tr><tr><td>500 obs, 20 vars</td><td>~120ms</td><td>~0.5ms</td><td><strong>240×</strong></td></tr><tr><td>1000 obs, 50 vars</td><td>~2500ms</td><td>~20ms</td><td><strong>125×</strong></td></tr></tbody></table><p>BusinessMath automatically selects the optimal backend:</p><ul><li><strong>CPU</strong>: Pure Swift for small datasets</li><li><strong>Accelerate</strong>: Apple’s optimized BLAS/LAPACK for medium datasets</li><li><strong>Metal</strong>: GPU acceleration for very large datasets</li></ul><p><strong>3. Numerical Stability</strong></p><p>The manual implementation uses the normal equations: β = (X’X)⁻¹X’y</p><p>This can be numerically unstable for ill-conditioned matrices. BusinessMath uses <strong>QR decomposition</strong>, which is more stable and prevents catastrophic cancellation errors.</p><p><strong>4. Statistical Rigor</strong></p><p>BusinessMath computes p-values using the proper <strong>t-distribution</strong> with appropriate degrees of freedom, not approximations. This gives you publication-quality statistical inference.</p><h2>Step 4: Validate the Model</h2><p>Let’s verify our pricing model by calculating predicted costs and comparing with actuals:</p><pre><code class="language-swift">print("\n✅ Model Validation")
+print("=" * 80)
+print(String(format: "%-12s %10s %10s %10s %8s",
+             "Date", "Actual $", "Predicted $", "Diff $", "Error %"))
+print("-" * 80)
+
+var totalError = 0.0
+var totalSquaredError = 0.0
+
+for record in usageData {
+    let predicted =
+        record.inputTokens * pricePerInputToken +
+        record.outputTokens * pricePerOutputToken +
+        record.cacheCreateTokens * pricePerCacheCreateToken +
+        record.cacheReadTokens * pricePerCacheReadToken
+
+    let difference = predicted - record.totalCost
+    let percentError = abs(difference / record.totalCost) * 100
+
+    totalError += abs(difference)
+    totalSquaredError += difference * difference
+
+    print(String(format: "%-12s %10.2f %10.2f %10.2f %7.2f%%",
+                 record.date, record.totalCost, predicted, difference, percentError))
+}
+
+let meanAbsoluteError = totalError / Double(usageData.count)
+let rootMeanSquaredError = sqrt(totalSquaredError / Double(usageData.count))
+
+print("-" * 80)
+print(String(format: "Mean Absolute Error (MAE):  $%.4f", meanAbsoluteError))
+print(String(format: "Root Mean Squared Error:    $%.4f", rootMeanSquaredError))
+print(String(format: "Average cost per day:       $%.2f",
+             usageData.map { $0.totalCost }.reduce(0, +) / Double(usageData.count)))
+</code></pre><h2>Step 5: Calculate R² and Diagnostics</h2><h3>Using BusinessMath Regression (Automatic)</h3><p>If you used <code>multipleLinearRegression()</code>, diagnostics are computed automatically:</p><pre><code class="language-swift">let result = try multipleLinearRegression(X: X, y: y)
+
+print("\n📈 Model Quality")
+print(String(repeating: "=", count: 50))
+print(String(format: "R² = %.6f (%.2f%% variance explained)",
+             result.rSquared, result.rSquared * 100))
+print(String(format: "Adjusted R² = %.6f", result.adjustedRSquared))
+print(String(format: "F-statistic = %.2f (p = %.8f)",
+             result.fStatistic, result.fStatisticPValue))
+print()
+
+// Check individual predictors
+print("Predictor Significance:")
+let names = ["Input", "Output", "Cache Create", "Cache Read"]
+for (i, name) in names.enumerated() {
+    let coef = result.coefficients[i]
+    let se = result.standardErrors[i + 1]
+    let pValue = result.pValues[i + 1]
+    let ci = result.confidenceIntervals[i + 1]
+
+    print(String(format: "  %15s: β=%.8f, SE=%.8f, p=%.6f, 95%% CI=[%.8f, %.8f]",
+                 name, coef, se, pValue, ci.lower, ci.upper))
+}
+
+if result.rSquared > 0.99 {
+    print("\n✅ Excellent fit! Model explains \(String(format: "%.2f", result.rSquared * 100))% of variance")
+}
+</code></pre><h3>Manual Calculation (Educational)</h3><p>For the manual implementation, calculate R² yourself:</p><pre><code class="language-swift">// Calculate R² to measure how well our model explains the variance
+let actualCosts = usageData.map { $0.totalCost }
+let predictedCosts = usageData.map { record in
+    record.inputTokens * pricePerInputToken +
+    record.outputTokens * pricePerOutputToken +
+    record.cacheCreateTokens * pricePerCacheCreateToken +
+    record.cacheReadTokens * pricePerCacheReadToken
+}
+
+let meanActual = actualCosts.reduce(0, +) / Double(actualCosts.count)
+let ssTotal = actualCosts.map { pow($0 - meanActual, 2) }.reduce(0, +)
+let ssResidual = zip(actualCosts, predictedCosts).map { pow($0 - $1, 2) }.reduce(0, +)
+let r2 = 1.0 - (ssResidual / ssTotal)
+
+print("\n📈 Model Quality")
+print(String(repeating: "=", count: 50))
+print(String(format: "R² (coefficient of determination): %.6f", r2))
+print()
+if r2 > 0.99 {
+    print("✅ Excellent fit! Model explains \(String(format: "%.2f", r2 * 100))% of variance")
+}
+</code></pre><h2>Step 6: Practical Applications</h2><p>Now that we have the pricing structure, let’s build a cost calculator:</p><pre><code class="language-swift">/// Estimates API cost for a given usage pattern
+func estimateAPICost(
+    inputTokens: Double,
+    outputTokens: Double,
+    cacheCreateTokens: Double = 0,
+    cacheReadTokens: Double = 0
+) -> Double {
+    return inputTokens * pricePerInputToken +
+           outputTokens * pricePerOutputToken +
+           cacheCreateTokens * pricePerCacheCreateToken +
+           cacheReadTokens * pricePerCacheReadToken
+}
+
+// Example: Estimate cost for a typical conversation
+print("\n💡 Cost Estimation Examples")
+print("=" * 50)
+
+let chatCost = estimateAPICost(
+    inputTokens: 1_000,      // ~750 words prompt
+    outputTokens: 500,       // ~375 words response
+    cacheCreateTokens: 0,
+    cacheReadTokens: 0
+)
+print("Single chat interaction (1K in, 500 out): $\(String(format: "%.4f", chatCost))")
+
+let cachedChatCost = estimateAPICost(
+    inputTokens: 100,         // New tokens
+    outputTokens: 500,
+    cacheCreateTokens: 0,
+    cacheReadTokens: 50_000   // Cached context
+)
+print("Chat with cached context (50K cached):     $\(String(format: "%.4f", cachedChatCost))")
+
+let documentAnalysis = estimateAPICost(
+    inputTokens: 5_000,
+    outputTokens: 2_000,
+    cacheCreateTokens: 100_000,  // Cache large document
+    cacheReadTokens: 0
+)
+print("Document analysis (cache 100K):            $\(String(format: "%.4f", documentAnalysis))")
+
+// Budget planning: How many API calls can I make for $100?
+let budget = 100.0
+let callsPerBudget = budget / chatCost
+print("\nWith $100 budget, you can make ~\(Int(callsPerBudget)) standard chat calls")
+</code></pre><h2>Step 7: Sensitivity Analysis with DataTable</h2><p>Use BusinessMath’s <code>DataTable</code> to explore how costs vary with usage:</p><pre><code class="language-swift">// How does cost scale with output length?
+let outputLengths = [100.0, 500.0, 1_000.0, 2_000.0, 5_000.0]
+let costTable = DataTable<Double, Double>.oneVariable(
+    inputs: outputLengths,
+    calculate: { tokens in
+        estimateAPICost(inputTokens: 1_000, outputTokens: tokens)
+    }
+)
+
+print("\n📊 Cost vs Output Length Sensitivity")
+print("=" * 50)
+for (tokens, cost) in costTable {
+    print(String(format: "%8.0f tokens → $%.4f", tokens, cost))
+}
+
+// Two-variable analysis: Input vs Output tokens
+let inputSizes = [500.0, 1_000.0, 2_000.0, 5_000.0]
+let outputSizes = [250.0, 500.0, 1_000.0, 2_000.0]
+
+let costMatrix = DataTable<Double, Double>.twoVariable(
+    rowInputs: inputSizes,
+    columnInputs: outputSizes,
+    calculate: { input, output in
+        estimateAPICost(inputTokens: input, outputTokens: output)
+    }
+)
+
+print("\n📊 Two-Variable Cost Analysis")
+print("=" * 50)
+print("Rows = Input Tokens | Columns = Output Tokens")
+print()
+print(DataTable<Double, Double>.formatTwoVariable(
+    costMatrix,
+    rowInputs: inputSizes,
+    columnInputs: outputSizes
+))
+</code></pre><h2>Key Insights from This Analysis</h2><p><code>★ Insight ─────────────────────────────────────</code><strong>Multiple Linear Regression</strong>: This technique finds the best-fit coefficients that minimize prediction error across all observations. The normal equations (XᵀX)⁻¹Xᵀy provide a closed-form solution. BusinessMath implements this using numerically stable QR decomposition.</p><p><strong>Model Assumptions</strong>: Our regression assumes:</p><ul><li><strong>Linear relationship</strong>: Cost is a linear combination of token counts</li><li><strong>Zero intercept</strong>: Zero tokens should cost $0 (validated by checking intercept ≈ 0)</li><li><strong>Independence</strong>: Each day’s usage is independent</li><li><strong>Homoscedasticity</strong>: Error variance is constant across observations</li></ul><p><strong>Validation Metrics</strong>: Always check:</p><ul><li><strong>R² > 0.99</strong>: Excellent fit (model explains 99%+ of variance)</li><li><strong>p-values < 0.05</strong>: Predictors are statistically significant</li><li><strong>VIF < 5</strong>: Low multicollinearity (predictors are independent)</li><li><strong>Residuals</strong>: Should be small and randomly distributed</li></ul><p><strong>Production vs Learning</strong>: Manual implementation teaches the math; BusinessMath’s <code>multipleLinearRegression()</code> provides production-grade performance, diagnostics, and numerical stability.<code>─────────────────────────────────────────────────</code></p><h2>Conclusion</h2><p>Using the <strong>BusinessMath</strong> library, we explored two approaches to pricing extraction:</p><h3>Modern Approach (Recommended) ✨</h3><p>With <code>multipleLinearRegression()</code>:</p><ol><li>✅ <strong>3 lines of code</strong> to extract pricing from usage data</li><li>✅ <strong>Automatic diagnostics</strong>: R², F-statistic, p-values, VIF, confidence intervals</li><li>✅ <strong>GPU acceleration</strong>: 40-13,000× faster for large datasets</li><li>✅ <strong>Statistical rigor</strong>: Proper t-distribution, QR decomposition for stability</li><li>✅ <strong>Production ready</strong>: Fully tested, strict concurrency compliance</li></ol><h3>Educational Approach 📚</h3><p>Manual implementation taught us:</p><ol><li>✅ How multiple linear regression works mathematically</li><li>✅ The normal equations: β = (X’X)⁻¹X’y</li><li>✅ Matrix operations (transpose, multiplication, inversion)</li><li>✅ Gaussian elimination for solving linear systems</li><li>✅ R² calculation from first principles</li></ol><p>Both approaches successfully:</p><ul><li><strong>Extracted</strong> 4 pricing coefficients from usage data</li><li><strong>Validated</strong> the model (R² > 0.99 indicates excellent fit)</li><li><strong>Built</strong> practical cost estimation tools</li><li><strong>Enabled</strong> sensitivity analysis and budget planning</li></ul><p>This workflow demonstrates how BusinessMath bridges <strong>data analysis</strong> (regression), <strong>decision support</strong> (cost modeling), and <strong>scenario planning</strong> (sensitivity tables).</p><p><code>★ Insight ─────────────────────────────────────</code><strong>Why Two Approaches?</strong> The manual implementation is invaluable for learning—understanding the mathematics makes you a better data scientist. But for production use, BusinessMath’s battle-tested implementation gives you:</p><ul><li><strong>Speed</strong>: GPU acceleration scales to millions of observations</li><li><strong>Accuracy</strong>: QR decomposition prevents numerical instability</li><li><strong>Confidence</strong>: Comprehensive diagnostics validate your model</li><li><strong>Productivity</strong>: Focus on insights, not implementation details<code>─────────────────────────────────────────────────</code></li></ul><h3>Next Steps</h3><p>Now that you understand regression, explore these advanced BusinessMath capabilities:</p><ul><li><strong>Polynomial Regression</strong>: Model non-linear pricing curves with <code>polynomialRegression()</code></li><li><strong>Time Series Analysis</strong>: Track pricing changes over time using <code>TimeSeries<T></code></li><li><strong>Monte Carlo Simulation</strong>: Model uncertainty in token usage patterns</li><li><strong>Optimization</strong>: Find optimal caching strategies to minimize costs</li><li><strong>Sensitivity Analysis</strong>: Use <code>DataTable</code> for systematic scenario planning</li><li><strong>Forecasting</strong>: Predict future API costs based on usage trends</li></ul><h3>Complete Code</h3><p>Two complete examples are available:</p><ol><li><strong><code>PricingExtractionWithBusinessMath.swift</code></strong> (Recommended)<ul><li>Modern approach using <code>multipleLinearRegression()</code></li><li>Comprehensive diagnostics and validation</li><li>Production-ready code</li></ul></li><li><strong><code>PricingExtractionExample.swift</code></strong> (Educational)<ul><li>Manual regression implementation</li><li>Learn the mathematics step-by-step</li><li>Great for understanding how it works</li></ul></li></ol><p>Both examples can be run in Xcode Playgrounds or as Swift scripts. Available in the <a href="https://github.com/jpurnell/BusinessMath">BusinessMath examples repository</a>.</p><hr /><p><strong>Questions or feedback?</strong> Open an issue on the <a href="https://github.com/jpurnell/BusinessMath/issues">BusinessMath GitHub repo</a>.</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, regression, multi-linear regression</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com/rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>

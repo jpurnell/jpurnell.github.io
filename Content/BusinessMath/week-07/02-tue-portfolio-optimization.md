@@ -1,6 +1,6 @@
 ---
 title: Portfolio Optimization: Building Optimal Investment Portfolios
-date: 2026-02-18 13:00
+date: 2026-02-17 13:00
 series: BusinessMath Quarterly Series
 week: 7
 post: 2

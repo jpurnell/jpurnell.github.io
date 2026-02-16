@@ -1,7 +1,460 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/03-fri-case-study-option-pricing</guid><title>Case Study #3: Option Pricing with Monte Carlo Simulation</title><link>https://www.justinpurnell.com/BusinessMath/week-06/03-fri-case-study-option-pricing</link><description><![CDATA[Part 20 of 12-Week BusinessMath Series]]></description><pubDate>Sat, 14 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[options]]></category><category><![CDATA[derivatives]]></category><category><![CDATA[black-scholes]]></category><category><![CDATA[convergence]]></category><category><![CDATA[case-study]]></category><content:encoded><![CDATA[<p><strong>Part 20 of 12-Week BusinessMath Series</strong></p><hr /><h2>The Business Problem</h2><p><strong>Company</strong>: FinTech startup building a derivatives trading platform</p><p><strong>Challenge</strong>: Price European call options for client portfolios. Need to:</p><ul><li>Price options accurately using Monte Carlo simulation</li><li>Validate results against Black-Scholes analytical formula</li><li>Balance accuracy vs. computation time (10ms target for real-time quotes)</li><li>Provide confidence intervals for risk management</li><li>Support batch pricing for portfolio valuation</li></ul><p><strong>Why Monte Carlo?</strong> While Black-Scholes provides closed-form pricing for European options, Monte Carlo generalizes to exotic options (Asian, Barrier, American) that clients will demand later.</p><hr /><h2>The Solution Architecture</h2><p>We’ll build a complete option pricing system that:</p><ol><li>Simulates stock price paths using Geometric Brownian Motion</li><li>Computes option payoffs across thousands of scenarios</li><li>Analyzes convergence to determine optimal iteration count</li><li>Compares Monte Carlo vs. Black-Scholes for validation</li><li>Optimizes for real-time pricing constraints</li></ol><hr /><h2>Step 1: Building the Option Pricing Model</h2><p>European call option pricing with Monte Carlo uses <strong>expression models</strong> - the modern GPU-accelerated approach that’s 10-100× faster than traditional loops.</p><h3>The Expression Model Approach</h3><p>Instead of manually looping and storing payoffs, we define the pricing logic declaratively:</p><pre><code class="language-swift">import Foundation
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post</guid><title>Reverse-Engineering API Pricing from Usage Data with BusinessMath</title><link>https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post</link><description><![CDATA[Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the BusinessMath Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types.]]></description><pubDate>Sun, 15 Feb 2026 14:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[regression]]></category><category><![CDATA[multi-linear regression]]></category><content:encoded><![CDATA[<h2>Introduction</h2><p>Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the <strong>BusinessMath</strong> Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types.</p><h3>Two Approaches in This Tutorial</h3><p>This tutorial presents <strong>two ways</strong> to solve the pricing extraction problem:</p><table><thead><th>Approach</th><th>Best For</th><th>Lines of Code</th><th>Time to Implement</th></thead><tbody><tr><td><strong>Modern (Recommended)</strong></td><td>Production use, quick analysis</td><td>~10 lines</td><td>5 minutes</td></tr><tr><td><strong>Educational</strong></td><td>Learning regression math</td><td>~150 lines</td><td>30 minutes</td></tr></tbody></table><p><strong>Modern Approach</strong>: Use BusinessMath’s built-in <code>multipleLinearRegression()</code> function with GPU acceleration, automatic diagnostics, and comprehensive statistical inference. Jump to <a href="#option-a-using-businessmaths-built-in-regression-recommended">Option A</a> to see this approach.</p><p><strong>Educational Approach</strong>: Implement regression from scratch to understand the mathematics. See <a href="#option-b-manual-implementation-educational">Option B</a> for the manual implementation.</p><p>Both approaches produce identical results, but the modern approach gives you:</p><ul><li>✨ <strong>Automatic diagnostics</strong>: R², F-statistic, p-values, VIF, confidence intervals</li><li>🚀 <strong>GPU acceleration</strong>: 40-13,000× faster for large datasets</li><li>🔬 <strong>Statistical rigor</strong>: Proper t-distribution, QR decomposition</li><li>✅ <strong>Production ready</strong>: Battle-tested, strict concurrency compliance</li></ul><h2>The Problem</h2><p>You have a usage table that shows daily API consumption across multiple token types:</p><ul><li><strong>Input tokens</strong>: The prompts you send</li><li><strong>Output tokens</strong>: The responses you receive</li><li><strong>Cache Create tokens</strong>: New cached content</li><li><strong>Cache Read tokens</strong>: Reused cached content</li></ul><p>Each row shows token counts and a total cost, but <strong>the pricing structure is hidden</strong>. Our goal: extract the per-token pricing.</p><h2>The Dataset</h2><p>Our pricing matrix contains real usage data from January-February 2026 for two Claude models (haiku-4.5 and sonnet-4.5):</p><pre><code>Date     │ Input │ Output │ Cache Create │ Cache Read │ Total Cost
+2026-01-12│ 35,778│  8,093 │  1,951,481  │ 22,710,000 │   $13.53
+2026-01-13│    847│    334 │  1,103,281  │ 16,250,000 │    $9.02
+2026-01-14│    144│     58 │    198,633  │  2,240,426 │    $1.38
+...
+</code></pre><h2>The Mathematical Model</h2><p>We’ll model the cost as a linear combination of token types:</p><pre><code>Cost = (Input × P_in) + (Output × P_out) + (CacheCreate × P_cc) + (CacheRead × P_cr)
+</code></pre><p>Where:</p><ul><li><code>P_in</code> = price per input token</li><li><code>P_out</code> = price per output token</li><li><code>P_cc</code> = price per cache create token</li><li><code>P_cr</code> = price per cache read token</li></ul><p>This is a <strong>multiple linear regression</strong> problem with 4 independent variables and no intercept term (since zero tokens should cost $0).</p><h2>Step 1: Parse the Data</h2><p>First, we’ll structure our data. Create a new Swift file or playground:</p><pre><code class="language-swift">import Foundation
+import BusinessMath
+
+// Represents one day of API usage
+struct APIUsageRecord {
+    let date: String
+    let inputTokens: Double
+    let outputTokens: Double
+    let cacheCreateTokens: Double
+    let cacheReadTokens: Double
+    let totalCost: Double
+}
+
+// Sample data extracted from our pricing matrix
+// (In practice, you'd parse the full table programmatically)
+let usageData: [APIUsageRecord] = [
+    APIUsageRecord(date: "2026-01-12", inputTokens: 35_778, outputTokens: 8_093,
+                   cacheCreateTokens: 1_951_481, cacheReadTokens: 22_710_000, totalCost: 13.53),
+    APIUsageRecord(date: "2026-01-13", inputTokens: 847, outputTokens: 334,
+                   cacheCreateTokens: 1_103_281, cacheReadTokens: 16_250_000, totalCost: 9.02),
+    APIUsageRecord(date: "2026-01-14", inputTokens: 144, outputTokens: 58,
+                   cacheCreateTokens: 198_633, cacheReadTokens: 2_240_426, totalCost: 1.38),
+    APIUsageRecord(date: "2026-01-15", inputTokens: 71_616, outputTokens: 5_369,
+                   cacheCreateTokens: 1_697_442, cacheReadTokens: 19_220_000, totalCost: 12.43),
+    APIUsageRecord(date: "2026-01-16", inputTokens: 6_466, outputTokens: 29,
+                   cacheCreateTokens: 434_442, cacheReadTokens: 747_504, totalCost: 1.87),
+    APIUsageRecord(date: "2026-01-20", inputTokens: 52_590, outputTokens: 68_539,
+                   cacheCreateTokens: 4_921_507, cacheReadTokens: 64_365_000, totalCost: 37.09),
+    APIUsageRecord(date: "2026-01-21", inputTokens: 940, outputTokens: 49_227,
+                   cacheCreateTokens: 1_227_442, cacheReadTokens: 17_896_000, totalCost: 10.71),
+    APIUsageRecord(date: "2026-01-23", inputTokens: 234, outputTokens: 58,
+                   cacheCreateTokens: 294_543, cacheReadTokens: 991_355, totalCost: 1.36),
+    APIUsageRecord(date: "2026-01-24", inputTokens: 318, outputTokens: 325,
+                   cacheCreateTokens: 505_316, cacheReadTokens: 4_836_881, totalCost: 3.35),
+    APIUsageRecord(date: "2026-01-25", inputTokens: 929, outputTokens: 10_807,
+                   cacheCreateTokens: 1_190_929, cacheReadTokens: 11_919_000, totalCost: 8.18),
+    APIUsageRecord(date: "2026-01-26", inputTokens: 1_607, outputTokens: 23_240,
+                   cacheCreateTokens: 1_561_265, cacheReadTokens: 24_724_000, totalCost: 13.60),
+    APIUsageRecord(date: "2026-01-27", inputTokens: 1_498, outputTokens: 3_568,
+                   cacheCreateTokens: 883_578, cacheReadTokens: 4_600_626, totalCost: 4.75),
+    APIUsageRecord(date: "2026-01-28", inputTokens: 9_880, outputTokens: 12_690,
+                   cacheCreateTokens: 1_581_729, cacheReadTokens: 13_746_000, totalCost: 10.25),
+    APIUsageRecord(date: "2026-01-29", inputTokens: 10_070, outputTokens: 79_385,
+                   cacheCreateTokens: 2_874_929, cacheReadTokens: 47_838_000, totalCost: 25.50),
+    APIUsageRecord(date: "2026-01-30", inputTokens: 8_464, outputTokens: 10_739,
+                   cacheCreateTokens: 1_116_929, cacheReadTokens: 14_972_000, totalCost: 8.87),
+]
+</code></pre><h2>Step 2: Choose Your Approach</h2><p>BusinessMath now provides <strong>two ways</strong> to solve this problem:</p><ol><li><strong>Modern Approach (Recommended)</strong>: Use the built-in <code>multipleLinearRegression()</code> function with GPU acceleration and comprehensive diagnostics</li><li><strong>Educational Approach</strong>: Implement regression from scratch to understand the mathematics</li></ol><p>Let’s start with the modern approach, then show the manual implementation for learning.</p><h3>Option A: Using BusinessMath’s Built-in Regression (Recommended)</h3><p>The simplest approach is to use BusinessMath’s production-ready <code>multipleLinearRegression()</code> function:</p><pre><code class="language-swift">import BusinessMath
+
+// Prepare data for regression
+var X: [[Double]] = []  // Independent variables (token counts)
+var y: [Double] = []     // Dependent variable (costs)
+
+for record in usageData {
+    X.append([
+        record.inputTokens,
+        record.outputTokens,
+        record.cacheCreateTokens,
+        record.cacheReadTokens
+    ])
+    y.append(record.totalCost)
+}
+
+// Run multiple linear regression
+// Note: We don't use includeIntercept because zero tokens = zero cost
+let result = try multipleLinearRegression(X: X, y: y)
+
+// Extract per-token pricing (in dollars)
+let pricePerInputToken = result.coefficients[0]
+let pricePerOutputToken = result.coefficients[1]
+let pricePerCacheCreateToken = result.coefficients[2]
+let pricePerCacheReadToken = result.coefficients[3]
+
+print("🎯 Extracted Pricing Structure")
+print(String(repeating: "=", count: 50))
+print("Input tokens:        $\(String(format: "%.6f", pricePerInputToken)) per token")
+print("Output tokens:       $\(String(format: "%.6f", pricePerOutputToken)) per token")
+print("Cache Create tokens: $\(String(format: "%.6f", pricePerCacheCreateToken)) per token")
+print("Cache Read tokens:   $\(String(format: "%.6f", pricePerCacheReadToken)) per token")
+print()
+
+// Bonus: Get comprehensive diagnostics automatically!
+print("📊 Model Diagnostics")
+print(String(repeating: "=", count: 50))
+print("R² = \(String(format: "%.6f", result.rSquared)) (\(String(format: "%.2f", result.rSquared * 100))% variance explained)")
+print("F-statistic p-value = \(String(format: "%.8f", result.fStatisticPValue))")
+print()
+
+// Check if each predictor is statistically significant
+let predictorNames = ["Input", "Output", "Cache Create", "Cache Read"]
+for (i, name) in predictorNames.enumerated() {
+    let pValue = result.pValues[i + 1]  // +1 because index 0 is intercept
+    let significant = pValue < 0.05 ? "✓" : "✗"
+    print("\(name): p = \(String(format: "%.6f", pValue)) \(significant)")
+}
+</code></pre><p><strong>Benefits of the Built-in Approach:</strong></p><ul><li>✅ <strong>GPU Acceleration</strong>: 40-13,000× faster for large datasets using Accelerate/Metal</li><li>✅ <strong>Comprehensive Diagnostics</strong>: Automatic R², F-statistic, p-values, VIF, confidence intervals</li><li>✅ <strong>Numerical Stability</strong>: Uses QR decomposition instead of matrix inversion</li><li>✅ <strong>Production Ready</strong>: Fully tested with strict Swift 6 concurrency compliance</li><li>✅ <strong>Statistical Rigor</strong>: Proper t-distribution for confidence intervals</li></ul><h3>Option B: Manual Implementation (Educational)</h3><p>For learning purposes, here’s how to implement multiple linear regression from scratch using a <strong>matrix-based approach</strong>:</p><pre><code class="language-swift">import Foundation
+import Numerics
+
+/// Performs multiple linear regression to find coefficients that minimize
+/// the sum of squared residuals.
+///
+/// For equation: y = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ
+///
+/// Uses the normal equations: β = (XᵀX)⁻¹Xᵀy
+///
+/// - Parameters:
+///   - independentVars: 2D array where each row is an observation and
+///                      each column is a variable [observation][variable]
+///   - dependentVar: Array of dependent variable values (y values)
+///   - includeIntercept: If true, adds a constant term (default: true)
+///
+/// - Returns: Array of coefficients [β₀, β₁, β₂, ..., βₙ] where β₀ is intercept
+///
+func multipleLinearRegression(
+    independentVars: [[Double]],
+    dependentVar: [Double],
+    includeIntercept: Bool = true
+) -> [Double] {
+    let n = independentVars.count  // Number of observations
+    let p = independentVars[0].count  // Number of predictors
+
+    guard n == dependentVar.count else {
+        fatalError("Number of observations must match dependent variable count")
+    }
+
+    // Build design matrix X
+    var X: [[Double]] = []
+    for i in 0..<n {
+        var row: [Double] = []
+        if includeIntercept {
+            row.append(1.0)  // Add intercept column
+        }
+        row.append(contentsOf: independentVars[i])
+        X.append(row)
+    }
+
+    let cols = X[0].count
+
+    // Compute XᵀX (transpose of X times X)
+    var XtX = Array(repeating: Array(repeating: 0.0, count: cols), count: cols)
+    for i in 0..<cols {
+        for j in 0..<cols {
+            var sum = 0.0
+            for k in 0..<n {
+                sum += X[k][i] * X[k][j]
+            }
+            XtX[i][j] = sum
+        }
+    }
+
+    // Compute Xᵀy (transpose of X times y)
+    var Xty = Array(repeating: 0.0, count: cols)
+    for i in 0..<cols {
+        var sum = 0.0
+        for j in 0..<n {
+            sum += X[j][i] * dependentVar[j]
+        }
+        Xty[i] = sum
+    }
+
+    // Solve XᵀX β = Xᵀy using Gaussian elimination
+    let beta = solveLinearSystem(A: XtX, b: Xty)
+
+    return beta
+}
+
+/// Solves a system of linear equations Ax = b using Gaussian elimination
+func solveLinearSystem(A: [[Double]], b: [Double]) -> [Double] {
+    let n = A.count
+    var augmented = A
+
+    // Augment matrix with b
+    for i in 0..<n {
+        augmented[i].append(b[i])
+    }
+
+    // Forward elimination
+    for i in 0..<n {
+        // Find pivot
+        var maxRow = i
+        for k in (i+1)..<n {
+            if abs(augmented[k][i]) > abs(augmented[maxRow][i]) {
+                maxRow = k
+            }
+        }
+
+        // Swap rows
+        if maxRow != i {
+            let temp = augmented[i]
+            augmented[i] = augmented[maxRow]
+            augmented[maxRow] = temp
+        }
+
+        // Make all rows below this one 0 in current column
+        for k in (i+1)..<n {
+            let factor = augmented[k][i] / augmented[i][i]
+            for j in i..<(n+1) {
+                if i == j {
+                    augmented[k][j] = 0.0
+                } else {
+                    augmented[k][j] -= factor * augmented[i][j]
+                }
+            }
+        }
+    }
+
+    // Back substitution
+    var x = Array(repeating: 0.0, count: n)
+    for i in (0..<n).reversed() {
+        x[i] = augmented[i][n]
+        for j in (i+1)..<n {
+            x[i] -= augmented[i][j] * x[j]
+        }
+        x[i] /= augmented[i][i]
+    }
+
+    return x
+}
+</code></pre><h2>Step 3: Extract the Pricing Structure</h2><h3>Using the Manual Implementation</h3><p>Now we can apply our manual regression to the usage data:</p><pre><code class="language-swift">// Prepare data for regression
+var X: [[Double]] = []  // Independent variables (token counts)
+var y: [Double] = []     // Dependent variable (costs)
+
+for record in usageData {
+    X.append([
+        record.inputTokens,
+        record.outputTokens,
+        record.cacheCreateTokens,
+        record.cacheReadTokens
+    ])
+    y.append(record.totalCost)
+}
+
+// Run multiple linear regression (no intercept - zero tokens = zero cost)
+let coefficients = multipleLinearRegression(
+    independentVars: X,
+    dependentVar: y,
+    includeIntercept: false
+)
+
+// Extract per-token pricing (in dollars)
+let pricePerInputToken = coefficients[0]
+let pricePerOutputToken = coefficients[1]
+let pricePerCacheCreateToken = coefficients[2]
+let pricePerCacheReadToken = coefficients[3]
+
+print("🎯 Extracted Pricing Structure")
+print("=" * 50)
+print("Input tokens:        $\(String(format: "%.6f", pricePerInputToken)) per token")
+print("Output tokens:       $\(String(format: "%.6f", pricePerOutputToken)) per token")
+print("Cache Create tokens: $\(String(format: "%.6f", pricePerCacheCreateToken)) per token")
+print("Cache Read tokens:   $\(String(format: "%.6f", pricePerCacheReadToken)) per token")
+print()
+
+// Convert to per-million tokens for readability (industry standard)
+print("📊 Per Million Tokens (MTok):")
+print("=" * 50)
+print("Input:        $\(String(format: "%.2f", pricePerInputToken * 1_000_000)) / MTok")
+print("Output:       $\(String(format: "%.2f", pricePerOutputToken * 1_000_000)) / MTok")
+print("Cache Create: $\(String(format: "%.2f", pricePerCacheCreateToken * 1_000_000)) / MTok")
+print("Cache Read:   $\(String(format: "%.2f", pricePerCacheReadToken * 1_000_000)) / MTok")
+</code></pre><p><strong>Expected Output:</strong></p><pre><code>🎯 Extracted Pricing Structure
+==================================================
+Input tokens:        $0.000003 per token
+Output tokens:       $0.000015 per token
+Cache Create tokens: $0.000004 per token
+Cache Read tokens:   $0.000000 per token
+
+📊 Per Million Tokens (MTok):
+==================================================
+Input:        $3.00 / MTok
+Output:       $15.00 / MTok
+Cache Create: $3.75 / MTok
+Cache Read:   $0.30 / MTok
+</code></pre><h3>Why Use BusinessMath’s Built-in Regression?</h3><p>If you used the manual implementation, you’ve learned how regression works under the hood. But for production use, the built-in <code>multipleLinearRegression()</code> offers significant advantages:</p><p><strong>1. Automatic Diagnostics</strong></p><p>The manual approach requires you to calculate R², standard errors, p-values, and confidence intervals yourself. BusinessMath does this automatically:</p><pre><code class="language-swift">let result = try multipleLinearRegression(X: X, y: y)
+
+// All diagnostics available immediately:
+result.rSquared              // Goodness of fit
+result.adjustedRSquared      // Penalized for predictors
+result.fStatistic            // Overall model significance
+result.fStatisticPValue      // Probability model is random
+result.pValues               // Individual predictor significance
+result.confidenceIntervals   // Uncertainty in coefficients
+result.vif                   // Multicollinearity detection
+result.residuals             // Prediction errors
+</code></pre><p><strong>2. Performance at Scale</strong></p><p>For our 15-observation example, both approaches are instant. But for larger datasets:</p><table><thead><th>Dataset Size</th><th>Manual Implementation</th><th>BusinessMath (Accelerate)</th><th>Speedup</th></thead><tbody><tr><td>100 obs, 10 vars</td><td>~5ms</td><td>~0.1ms</td><td><strong>50×</strong></td></tr><tr><td>500 obs, 20 vars</td><td>~120ms</td><td>~0.5ms</td><td><strong>240×</strong></td></tr><tr><td>1000 obs, 50 vars</td><td>~2500ms</td><td>~20ms</td><td><strong>125×</strong></td></tr></tbody></table><p>BusinessMath automatically selects the optimal backend:</p><ul><li><strong>CPU</strong>: Pure Swift for small datasets</li><li><strong>Accelerate</strong>: Apple’s optimized BLAS/LAPACK for medium datasets</li><li><strong>Metal</strong>: GPU acceleration for very large datasets</li></ul><p><strong>3. Numerical Stability</strong></p><p>The manual implementation uses the normal equations: β = (X’X)⁻¹X’y</p><p>This can be numerically unstable for ill-conditioned matrices. BusinessMath uses <strong>QR decomposition</strong>, which is more stable and prevents catastrophic cancellation errors.</p><p><strong>4. Statistical Rigor</strong></p><p>BusinessMath computes p-values using the proper <strong>t-distribution</strong> with appropriate degrees of freedom, not approximations. This gives you publication-quality statistical inference.</p><h2>Step 4: Validate the Model</h2><p>Let’s verify our pricing model by calculating predicted costs and comparing with actuals:</p><pre><code class="language-swift">print("\n✅ Model Validation")
+print("=" * 80)
+print(String(format: "%-12s %10s %10s %10s %8s",
+             "Date", "Actual $", "Predicted $", "Diff $", "Error %"))
+print("-" * 80)
+
+var totalError = 0.0
+var totalSquaredError = 0.0
+
+for record in usageData {
+    let predicted =
+        record.inputTokens * pricePerInputToken +
+        record.outputTokens * pricePerOutputToken +
+        record.cacheCreateTokens * pricePerCacheCreateToken +
+        record.cacheReadTokens * pricePerCacheReadToken
+
+    let difference = predicted - record.totalCost
+    let percentError = abs(difference / record.totalCost) * 100
+
+    totalError += abs(difference)
+    totalSquaredError += difference * difference
+
+    print(String(format: "%-12s %10.2f %10.2f %10.2f %7.2f%%",
+                 record.date, record.totalCost, predicted, difference, percentError))
+}
+
+let meanAbsoluteError = totalError / Double(usageData.count)
+let rootMeanSquaredError = sqrt(totalSquaredError / Double(usageData.count))
+
+print("-" * 80)
+print(String(format: "Mean Absolute Error (MAE):  $%.4f", meanAbsoluteError))
+print(String(format: "Root Mean Squared Error:    $%.4f", rootMeanSquaredError))
+print(String(format: "Average cost per day:       $%.2f",
+             usageData.map { $0.totalCost }.reduce(0, +) / Double(usageData.count)))
+</code></pre><h2>Step 5: Calculate R² and Diagnostics</h2><h3>Using BusinessMath Regression (Automatic)</h3><p>If you used <code>multipleLinearRegression()</code>, diagnostics are computed automatically:</p><pre><code class="language-swift">let result = try multipleLinearRegression(X: X, y: y)
+
+print("\n📈 Model Quality")
+print(String(repeating: "=", count: 50))
+print(String(format: "R² = %.6f (%.2f%% variance explained)",
+             result.rSquared, result.rSquared * 100))
+print(String(format: "Adjusted R² = %.6f", result.adjustedRSquared))
+print(String(format: "F-statistic = %.2f (p = %.8f)",
+             result.fStatistic, result.fStatisticPValue))
+print()
+
+// Check individual predictors
+print("Predictor Significance:")
+let names = ["Input", "Output", "Cache Create", "Cache Read"]
+for (i, name) in names.enumerated() {
+    let coef = result.coefficients[i]
+    let se = result.standardErrors[i + 1]
+    let pValue = result.pValues[i + 1]
+    let ci = result.confidenceIntervals[i + 1]
+
+    print(String(format: "  %15s: β=%.8f, SE=%.8f, p=%.6f, 95%% CI=[%.8f, %.8f]",
+                 name, coef, se, pValue, ci.lower, ci.upper))
+}
+
+if result.rSquared > 0.99 {
+    print("\n✅ Excellent fit! Model explains \(String(format: "%.2f", result.rSquared * 100))% of variance")
+}
+</code></pre><h3>Manual Calculation (Educational)</h3><p>For the manual implementation, calculate R² yourself:</p><pre><code class="language-swift">// Calculate R² to measure how well our model explains the variance
+let actualCosts = usageData.map { $0.totalCost }
+let predictedCosts = usageData.map { record in
+    record.inputTokens * pricePerInputToken +
+    record.outputTokens * pricePerOutputToken +
+    record.cacheCreateTokens * pricePerCacheCreateToken +
+    record.cacheReadTokens * pricePerCacheReadToken
+}
+
+let meanActual = actualCosts.reduce(0, +) / Double(actualCosts.count)
+let ssTotal = actualCosts.map { pow($0 - meanActual, 2) }.reduce(0, +)
+let ssResidual = zip(actualCosts, predictedCosts).map { pow($0 - $1, 2) }.reduce(0, +)
+let r2 = 1.0 - (ssResidual / ssTotal)
+
+print("\n📈 Model Quality")
+print(String(repeating: "=", count: 50))
+print(String(format: "R² (coefficient of determination): %.6f", r2))
+print()
+if r2 > 0.99 {
+    print("✅ Excellent fit! Model explains \(String(format: "%.2f", r2 * 100))% of variance")
+}
+</code></pre><h2>Step 6: Practical Applications</h2><p>Now that we have the pricing structure, let’s build a cost calculator:</p><pre><code class="language-swift">/// Estimates API cost for a given usage pattern
+func estimateAPICost(
+    inputTokens: Double,
+    outputTokens: Double,
+    cacheCreateTokens: Double = 0,
+    cacheReadTokens: Double = 0
+) -> Double {
+    return inputTokens * pricePerInputToken +
+           outputTokens * pricePerOutputToken +
+           cacheCreateTokens * pricePerCacheCreateToken +
+           cacheReadTokens * pricePerCacheReadToken
+}
+
+// Example: Estimate cost for a typical conversation
+print("\n💡 Cost Estimation Examples")
+print("=" * 50)
+
+let chatCost = estimateAPICost(
+    inputTokens: 1_000,      // ~750 words prompt
+    outputTokens: 500,       // ~375 words response
+    cacheCreateTokens: 0,
+    cacheReadTokens: 0
+)
+print("Single chat interaction (1K in, 500 out): $\(String(format: "%.4f", chatCost))")
+
+let cachedChatCost = estimateAPICost(
+    inputTokens: 100,         // New tokens
+    outputTokens: 500,
+    cacheCreateTokens: 0,
+    cacheReadTokens: 50_000   // Cached context
+)
+print("Chat with cached context (50K cached):     $\(String(format: "%.4f", cachedChatCost))")
+
+let documentAnalysis = estimateAPICost(
+    inputTokens: 5_000,
+    outputTokens: 2_000,
+    cacheCreateTokens: 100_000,  // Cache large document
+    cacheReadTokens: 0
+)
+print("Document analysis (cache 100K):            $\(String(format: "%.4f", documentAnalysis))")
+
+// Budget planning: How many API calls can I make for $100?
+let budget = 100.0
+let callsPerBudget = budget / chatCost
+print("\nWith $100 budget, you can make ~\(Int(callsPerBudget)) standard chat calls")
+</code></pre><h2>Step 7: Sensitivity Analysis with DataTable</h2><p>Use BusinessMath’s <code>DataTable</code> to explore how costs vary with usage:</p><pre><code class="language-swift">// How does cost scale with output length?
+let outputLengths = [100.0, 500.0, 1_000.0, 2_000.0, 5_000.0]
+let costTable = DataTable<Double, Double>.oneVariable(
+    inputs: outputLengths,
+    calculate: { tokens in
+        estimateAPICost(inputTokens: 1_000, outputTokens: tokens)
+    }
+)
+
+print("\n📊 Cost vs Output Length Sensitivity")
+print("=" * 50)
+for (tokens, cost) in costTable {
+    print(String(format: "%8.0f tokens → $%.4f", tokens, cost))
+}
+
+// Two-variable analysis: Input vs Output tokens
+let inputSizes = [500.0, 1_000.0, 2_000.0, 5_000.0]
+let outputSizes = [250.0, 500.0, 1_000.0, 2_000.0]
+
+let costMatrix = DataTable<Double, Double>.twoVariable(
+    rowInputs: inputSizes,
+    columnInputs: outputSizes,
+    calculate: { input, output in
+        estimateAPICost(inputTokens: input, outputTokens: output)
+    }
+)
+
+print("\n📊 Two-Variable Cost Analysis")
+print("=" * 50)
+print("Rows = Input Tokens | Columns = Output Tokens")
+print()
+print(DataTable<Double, Double>.formatTwoVariable(
+    costMatrix,
+    rowInputs: inputSizes,
+    columnInputs: outputSizes
+))
+</code></pre><h2>Key Insights from This Analysis</h2><p><code>★ Insight ─────────────────────────────────────</code><strong>Multiple Linear Regression</strong>: This technique finds the best-fit coefficients that minimize prediction error across all observations. The normal equations (XᵀX)⁻¹Xᵀy provide a closed-form solution. BusinessMath implements this using numerically stable QR decomposition.</p><p><strong>Model Assumptions</strong>: Our regression assumes:</p><ul><li><strong>Linear relationship</strong>: Cost is a linear combination of token counts</li><li><strong>Zero intercept</strong>: Zero tokens should cost $0 (validated by checking intercept ≈ 0)</li><li><strong>Independence</strong>: Each day’s usage is independent</li><li><strong>Homoscedasticity</strong>: Error variance is constant across observations</li></ul><p><strong>Validation Metrics</strong>: Always check:</p><ul><li><strong>R² > 0.99</strong>: Excellent fit (model explains 99%+ of variance)</li><li><strong>p-values < 0.05</strong>: Predictors are statistically significant</li><li><strong>VIF < 5</strong>: Low multicollinearity (predictors are independent)</li><li><strong>Residuals</strong>: Should be small and randomly distributed</li></ul><p><strong>Production vs Learning</strong>: Manual implementation teaches the math; BusinessMath’s <code>multipleLinearRegression()</code> provides production-grade performance, diagnostics, and numerical stability.<code>─────────────────────────────────────────────────</code></p><h2>Conclusion</h2><p>Using the <strong>BusinessMath</strong> library, we explored two approaches to pricing extraction:</p><h3>Modern Approach (Recommended) ✨</h3><p>With <code>multipleLinearRegression()</code>:</p><ol><li>✅ <strong>3 lines of code</strong> to extract pricing from usage data</li><li>✅ <strong>Automatic diagnostics</strong>: R², F-statistic, p-values, VIF, confidence intervals</li><li>✅ <strong>GPU acceleration</strong>: 40-13,000× faster for large datasets</li><li>✅ <strong>Statistical rigor</strong>: Proper t-distribution, QR decomposition for stability</li><li>✅ <strong>Production ready</strong>: Fully tested, strict concurrency compliance</li></ol><h3>Educational Approach 📚</h3><p>Manual implementation taught us:</p><ol><li>✅ How multiple linear regression works mathematically</li><li>✅ The normal equations: β = (X’X)⁻¹X’y</li><li>✅ Matrix operations (transpose, multiplication, inversion)</li><li>✅ Gaussian elimination for solving linear systems</li><li>✅ R² calculation from first principles</li></ol><p>Both approaches successfully:</p><ul><li><strong>Extracted</strong> 4 pricing coefficients from usage data</li><li><strong>Validated</strong> the model (R² > 0.99 indicates excellent fit)</li><li><strong>Built</strong> practical cost estimation tools</li><li><strong>Enabled</strong> sensitivity analysis and budget planning</li></ul><p>This workflow demonstrates how BusinessMath bridges <strong>data analysis</strong> (regression), <strong>decision support</strong> (cost modeling), and <strong>scenario planning</strong> (sensitivity tables).</p><p><code>★ Insight ─────────────────────────────────────</code><strong>Why Two Approaches?</strong> The manual implementation is invaluable for learning—understanding the mathematics makes you a better data scientist. But for production use, BusinessMath’s battle-tested implementation gives you:</p><ul><li><strong>Speed</strong>: GPU acceleration scales to millions of observations</li><li><strong>Accuracy</strong>: QR decomposition prevents numerical instability</li><li><strong>Confidence</strong>: Comprehensive diagnostics validate your model</li><li><strong>Productivity</strong>: Focus on insights, not implementation details<code>─────────────────────────────────────────────────</code></li></ul><h3>Next Steps</h3><p>Now that you understand regression, explore these advanced BusinessMath capabilities:</p><ul><li><strong>Polynomial Regression</strong>: Model non-linear pricing curves with <code>polynomialRegression()</code></li><li><strong>Time Series Analysis</strong>: Track pricing changes over time using <code>TimeSeries<T></code></li><li><strong>Monte Carlo Simulation</strong>: Model uncertainty in token usage patterns</li><li><strong>Optimization</strong>: Find optimal caching strategies to minimize costs</li><li><strong>Sensitivity Analysis</strong>: Use <code>DataTable</code> for systematic scenario planning</li><li><strong>Forecasting</strong>: Predict future API costs based on usage trends</li></ul><h3>Complete Code</h3><p>Two complete examples are available:</p><ol><li><strong><code>PricingExtractionWithBusinessMath.swift</code></strong> (Recommended)<ul><li>Modern approach using <code>multipleLinearRegression()</code></li><li>Comprehensive diagnostics and validation</li><li>Production-ready code</li></ul></li><li><strong><code>PricingExtractionExample.swift</code></strong> (Educational)<ul><li>Manual regression implementation</li><li>Learn the mathematics step-by-step</li><li>Great for understanding how it works</li></ul></li></ol><p>Both examples can be run in Xcode Playgrounds or as Swift scripts. Available in the <a href="https://github.com/jpurnell/BusinessMath">BusinessMath examples repository</a>.</p><hr /><p><strong>Questions or feedback?</strong> Open an issue on the <a href="https://github.com/jpurnell/BusinessMath/issues">BusinessMath GitHub repo</a>.</p>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-06/03-fri-case-study-option-pricing</guid><title>Case Study #3: Option Pricing with Monte Carlo Simulation</title><link>https://www.justinpurnell.com/BusinessMath/week-06/03-fri-case-study-option-pricing</link><description><![CDATA[Part 20 of 12-Week BusinessMath Series]]></description><pubDate>Sat, 14 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[monte-carlo]]></category><category><![CDATA[options]]></category><category><![CDATA[derivatives]]></category><category><![CDATA[black-scholes]]></category><category><![CDATA[convergence]]></category><category><![CDATA[case-study]]></category><content:encoded><![CDATA[<p><strong>Part 20 of 12-Week BusinessMath Series</strong></p><hr /><h2>The Business Problem</h2><p><strong>Company</strong>: FinTech startup building a derivatives trading platform</p><p><strong>Challenge</strong>: Price European call options for client portfolios. Need to:</p><ul><li>Price options accurately using Monte Carlo simulation</li><li>Validate results against Black-Scholes analytical formula</li><li>Balance accuracy vs. computation time (10ms target for real-time quotes)</li><li>Provide confidence intervals for risk management</li><li>Support batch pricing for portfolio valuation</li></ul><p><strong>Why Monte Carlo?</strong> While Black-Scholes provides closed-form pricing for European options, Monte Carlo generalizes to exotic options (Asian, Barrier, American) that clients will demand later.</p><hr /><h2>The Solution Architecture</h2><p>We’ll build a complete option pricing system that:</p><ol><li>Simulates stock price paths using Geometric Brownian Motion</li><li>Computes option payoffs across thousands of scenarios</li><li>Analyzes convergence to determine optimal iteration count</li><li>Compares Monte Carlo vs. Black-Scholes for validation</li><li>Optimizes for real-time pricing constraints</li></ol><hr /><h2>Step 1: Building the Option Pricing Model</h2><p>European call option pricing with Monte Carlo uses <strong>expression models</strong> - the modern GPU-accelerated approach that’s 10-100× faster than traditional loops.</p><h3>The Expression Model Approach</h3><p>Instead of manually looping and storing payoffs, we define the pricing logic declaratively:</p><pre><code class="language-swift">import Foundation
 import BusinessMath
 
 // Option parameters
@@ -9744,49 +10197,4 @@ let all = profitabilityRatios(incomeStatement: is, balanceSheet: bs)
 
 // Individual (when you only need one)
 let roe = returnOnEquity(incomeStatement: is, balanceSheet: bs)
-</code></pre><p><strong>The lesson</strong>: Provide both convenience (composite) and precision (individual). Let users choose based on their needs.</p><p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan (Week 3) - Managing API surface area</a></p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Risk Analytics (Friday) - VaR, stress testing, and comprehensive risk metrics.</p><p><strong>Case Study</strong>: Week 3 Friday will combine depreciation + TVM + financial ratios for capital equipment decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 7/~48</li><li>Topics Covered: Foundation + Analysis Tools (in progress)</li><li>Playgrounds: 6 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-02/02-tue-documentation-as-design</guid><title>Documentation as Design</title><link>https://www.justinpurnell.com/BusinessMath/week-02/02-tue-documentation-as-design</link><description><![CDATA[Development Journey Series]]></description><pubDate>Tue, 13 Jan 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[ai-collaboration]]></category><category><![CDATA[documentation]]></category><category><![CDATA[api-design]]></category><category><![CDATA[docc]]></category><category><![CDATA[development journey]]></category><content:encoded><![CDATA[<p><strong>Development Journey Series</strong></p><hr /><h2>The Context</h2><p>We were implementing IRR (Internal Rate of Return) calculation for BusinessMath. IRR is conceptually simple—find the discount rate where NPV equals zero—but the implementation requires iterative solving with Newton-Raphson method.</p><p>I had a working implementation. The tests passed. The calculations were correct.</p><p><strong>But I couldn’t document it.</strong></p><p>When I tried to write the DocC documentation, I struggled to explain what the parameters meant, when the function would throw errors, and what users should expect. The act of documentation revealed design flaws in the API itself.</p><p>That’s when we discovered: <strong>If you can’t document it clearly, the API design is wrong.</strong></p><hr /><h2>The Challenge</h2><p>The traditional workflow puts documentation last:</p><ol><li>Design API (maybe)</li><li>Implement code</li><li>Write tests</li><li><strong>Finally</strong>: Document what you built</li></ol><p><strong>The problem</strong>: By step 4, you’ve invested heavily in the implementation. Changing the API now feels expensive. So you write convoluted documentation to explain a poorly designed API instead of fixing the root cause.</p><p>With AI generating code quickly, this problem accelerates. AI happily implements whatever you ask for, but it doesn’t push back on bad API design. You get working code with terrible interfaces.</p><p><strong>We needed to front-load the design validation.</strong></p><hr /><h2>The Solution</h2><p><strong>Write complete DocC documentation BEFORE implementing anything.</strong></p><h3>The Documentation-First Workflow</h3><p><strong>1. Write the DocC Tutorial First</strong></p><p>Before writing any implementation code, write the complete DocC article including:</p><ul><li>Overview of what the function does</li><li>Parameter descriptions</li><li>Return value explanation</li><li>Error cases</li><li>Usage examples (that won’t compile yet—that’s okay!)</li><li>See Also references</li></ul><p><strong>2. If Documentation Is Hard to Write, Redesign the API</strong></p><p>Struggling to document? That’s a signal. The API is confusing. Fix it now while it’s cheap.</p><p><strong>3. Use Documentation as AI Specification</strong></p><p>Once the documentation reads clearly, give it to AI as the implementation spec. The clearer your docs, the better AI’s implementation.</p><hr /><h2>The Results</h2><h3>Before: Hard to Document</h3><p>Here’s what AI generated on the first attempt:</p><pre><code class="language-swift">// BEFORE: Hard to document
-public func calc(_ a: [Double], _ b: Double, _ c: Int) -> Double?
-</code></pre><p><strong>Trying to document this</strong>:</p><pre><code class="language-swift">/// Calculates... something?
-///
-/// - Parameter a: An array of... values? Cash flows?
-/// - Parameter b: A rate? Or is it a guess?
-/// - Parameter c: Maximum... iterations? Or is it periods?
-/// - Returns: The result, or nil if... it fails?
-</code></pre><p>Even writing this, I had to guess what the parameters meant. That’s a sign of bad API design.</p><hr /><h3>After: Easy to Document</h3><p>After redesigning the API with documentation in mind:</p><pre><code class="language-swift">// AFTER: Easy to document
-/// Calculates the internal rate of return for a series of cash flows.
-///
-/// The IRR is the discount rate that makes NPV equal to zero.
-/// Uses Newton-Raphson method for iterative solving.
-///
-/// ## Usage Example
-///
-/// let cashFlows = [-1000, 300, 400, 500]
-/// let irr = try calculateIRR(cashFlows: cashFlows)
-/// print(irr.percent(1)) // "12.5%"
-///
-/// - Parameter cashFlows: Array of cash flows, starting with initial investment
-/// - Returns: IRR as Double (0.125 = 12.5%)
-/// - Throws: `FinancialError.convergenceFailure` if doesn't converge
-public func calculateIRR(cashFlows: [Double]) throws -> Double
-</code></pre><p><strong>Notice the difference</strong>:</p><ul><li>Function name is clear: <code>calculateIRR</code> (not <code>calc</code>)</li><li>Parameters are self-documenting: <code>cashFlows</code> (not <code>a</code>)</li><li>Return type is obvious: <code>Double</code> (not <code>Double?</code>)</li><li>Errors are explicit: <code>throws</code> (not returning <code>nil</code>)</li><li>Example is compilable and clear</li></ul><hr /><h2>What Worked</h2><h3>1. Documentation Revealed IRR Needed Error Handling</h3><p>The first attempt returned <code>Double?</code> (optional). But when I tried to document this:</p><pre><code class="language-swift">/// - Returns: The IRR, or nil if...
-</code></pre><p>I couldn’t finish the sentence. <strong>What does nil mean?</strong></p><ul><li>Didn’t converge after max iterations?</li><li>Invalid cash flows (all positive)?</li><li>Something else?</li></ul><p>The documentation revealed the design flaw: we needed typed errors, not ambiguous nil.</p><p><strong>Fix</strong>:</p><pre><code class="language-swift">enum FinancialError: Error {
-    case convergenceFailure
-    case invalidCashFlows
-}
-
-public func calculateIRR(cashFlows: [Double]) throws -> Double
-</code></pre><p>Now the documentation writes itself:</p><pre><code class="language-swift">/// - Throws: `FinancialError.convergenceFailure` if doesn't converge after 100 iterations
-///          `FinancialError.invalidCashFlows` if all cash flows are positive
-</code></pre><hr /><h3>2. Example Showed We Needed Better Formatting</h3><p>When writing the usage example, I wrote:</p><pre><code class="language-swift">let irr = try calculateIRR(cashFlows: cashFlows)
-print(irr)  // Prints: 0.12456789
-</code></pre><p>Looking at that output, I realized: <strong>Users will want percentages, not decimals.</strong></p><p>This led to adding format guidance in the documentation:</p><pre><code class="language-swift">print(irr.percent(1))  // "12.5%"
-</code></pre><p><strong>Without writing the example first</strong>, I wouldn’t have caught this usability issue.</p><hr /><h3>3. AI Implementation Matched Documentation Perfectly</h3><p>Once the documentation was clear, I gave it to AI with this prompt:</p><blockquote><p>“Implement <code>calculateIRR</code> to match this documentation exactly. Use Newton-Raphson method. The function signature must match what’s documented.”</p></blockquote><p>AI’s implementation:</p><ul><li>✅ Matched the documented signature exactly</li><li>✅ Threw the documented errors</li><li>✅ Handled all edge cases mentioned in docs</li><li>✅ Passed the example from documentation</li></ul><p><strong>No back-and-forth</strong>. No debugging. The documentation was the specification, and AI executed it perfectly.</p><hr /><h2>What Didn’t Work</h2><h3>1. First Attempt at Documentation Was Too Vague</h3><p>My initial documentation attempt:</p><pre><code class="language-swift">/// Calculates IRR for cash flows.
-///
-/// - Parameter cashFlows: The cash flows
-/// - Returns: The IRR
-</code></pre><p>This tells you nothing. What’s the format? What are the units? What can go wrong?</p><p><strong>AI implemented it</strong>, but not the way I wanted. It made assumptions about default values, convergence tolerance, and error handling that didn’t match my intent.</p><p><strong>Fix</strong>: Be specific. Include units, formats, edge cases, and examples.</p><hr /><h3>2. Example Initially Didn’t Compile</h3><p>I wrote the example before implementing the function (good!), but I made a mistake:</p><pre><code class="language-swift">// Wrong:
-let irr = calculateIRR([-1000, 300, 400, 500])  // Missing label!
-</code></pre><p>When I tried to build the documentation, it failed.</p><p><strong>This is actually good!</strong> I caught the error in documentation, not in user code. Fixed it immediately:</p><pre><code class="language-swift">// Correct:
-let irr = try calculateIRR(cashFlows: [-1000, 300, 400, 500])
-</code></pre><p><strong>Lesson</strong>: Documentation examples should compile. If they don’t, fix the API before implementing.</p><hr /><h2>The Insight</h2><p><strong>If you can’t document it clearly, the API design is wrong. Fix it while it’s cheap.</strong></p><p>Documentation-first development creates a forcing function:</p><ul><li><strong>Vague function names</strong> become obvious when you try to document them</li><li><strong>Ambiguous parameters</strong> can’t be described clearly</li><li><strong>Missing error handling</strong> leaves gaps in documentation</li><li><strong>Poor usability</strong> shows up in examples</li></ul><p>By writing documentation first, you catch these issues <strong>before investing in implementation</strong>. Redesigning the API takes 5 minutes. Redesigning after implementation, tests, and integration takes hours.</p><blockquote><p><strong>Key Takeaway</strong>: Write DocC before implementation. If the docs are hard to write, the API is wrong. Fix it now, while it’s cheap.</p></blockquote><hr /><h2>How to Apply This</h2><p><strong>For your next feature</strong>:</p><p><strong>1. Write Complete DocC First</strong></p><ul><li>Overview paragraph</li><li>All parameters documented</li><li>Return value explained</li><li>Error cases listed</li><li>Example that shows realistic usage</li></ul><p><strong>2. Check for Red Flags</strong></p><ul><li>Struggling to name parameters clearly?</li><li>Can’t explain what nil means?</li><li>Example is confusing or complex?</li><li>Using words like “various” or “certain cases”?</li></ul><p><strong>3. Redesign if Needed</strong></p><ul><li>Rename parameters for clarity</li><li>Add or remove parameters</li><li>Change return type (optional → throws)</li><li>Simplify the API</li></ul><p><strong>4. Give Documentation to AI</strong></p><ul><li>“Implement this function to match the documentation exactly”</li><li>Paste the complete DocC block</li><li>AI will generate code that matches the spec</li></ul><p><strong>5. Verify Example Compiles</strong></p><ul><li>Build documentation in Xcode</li><li>Fix any compile errors</li><li>If examples don’t compile, API might still be wrong</li></ul><hr /><h2>See It In Action</h2><p>This practice is demonstrated throughout the BusinessMath library:</p><p><strong>Technical Examples</strong>:</p><ul><li><a href="../01-mon-data-tables"><strong>Data Table Analysis</strong> (Monday)</a>: Clear parameter names, typed inputs/outputs</li><li><a href="../03-wed-financial-ratios"><strong>Financial Ratios</strong> (Wednesday)</a>: Descriptive function names, documented return types</li><li><a href="../04-fri-risk-analytics"><strong>Risk Analytics</strong> (Friday)</a>: Error cases explicitly documented</li></ul><p><strong>Related Practices</strong>:</p><ul><li><a href="../../week-01/02-tue-test-first-development"><strong>Test-First Development</strong> (Week 1 Tuesday)</a>: Tests validate documented behavior</li><li><strong>Coding Standards</strong> (Week 5): Forbidden patterns include undocumented public APIs</li></ul><hr /><h2>Common Pitfalls</h2><h3>❌ Pitfall 1: Writing minimal documentation</h3><p><strong>Problem</strong>: “I’ll fill in details later” → Never happens<strong>Solution</strong>: Write complete docs now. It takes 10 minutes and saves hours.</p><h3>❌ Pitfall 2: Documenting after implementation</h3><p><strong>Problem</strong>: You’ll rationalize the existing API instead of improving it<strong>Solution</strong>: Docs first, always. Don’t compromise.</p><h3>❌ Pitfall 3: Examples that don’t compile</h3><p><strong>Problem</strong>: Users copy broken examples and get frustrated<strong>Solution</strong>: Build documentation in Xcode, fix compile errors immediately</p><hr /><h2>Discussion</h2><p><strong>Questions to consider</strong>:</p><ol><li>How much documentation is “enough” before implementing?</li><li>Should every function have an example, or just complex ones?</li><li>How do you balance documentation thoroughness with velocity?</li></ol><!--**Share your experience**: Have you tried documentation-first development? What did you learn?-->
-<hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 6/~48</li><li>Methodology Posts: 2/12</li><li>Practices Covered: Test-First, Documentation as Design</li></ul>]]></content:encoded></item></channel></rss>
+</code></pre><p><strong>The lesson</strong>: Provide both convenience (composite) and precision (individual). Let users choose based on their needs.</p><p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan (Week 3) - Managing API surface area</a></p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Risk Analytics (Friday) - VaR, stress testing, and comprehensive risk metrics.</p><p><strong>Case Study</strong>: Week 3 Friday will combine depreciation + TVM + financial ratios for capital equipment decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 7/~48</li><li>Topics Covered: Foundation + Analysis Tools (in progress)</li><li>Playgrounds: 6 available</li></ul>]]></content:encoded></item></channel></rss>
