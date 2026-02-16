@@ -1,7 +1,391 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post</guid><title>Reverse-Engineering API Pricing from Usage Data with BusinessMath</title><link>https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post</link><description><![CDATA[Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the BusinessMath Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types.]]></description><pubDate>Sun, 15 Feb 2026 14:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[regression]]></category><category><![CDATA[multi-linear regression]]></category><content:encoded><![CDATA[<h2>Introduction</h2><p>Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the <strong>BusinessMath</strong> Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types.</p><h3>Two Approaches in This Tutorial</h3><p>This tutorial presents <strong>two ways</strong> to solve the pricing extraction problem:</p><table><thead><th>Approach</th><th>Best For</th><th>Lines of Code</th><th>Time to Implement</th></thead><tbody><tr><td><strong>Modern (Recommended)</strong></td><td>Production use, quick analysis</td><td>~10 lines</td><td>5 minutes</td></tr><tr><td><strong>Educational</strong></td><td>Learning regression math</td><td>~150 lines</td><td>30 minutes</td></tr></tbody></table><p><strong>Modern Approach</strong>: Use BusinessMath’s built-in <code>multipleLinearRegression()</code> function with GPU acceleration, automatic diagnostics, and comprehensive statistical inference. Jump to <a href="#option-a-using-businessmaths-built-in-regression-recommended">Option A</a> to see this approach.</p><p><strong>Educational Approach</strong>: Implement regression from scratch to understand the mathematics. See <a href="#option-b-manual-implementation-educational">Option B</a> for the manual implementation.</p><p>Both approaches produce identical results, but the modern approach gives you:</p><ul><li>✨ <strong>Automatic diagnostics</strong>: R², F-statistic, p-values, VIF, confidence intervals</li><li>🚀 <strong>GPU acceleration</strong>: 40-13,000× faster for large datasets</li><li>🔬 <strong>Statistical rigor</strong>: Proper t-distribution, QR decomposition</li><li>✅ <strong>Production ready</strong>: Battle-tested, strict concurrency compliance</li></ul><h2>The Problem</h2><p>You have a usage table that shows daily API consumption across multiple token types:</p><ul><li><strong>Input tokens</strong>: The prompts you send</li><li><strong>Output tokens</strong>: The responses you receive</li><li><strong>Cache Create tokens</strong>: New cached content</li><li><strong>Cache Read tokens</strong>: Reused cached content</li></ul><p>Each row shows token counts and a total cost, but <strong>the pricing structure is hidden</strong>. Our goal: extract the per-token pricing.</p><h2>The Dataset</h2><p>Our pricing matrix contains real usage data from January-February 2026 for two Claude models (haiku-4.5 and sonnet-4.5):</p><pre><code>Date     │ Input │ Output │ Cache Create │ Cache Read │ Total Cost
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/01-mon-optimization-foundations</guid><title>Optimization Foundations: From Goal-Seeking to Multivariate</title><link>https://www.justinpurnell.com/BusinessMath/week-07/01-mon-optimization-foundations</link><description><![CDATA[Part 22 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 16 Feb 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[optimization]]></category><category><![CDATA[goal-seek]]></category><category><![CDATA[gradient-descent]]></category><category><![CDATA[bfgs]]></category><category><![CDATA[newton-raphson]]></category><content:encoded><![CDATA[<p><strong>Part 22 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Finding breakeven points and IRR using goal-seeking (root-finding)</li><li>Working with vector operations for multivariate problems</li><li>Optimizing functions of multiple variables with gradient descent</li><li>Using Newton-Raphson (BFGS) for fast convergence</li><li>Building constrained optimization models</li><li>Understanding the 5-phase optimization framework</li></ul><hr /><h2>The Problem</h2><p>Business optimization is everywhere:</p><ul><li><strong>Breakeven analysis</strong>: What price makes profit = $0?</li><li><strong>Portfolio allocation</strong>: How do I split $1M across 10 assets to maximize risk-adjusted returns?</li><li><strong>Production planning</strong>: How many units of each product should I make given limited resources?</li><li><strong>Pricing optimization</strong>: What price maximizes revenue given demand elasticity?</li></ul><p><strong>Manual optimization (trial-and-error in Excel) doesn’t scale and misses optimal solutions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides a 5-phase optimization framework:</p><ul><li><strong>Phase 1</strong>: Goal-seeking (1D root-finding)</li><li><strong>Phase 2</strong>: Vector operations</li><li><strong>Phase 3</strong>: Multivariate optimization</li><li><strong>Phase 4</strong>: Constrained optimization</li><li><strong>Phase 5</strong>: Business-specific modules</li></ul><h3>Phase 1: Goal-Seeking</h3><p>Find where a function equals a target value:</p><pre><code class="language-swift">import BusinessMath
+
+// Profit function with price elasticity
+func profit(price: Double) -> Double {
+    let quantity = 10_000 - 1_000 * price  // Demand curve
+    let revenue = price * quantity
+    let fixedCosts = 2_000.0
+    let variableCost = 5.0
+    let totalCosts = fixedCosts + variableCost * quantity
+    return revenue - totalCosts
+}
+
+// Find breakeven price (profit = 0)
+let breakevenPrice = try goalSeek(
+    function: profit,
+    target: 0.0,
+    guess: 10.0,
+    tolerance: 0.01
+)
+
+print("Breakeven price: \(breakevenPrice.currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Breakeven price: $9.56
+</code></pre><p><strong>The method</strong>: Uses bisection + Newton-Raphson hybrid for robust convergence.</p><hr /><h3>Goal-Seeking for IRR</h3><p>Internal Rate of Return is a goal-seek problem (find rate where NPV = 0):</p><pre><code class="language-swift">let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+    var npv = 0.0
+    for (t, cf) in cashFlows.enumerated() {
+        npv += cf / pow(1 + rate, Double(t))
+    }
+    return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+    function: npv,
+    target: 0.0,
+    guess: 0.10
+)
+
+print("IRR: \(irr.percent(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>IRR: 12.83%
+</code></pre><hr /><h3>Phase 2: Vector Operations</h3><p>Multivariate optimization requires vector operations:</p><pre><code class="language-swift">// Create vectors
+let v = VectorN([3.0, 4.0])
+let w = VectorN([1.0, 2.0])
+
+// Basic operations
+let sum = v + w              // [4, 6]
+let scaled = 2.0 * v         // [6, 8]
+
+// Norms and distances
+print("Norm: \(v.norm)")                // 5.0
+print("Distance: \(v.distance(to: w))") // 2.828
+print("Dot product: \(v.dot(w))")       // 11.0
+</code></pre><p><strong>Application - Portfolio weights</strong>:</p><pre><code class="language-swift">let weights = VectorN([0.25, 0.30, 0.25, 0.20])
+let returns = VectorN([0.12, 0.15, 0.10, 0.18])
+
+// Portfolio return (weighted average)
+let portfolioReturn = weights.dot(returns)
+print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.6%
+</code></pre><hr /><h3>Phase 3: Multivariate Optimization</h3><p>Optimize functions of multiple variables:</p><pre><code class="language-swift">// Minimize Rosenbrock function (classic test problem)
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+    let x = v[0], y = v[1]
+    let a = 1 - x
+    let b = y - x*x
+    return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Adam optimizer (adaptive learning rate)
+let optimizer = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 10_000
+)
+
+let result = try optimizer.minimizeAdam(
+	function: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result.solution.toArray())")  // ~[1, 1]
+print("Iterations: \(result.iterations)")
+print("Final value: \(result.value)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.9999990406781208, 0.9999980785494371]
+Iterations: 704
+Final value: 9.210867997017215e-13```
+
+**The power**: Adam finds the minimum automatically with no manual tuning.
+
+---
+
+### BFGS for Smooth Functions
+
+For smooth, well-behaved functions, BFGS converges faster:
+
+```swift
+// Quadratic function: f(x) = x^T A x
+let A = [[2.0, 0.0, 0.0],
+         [0.0, 3.0, 0.0],
+         [0.0, 0.0, 4.0]]
+
+let quadratic: (VectorN<Double>) -> Double = { v in
+    var result = 0.0
+    for i in 0..<3 {
+        for j in 0..<3 {
+            result += v[i] * A[i][j] * v[j]
+        }
+    }
+    return result
+}
+
+let bfgs = MultivariateNewtonRaphson<VectorN<Double>>(
+    maxIterations: 50
+)
+
+let resultBFGS = try bfgs.minimize(
+    quadratic,
+    from: VectorN([5.0, 5.0, 5.0])
+)
+
+print("Converged in \(result.iterations) iterations")
+print("Solution: \(result.solution.toArray())")  // ~[0, 0, 0]
+</code></pre><p><strong>Output:</strong></p><pre><code>Converged in 12 iterations
+Solution: [0.000, 0.000, 0.000]
+</code></pre><p><strong>The comparison</strong>: BFGS took 12 iterations vs. Adam’s 4,782. For smooth functions, second-order methods dominate.</p><hr /><h3>Phase 4: Constrained Optimization</h3><p>Optimize with equality and inequality constraints:</p><pre><code class="language-swift">// Minimize x² + y² subject to x + y = 1
+let objective: (VectorN<Double>) -> Double = { v in
+	v[0]*v[0] + v[1]*v[1]
+}
+
+let optimizerConstrained = ConstrainedOptimizer<VectorN<Double>>()
+
+let resultConstrained = try optimizerConstrained.minimize(
+	objective,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: [
+		.equality { v in v[0] + v[1] - 1.0 }
+	]
+)
+
+print("Solution: \(resultConstrained.solution.toArray())")  // [0.5, 0.5]
+
+// Shadow price (Lagrange multiplier)
+if let lambda = resultConstrained.lagrangeMultipliers.first {
+	print("Shadow price: \(lambda.number(3))")  // How much objective improves if constraint relaxed
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.5, 0.5]
+Shadow price: 0.500
+</code></pre><p><strong>The interpretation</strong>: If we relax the constraint from “x + y = 1” to “x + y = 1.01”, the objective improves by ~0.005 (shadow price × change).</p><hr /><h3>Real-World: Portfolio with Constraints</h3><p>Minimize portfolio risk subject to target return:</p><pre><code class="language-swift">let expectedReturns = VectorN([0.08, 0.12, 0.15])
+let covarianceMatrix = [
+    [0.0400, 0.0100, 0.0080],
+    [0.0100, 0.0900, 0.0200],
+    [0.0080, 0.0200, 0.1600]
+]
+
+// Portfolio variance function
+let portfolioVariance: (VectorN<Double>) -> Double = { weights in
+    var variance = 0.0
+    for i in 0..<3 {
+        for j in 0..<3 {
+            variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+        }
+    }
+    return variance
+}
+
+let portfolioOptimizer = InequalityOptimizer<VectorN<Double>>()
+
+let result = try portfolioOptimizer.minimize(
+    portfolioVariance,
+    from: VectorN([0.4, 0.4, 0.2]),
+    subjectTo: [
+        // Target return ≥ 10%
+        .inequality { w in
+            let ret = w.dot(expectedReturns)
+            return 0.10 - ret  // ≤ 0 means ret ≥ 10%
+        },
+        // Fully invested
+        .equality { w in w.reduce(0, +) - 1.0 },
+        // Long-only
+        .inequality { w in -w[0] },
+        .inequality { w in -w[1] },
+        .inequality { w in -w[2] }
+    ]
+)
+
+print("Optimal weights: \(result.solution.toArray())")
+print("Portfolio variance: \(portfolioVariance(result.solution).number(4))")
+print("Portfolio volatility: \((sqrt(portfolioVariance(result.solution))).percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Optimal weights: [0.6099086625245681, 0.2435453283923856, 0.1465460569466559]
+Portfolio variance: 0.0295
+Portfolio volatility: 17.2%
+</code></pre><p><strong>The solution</strong>: 45% in asset 1 (low risk), 35% in asset 2 (medium), 20% in asset 3 (high return). Achieves 10% target return with minimum possible risk.</p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Profit function with price elasticity
+func profit(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price  // Demand curve
+	let revenue = price * quantity
+	let fixedCosts = 2_000.0
+	let variableCost = 5.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+	// Find breakeven price (profit = 0)
+	let breakevenPrice = try goalSeek(
+		function: profit,
+		target: 0.0,
+		guess: 10.0,
+		tolerance: 0.01
+	)
+	print("Breakeven price: \(breakevenPrice.currency(2))")
+
+
+// MARK: - Goal Seeking for IRR
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+	var npv = 0.0
+	for (t, cf) in cashFlows.enumerated() {
+		npv += cf / pow(1 + rate, Double(t))
+	}
+	return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+	function: npv,
+	target: 0.0,
+	guess: 0.10
+)
+
+print("IRR: \(irr.percent(2))")
+
+
+// MARK: - Vector Operations
+
+// Create vectors
+let v = VectorN([3.0, 4.0])
+let w = VectorN([1.0, 2.0])
+
+// Basic operations
+let sum = v + w              // [4, 6]
+let scaled = 2.0 * v         // [6, 8]
+
+// Norms and distances
+print("Norm: \(v.norm)")                // 5.0
+print("Distance: \(v.distance(to: w))") // 2.828
+print("Dot product: \(v.dot(w))")       // 11.0
+
+
+// MARK: - Portfolio Weights
+
+let weights = VectorN([0.25, 0.30, 0.25, 0.20])
+let returns = VectorN([0.12, 0.15, 0.10, 0.18])
+
+// Portfolio return (weighted average)
+let portfolioReturn = weights.dot(returns)
+print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.6%
+
+// MARK: - Multivariate Operations
+
+// Minimize Rosenbrock function (classic test problem)
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+	let x = v[0], y = v[1]
+	let a = 1 - x
+	let b = y - x*x
+	return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Adam optimizer (adaptive learning rate)
+let optimizer = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 10_000
+)
+
+let result = try optimizer.minimizeAdam(
+	function: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result.solution.toArray())")  // ~[1, 1]
+print("Iterations: \(result.iterations)")
+print("Final value: \(result.value)")
+
+
+// MARK: - BFGS
+	// Quadratic function: f(x) = x^T A x
+	let A = [[2.0, 0.0, 0.0],
+			 [0.0, 3.0, 0.0],
+			 [0.0, 0.0, 4.0]]
+
+	let quadratic: (VectorN<Double>) -> Double = { v in
+		var result = 0.0
+		for i in 0..<3 {
+			for j in 0..<3 {
+				result += v[i] * A[i][j] * v[j]
+			}
+		}
+		return result
+	}
+
+	let bfgs = MultivariateNewtonRaphson<VectorN<Double>>(
+		maxIterations: 50
+	)
+
+	let resultBFGS = try bfgs.minimize(
+		quadratic,
+		from: VectorN([5.0, 5.0, 5.0])
+	)
+
+	print("Converged in \(resultBFGS.iterations) iterations")
+	print("Solution: \(resultBFGS.solution.toArray())")  // ~[0, 0, 0]
+
+// MARK: - Constrained Optimization
+
+// Minimize x² + y² subject to x + y = 1
+let objective: (VectorN<Double>) -> Double = { v in
+	v[0]*v[0] + v[1]*v[1]
+}
+
+let optimizerConstrained = ConstrainedOptimizer<VectorN<Double>>()
+
+let resultConstrained = try optimizerConstrained.minimize(
+	objective,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: [
+		.equality { v in v[0] + v[1] - 1.0 }
+	]
+)
+
+print("Solution: \(resultConstrained.solution.toArray())")  // [0.5, 0.5]
+
+// Shadow price (Lagrange multiplier)
+if let lambda = resultConstrained.lagrangeMultipliers.first {
+	print("Shadow price: \(lambda.number(3))")  // How much objective improves if constraint relaxed
+}
+
+// MARK: - Portfolio with Constraints
+
+let expectedReturns = VectorN([0.08, 0.12, 0.15])
+let covarianceMatrix = [
+	[0.0400, 0.0100, 0.0080],
+	[0.0100, 0.0900, 0.0200],
+	[0.0080, 0.0200, 0.1600]
+]
+
+// Portfolio variance function
+let portfolioVariance: (VectorN<Double>) -> Double = { weights in
+	var variance = 0.0
+	for i in 0..<3 {
+		for j in 0..<3 {
+			variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+		}
+	}
+	return variance
+}
+
+let portfolioOptimizer = InequalityOptimizer<VectorN<Double>>()
+
+let resultPortfolio = try portfolioOptimizer.minimize(
+	portfolioVariance,
+	from: VectorN([0.4, 0.4, 0.2]),
+	subjectTo: [
+		// Target return ≥ 10%
+		.inequality { w in
+			let ret = w.dot(expectedReturns)
+			return 0.10 - ret  // ≤ 0 means ret ≥ 10%
+		},
+		// Fully invested
+		.equality { w in w.reduce(0, +) - 1.0 },
+		// Long-only
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] }
+	]
+)
+
+print("Optimal weights: \(resultPortfolio.solution.toArray())")
+print("Portfolio variance: \(portfolioVariance(resultPortfolio.solution).number(4))")
+print("Portfolio volatility: \((sqrt(portfolioVariance(resultPortfolio.solution))).percent(1))")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.1-OptimizationGuide.md">BusinessMath Docs – 5.1 Optimization Guide</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Find the profit-maximizing price (not just breakeven)</li><li>Build a 10-asset portfolio with sector constraints</li><li>Optimize production mix given resource constraints</li><li>Compare Adam vs. BFGS vs. gradient descent convergence</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Private equity</strong>: Portfolio company optimization (pricing, production, capex)</li><li><strong>Trading</strong>: Optimal execution algorithms</li><li><strong>Corporate finance</strong>: Capital structure optimization (debt/equity mix)</li><li><strong>Supply chain</strong>: Multi-facility production allocation</li></ul><p><strong>CFO use case</strong>: “We manufacture 3 products in 2 factories. Each product has different margins, each factory has capacity constraints. Find the production mix that maximizes EBITDA.”</p><p>BusinessMath makes this programmatic, not a manual Excel Solver exercise.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Second-Order Methods (BFGS) Beat First-Order (Gradient Descent)</strong></p><p>Gradient descent uses only the <strong>slope</strong> (first derivative). BFGS uses the <strong>curvature</strong> (second derivative via Hessian approximation).</p><p><strong>Analogy</strong>: Finding the bottom of a valley.</p><ul><li><strong>Gradient descent</strong>: Walks downhill, adjusts step size manually</li><li><strong>BFGS</strong>: Estimates the valley’s shape, jumps near the bottom</li></ul><p><strong>Trade-off</strong>: BFGS is faster (fewer iterations) but more complex (memory for Hessian approximation).</p><p><strong>Rule of thumb</strong>: Use Adam for non-smooth, noisy functions. Use BFGS for smooth, well-behaved functions.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part was <strong>choosing default optimization algorithms</strong>. We provide multiple (Adam, BFGS, Nelder-Mead, simulated annealing) because no single algorithm dominates:</p><ul><li><strong>Adam</strong>: Best for neural networks, noisy gradients</li><li><strong>BFGS</strong>: Best for smooth functions, small-medium dimensions</li><li><strong>Nelder-Mead</strong>: Best when gradients unavailable</li><li><strong>Simulated Annealing</strong>: Best for discrete, combinatorial problems</li></ul><p>Rather than pick one “default,” we expose all and provide guidance on when to use each.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We tested each optimizer on standard test functions (Rosenbrock, Rastrigin, etc.) with known solutions.</p><hr /><h2>Next Steps</h2><p><strong>Coming up tomorrow</strong>: Portfolio Optimization - Deep dive into Modern Portfolio Theory, efficient frontiers, and risk parity.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 22/~48</li><li>Playgrounds: 21 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post</guid><title>Reverse-Engineering API Pricing from Usage Data with BusinessMath</title><link>https://www.justinpurnell.com/BusinessMath/week-07/00-sun-pricing-extraction-blog-post</link><description><![CDATA[Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the BusinessMath Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types.]]></description><pubDate>Sun, 15 Feb 2026 14:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[regression]]></category><category><![CDATA[multi-linear regression]]></category><content:encoded><![CDATA[<h2>Introduction</h2><p>Ever wondered what you’re actually paying per token when using an AI API? In this tutorial, we’ll use the <strong>BusinessMath</strong> Swift library to extract the underlying pricing structure from a real usage table. We’ll employ multiple linear regression to determine the exact cost per token for different usage types.</p><h3>Two Approaches in This Tutorial</h3><p>This tutorial presents <strong>two ways</strong> to solve the pricing extraction problem:</p><table><thead><th>Approach</th><th>Best For</th><th>Lines of Code</th><th>Time to Implement</th></thead><tbody><tr><td><strong>Modern (Recommended)</strong></td><td>Production use, quick analysis</td><td>~10 lines</td><td>5 minutes</td></tr><tr><td><strong>Educational</strong></td><td>Learning regression math</td><td>~150 lines</td><td>30 minutes</td></tr></tbody></table><p><strong>Modern Approach</strong>: Use BusinessMath’s built-in <code>multipleLinearRegression()</code> function with GPU acceleration, automatic diagnostics, and comprehensive statistical inference. Jump to <a href="#option-a-using-businessmaths-built-in-regression-recommended">Option A</a> to see this approach.</p><p><strong>Educational Approach</strong>: Implement regression from scratch to understand the mathematics. See <a href="#option-b-manual-implementation-educational">Option B</a> for the manual implementation.</p><p>Both approaches produce identical results, but the modern approach gives you:</p><ul><li>✨ <strong>Automatic diagnostics</strong>: R², F-statistic, p-values, VIF, confidence intervals</li><li>🚀 <strong>GPU acceleration</strong>: 40-13,000× faster for large datasets</li><li>🔬 <strong>Statistical rigor</strong>: Proper t-distribution, QR decomposition</li><li>✅ <strong>Production ready</strong>: Battle-tested, strict concurrency compliance</li></ul><h2>The Problem</h2><p>You have a usage table that shows daily API consumption across multiple token types:</p><ul><li><strong>Input tokens</strong>: The prompts you send</li><li><strong>Output tokens</strong>: The responses you receive</li><li><strong>Cache Create tokens</strong>: New cached content</li><li><strong>Cache Read tokens</strong>: Reused cached content</li></ul><p>Each row shows token counts and a total cost, but <strong>the pricing structure is hidden</strong>. Our goal: extract the per-token pricing.</p><h2>The Dataset</h2><p>Our pricing matrix contains real usage data from January-February 2026 for two Claude models (haiku-4.5 and sonnet-4.5):</p><pre><code>Date     │ Input │ Output │ Cache Create │ Cache Read │ Total Cost
 2026-01-12│ 35,778│  8,093 │  1,951,481  │ 22,710,000 │   $13.53
 2026-01-13│    847│    334 │  1,103,281  │ 16,250,000 │    $9.02
 2026-01-14│    144│     58 │    198,633  │  2,240,426 │    $1.38
@@ -9536,663 +9920,4 @@ for i in 0..<portfolioVaRs.count {
 }
 
 </code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md"><strong>BusinessMath Docs – 2.3 Risk Analytics</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Create custom stress scenarios for your industry</li><li>Calculate VaR and CVaR for different confidence levels</li><li>Compare Sharpe vs Sortino ratios for asymmetric strategies</li></ol><hr /><h2>Real-World Application</h2><p>Risk managers use these tools daily:</p><ul><li><strong>Portfolio VaR</strong>: Regulatory requirement for banks</li><li><strong>Stress testing</strong>: Required by Dodd-Frank, Basel III</li><li><strong>Drawdown analysis</strong>: Hedge fund performance evaluation</li><li><strong>Risk aggregation</strong>: Enterprise-wide risk management</li></ul><p>BusinessMath makes these institutional-grade analytics accessible in 10-20 lines of Swift code.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Both VaR and CVaR?</strong></p><p>VaR answers: “What’s the threshold of the worst 5% of outcomes?”CVaR answers: “When you’re in that worst 5%, how bad does it actually get?”</p><p>Example: Portfolio with VaR₉₅ = -$100k, CVaR₉₅ = -$500k</p><ul><li><strong>VaR says</strong>: 95% of the time, you won’t lose more than $100k</li><li><strong>CVaR says</strong>: But when you do lose more, you lose an average of $500k</li></ul><p><strong>CVaR captures tail risk</strong>—the thing that kills portfolios. VaR alone can be misleading for fat-tailed distributions.</p><p>This distinction matters for crypto, options, and leveraged strategies where tails are fat.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing VaR wasn’t the math—it was choosing which variant to implement. There are three common methods:</p><ol><li><strong>Historical VaR</strong>: Use actual historical percentile</li><li><strong>Parametric VaR</strong>: Assume normal distribution</li><li><strong>Monte Carlo VaR</strong>: Simulate future scenarios</li></ol><p>We chose <strong>Historical VaR</strong> as the default because:</p><ul><li>No distribution assumptions</li><li>Works with any return pattern</li><li>Easy to explain and verify</li></ul><p>But we documented this choice explicitly in both code and DocC, so users know what they’re getting.</p><p><strong>The lesson</strong>: When multiple valid implementations exist, pick one, document it clearly, and make the choice transparent.</p><p><strong>Related Methodology</strong>: <a href="../week-09/02-tue-tests-wrong.md">When Tests Pass But Code Is Wrong</a> (Week 9) - Validating statistical implementations</p><hr /><h2>Next Steps</h2><p><strong>Coming up this week</strong>: Week 3 explores operational models—growth, depreciation, and revenue modeling.</p><p><strong>Case Study</strong>: Week 3 Friday combines depreciation + TVM for capital equipment purchase decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 8/~48</li><li><strong>Week 2 Complete!</strong> ✅</li><li>Topics Covered: Foundation + Analysis Tools</li><li>Playgrounds: 7 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-02/03-wed-financial-ratios</guid><title>Financial Ratios & Metrics Guide</title><link>https://www.justinpurnell.com/BusinessMath/week-02/03-wed-financial-ratios</link><description><![CDATA[Part 7 of 12-Week BusinessMath Series]]></description><pubDate>Wed, 14 Jan 2026 08:00:00 -0500</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[financial-ratios]]></category><category><![CDATA[profitability]]></category><category><![CDATA[liquidity]]></category><category><![CDATA[solvency]]></category><content:encoded><![CDATA[<p><strong>Part 7 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How to calculate and interpret profitability ratios (ROA, ROE, ROIC)</li><li>Using efficiency ratios to measure asset utilization</li><li>Assessing liquidity and solvency for financial health</li><li>Applying DuPont analysis to decompose ROE</li><li>Using credit metrics like Altman Z-Score and Piotroski F-Score</li></ul><hr /><h2>The Problem</h2><p>Analyzing financial statements requires calculating dozens of ratios across five categories: profitability, efficiency, liquidity, solvency, and valuation. Each ratio has a specific formula, interpretation guidelines, and industry benchmarks.</p><p>Doing this manually is tedious and error-prone. Spreadsheets help, but lack type safety and composability. You need to:</p><ul><li>Calculate ratios consistently across periods</li><li>Track trends over time</li><li>Compare companies on equal footing</li><li>Assess financial health with composite scores</li></ul><p><strong>BusinessMath offers a systematic way to compute, track, and interpret financial metrics programmatically.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive ratio analysis functions that work with <code>IncomeStatement</code> and <code>BalanceSheet</code> data structures, returning results as <code>TimeSeries</code> for trend analysis.</p><h3>Setup: Creating Financial Statements</h3><p>First, let’s create sample financial statements for a fictional SaaS company “TechCo”:</p><pre><code class="language-swift">// Define company and periods
-let entity = Entity(id: "TECH", primaryType: .ticker, name: "TechCo Inc.")
-let periods = [
-	Period.quarter(year: 2025, quarter: 1),
-	Period.quarter(year: 2025, quarter: 2),
-	Period.quarter(year: 2025, quarter: 3),
-	Period.quarter(year: 2025, quarter: 4)
-]
-
-// Convenient period references
-let q1 = periods[0]
-let q2 = periods[1]
-let q3 = periods[2]
-let q4 = periods[3]
-
-// Create Income Statement
-// Revenue: $5M → $6M over the year (20% growth)
-let revenueSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [5_000_000, 5_300_000, 5_600_000, 6_000_000]
-)
-let revenueAccount = try Account(
-	entity: entity,
-	name: "Subscription Revenue",
-	type: .revenue,
-	timeSeries: revenueSeries
-)
-
-// COGS: 30% of revenue
-var cogsMetadata = AccountMetadata()
-cogsMetadata.category = "COGS"
-let cogsSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [1_500_000, 1_590_000, 1_680_000, 1_800_000]
-)
-let cogsAccount = try Account(
-	entity: entity,
-	name: "Cost of Goods Sold",
-	type: .expense,
-	timeSeries: cogsSeries,
-	metadata: cogsMetadata
-)
-
-// Operating Expenses: R&D + S&M + G&A
-var opexMetadata = AccountMetadata()
-opexMetadata.category = "Operating"
-let opexSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [2_000_000, 2_100_000, 2_150_000, 2_200_000]
-)
-let opexAccount = try Account(
-	entity: entity,
-	name: "Operating Expenses",
-	type: .expense,
-	timeSeries: opexSeries,
-	metadata: opexMetadata
-)
-
-// Interest expense
-let interestSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [100_000, 95_000, 90_000, 85_000]
-)
-let interestAccount = try Account(
-	entity: entity,
-	name: "Interest Expense",
-	type: .expense,
-	timeSeries: interestSeries
-)
-
-let incomeStatement = try IncomeStatement(
-	entity: entity,
-	periods: periods,
-	revenueAccounts: [revenueAccount],
-	expenseAccounts: [cogsAccount, opexAccount, interestAccount]
-)
-
-// Create Balance Sheet
-// Current Assets
-var currentAssetMetadata = AccountMetadata()
-currentAssetMetadata.category = "Current"
-
-let cashSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [3_000_000, 3_500_000, 4_000_000, 4_500_000]
-)
-let cashAccount = try Account(
-	entity: entity,
-	name: "Cash",
-	type: .asset,
-	timeSeries: cashSeries,
-	metadata: currentAssetMetadata
-)
-
-let receivablesSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [1_200_000, 1_300_000, 1_400_000, 1_500_000]
-)
-let receivablesAccount = try Account(
-	entity: entity,
-	name: "Accounts Receivable",
-	type: .asset,
-	timeSeries: receivablesSeries,
-	metadata: currentAssetMetadata
-)
-
-// Fixed Assets
-var fixedAssetMetadata = AccountMetadata()
-fixedAssetMetadata.category = "Fixed"
-
-let ppeSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [2_000_000, 2_050_000, 2_100_000, 2_150_000]
-)
-let ppeAccount = try Account(
-	entity: entity,
-	name: "Property & Equipment",
-	type: .asset,
-	timeSeries: ppeSeries,
-	metadata: fixedAssetMetadata
-)
-
-// Current Liabilities
-var currentLiabilityMetadata = AccountMetadata()
-currentLiabilityMetadata.category = "Current"
-
-let payablesSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [800_000, 850_000, 900_000, 950_000]
-)
-let payablesAccount = try Account(
-	entity: entity,
-	name: "Accounts Payable",
-	type: .liability,
-	timeSeries: payablesSeries,
-	metadata: currentLiabilityMetadata
-)
-
-// Long-term Debt
-var longTermLiabilityMetadata = AccountMetadata()
-longTermLiabilityMetadata.category = "Long-term"
-
-let debtSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [2_000_000, 1_900_000, 1_800_000, 1_700_000]
-)
-let debtAccount = try Account(
-	entity: entity,
-	name: "Long-term Debt",
-	type: .liability,
-	timeSeries: debtSeries,
-	metadata: longTermLiabilityMetadata
-)
-
-// Equity (balancing to Assets = Liabilities + Equity)
-let equitySeries = TimeSeries<Double>(
-	periods: periods,
-	values: [3_400_000, 4_100_000, 4_800_000, 5_500_000]
-)
-let equityAccount = try Account(
-	entity: entity,
-	name: "Shareholders Equity",
-	type: .equity,
-	timeSeries: equitySeries
-)
-
-let balanceSheet = try BalanceSheet(
-	entity: entity,
-	periods: periods,
-	assetAccounts: [cashAccount, receivablesAccount, ppeAccount],
-	liabilityAccounts: [payablesAccount, debtAccount],
-	equityAccounts: [equityAccount]
-)
-
-// Market data for valuation metrics
-let marketPrice = 45.00  // $45 per share
-let sharesOutstanding = 200_000.0  // 200K shares outstanding
-
-// Cash flow statement (for Piotroski F-Score)
-let operatingCashFlowSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [1_500_000, 1_600_000, 1_700_000, 1_900_000]
-)
-let cashFlowAccount = try Account(
-	entity: entity,
-	name: "Operating Cash Flow",
-	type: .operating,  // Must use .operating for operating cash flow accounts
-	timeSeries: operatingCashFlowSeries
-)
-
-let cashFlowStatement = try CashFlowStatement(
-	entity: entity,
-	periods: periods,
-	operatingAccounts: [cashFlowAccount],
-	investingAccounts: [],
-	financingAccounts: []
-)
-</code></pre><p><strong>About TechCo’s Financials:</strong></p><ul><li><strong>Revenue</strong>: Growing SaaS company, $5M → $6M quarterly (20% annual growth)</li><li><strong>Gross Margin</strong>: 70% (typical for SaaS: low COGS, high operating leverage)</li><li><strong>Balance Sheet</strong>: Healthy cash position ($3M → $4.5M), paying down debt ($2M → $1.7M)</li><li><strong>Equity</strong>: Growing from retained earnings as company becomes profitable</li></ul><p>The setup defines all variables used in examples below: <code>incomeStatement</code>, <code>balanceSheet</code>, <code>cashFlowStatement</code>, <code>q1</code>-<code>q4</code>, <code>periods</code>, <code>marketPrice</code>, and <code>sharesOutstanding</code>.</p><hr /><h3>Profitability Ratios</h3><p>How efficiently does the company generate profits?</p><pre><code class="language-swift">import BusinessMath
-
-// Get all profitability ratios at once
-let profitability = profitabilityRatios(
-	incomeStatement: incomeStatement,
-	balanceSheet: balanceSheet
-)
-
-print("=== Profitability Analysis ===")
-print("Gross Margin: \(profitability.grossMargin[q1]!.percent(1))")
-print("Operating Margin: \(profitability.operatingMargin[q1]!.percent(1))")
-print("Net Margin: \(profitability.netMargin[q1]!.percent(1))")
-print("EBITDA Margin: \(profitability.ebitdaMargin[q1]!.percent(1))")
-print("ROA: \(profitability.roa[q1]!.percent(1))")
-print("ROE: \(profitability.roe[q1]!.percent(1))")
-print("ROIC: \(profitability.roic[q1]!.percent(1))")
-</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Gross Margin > 40%</strong>: Strong pricing power</li><li><strong>ROA > 5%</strong>: Good asset efficiency (varies by industry)</li><li><strong>ROE > 15%</strong>: Strong returns for shareholders</li><li><strong>ROIC > WACC</strong>: Company creates value</li></ul><hr /><h3>Efficiency Ratios</h3><p>How effectively does the company use its assets?</p><pre><code class="language-swift">let efficiency = efficiencyRatios(
-    incomeStatement: incomeStatement,
-    balanceSheet: balanceSheet
-)
-
-print("\n=== Efficiency Analysis ===")
-print("Asset Turnover: \(efficiency.assetTurnover[q1]!.number(2))")
-print("Inventory Turnover: \(efficiency.inventoryTurnover![q1]!.number(1))")
-print("Receivables Turnover: \(efficiency.receivablesTurnover![q1]!.number(1))")
-print("Days Sales Outstanding: \(efficiency.daysSalesOutstanding![q1]!.number(1)) days")
-print("Days Inventory Outstanding: \(efficiency.daysInventoryOutstanding![q1]!.number(1)) days")
-print("Days Payable Outstanding: \(efficiency.daysPayableOutstanding![q1]!.number(1)) days")
-
-// Cash Conversion Cycle
-let ccc = efficiency.cashConversionCycle![q1]!
-print("Cash Conversion Cycle: \(ccc.number(1)) days")
-</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Higher turnover</strong> = more efficient use of assets</li><li><strong>Lower DSO (Days Sales Outstanding)</strong> = faster cash collection</li><li><strong>Shorter CCC (Cash Conversion Cycle)</strong> = less cash tied up in operations</li><li>Always compare to industry benchmarks</li></ul><hr /><h3>Liquidity Ratios</h3><p>Can the company meet short-term obligations?</p><pre><code class="language-swift">print("\n=== Liquidity Analysis ===")
-print("Current Ratio: \(liquidity.currentRatio[q1]!)")
-print("Quick Ratio: \(liquidity.quickRatio[q1]!)")
-print("Cash Ratio: \(liquidity.cashRatio[q1]!)")
-print("Working Capital: \(liquidity.workingCapital[q1]!.currency(0))")
-
-// Assess liquidity health
-let currentRatio = liquidity.currentRatio[q1]!
-if currentRatio < 1.0 {
-	print("⚠️  Warning: Current ratio < 1.0 indicates potential liquidity issues")
-} else if currentRatio > 3.0 {
-	print("ℹ️  Note: High current ratio may indicate inefficient use of assets")
-} else {
-	print("✓ Current ratio in healthy range")
-}
-</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Current Ratio > 1.5</strong>: Good short-term health</li><li><strong>Quick Ratio > 1.0</strong>: Can pay bills without selling inventory</li><li><strong>Cash Ratio > 0.5</strong>: Strong</li><li><strong>Too high</strong> may indicate poor asset utilization</li></ul><hr /><h3>Solvency Ratios</h3><p>Can the company meet long-term obligations?</p><pre><code class="language-swift">let solvency = solvencyRatios(
-    incomeStatement: incomeStatement,
-    balanceSheet: balanceSheet
-)
-
-print("\n=== Solvency Analysis ===")
-print("Debt-to-Equity: \(solvency.debtToEquity[q2]!.number(2))")
-print("Debt-to-Assets: \(solvency.debtToAssets[q2]!.number(2))")
-print("Equity Ratio: \(solvency.equityRatio[q2]!.number(2))")
-print("Interest Coverage: \(solvency.interestCoverage![q2]!.number(1))x")
-print("Debt Service Coverage: \(solvency.debtServiceCoverage![q2]!.number(1))x")
-
-// Assess leverage
-let debtToEquity = solvency.debtToEquity[q1]!
-if debtToEquity > 2.0 {
-    print("⚠️  High leverage - company relies heavily on debt")
-} else if debtToEquity < 0.5 {
-    print("ℹ️  Conservative capital structure - may be underlevered")
-} else {
-    print("✓ Balanced capital structure")
-}
-
-// Check interest coverage
-let interestCoverage = solvency.interestCoverage[q1]!
-if interestCoverage < 2.0 {
-    print("⚠️  Low interest coverage - may struggle to pay interest")
-} else if interestCoverage > 5.0 {
-    print("✓ Strong interest coverage")
-}
-</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Lower D/E</strong>: Less risky, but may miss growth opportunities</li><li><strong>Higher D/E</strong>: More leverage, higher risk and return potential</li><li><strong>Interest Coverage > 3x</strong>: Generally safe</li><li><strong>Industry context matters</strong> (utilities vs tech)</li></ul><hr /><h3>DuPont Analysis</h3><p>Decompose ROE to understand its drivers:</p><pre><code class="language-swift">// 3-Way DuPont Analysis
-let dupont = dupontAnalysis(
-    incomeStatement: incomeStatement,
-    balanceSheet: balanceSheet
-)
-
-print("\n=== 3-Way DuPont Analysis ===")
-print("ROE = Net Margin × Asset Turnover × Equity Multiplier\n")
-print("Net Margin: \(dupont.netMargin[q1]!.percent())")
-print("Asset Turnover: \(dupont.assetTurnover[q1]!.number(1))x")
-print("Equity Multiplier: \(dupont.equityMultiplier[q1]!.number(1))x")
-print("ROE: \(dupont.roe[q1]!.percent(1))")
-
-// Verify the formula
-let calculated = dupont.netMargin[q1]! *
-				 dupont.assetTurnover[q1]! *
-				 dupont.equityMultiplier[q1]!
-print("\nVerification: \(calculated.percent()) ≈ \(dupont.roe[q1]!.percent())")
-</code></pre><p><strong>ROE can be high due to</strong>:</p><ul><li><strong>High Net Margin</strong>: Pricing power (luxury goods)</li><li><strong>High Asset Turnover</strong>: Efficient operations (retail)</li><li><strong>High Equity Multiplier</strong>: Using leverage (banks)</li></ul><p>DuPont analysis reveals <strong>which factor drives ROE</strong>, helping you understand the business model.</p><hr /><h3>Credit Metrics</h3><p>Assess bankruptcy risk and fundamental strength:</p><pre><code class="language-swift">// Altman Z-Score (bankruptcy prediction)
-let altmanZ = altmanZScore(
-    incomeStatement: incomeStatement,
-    balanceSheet: balanceSheet,
-    marketPrice: marketPrice,
-    sharesOutstanding: sharesOutstanding
-)
-
-print("\n=== Altman Z-Score ===")
-print("Z-Score: \(altmanZ[q1]!)")
-
-let zScore = altmanZ[q1]!
-if zScore > 2.99 {
-    print("✓ Safe zone - low bankruptcy risk")
-} else if zScore > 1.81 {
-    print("⚠️  Grey zone - moderate risk")
-} else {
-    print("⚠️  Distress zone - high bankruptcy risk")
-}
-
-// Piotroski F-Score (fundamental strength, 0-9)
-let piotroski = piotroskiFScore(
-    incomeStatement: incomeStatement,
-    balanceSheet: balanceSheet,
-    cashFlowStatement: cashFlowStatement
-)
-
-print("\n=== Piotroski F-Score ===")
-print("F-Score: \(Int(piotroski.totalScore)) / 9")
-
-let fScore = Int(piotroski.totalScore)
-if fScore >= 7 {
-    print("✓ Strong fundamentals")
-} else if fScore >= 4 {
-    print("ℹ️  Moderate fundamentals")
-} else {
-    print("⚠️  Weak fundamentals")
-}
-</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Altman Z-Score</strong>:<ul><li>> 3.0: Financially sound</li><li>1.8-3.0: Watch zone</li><li>< 1.8: High bankruptcy risk</li></ul></li><li><strong>Piotroski F-Score</strong>:<ul><li>8-9: Very strong</li><li>5-7: Solid</li><li>0-4: Weak</li></ul></li></ul><hr /><h2>How It Works</h2><h3>TimeSeries Return Values</h3><p>All ratio functions return <code>TimeSeries<Double></code>, allowing trend analysis:</p><pre><code class="language-swift">// Analyze trends across quarters
-print("\n=== Profitability Trends ===")
-print("Period       ROE      ROA    Net Margin")
-for period in periods {
-    let roe = profitability.roe[period]!
-    let roa = profitability.roa[period]!
-    let margin = profitability.netMargin[period]!
-
-	print("\(period.label.padding(toLength: 7, withPad: " ", startingAt: 0)) \(roe.percent(1).paddingLeft(toLength: 8)) \(roa.percent(1).paddingLeft(toLength: 8)) \(margin.percent(1).paddingLeft(toLength: 12))")
-}
-
-// Calculate quarter-over-quarter growth
-let q1_roe = profitability.roe[q1]!
-let q2_roe = profitability.roe[q2]!
-let qoq_growth = ((q2_roe - q1_roe) / q1_roe)
-print("\nQ2 ROE growth vs Q1: \(qoq_growth.percent())")
-</code></pre><h3>Industry Benchmarks</h3><p>Typical ranges vary by industry:</p><p><strong>Technology</strong>:</p><ul><li>Gross Margin: 60-80%</li><li>ROE: 15-30%</li><li>D/E: 0.1-0.5 (low leverage)</li><li>Asset Turnover: 0.5-1.0</li></ul><p><strong>Retail</strong>:</p><ul><li>Gross Margin: 25-40%</li><li>ROE: 15-25%</li><li>D/E: 0.5-1.5</li><li>Asset Turnover: 2.0-4.0 (high)</li></ul><p><strong>Financial Services</strong>:</p><ul><li>Net Margin: 15-25%</li><li>ROE: 10-15%</li><li>D/E: 5.0-10.0 (high leverage)</li><li>Equity Multiplier: 10-20x</li></ul><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-// Define company and periods
-let entity = Entity(id: "TECH", primaryType: .ticker, name: "TechCo Inc.")
-let periods = [
-	Period.quarter(year: 2025, quarter: 1),
-	Period.quarter(year: 2025, quarter: 2),
-	Period.quarter(year: 2025, quarter: 3),
-	Period.quarter(year: 2025, quarter: 4)
-]
-
-// Convenient period references
-let q1 = periods[0]
-let q2 = periods[1]
-let q3 = periods[2]
-let q4 = periods[3]
-
-// Create Income Statement
-// Revenue: $5M → $6M over the year (20% growth)
-let revenueSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [5_000_000, 5_300_000, 5_600_000, 6_000_000]
-)
-let revenueAccount = try Account(
-	entity: entity,
-	name: "Subscription Revenue",
-	incomeStatementRole: .serviceRevenue,
-	timeSeries: revenueSeries
-)
-
-// COGS: 30% of revenue
-let cogsSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [1_500_000, 1_590_000, 1_680_000, 1_800_000]
-)
-let cogsAccount = try Account(
-	entity: entity,
-	name: "Cost of Goods Sold",
-	incomeStatementRole: .costOfGoodsSold,
-	timeSeries: cogsSeries
-)
-
-// Operating Expenses: R&D + S&M + G&A
-let opexSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [2_000_000, 2_100_000, 2_150_000, 2_200_000]
-)
-let opexAccount = try Account(
-	entity: entity,
-	name: "Operating Expenses",
-	incomeStatementRole: .operatingExpenseOther,
-	timeSeries: opexSeries
-)
-
-// Interest expense
-let interestSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [100_000, 95_000, 90_000, 85_000]
-)
-let interestAccount = try Account(
-	entity: entity,
-	name: "Interest Expense",
-	incomeStatementRole: .interestExpense,
-	timeSeries: interestSeries
-)
-
-let incomeStatement = try IncomeStatement(
-	entity: entity,
-	periods: periods,
-	accounts: [revenueAccount, cogsAccount, opexAccount, interestAccount]
-)
-
-// Create Balance Sheet
-// Current Assets
-let cashSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [3_000_000, 3_500_000, 4_000_000, 4_500_000]
-)
-let cashAccount = try Account(
-	entity: entity,
-	name: "Cash",
-	balanceSheetRole: .cashAndEquivalents,
-	timeSeries: cashSeries
-)
-
-let receivablesSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [1_200_000, 1_300_000, 1_400_000, 1_500_000]
-)
-let receivablesAccount = try Account(
-	entity: entity,
-	name: "Accounts Receivable",
-	balanceSheetRole: .accountsReceivable,  // Required for receivables turnover
-	timeSeries: receivablesSeries
-)
-
-// Inventory (needed for inventory turnover)
-let inventorySeries = TimeSeries<Double>(
-	periods: periods,
-	values: [500_000, 520_000, 540_000, 560_000]
-)
-let inventoryAccount = try Account(
-	entity: entity,
-	name: "Inventory",
-	balanceSheetRole: .inventory,  // Required for inventory turnover
-	timeSeries: inventorySeries
-)
-
-// Fixed Assets
-let ppeSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [2_000_000, 2_050_000, 2_100_000, 2_150_000]
-)
-let ppeAccount = try Account(
-	entity: entity,
-	name: "Property & Equipment",
-	balanceSheetRole: .propertyPlantEquipment,
-	timeSeries: ppeSeries
-)
-
-// Current Liabilities
-let payablesSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [800_000, 850_000, 900_000, 950_000]
-)
-let payablesAccount = try Account(
-	entity: entity,
-	name: "Accounts Payable",
-	balanceSheetRole: .accountsPayable,  // Required for days payable outstanding
-	timeSeries: payablesSeries
-)
-
-// Long-term Debt
-let debtSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [2_000_000, 1_900_000, 1_800_000, 1_700_000]
-)
-let debtAccount = try Account(
-	entity: entity,
-	name: "Long-term Debt",
-	balanceSheetRole: .longTermDebt,
-	timeSeries: debtSeries
-)
-
-// Equity (balancing to Assets = Liabilities + Equity)
-// Adjusted for inventory: Assets now include $500K+ inventory each quarter
-let equitySeries = TimeSeries<Double>(
-	periods: periods,
-	values: [3_900_000, 4_620_000, 5_340_000, 6_060_000]
-)
-let equityAccount = try Account(
-	entity: entity,
-	name: "Shareholders Equity",
-	balanceSheetRole: .commonStock,
-	timeSeries: equitySeries
-)
-
-let balanceSheet = try BalanceSheet(
-	entity: entity,
-	periods: periods,
-	accounts: [cashAccount, receivablesAccount, inventoryAccount, ppeAccount, payablesAccount, debtAccount, equityAccount]
-)
-
-// Market data for valuation metrics
-let marketPrice = 45.00  // $45 per share
-let sharesOutstanding = 200_000.0  // 200K shares outstanding
-
-// Cash flow statement (for Piotroski F-Score)
-let operatingCashFlowSeries = TimeSeries<Double>(
-	periods: periods,
-	values: [1_500_000, 1_600_000, 1_700_000, 1_900_000]
-)
-let cashFlowAccount = try Account(
-	entity: entity,
-	name: "Operating Cash Flow",
-	cashFlowRole: .otherOperatingActivities,  // Use cashFlowRole for cash flow accounts
-	timeSeries: operatingCashFlowSeries
-)
-
-let cashFlowStatement = try CashFlowStatement(
-	entity: entity,
-	periods: periods,
-	accounts: [cashFlowAccount]
-)
-
-// Get all profitability ratios at once
-let profitability = profitabilityRatios(
-	incomeStatement: incomeStatement,
-	balanceSheet: balanceSheet
-)
-
-print("=== Profitability Analysis ===")
-print("Gross Margin: \(profitability.grossMargin[q2]!.percent(1))")
-print("Operating Margin: \(profitability.operatingMargin[q2]!.percent(1))")
-print("Net Margin: \(profitability.netMargin[q2]!.percent(1))")
-print("EBITDA Margin: \(profitability.ebitdaMargin[q2]!.percent(1))")
-print("ROA: \(profitability.roa[q2]!.percent(1))")
-print("ROE: \(profitability.roe[q2]!.percent(1))")
-print("ROIC: \(profitability.roic[q2]!.percent(1))")
-
-let efficiency = efficiencyRatios(
-	incomeStatement: incomeStatement,
-	balanceSheet: balanceSheet
-)
-
-print("\n=== Efficiency Analysis ===")
-print("Asset Turnover: \(efficiency.assetTurnover[q2]!.number(2))")
-print("Inventory Turnover: \(efficiency.inventoryTurnover![q2]!.number(1))")
-print("Receivables Turnover: \(efficiency.receivablesTurnover![q2]!.number(1))")
-print("Days Sales Outstanding: \(efficiency.daysSalesOutstanding![q2]!.number(1)) days")
-print("Days Inventory Outstanding: \(efficiency.daysInventoryOutstanding![q2]!.number(1)) days")
-print("Days Payable Outstanding: \(efficiency.daysPayableOutstanding![q2]!.number(1)) days")
-
-// Cash Conversion Cycle
-let ccc = efficiency.cashConversionCycle![q2]!
-print("Cash Conversion Cycle: \(ccc.number(1)) days")
-
-
-let liquidity = liquidityRatios(balanceSheet: balanceSheet)
-
-print("\n=== Liquidity Analysis ===")
-print("Current Ratio: \(liquidity.currentRatio[q2]!.number(1))")
-print("Quick Ratio: \(liquidity.quickRatio[q2]!.number(1))")
-print("Cash Ratio: \(liquidity.cashRatio[q2]!.number(1))")
-print("Working Capital: \(liquidity.workingCapital[q2]!.currency(0))")
-
-// Assess liquidity health
-let currentRatio = liquidity.currentRatio[q2]!
-if currentRatio < 1.0 {
-	print("⚠️  Warning: Current ratio < 1.0 indicates potential liquidity issues")
-} else if currentRatio > 3.0 {
-	print("ℹ️  Note: High current ratio may indicate inefficient use of assets")
-} else {
-	print("✓ Current ratio in healthy range")
-}
-
-
-// Calculate solvency ratios using the convenience API
-// Principal payments are automatically derived from period-over-period debt reduction
-let solvency = solvencyRatios(
-	incomeStatement: incomeStatement,
-	balanceSheet: balanceSheet,
-	debtAccount: debtAccount,        // Automatically calculates principal payments
-	interestAccount: interestAccount  // from balance sheet changes
-)
-
-print("\n=== Solvency Analysis ===")
-print("Debt-to-Equity: \(solvency.debtToEquity[q2]!.number(2))")
-print("Debt-to-Assets: \(solvency.debtToAssets[q2]!.number(2))")
-print("Equity Ratio: \(solvency.equityRatio[q2]!.number(2))")
-print("Interest Coverage: \(solvency.interestCoverage![q2]!.number(1))x")
-print("Debt Service Coverage: \(solvency.debtServiceCoverage![q2]!.number(1))x")
-
-// 3-Way DuPont Analysis
-let dupont = dupontAnalysis(
-	incomeStatement: incomeStatement,
-	balanceSheet: balanceSheet
-)
-
-print("\n=== 3-Way DuPont Analysis ===")
-print("ROE = Net Margin × Asset Turnover × Equity Multiplier\n")
-print("Net Margin: \(dupont.netMargin[q1]!.percent())")
-print("Asset Turnover: \(dupont.assetTurnover[q1]!.number(1))x")
-print("Equity Multiplier: \(dupont.equityMultiplier[q1]!.number(1))x")
-print("ROE: \(dupont.roe[q1]!.percent(1))")
-
-// Verify the formula
-let calculated = dupont.netMargin[q1]! *
-				 dupont.assetTurnover[q1]! *
-				 dupont.equityMultiplier[q1]!
-print("\nVerification: \(calculated.percent()) ≈ \(dupont.roe[q1]!.percent())")
-
-// Assess leverage
-let debtToEquity = solvency.debtToEquity[q2]!
-if debtToEquity > 2.0 {
-	print("⚠️  High leverage - company relies heavily on debt")
-} else if debtToEquity < 0.5 {
-	print("ℹ️  Conservative capital structure - may be underlevered")
-} else {
-	print("✓ Balanced capital structure")
-}
-
-// Check interest coverage
-let interestCoverage = solvency.interestCoverage?[q2]! ?? 0.0
-if interestCoverage < 2.0 {
-	print("⚠️  Low interest coverage - may struggle to pay interest")
-} else if interestCoverage > 5.0 {
-	print("✓ Strong interest coverage")
-}
-
-	// Analyze trends across quarters
-	print("\n=== Profitability Trends ===")
-	print("Period       ROE      ROA    Net Margin")
-	for period in periods {
-		let roe = profitability.roe[period]!
-		let roa = profitability.roa[period]!
-		let margin = profitability.netMargin[period]!
-		print("\(period.label.padding(toLength: 7, withPad: " ", startingAt: 0)) \(roe.percent(1).paddingLeft(toLength: 8)) \(roa.percent(1).paddingLeft(toLength: 8)) \(margin.percent(1).paddingLeft(toLength: 12))")
-	}
-
-	// Calculate quarter-over-quarter growth
-	let q1_roe = profitability.roe[q1]!
-	let q2_roe = profitability.roe[q2]!
-	let qoq_growth = ((q2_roe - q1_roe) / q1_roe)
-	print("\nQ2 ROE growth vs Q1: \(qoq_growth.percent())")
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md"><strong>BusinessMath Docs – 2.2 Financial Ratios</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Compare profitability ratios for two companies</li><li>Track liquidity trends over multiple quarters</li><li>Perform DuPont analysis to identify ROE drivers</li></ol><hr /><h2>Real-World Application</h2><p>Investment analysts use financial ratios for every stock evaluation:</p><ul><li><strong>Profitability screening</strong>: ROE > 15%, ROIC > WACC</li><li><strong>Safety checks</strong>: Current Ratio > 1.5, Z-Score > 2.99</li><li><strong>Efficiency comparisons</strong>: Compare DSO across industry peers</li><li><strong>Valuation</strong>: Low P/E + high Piotroski F-Score = potential value</li></ul><p>BusinessMath makes these calculations systematic, repeatable, and type-safe.</p><hr /><h3>📝 Development Note</h3><p>During development, we debated whether to return individual ratios (separate functions for each) or composite structs (one function returning all profitability ratios).</p><p><strong>The composite approach won</strong> because real-world analysis requires calculating many related ratios simultaneously. Calling 7 separate functions for profitability analysis was tedious and led to code duplication.</p><p>But we kept individual functions available too:</p><pre><code class="language-swift">// Composite (most common)
-let all = profitabilityRatios(incomeStatement: is, balanceSheet: bs)
-
-// Individual (when you only need one)
-let roe = returnOnEquity(incomeStatement: is, balanceSheet: bs)
-</code></pre><p><strong>The lesson</strong>: Provide both convenience (composite) and precision (individual). Let users choose based on their needs.</p><p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan (Week 3) - Managing API surface area</a></p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Risk Analytics (Friday) - VaR, stress testing, and comprehensive risk metrics.</p><p><strong>Case Study</strong>: Week 3 Friday will combine depreciation + TVM + financial ratios for capital equipment decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 7/~48</li><li>Topics Covered: Foundation + Analysis Tools (in progress)</li><li>Playgrounds: 6 available</li></ul>]]></content:encoded></item></channel></rss>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md"><strong>BusinessMath Docs – 2.3 Risk Analytics</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Create custom stress scenarios for your industry</li><li>Calculate VaR and CVaR for different confidence levels</li><li>Compare Sharpe vs Sortino ratios for asymmetric strategies</li></ol><hr /><h2>Real-World Application</h2><p>Risk managers use these tools daily:</p><ul><li><strong>Portfolio VaR</strong>: Regulatory requirement for banks</li><li><strong>Stress testing</strong>: Required by Dodd-Frank, Basel III</li><li><strong>Drawdown analysis</strong>: Hedge fund performance evaluation</li><li><strong>Risk aggregation</strong>: Enterprise-wide risk management</li></ul><p>BusinessMath makes these institutional-grade analytics accessible in 10-20 lines of Swift code.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Both VaR and CVaR?</strong></p><p>VaR answers: “What’s the threshold of the worst 5% of outcomes?”CVaR answers: “When you’re in that worst 5%, how bad does it actually get?”</p><p>Example: Portfolio with VaR₉₅ = -$100k, CVaR₉₅ = -$500k</p><ul><li><strong>VaR says</strong>: 95% of the time, you won’t lose more than $100k</li><li><strong>CVaR says</strong>: But when you do lose more, you lose an average of $500k</li></ul><p><strong>CVaR captures tail risk</strong>—the thing that kills portfolios. VaR alone can be misleading for fat-tailed distributions.</p><p>This distinction matters for crypto, options, and leveraged strategies where tails are fat.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing VaR wasn’t the math—it was choosing which variant to implement. There are three common methods:</p><ol><li><strong>Historical VaR</strong>: Use actual historical percentile</li><li><strong>Parametric VaR</strong>: Assume normal distribution</li><li><strong>Monte Carlo VaR</strong>: Simulate future scenarios</li></ol><p>We chose <strong>Historical VaR</strong> as the default because:</p><ul><li>No distribution assumptions</li><li>Works with any return pattern</li><li>Easy to explain and verify</li></ul><p>But we documented this choice explicitly in both code and DocC, so users know what they’re getting.</p><p><strong>The lesson</strong>: When multiple valid implementations exist, pick one, document it clearly, and make the choice transparent.</p><p><strong>Related Methodology</strong>: <a href="../week-09/02-tue-tests-wrong.md">When Tests Pass But Code Is Wrong</a> (Week 9) - Validating statistical implementations</p><hr /><h2>Next Steps</h2><p><strong>Coming up this week</strong>: Week 3 explores operational models—growth, depreciation, and revenue modeling.</p><p><strong>Case Study</strong>: Week 3 Friday combines depreciation + TVM for capital equipment purchase decisions.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 2/12</li><li>Posts Published: 8/~48</li><li><strong>Week 2 Complete!</strong> ✅</li><li>Topics Covered: Foundation + Analysis Tools</li><li>Playgrounds: 7 available</li></ul>]]></content:encoded></item></channel></rss>
