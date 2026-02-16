@@ -1,6 +1,6 @@
 ---
 title: Vector Operations: Foundation for Multivariate Optimization
-date: 2026-02-20 13:00
+date: 2026-02-19 13:00
 series: BusinessMath Quarterly Series
 week: 7
 post: 4
