@@ -8,6 +8,17 @@ struct IgniteWebsite {
 
         do {
             try await site.publish(buildDirectoryPath: "docs")
+
+            // Run post-build script to add RSS autodiscovery links
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/bin/bash")
+            process.arguments = ["add-rss-link.sh"]
+            try process.run()
+            process.waitUntilExit()
+
+            if process.terminationStatus == 0 {
+                print("✓ RSS autodiscovery links added")
+            }
         } catch {
             print(error.localizedDescription)
         }
