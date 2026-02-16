@@ -9,7 +9,7 @@
 import Foundation
 import Ignite
 
-func RSS(mode: FeedConfiguration.ContentMode = .full, contentCount: Int = 20, path: String = "/feed.rss", image: FeedConfiguration.FeedImage = FeedConfiguration.FeedImage(url: "/images/logos/rss.png", width: 144, height: 152)) -> FeedConfiguration {
-	
+func RSS(mode: FeedConfiguration.ContentMode = .full, contentCount: Int = 20, path: String = "/feed.rss", image: FeedConfiguration.FeedImage = FeedConfiguration.FeedImage(url: "https://www.justinpurnell.com/images/logos/rss.png", width: 144, height: 152)) -> FeedConfiguration {
+
 	return FeedConfiguration(mode: mode, contentCount: contentCount, path: path, image: image)
 }

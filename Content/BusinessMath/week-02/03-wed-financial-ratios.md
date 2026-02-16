@@ -1,6 +1,6 @@
 ---
 layout: BlogPostLayout
-title: Financial Ratios & Metrics Guide
+title: Financial Ratios and Metrics Guide
 date: 2026-01-14 13:00
 series: BusinessMath Quarterly Series
 week: 2
