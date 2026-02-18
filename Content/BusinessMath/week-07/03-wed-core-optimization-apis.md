@@ -1,5 +1,5 @@
 ---
-title: Core Optimization APIs: Goal-Seeking and Error Handling
+title: "Core Optimization APIs: Goal-Seeking and Error Handling"
 date: 2026-02-18 13:00
 series: BusinessMath Quarterly Series
 week: 7
