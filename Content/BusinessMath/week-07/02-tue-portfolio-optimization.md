@@ -8,7 +8,7 @@ docc_source: "5.2-PortfolioOptimizationGuide.md"
 playground: "Week07/Optimization.playground"
 tags: businessmath, swift, portfolio, optimization, modern-portfolio-theory, sharpe-ratio, efficient-frontier
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Portfolio Optimization: Building Optimal Investment Portfolios
