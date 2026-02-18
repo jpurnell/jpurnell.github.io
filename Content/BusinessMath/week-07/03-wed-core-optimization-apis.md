@@ -8,7 +8,7 @@ docc_source: "5.3-CoreOptimization.md"
 playground: "Week07/Optimization.playground"
 tags: businessmath, swift, goal-seeking, root-finding, irr, breakeven, error-handling
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Core Optimization APIs: Goal-Seeking and Error Handling
