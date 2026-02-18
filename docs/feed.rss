@@ -1,7 +1,338 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/02-tue-portfolio-optimization</guid><title>Portfolio Optimization: Building Optimal Investment Portfolios</title><link>https://www.justinpurnell.com/BusinessMath/week-07/02-tue-portfolio-optimization</link><description><![CDATA[Part 23 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 17 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[portfolio]]></category><category><![CDATA[optimization]]></category><category><![CDATA[modern-portfolio-theory]]></category><category><![CDATA[sharpe-ratio]]></category><category><![CDATA[efficient-frontier]]></category><content:encoded><![CDATA[<p><strong>Part 23 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building maximum Sharpe ratio portfolios (best risk-adjusted return)</li><li>Finding minimum variance portfolios (lowest risk)</li><li>Generating efficient frontiers (all optimal portfolios)</li><li>Implementing risk parity strategies (equal risk contribution)</li><li>Applying real-world constraints (long-only, leverage limits, position sizing)</li><li>Understanding the math behind Modern Portfolio Theory</li></ul><hr /><h2>The Problem</h2><p>Investment portfolio construction requires balancing multiple competing objectives:</p><ul><li><strong>Risk vs. Return</strong>: Higher returns usually mean higher risk, but by how much?</li><li><strong>Diversification</strong>: How do you optimally combine assets that move differently?</li><li><strong>Constraints</strong>: No short-selling, position limits, target returns, leverage restrictions</li><li><strong>Multiple Solutions</strong>: There are infinite ways to allocate capital—which is optimal?</li></ul><p><strong>Manual portfolio construction (guessing weights in a spreadsheet) doesn’t find mathematically optimal solutions.</strong></p><hr /><h2>The Solution</h2><p>Modern Portfolio Theory (MPT), developed by Harry Markowitz, provides a mathematical framework for optimal portfolio construction. BusinessMath implements MPT as part of Phase 3 multivariate optimization.</p><h3>Maximum Sharpe Ratio Portfolio</h3><p>Find the portfolio with the best risk-adjusted return:</p><pre><code class="language-swift">import BusinessMath
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis</guid><title>Core Optimization APIs: Goal-Seeking and Error Handling</title><link>https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis</link><description><![CDATA[Part 24 of 12-Week BusinessMath Series]]></description><pubDate>Wed, 18 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[goal-seeking]]></category><category><![CDATA[root-finding]]></category><category><![CDATA[irr]]></category><category><![CDATA[breakeven]]></category><category><![CDATA[error-handling]]></category><content:encoded><![CDATA[<p><strong>Part 24 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Using the <code>goalSeek()</code> function for root-finding problems</li><li>Finding breakeven prices, target revenues, and IRR automatically</li><li>Understanding Newton-Raphson convergence and numerical differentiation</li><li>Handling convergence failures and division by zero errors</li><li>Choosing initial guesses for robust convergence</li><li>Using the <code>GoalSeekOptimizer</code> class for constrained problems</li></ul><hr /><h2>The Problem</h2><p>Many business problems require <strong>inverse solving</strong>—finding an input that produces a target output:</p><ul><li><strong>Breakeven analysis</strong>: What price gives zero profit?</li><li><strong>Target seeking</strong>: What sales volume achieves $1M revenue?</li><li><strong>IRR calculation</strong>: What discount rate makes NPV = 0?</li><li><strong>Equation solving</strong>: Find x where f(x) = target</li></ul><p><strong>Manual trial-and-error (guessing values in Excel) is slow, imprecise, and doesn’t scale.</strong></p><hr /><h2>The Solution</h2><p>Goal-seeking (also called root-finding) automates the inverse problem. BusinessMath implements Newton-Raphson iteration with numerical differentiation for robust convergence.</p><h3>Goal-Seeking vs. Optimization</h3><p>Understanding the difference is critical:</p><table><thead><th><strong>Goal-Seeking</strong></th><th><strong>Optimization</strong></th></thead><tbody><tr><td>Find where <strong>f(x) = target</strong></td><td>Find where <strong>f’(x) = 0</strong></td></tr><tr><td>Root-finding</td><td>Minimize/Maximize</td></tr><tr><td>Example: Breakeven price</td><td>Example: Optimal price</td></tr><tr><td>Uses: <code>goalSeek()</code></td><td>Uses: <code>minimize()</code>, <code>maximize()</code></td></tr></tbody></table><hr /><h3>Basic Goal-Seeking</h3><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Find x where x² = 4
+let result = try goalSeek(
+    function: { x in x * x },
+    target: 4.0,
+    guess: 1.0
+)
+
+print(result)  // ~2.0
+</code></pre><p><strong>API Signature:</strong></p><pre><code class="language-swift">func goalSeek<T: Real>(
+    function: @escaping (T) -> T,
+    target: T,
+    guess: T,
+    tolerance: T = T(1) / T(1_000_000),
+    maxIterations: Int = 1000
+) throws -> T
+</code></pre><p><strong>Parameters:</strong></p><ul><li><code>function</code>: The function f(x) to solve</li><li><code>target</code>: The value you want f(x) to equal</li><li><code>guess</code>: Initial guess (critical for convergence!)</li><li><code>tolerance</code>: Convergence threshold (default: 0.000001)</li><li><code>maxIterations</code>: Maximum iterations before giving up (default: 1000)</li></ul><hr /><h3>Example 1: Breakeven Analysis</h3><p>Find the price where profit equals zero:</p><pre><code class="language-swift">import BusinessMath
+
+// Profit function with demand elasticity
+func profit(price: Double) -> Double {
+    let quantity = 10_000 - 1_000 * price  // Demand curve
+    let revenue = price * quantity
+    let fixedCosts = 5_000.0
+    let variableCost = 4.0
+    let totalCosts = fixedCosts + variableCost * quantity
+    return revenue - totalCosts
+}
+
+// Find breakeven price (profit = 0)
+let breakevenPrice = try goalSeek(
+    function: profit,
+    target: 0.0,
+    guess: 4.0,
+    tolerance: 0.01
+)
+
+print("Breakeven price: \(breakevenPrice.currency(2))")
+print("Verification: \(profit(price: breakevenPrice).currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Breakeven price: $5.00
+Verification: $0.00
+</code></pre><p><strong>The method</strong>: Newton-Raphson typically converges in 5-7 iterations.</p><hr /><h3>Example 2: Target Revenue</h3><p>Find the sales volume needed to hit a revenue target:</p><pre><code class="language-swift">import BusinessMath
+
+let pricePerUnit = 50.0
+let targetRevenue = 100_000.0
+
+// Revenue = price × quantity
+let requiredQuantity = try goalSeek(
+    function: { quantity in pricePerUnit * quantity },
+    target: targetRevenue,
+    guess: 1_000.0
+)
+
+print("Need to sell \(requiredQuantity.number(0)) units")
+print("Revenue: \((pricePerUnit * requiredQuantity).currency(0))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Need to sell 2,000 units
+Revenue: $100,000
+</code></pre><hr /><h3>Example 3: Internal Rate of Return (IRR)</h3><p>IRR is the discount rate where NPV equals zero—a perfect goal-seek problem:</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+    var npv = 0.0
+    for (t, cf) in cashFlows.enumerated() {
+        npv += cf / pow(1 + rate, Double(t))
+    }
+    return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+    function: npv,
+    target: 0.0,
+    guess: 0.10  // Start with 10% guess
+)
+
+print("IRR: \(irr.percent(2))")
+print("Verification - NPV at IRR: \(npv(rate: irr).currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>IRR: 12.83%
+Verification - NPV at IRR: $0.00
+</code></pre><p><strong>The insight</strong>: This is exactly how BusinessMath’s <code>irr()</code> function works internally.</p><hr /><h3>Example 4: Equation Solving</h3><p>Solve complex equations numerically:</p><pre><code class="language-swift">import BusinessMath
+
+// Solve: e^x - 2x - 3 = 0
+let solution = try goalSeek(
+    function: { x in exp(x) - 2*x - 3 },
+    target: 0.0,
+    guess: 1.0
+)
+
+print("Solution: x = \(solution.number(6))")
+
+// Verify: Should be ≈ 0
+let verify = exp(solution) - 2*solution - 3
+print("Verification: \(verify.number(10))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: x = 1.923939
+Verification: 0.0000000000
+</code></pre><hr /><h2>Algorithm: Newton-Raphson Method</h2><p>Goal-seeking uses Newton-Raphson iteration for root-finding:</p><pre><code>x_{n+1} = x_n - (f(x_n) - target) / f'(x_n)
+</code></pre><p><strong>Convergence Properties:</strong></p><ul><li><strong>Quadratic convergence</strong> when close to the root</li><li>Typically converges in 5-10 iterations</li><li>Requires continuous, differentiable function</li><li>Sensitive to initial guess</li></ul><p><strong>Numerical Differentiation:</strong></p><p>Since we don’t have symbolic derivatives, f’(x) is computed using central differences:</p><pre><code>f'(x) ≈ (f(x + h) - f(x - h)) / (2h)
+</code></pre><p>Where h is a small step size (default: 0.0001).</p><hr /><h2>Error Handling</h2><h3>Division by Zero</h3><p>Occurs when the derivative f’(x) = 0 (flat function):</p><pre><code class="language-swift">do {
+    // Function with zero derivative at x=0
+    let result = try goalSeek(
+        function: { x in x * x * x },  // f'(0) = 0
+        target: 0.0,
+        guess: 0.0  // BAD: Starting at stationary point
+    )
+} catch let error as BusinessMathError {
+    print(error.localizedDescription)
+    // "Goal-seeking failed: Division by zero encountered"
+
+    if let recovery = error.recoverySuggestion {
+        print("How to fix:\n\(recovery)")
+        // "Try a different initial guess away from stationary points"
+    }
+}
+</code></pre><p><strong>Solution:</strong> Choose a different initial guess away from stationary points.</p><hr /><h3>Convergence Failed</h3><p>Occurs when the algorithm doesn’t converge in max iterations:</p><pre><code class="language-swift">do {
+    let result = try goalSeek(
+        function: { x in sin(x) },
+        target: 1.5,  // BAD: sin(x) never equals 1.5
+        guess: 0.0
+    )
+} catch let error as BusinessMathError {
+    print(error.localizedDescription)
+    // "Goal-seeking did not converge within 1000 iterations"
+
+    if let recovery = error.recoverySuggestion {
+        print("How to fix:\n\(recovery)")
+        // "Try different initial guess, increase max iterations, or relax tolerance"
+    }
+}
+</code></pre><p><strong>Possible causes:</strong></p><ul><li>No solution exists (like sin(x) = 1.5)</li><li>Initial guess too far from solution</li><li>Function is not well-behaved (discontinuous, non-smooth)</li><li>Tolerance too strict</li></ul><p><strong>Solutions:</strong></p><ul><li>Try multiple initial guesses</li><li>Increase max iterations</li><li>Relax tolerance</li><li>Verify a solution actually exists</li></ul><hr /><h2>Choosing Initial Guesses</h2><p>The initial guess is <strong>critical</strong> for convergence:</p><h3>Good Practices</h3><p><strong>1. Use domain knowledge:</strong></p><pre><code class="language-swift">// Breakeven usually between cost and market price
+let guess = (costPrice + marketPrice) / 2
+</code></pre><p><strong>2. Try multiple guesses:</strong></p><pre><code class="language-swift">let guesses = [5.0, 10.0, 20.0]
+for guess in guesses {
+    if let result = try? goalSeek(function: f, target: target, guess: guess) {
+        print("Found solution: \(result)")
+        break
+    }
+}
+</code></pre><p><strong>3. Start near expected solution:</strong></p><pre><code class="language-swift">// If last month's breakeven was $10, start there
+let guess = lastMonthBreakeven
+</code></pre><p><strong>4. Avoid problematic points:</strong></p><pre><code class="language-swift">// Don't start where derivative is zero
+let guess = 1.0  // Not 0.0 for f(x) = x²
+</code></pre><hr /><h2>The GoalSeekOptimizer Class</h2><p>For more control and constraint support:</p><pre><code class="language-swift">import BusinessMath
+
+func profitFunction(price: Double) -> Double {
+    let quantity = 10_000 - 1_000 * price
+    let revenue = price * quantity
+    let fixedCosts = 5_000.0
+    let variableCost = 4.0
+    let totalCosts = fixedCosts + variableCost * quantity
+    return revenue - totalCosts
+}
+
+let optimizer = GoalSeekOptimizer<Double>(
+    target: 0.0,
+    tolerance: 0.0001,
+    maxIterations: 1000
+)
+
+let result = optimizer.optimize(
+    objective: profitFunction,
+    constraints: [],
+    initialGuess: 4.0,
+    bounds: (lower: 0.0, upper: 100.0)
+)
+
+print("Solution: \(result.optimalValue.currency(2))")
+print("Converged: \(result.converged)")
+print("Iterations: \(result.iterations)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: $5.00
+Converged: true
+Iterations: 6
+</code></pre><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// MARK: - Basic Goal Seek
+
+// Find x where x² = 4
+let result = try goalSeek(
+	function: { x in x * x },
+	target: 4.0,
+	guess: 1.0
+)
+
+print(result.number())  // ~2.0
+
+// MARK: - Breakeven Analysis
+// Find the price where profit = 0
+
+// Profit function with demand elasticity
+func profit(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price  // Demand curve
+	let revenue = price * quantity
+	let fixedCosts = 5_000.0
+	let variableCost = 4.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+// Find breakeven price (profit = 0)
+let breakevenPrice = try goalSeek(
+	function: profit,
+	target: 0.0,
+	guess: 6.0,
+	tolerance: 0.01
+)
+
+print("Breakeven price: \(breakevenPrice.currency(2))")
+print("Verification: \(profit(price: breakevenPrice).currency(2))")
+
+// MARK: - Target Revenue
+let pricePerUnit = 50.0
+let targetRevenue = 100_000.0
+
+// Revenue = price × quantity
+let requiredQuantity = try goalSeek(
+	function: { quantity in pricePerUnit * quantity },
+	target: targetRevenue,
+	guess: 1_000.0
+)
+
+print("Need to sell \(requiredQuantity.number(0)) units")
+print("Revenue: \((pricePerUnit * requiredQuantity).currency(0))")
+
+// MARK: - Internal Rate of Return
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+	var npv = 0.0
+	for (t, cf) in cashFlows.enumerated() {
+		npv += cf / pow(1 + rate, Double(t))
+	}
+	return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+	function: npv,
+	target: 0.0,
+	guess: 0.10  // Start with 10% guess
+)
+
+print("IRR: \(irr.percent(2))")
+print("Verification - NPV at IRR: \(npv(rate: irr).currency(2))")
+
+// MARK: - Equation Solving
+
+// Solve: e^x - 2x - 3 = 0
+let solution = try goalSeek(
+	function: { x in exp(x) - 2*x - 3 },
+	target: 0.0,
+	guess: 1.0
+)
+
+print("Solution: x = \(solution.number(6))")
+
+// Verify: Should be ≈ 0
+let verify = exp(solution) - 2*solution - 3
+print("Verification: \(verify.number(10))")
+
+// MARK: - Error Handling, Division by Zero
+
+do {
+	// Function with zero derivative at x=0
+	let result = try goalSeek(
+		function: { x in x * x * x },  // f'(0) = 0
+		target: 0.0,
+		guess: 0.0  // BAD: Starting at stationary point
+	)
+	print(result)
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking failed: Division by zero encountered"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try a different initial guess away from stationary points"
+	}
+}
+
+// MARK: - Error Handling, Failed Convergence
+
+do {
+	let result = try goalSeek(
+		function: { x in sin(x) },
+		target: 1.5,  // BAD: sin(x) never equals 1.5
+		guess: 0.0
+	)
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking did not converge within 1000 iterations"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try different initial guess, increase max iterations, or relax tolerance"
+	}
+}
+
+// MARK: - Goal Seek Optimizer Class
+func profitFunction(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price
+	let revenue = price * quantity
+	let fixedCosts = 5_000.0
+	let variableCost = 4.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+let optimizer_GS = GoalSeekOptimizer<Double>(
+	target: 0.0,
+	tolerance: 0.0001,
+	maxIterations: 1000
+)
+
+let result_GS = optimizer_GS.optimize(
+	objective: profitFunction,
+	constraints: [],
+	initialGuess: 4.0,
+	bounds: (lower: 0.0, upper: 100.0)
+)
+
+print("Solution: \(result_GS.optimalValue.currency(2))")
+print("Converged: \(result_GS.converged)")
+print("Iterations: \(result_GS.iterations)")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.3-CoreOptimization.md">BusinessMath Docs – 5.3 Core Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Find the profit-maximizing price (use <code>minimize()</code> on negative profit)</li><li>Solve for multiple roots by trying different initial guesses</li><li>Build a breakeven calculator for a business with complex cost structure</li><li>Compare convergence speed: Newton-Raphson vs. bisection method</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Financial planning</strong>: Automate target-seeking for revenue, margin, ROI goals</li><li><strong>Pricing analysis</strong>: Find breakeven prices accounting for price elasticity</li><li><strong>Investment analysis</strong>: Calculate IRR for complex cash flow patterns</li><li><strong>Engineering</strong>: Solve implicit equations (e.g., pipe flow, heat transfer)</li></ul><p><strong>CFO use case</strong>: “We need to hit $5M EBITDA next quarter. What revenue do we need given our cost structure and operating leverage?”</p><p>Goal-seeking automates this calculation instantly.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Newton-Raphson Converges Quadratically</strong></p><p>Newton-Raphson doubles the number of correct digits with each iteration when close to the solution. This is called <strong>quadratic convergence</strong>.</p><p><strong>Example progression</strong> (finding √2):</p><ul><li>Iteration 1: 1.5 (1 digit correct)</li><li>Iteration 2: 1.416… (2 digits correct)</li><li>Iteration 3: 1.414215… (5 digits correct)</li><li>Iteration 4: 1.41421356237… (11 digits correct)</li></ul><p><strong>Why?</strong> Taylor series analysis shows the error decreases proportional to the square of the previous error: ε_{n+1} ∝ ε_n²</p><p><strong>Trade-off:</strong> Fast convergence requires good initial guess. Bad guesses may diverge or converge to wrong root.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part was <strong>making numerical differentiation robust</strong> across all <code>Real</code> types (Float, Double, Decimal, etc.).</p><p><strong>Challenge:</strong> The step size <code>h</code> for f’(x) ≈ (f(x+h) - f(x-h)) / (2h) must be:</p><ul><li>Large enough to avoid catastrophic cancellation (subtracting nearly equal numbers)</li><li>Small enough to approximate the true derivative</li></ul><p>We settled on <code>h = √ε × max(|x|, 1)</code> where ε is machine epsilon. This adapts to:</p><ul><li>Float vs. Double vs. Decimal precision</li><li>Magnitude of x (avoid tiny steps for large x)</li></ul><p><strong>Result:</strong> Goal-seeking works reliably across all numeric types without user tuning.</p><p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered catastrophic cancellation and condition numbers.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Thursday</strong>: Vector Operations - Understanding the VectorSpace protocol, Vector2D, Vector3D, and VectorN for multivariate optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 24/~48</li><li>Playgrounds: 21 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/02-tue-portfolio-optimization</guid><title>Portfolio Optimization: Building Optimal Investment Portfolios</title><link>https://www.justinpurnell.com/BusinessMath/week-07/02-tue-portfolio-optimization</link><description><![CDATA[Part 23 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 17 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[portfolio]]></category><category><![CDATA[optimization]]></category><category><![CDATA[modern-portfolio-theory]]></category><category><![CDATA[sharpe-ratio]]></category><category><![CDATA[efficient-frontier]]></category><content:encoded><![CDATA[<p><strong>Part 23 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building maximum Sharpe ratio portfolios (best risk-adjusted return)</li><li>Finding minimum variance portfolios (lowest risk)</li><li>Generating efficient frontiers (all optimal portfolios)</li><li>Implementing risk parity strategies (equal risk contribution)</li><li>Applying real-world constraints (long-only, leverage limits, position sizing)</li><li>Understanding the math behind Modern Portfolio Theory</li></ul><hr /><h2>The Problem</h2><p>Investment portfolio construction requires balancing multiple competing objectives:</p><ul><li><strong>Risk vs. Return</strong>: Higher returns usually mean higher risk, but by how much?</li><li><strong>Diversification</strong>: How do you optimally combine assets that move differently?</li><li><strong>Constraints</strong>: No short-selling, position limits, target returns, leverage restrictions</li><li><strong>Multiple Solutions</strong>: There are infinite ways to allocate capital—which is optimal?</li></ul><p><strong>Manual portfolio construction (guessing weights in a spreadsheet) doesn’t find mathematically optimal solutions.</strong></p><hr /><h2>The Solution</h2><p>Modern Portfolio Theory (MPT), developed by Harry Markowitz, provides a mathematical framework for optimal portfolio construction. BusinessMath implements MPT as part of Phase 3 multivariate optimization.</p><h3>Maximum Sharpe Ratio Portfolio</h3><p>Find the portfolio with the best risk-adjusted return:</p><pre><code class="language-swift">import BusinessMath
 
 // 4 assets: stocks (small, large), bonds, real estate
 let optimizer = PortfolioOptimizer()
@@ -9604,296 +9935,4 @@ Build a production-quality Swift library for financial calculations with:
 - **Medium (M)**: [Your time estimate]
 - **Large (L)**: [Your time estimate]
 - **XL**: [Your time estimate]
-</code></pre><hr /><h2>Discussion</h2><p><strong>Questions to consider</strong>:</p><ol><li>How detailed should the master plan be?</li><li>How often should you update it?</li><li>What do you do when priorities shift mid-project?</li></ol><p><strong>Share your experience</strong>: Do you use a master plan or roadmap document? What works for you?</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 10/~48</li><li>Methodology Posts: 3/12</li><li>Practices Covered: Test-First, Documentation as Design, Master Planning</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-03/01-mon-growth-modeling</guid><title>Growth Modeling and Forecasting</title><link>https://www.justinpurnell.com/BusinessMath/week-03/01-mon-growth-modeling</link><description><![CDATA[Part 9 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 19 Jan 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[growth]]></category><category><![CDATA[forecasting]]></category><category><![CDATA[cagr]]></category><category><![CDATA[trends]]></category><category><![CDATA[seasonality]]></category><content:encoded><![CDATA[<p><strong>Part 9 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Calculating growth rates (simple and CAGR)</li><li>Fitting trend models (linear, exponential, logistic)</li><li>Extracting and applying seasonal patterns</li><li>Building complete forecasting workflows</li><li>Choosing the right approach for your data</li></ul><hr /><h2>The Problem</h2><p>Business planning requires forecasting: <strong>Will we hit our revenue target? How many users will we have next quarter? What should our headcount plan look like?</strong></p><p>Forecasting means understanding growth patterns:</p><ul><li><strong>Growth rates</strong>: How fast are we growing?</li><li><strong>Trend models</strong>: What’s the underlying trajectory?</li><li><strong>Seasonality</strong>: Do we have recurring patterns (Q4 spike, summer slump)?</li></ul><p>Building robust forecasts manually requires statistical knowledge, careful data handling, and combining multiple techniques. <strong>You need systematic tools for growth analysis and forecasting.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive growth modeling including growth rate calculations, trend fitting, and seasonality extraction.</p><h3>Growth Rates</h3><p>Calculate simple and compound growth:</p><pre><code class="language-swift">import BusinessMath
-
-// Simple growth rate
-let growth = try growthRate(from: 100_000, to: 120_000)
-// Result: 0.20 (20% growth)
-
-// Negative growth (decline)
-let decline = try growthRate(from: 120_000, to: 100_000)
-// Result: -0.1667 (-16.67% decline)
-</code></pre><p><strong>Formula:</strong></p><pre><code>Growth Rate = (Ending / Beginning) - 1
-</code></pre><hr /><h3>Compound Annual Growth Rate (CAGR)</h3><p>CAGR smooths out volatility to show steady equivalent growth:</p><pre><code class="language-swift">// Revenue: $100k → $110k → $125k → $150k over 3 years
-let compoundGrowth = cagr(
-    beginningValue: 100_000,
-    endingValue: 150_000,
-    years: 3
-)
-// Result: ~0.1447 (14.47% per year)
-
-// Verify: does 14.47% compound for 3 years give $150k?
-let verification = 100_000 * pow((1 + compoundGrowth), 3.0)
-// Result: ~150,000 ✓
-</code></pre><p><strong>Formula:</strong></p><pre><code>CAGR = (Ending / Beginning)^(1/years) - 1
-</code></pre><p><strong>The insight</strong>: Revenue was volatile year-to-year ($10k, then $15k, then $25k growth), but CAGR shows the equivalent steady rate: 14.47% annually.</p><hr /><h3>Applying Growth</h3><p>Project future values:</p><pre><code class="language-swift">// Project $100k base with 15% annual growth for 5 years
-let projection = applyGrowth(
-    baseValue: 100_000,
-    rate: 0.15,
-    periods: 5,
-    compounding: .annual
-)
-// Result: [100k, 115k, 132.25k, 152.09k, 174.90k, 201.14k]
-</code></pre><hr /><h3>Compounding Frequencies</h3><p>Different frequencies affect growth:</p><pre><code class="language-swift">let base = 100_000.0
-let rate = 0.12  // 12% annual rate
-let years = 5
-
-// Annual: 12% once per year
-let annual = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .annual)
-print(annual.last!.number(0))
-// Final: ~176,234
-
-// Quarterly: 3% four times per year
-let quarterly = applyGrowth(baseValue: base, rate: rate, periods: years * 4, compounding: .quarterly)
-print(quarterly.last!.number(0))
-// Final: ~180,611 (higher due to more frequent compounding)
-
-// Monthly: 1% twelve times per year
-let monthly = applyGrowth(baseValue: base, rate: rate, periods: years * 12, compounding: .monthly)
-print(monthly.last!.number(0))
-// Final: ~181,670
-
-// Continuous: e^(rt)
-let continuous = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .continuous)
-print(continuous.last!.number(0))
-// Final: ~182,212 (theoretical maximum)
-</code></pre><p><strong>The insight</strong>: More frequent compounding increases final value. Continuous compounding is the mathematical limit.</p><hr /><h2>Trend Models</h2><p>Trend models fit mathematical functions to historical data for forecasting.</p><h3>Linear Trend</h3><p>Models constant absolute growth:</p><pre><code class="language-swift">// Historical revenue shows steady ~$5k/month increase
-let periods_linearTrend = (1...12).map { Period.month(year: 2024, month: $0) }
-let revenue_linearTrend: [Double] = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]
-
-let historical_linearTrend = TimeSeries(periods: periods_linearTrend, values: revenue_linearTrend)
-
-// Fit linear trend
-var trend_linearTrend = LinearTrend<Double>()
-try trend_linearTrend.fit(to: historical_linearTrend)
-
-// Project 6 months forward
-let forecast_linearTrend = try trend_linearTrend.project(periods: 6)
-print(forecast_linearTrend.valuesArray.map({$0.rounded()}))
-// Result: [142, 145, 148, 152, 155, 159] (approximately)
-</code></pre><p><strong>Formula:</strong></p><pre><code>y = mx + b
-
-Where:
-- m = slope (rate of change)
-- b = intercept (starting value)
-</code></pre><p><strong>Best for</strong>:</p><ul><li>Steady absolute growth (adding same $ each period)</li><li>Short-term forecasts</li><li>Linear relationships</li></ul><hr /><h3>Exponential Trend</h3><p>Models constant percentage growth:</p><pre><code class="language-swift">// Revenue doubling every few years
-let periods_exponentialTrend = (0..<10).map { Period.year(2015 + $0) }
-let revenue_exponentialTrend: [Double] = [100, 115, 130, 155, 175, 200, 235, 265, 310, 350]
-
-let historical_exponentialTrend = TimeSeries(periods: periods_exponentialTrend, values: revenue_exponentialTrend)
-
-// Fit exponential trend
-var trend_exponentialTrend = ExponentialTrend<Double>()
-try trend_exponentialTrend.fit(to: historical_exponentialTrend)
-
-// Project 5 years forward
-let forecast_exponentialTrend = try trend_exponentialTrend.project(periods: 5)
-// Result: [407, 468, 538, 619, 713]
-</code></pre><p><strong>Formula:</strong></p><pre><code>y = a × e^(bx)
-
-Where:
-- a = initial value
-- b = growth rate
-- e = Euler's number (2.71828...)
-</code></pre><p><strong>Best for</strong>:</p><ul><li>Constant percentage growth (e.g., 15% per year)</li><li>Long-term trends</li><li>Compound growth scenarios</li></ul><hr /><h3>Logistic Trend</h3><p>Models growth approaching a capacity limit (S-curve):</p><pre><code class="language-swift">// User adoption: starts slow, accelerates, then plateaus
-let periods_logisticTrend = (0..<24).map { Period.month(year: 2023 + $0/12, month: ($0 % 12) + 1) }
-let users_logisticTrend: [Double] = [100, 150, 250, 400, 700, 1200, 2000, 3500, 5500, 8000,
-						11000, 14000, 17000, 19500, 21500, 23000, 24000, 24500,
-						24800, 24900, 24950, 24970, 24985, 24990]
-
-let historical_logisticTrend = TimeSeries(periods: periods_logisticTrend, values: users_logisticTrend)
-
-// Fit logistic trend with capacity of 25,000 users
-var trend_logisticTrend = LogisticTrend<Double>(capacity: 25_000)
-try trend_logisticTrend.fit(to: historical_logisticTrend)
-
-// Project 12 months forward
-let forecast_logisticTrend = try trend_logisticTrend.project(periods: 12)
-// Result: Approaches but never exceeds 25,000
-</code></pre><p><strong>Formula:</strong></p><pre><code>y = L / (1 + e^(-k(x-x₀)))
-
-Where:
-- L = capacity (maximum value)
-- k = growth rate
-- x₀ = midpoint of curve
-</code></pre><p><strong>Best for</strong>:</p><ul><li>Market saturation scenarios</li><li>Product adoption curves</li><li>SaaS user growth with market limits</li><li>Biological growth (population with carrying capacity)</li></ul><hr /><h2>Seasonality</h2><p>Extract and apply recurring patterns.</p><h3>Seasonal Indices</h3><p>Calculate seasonal factors:</p><pre><code class="language-swift">// Quarterly revenue with Q4 holiday spike
-let periods = (0..<12).map { Period.quarter(year: 2022 + $0/4, quarter: ($0 % 4) + 1) }
-let revenue: [Double] = [100, 120, 110, 150,  // 2022
-                         105, 125, 115, 160,  // 2023
-                         110, 130, 120, 170]  // 2024
-
-let ts = TimeSeries(periods: periods, values: revenue)
-
-// Calculate seasonal indices (4 quarters per year)
-let indices = try seasonalIndices(timeSeries: ts, periodsPerYear: 4)
-print(indices.map({"\($0.number(2))"}).joined(separator: ", "))
-// Result: [~0.85, ~1.00, ~0.91, ~1.24]
-</code></pre><p><strong>Interpretation</strong>:</p><ul><li><strong>Q1: 0.85</strong> → 15% below average (post-holiday slump)</li><li><strong>Q2: 1.00</strong> → Average</li><li><strong>Q3: 0.91</strong> → 9% below average (summer slowdown)</li><li><strong>Q4: 1.24</strong> → 24% above average (holiday spike!)</li></ul><hr /><h3>Complete Forecasting Workflow</h3><p>Combine all techniques:</p><pre><code class="language-swift">// 1. Load historical data
-let historical = TimeSeries(periods: historicalPeriods, values: historicalRevenue)
-
-// 2. Extract seasonal pattern
-let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
-
-// 3. Deseasonalize to reveal underlying trend
-let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
-
-// 4. Fit trend model to deseasonalized data
-var trend = LinearTrend<Double>()
-try trend.fit(to: deseasonalized)
-
-// 5. Project trend forward
-let forecastPeriods = 4  // Next 4 quarters
-let trendForecast = try trend.project(periods: forecastPeriods)
-
-// 6. Reapply seasonality to trend forecast
-let seasonalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
-
-// 7. Present forecast
-for (period, value) in zip(seasonalForecast.periods, seasonalForecast.valuesArray) {
-    print("\(period.label): \(value.currency())")
-}
-</code></pre><p><strong>This workflow</strong>:</p><ol><li>Extracts the recurring seasonal pattern</li><li>Removes it to see the underlying growth trend</li><li>Fits a trend model to clean data</li><li>Projects that trend forward</li><li>Reapplies the seasonal pattern to the forecast</li><li>Produces realistic forecasts that account for both trend and seasonality</li></ol><hr /><h2>Choosing the Right Approach</h2><h3>Decision Tree</h3><p><strong>Step 1: Does your data have seasonality?</strong></p><ul><li><strong>Yes</strong> → Extract seasonal pattern first</li><li><strong>No</strong> → Skip to trend modeling</li></ul><p><strong>Step 2: What kind of growth pattern?</strong></p><ul><li><strong>Constant $ per period</strong> → Linear Trend</li><li><strong>Constant % per period</strong> → Exponential Trend</li><li><strong>Growth approaching limit</strong> → Logistic Trend</li></ul><p><strong>Step 3: How much history do you have?</strong></p><ul><li><strong>< 2 full cycles</strong> → Use simple growth rates</li><li><strong>2-3 cycles</strong> → Linear or exponential trend</li><li><strong>3+ cycles</strong> → Full decomposition with seasonality</li></ul><p><strong>Step 4: What’s your forecast horizon?</strong></p><ul><li><strong>Short-term (1-3 periods)</strong> → Any model works</li><li><strong>Medium-term (4-8 periods)</strong> → Trend models with seasonality</li><li><strong>Long-term (9+ periods)</strong> → Be cautious, validate assumptions</li></ul><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-// Simple growth rate
-let growth = try growthRate(from: 100_000, to: 120_000)
-// Result: 0.20 (20% growth)
-
-// Negative growth (decline)
-let decline = try growthRate(from: 120_000, to: 100_000)
-// Result: -0.1667 (-16.67% decline)
-
-
-// Revenue: $100k → $110k → $125k → $150k over 3 years
-let compoundGrowth = cagr(
-	beginningValue: 100_000,
-	endingValue: 150_000,
-	years: 3
-)
-// Result: ~0.1447 (14.47% per year)
-
-// Verify: does 14.47% compound for 3 years give $150k?
-let verification = 100_000 * pow((1 + compoundGrowth), 3.0)
-// Result: ~150,000 ✓
-
-	// Project $100k base with 15% annual growth for 5 years
-	let projection = applyGrowth(
-		baseValue: 100_000,
-		rate: 0.15,
-		periods: 5,
-		compounding: .annual
-	)
-	// Result: [100k, 115k, 132.25k, 152.09k, 174.90k, 201.14k]
-
-let base = 100_000.0
-let rate = 0.12  // 12% annual rate
-let years = 5
-
-// Annual: 12% once per year
-let annual = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .annual)
-print(annual.last!.number(0))
-// Final: ~176,234
-
-// Quarterly: 3% four times per year
-let quarterly = applyGrowth(baseValue: base, rate: rate, periods: years * 4, compounding: .quarterly)
-print(quarterly.last!.number(0))
-// Final: ~180,611 (higher due to more frequent compounding)
-
-// Monthly: 1% twelve times per year
-let monthly = applyGrowth(baseValue: base, rate: rate, periods: years * 12, compounding: .monthly)
-print(monthly.last!.number(0))
-// Final: ~181,670
-
-// Continuous: e^(rt)
-let continuous = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .continuous)
-print(continuous.last!.number(0))
-// Final: ~182,212 (theoretical maximum)
-
-	// Historical revenue shows steady ~$5k/month increase
-	let periods_linearTrend = (1...12).map { Period.month(year: 2024, month: $0) }
-	let revenue_linearTrend: [Double] = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]
-
-	let historical_linearTrend = TimeSeries(periods: periods_linearTrend, values: revenue_linearTrend)
-
-	// Fit linear trend
-	var trend_linearTrend = LinearTrend<Double>()
-	try trend_linearTrend.fit(to: historical_linearTrend)
-
-	// Project 6 months forward
-	let forecast_linearTrend = try trend_linearTrend.project(periods: 6)
-	print(forecast_linearTrend.valuesArray.map({$0.rounded()}))
-	// Result: [142, 145, 148, 152, 155, 159] (approximately)
-
-	// Revenue doubling every few years
-	let periods_exponentialTrend = (0..<10).map { Period.year(2015 + $0) }
-	let revenue_exponentialTrend: [Double] = [100, 115, 130, 155, 175, 200, 235, 265, 310, 350]
-
-	let historical_exponentialTrend = TimeSeries(periods: periods_exponentialTrend, values: revenue_exponentialTrend)
-
-	// Fit exponential trend
-	var trend_exponentialTrend = ExponentialTrend<Double>()
-	try trend_exponentialTrend.fit(to: historical_exponentialTrend)
-
-	// Project 5 years forward
-	let forecast_exponentialTrend = try trend_exponentialTrend.project(periods: 5)
-	print(forecast_exponentialTrend.valuesArray.map({$0.rounded()}))
-	// Result: [407, 468, 538, 619, 713]
-
-	// User adoption: starts slow, accelerates, then plateaus
-	let periods_logisticTrend = (0..<24).map { Period.month(year: 2023 + $0/12, month: ($0 % 12) + 1) }
-	let users_logisticTrend: [Double] = [100, 150, 250, 400, 700, 1200, 2000, 3500, 5500, 8000,
-							11000, 14000, 17000, 19500, 21500, 23000, 24000, 24500,
-							24800, 24900, 24950, 24970, 24985, 24990]
-
-	let historical_logisticTrend = TimeSeries(periods: periods_logisticTrend, values: users_logisticTrend)
-
-	// Fit logistic trend with capacity of 25,000 users
-	var trend_logisticTrend = LogisticTrend<Double>(capacity: 25_000)
-	try trend_logisticTrend.fit(to: historical_logisticTrend)
-
-	// Project 12 months forward
-	let forecast_logisticTrend = try trend_logisticTrend.project(periods: 12)
-	print(forecast_logisticTrend.valuesArray.map({$0.rounded()}))
-	// Result: Approaches but never exceeds 25,000
-
-	// Quarterly revenue with Q4 holiday spike
-	let periods = (0..<12).map { Period.quarter(year: 2022 + $0/4, quarter: ($0 % 4) + 1) }
-	let revenue: [Double] = [100, 120, 110, 150,  // 2022
-							 105, 125, 115, 160,  // 2023
-							 110, 130, 120, 170]  // 2024
-
-	let ts = TimeSeries(periods: periods, values: revenue)
-
-	// Calculate seasonal indices (4 quarters per year)
-	let indices = try seasonalIndices(timeSeries: ts, periodsPerYear: 4)
-	print(indices.map({"\($0.number(2))"}).joined(separator: ", "))
-	// Result: [~0.85, ~1.00, ~0.91, ~1.24]
-
-	// 1. Load historical data
-	let historical = TimeSeries(periods: historicalPeriods, values: historicalRevenue)
-
-	// 2. Extract seasonal pattern
-	let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
-
-	// 3. Deseasonalize to reveal underlying trend
-	let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
-
-	// 4. Fit trend model to deseasonalized data
-	var trend = LinearTrend<Double>()
-	try trend.fit(to: deseasonalized)
-
-	// 5. Project trend forward
-	let forecastPeriods = 4  // Next 4 quarters
-	let trendForecast = try trend.project(periods: forecastPeriods)
-
-	// 6. Reapply seasonality to trend forecast
-	let seasonalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
-
-	// 7. Present forecast
-	for (period, value) in zip(seasonalForecast.periods, seasonalForecast.valuesArray) {
-		print("\(period.label): \(value.currency())")
-	}
-	
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.1-GrowthModeling.md"><strong>BusinessMath Docs – 3.1 Growth Modeling</strong></a></p><p><strong>Modifications to try</strong>:</p><ol><li>Calculate CAGR for your company’s historical revenue</li><li>Fit different trend models and compare predictions</li><li>Extract seasonal patterns from your business data</li></ol><hr /><h2>Real-World Application</h2><p>A SaaS company tracking user growth notices:</p><ul><li><strong>Monthly data</strong>: 10-15% growth, but volatile</li><li><strong>CAGR over 2 years</strong>: 12.3% (the smoothed view)</li><li><strong>Seasonal pattern</strong>: Lower signups in July-August (summer)</li><li><strong>Trend model</strong>: Logistic with 100k user capacity (market saturation)</li></ul><p>Combining these insights produces a forecast that accounts for:</p><ul><li>Long-term growth trajectory (logistic curve)</li><li>Seasonal dips in summer</li><li>Market saturation approaching</li></ul><p><strong>This is infinitely more useful than a simple “we’re growing 15%/month” projection.</strong></p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Deseasonalize Before Trend Fitting?</strong></p><p>If you fit a trend to raw seasonal data, the model gets confused:</p><ul><li>Q4 spikes look like acceleration</li><li>Q1 dips look like deceleration</li><li>The fitted trend becomes wavy instead of smooth</li></ul><p><strong>Deseasonalizing first</strong> lets you fit a clean trend, then reapply the seasonal pattern to forecasts.</p><p>Think of it like removing noise before measuring signal.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest decision in growth modeling was: <strong>Should we make seasonality automatic, or explicit?</strong></p><p>Some libraries auto-detect seasonal patterns. Sounds convenient! But it often gets it wrong—detecting false patterns in noise, or missing real patterns in small datasets.</p><p>We chose <strong>explicit seasonality</strong>:</p><ul><li>You specify <code>periodsPerYear</code> (4 for quarters, 12 for months)</li><li>You inspect the indices before using them</li><li>You decide if the pattern makes business sense</li></ul><p>This requires one extra line of code, but prevents silent errors. When seasonality extraction fails, you know immediately and can investigate.</p><p><strong>The lesson</strong>: Convenience features that fail silently are worse than explicit APIs that require judgment.</p><p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan</a> (Tuesday) - Planning for API decisions</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: The Master Plan (Tuesday) - How to organize large projects with AI collaboration.</p><p><strong>This week</strong>: Revenue modeling (Thursday) and Capital Equipment case study (Friday).</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 9/~48</li><li>Topics Covered: Foundation + Analysis + Operational Models (starting)</li><li>Playgrounds: 8 available</li></ul>]]></content:encoded></item></channel></rss>
+</code></pre><hr /><h2>Discussion</h2><p><strong>Questions to consider</strong>:</p><ol><li>How detailed should the master plan be?</li><li>How often should you update it?</li><li>What do you do when priorities shift mid-project?</li></ol><p><strong>Share your experience</strong>: Do you use a master plan or roadmap document? What works for you?</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 10/~48</li><li>Methodology Posts: 3/12</li><li>Practices Covered: Test-First, Documentation as Design, Master Planning</li></ul>]]></content:encoded></item></channel></rss>

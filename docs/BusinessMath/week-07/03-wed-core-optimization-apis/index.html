@@ -1,0 +1,341 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 24 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Core Optimization APIs: Goal-Seeking and Error Handling</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Core Optimization APIs: Goal-Seeking and Error Handling"><meta property="twitter:title" content="Core Optimization APIs: Goal-Seeking and Error Handling"><meta property="og:description" content="Core Optimization APIs: Goal-Seeking and Error Handling"><meta name="twitter:description" content="Core Optimization APIs: Goal-Seeking and Error Handling"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">"Core Optimization APIs: Goal-Seeking and Error Handling"</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">11 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 24 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Using the <code>goalSeek()</code> function for root-finding problems</li><li>Finding breakeven prices, target revenues, and IRR automatically</li><li>Understanding Newton-Raphson convergence and numerical differentiation</li><li>Handling convergence failures and division by zero errors</li><li>Choosing initial guesses for robust convergence</li><li>Using the <code>GoalSeekOptimizer</code> class for constrained problems</li></ul><hr /><h2>The Problem</h2><p>Many business problems require <strong>inverse solving</strong>—finding an input that produces a target output:</p><ul><li><strong>Breakeven analysis</strong>: What price gives zero profit?</li><li><strong>Target seeking</strong>: What sales volume achieves $1M revenue?</li><li><strong>IRR calculation</strong>: What discount rate makes NPV = 0?</li><li><strong>Equation solving</strong>: Find x where f(x) = target</li></ul><p><strong>Manual trial-and-error (guessing values in Excel) is slow, imprecise, and doesn’t scale.</strong></p><hr /><h2>The Solution</h2><p>Goal-seeking (also called root-finding) automates the inverse problem. BusinessMath implements Newton-Raphson iteration with numerical differentiation for robust convergence.</p><h3>Goal-Seeking vs. Optimization</h3><p>Understanding the difference is critical:</p><table><thead><th><strong>Goal-Seeking</strong></th><th><strong>Optimization</strong></th></thead><tbody><tr><td>Find where <strong>f(x) = target</strong></td><td>Find where <strong>f’(x) = 0</strong></td></tr><tr><td>Root-finding</td><td>Minimize/Maximize</td></tr><tr><td>Example: Breakeven price</td><td>Example: Optimal price</td></tr><tr><td>Uses: <code>goalSeek()</code></td><td>Uses: <code>minimize()</code>, <code>maximize()</code></td></tr></tbody></table><hr /><h3>Basic Goal-Seeking</h3><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Find x where x² = 4
+let result = try goalSeek(
+    function: { x in x * x },
+    target: 4.0,
+    guess: 1.0
+)
+
+print(result)  // ~2.0
+</code></pre><p><strong>API Signature:</strong></p><pre><code class="language-swift">func goalSeek<T: Real>(
+    function: @escaping (T) -> T,
+    target: T,
+    guess: T,
+    tolerance: T = T(1) / T(1_000_000),
+    maxIterations: Int = 1000
+) throws -> T
+</code></pre><p><strong>Parameters:</strong></p><ul><li><code>function</code>: The function f(x) to solve</li><li><code>target</code>: The value you want f(x) to equal</li><li><code>guess</code>: Initial guess (critical for convergence!)</li><li><code>tolerance</code>: Convergence threshold (default: 0.000001)</li><li><code>maxIterations</code>: Maximum iterations before giving up (default: 1000)</li></ul><hr /><h3>Example 1: Breakeven Analysis</h3><p>Find the price where profit equals zero:</p><pre><code class="language-swift">import BusinessMath
+
+// Profit function with demand elasticity
+func profit(price: Double) -> Double {
+    let quantity = 10_000 - 1_000 * price  // Demand curve
+    let revenue = price * quantity
+    let fixedCosts = 5_000.0
+    let variableCost = 4.0
+    let totalCosts = fixedCosts + variableCost * quantity
+    return revenue - totalCosts
+}
+
+// Find breakeven price (profit = 0)
+let breakevenPrice = try goalSeek(
+    function: profit,
+    target: 0.0,
+    guess: 4.0,
+    tolerance: 0.01
+)
+
+print("Breakeven price: \(breakevenPrice.currency(2))")
+print("Verification: \(profit(price: breakevenPrice).currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Breakeven price: $5.00
+Verification: $0.00
+</code></pre><p><strong>The method</strong>: Newton-Raphson typically converges in 5-7 iterations.</p><hr /><h3>Example 2: Target Revenue</h3><p>Find the sales volume needed to hit a revenue target:</p><pre><code class="language-swift">import BusinessMath
+
+let pricePerUnit = 50.0
+let targetRevenue = 100_000.0
+
+// Revenue = price × quantity
+let requiredQuantity = try goalSeek(
+    function: { quantity in pricePerUnit * quantity },
+    target: targetRevenue,
+    guess: 1_000.0
+)
+
+print("Need to sell \(requiredQuantity.number(0)) units")
+print("Revenue: \((pricePerUnit * requiredQuantity).currency(0))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Need to sell 2,000 units
+Revenue: $100,000
+</code></pre><hr /><h3>Example 3: Internal Rate of Return (IRR)</h3><p>IRR is the discount rate where NPV equals zero—a perfect goal-seek problem:</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+    var npv = 0.0
+    for (t, cf) in cashFlows.enumerated() {
+        npv += cf / pow(1 + rate, Double(t))
+    }
+    return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+    function: npv,
+    target: 0.0,
+    guess: 0.10  // Start with 10% guess
+)
+
+print("IRR: \(irr.percent(2))")
+print("Verification - NPV at IRR: \(npv(rate: irr).currency(2))")
+</code></pre><p><strong>Output:</strong></p><pre><code>IRR: 12.83%
+Verification - NPV at IRR: $0.00
+</code></pre><p><strong>The insight</strong>: This is exactly how BusinessMath’s <code>irr()</code> function works internally.</p><hr /><h3>Example 4: Equation Solving</h3><p>Solve complex equations numerically:</p><pre><code class="language-swift">import BusinessMath
+
+// Solve: e^x - 2x - 3 = 0
+let solution = try goalSeek(
+    function: { x in exp(x) - 2*x - 3 },
+    target: 0.0,
+    guess: 1.0
+)
+
+print("Solution: x = \(solution.number(6))")
+
+// Verify: Should be ≈ 0
+let verify = exp(solution) - 2*solution - 3
+print("Verification: \(verify.number(10))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: x = 1.923939
+Verification: 0.0000000000
+</code></pre><hr /><h2>Algorithm: Newton-Raphson Method</h2><p>Goal-seeking uses Newton-Raphson iteration for root-finding:</p><pre><code>x_{n+1} = x_n - (f(x_n) - target) / f'(x_n)
+</code></pre><p><strong>Convergence Properties:</strong></p><ul><li><strong>Quadratic convergence</strong> when close to the root</li><li>Typically converges in 5-10 iterations</li><li>Requires continuous, differentiable function</li><li>Sensitive to initial guess</li></ul><p><strong>Numerical Differentiation:</strong></p><p>Since we don’t have symbolic derivatives, f’(x) is computed using central differences:</p><pre><code>f'(x) ≈ (f(x + h) - f(x - h)) / (2h)
+</code></pre><p>Where h is a small step size (default: 0.0001).</p><hr /><h2>Error Handling</h2><h3>Division by Zero</h3><p>Occurs when the derivative f’(x) = 0 (flat function):</p><pre><code class="language-swift">do {
+    // Function with zero derivative at x=0
+    let result = try goalSeek(
+        function: { x in x * x * x },  // f'(0) = 0
+        target: 0.0,
+        guess: 0.0  // BAD: Starting at stationary point
+    )
+} catch let error as BusinessMathError {
+    print(error.localizedDescription)
+    // "Goal-seeking failed: Division by zero encountered"
+
+    if let recovery = error.recoverySuggestion {
+        print("How to fix:\n\(recovery)")
+        // "Try a different initial guess away from stationary points"
+    }
+}
+</code></pre><p><strong>Solution:</strong> Choose a different initial guess away from stationary points.</p><hr /><h3>Convergence Failed</h3><p>Occurs when the algorithm doesn’t converge in max iterations:</p><pre><code class="language-swift">do {
+    let result = try goalSeek(
+        function: { x in sin(x) },
+        target: 1.5,  // BAD: sin(x) never equals 1.5
+        guess: 0.0
+    )
+} catch let error as BusinessMathError {
+    print(error.localizedDescription)
+    // "Goal-seeking did not converge within 1000 iterations"
+
+    if let recovery = error.recoverySuggestion {
+        print("How to fix:\n\(recovery)")
+        // "Try different initial guess, increase max iterations, or relax tolerance"
+    }
+}
+</code></pre><p><strong>Possible causes:</strong></p><ul><li>No solution exists (like sin(x) = 1.5)</li><li>Initial guess too far from solution</li><li>Function is not well-behaved (discontinuous, non-smooth)</li><li>Tolerance too strict</li></ul><p><strong>Solutions:</strong></p><ul><li>Try multiple initial guesses</li><li>Increase max iterations</li><li>Relax tolerance</li><li>Verify a solution actually exists</li></ul><hr /><h2>Choosing Initial Guesses</h2><p>The initial guess is <strong>critical</strong> for convergence:</p><h3>Good Practices</h3><p><strong>1. Use domain knowledge:</strong></p><pre><code class="language-swift">// Breakeven usually between cost and market price
+let guess = (costPrice + marketPrice) / 2
+</code></pre><p><strong>2. Try multiple guesses:</strong></p><pre><code class="language-swift">let guesses = [5.0, 10.0, 20.0]
+for guess in guesses {
+    if let result = try? goalSeek(function: f, target: target, guess: guess) {
+        print("Found solution: \(result)")
+        break
+    }
+}
+</code></pre><p><strong>3. Start near expected solution:</strong></p><pre><code class="language-swift">// If last month's breakeven was $10, start there
+let guess = lastMonthBreakeven
+</code></pre><p><strong>4. Avoid problematic points:</strong></p><pre><code class="language-swift">// Don't start where derivative is zero
+let guess = 1.0  // Not 0.0 for f(x) = x²
+</code></pre><hr /><h2>The GoalSeekOptimizer Class</h2><p>For more control and constraint support:</p><pre><code class="language-swift">import BusinessMath
+
+func profitFunction(price: Double) -> Double {
+    let quantity = 10_000 - 1_000 * price
+    let revenue = price * quantity
+    let fixedCosts = 5_000.0
+    let variableCost = 4.0
+    let totalCosts = fixedCosts + variableCost * quantity
+    return revenue - totalCosts
+}
+
+let optimizer = GoalSeekOptimizer<Double>(
+    target: 0.0,
+    tolerance: 0.0001,
+    maxIterations: 1000
+)
+
+let result = optimizer.optimize(
+    objective: profitFunction,
+    constraints: [],
+    initialGuess: 4.0,
+    bounds: (lower: 0.0, upper: 100.0)
+)
+
+print("Solution: \(result.optimalValue.currency(2))")
+print("Converged: \(result.converged)")
+print("Iterations: \(result.iterations)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: $5.00
+Converged: true
+Iterations: 6
+</code></pre><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// MARK: - Basic Goal Seek
+
+// Find x where x² = 4
+let result = try goalSeek(
+	function: { x in x * x },
+	target: 4.0,
+	guess: 1.0
+)
+
+print(result.number())  // ~2.0
+
+// MARK: - Breakeven Analysis
+// Find the price where profit = 0
+
+// Profit function with demand elasticity
+func profit(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price  // Demand curve
+	let revenue = price * quantity
+	let fixedCosts = 5_000.0
+	let variableCost = 4.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+// Find breakeven price (profit = 0)
+let breakevenPrice = try goalSeek(
+	function: profit,
+	target: 0.0,
+	guess: 6.0,
+	tolerance: 0.01
+)
+
+print("Breakeven price: \(breakevenPrice.currency(2))")
+print("Verification: \(profit(price: breakevenPrice).currency(2))")
+
+// MARK: - Target Revenue
+let pricePerUnit = 50.0
+let targetRevenue = 100_000.0
+
+// Revenue = price × quantity
+let requiredQuantity = try goalSeek(
+	function: { quantity in pricePerUnit * quantity },
+	target: targetRevenue,
+	guess: 1_000.0
+)
+
+print("Need to sell \(requiredQuantity.number(0)) units")
+print("Revenue: \((pricePerUnit * requiredQuantity).currency(0))")
+
+// MARK: - Internal Rate of Return
+
+let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]
+
+func npv(rate: Double) -> Double {
+	var npv = 0.0
+	for (t, cf) in cashFlows.enumerated() {
+		npv += cf / pow(1 + rate, Double(t))
+	}
+	return npv
+}
+
+// Find rate where NPV = 0
+let irr = try goalSeek(
+	function: npv,
+	target: 0.0,
+	guess: 0.10  // Start with 10% guess
+)
+
+print("IRR: \(irr.percent(2))")
+print("Verification - NPV at IRR: \(npv(rate: irr).currency(2))")
+
+// MARK: - Equation Solving
+
+// Solve: e^x - 2x - 3 = 0
+let solution = try goalSeek(
+	function: { x in exp(x) - 2*x - 3 },
+	target: 0.0,
+	guess: 1.0
+)
+
+print("Solution: x = \(solution.number(6))")
+
+// Verify: Should be ≈ 0
+let verify = exp(solution) - 2*solution - 3
+print("Verification: \(verify.number(10))")
+
+// MARK: - Error Handling, Division by Zero
+
+do {
+	// Function with zero derivative at x=0
+	let result = try goalSeek(
+		function: { x in x * x * x },  // f'(0) = 0
+		target: 0.0,
+		guess: 0.0  // BAD: Starting at stationary point
+	)
+	print(result)
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking failed: Division by zero encountered"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try a different initial guess away from stationary points"
+	}
+}
+
+// MARK: - Error Handling, Failed Convergence
+
+do {
+	let result = try goalSeek(
+		function: { x in sin(x) },
+		target: 1.5,  // BAD: sin(x) never equals 1.5
+		guess: 0.0
+	)
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking did not converge within 1000 iterations"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try different initial guess, increase max iterations, or relax tolerance"
+	}
+}
+
+// MARK: - Goal Seek Optimizer Class
+func profitFunction(price: Double) -> Double {
+	let quantity = 10_000 - 1_000 * price
+	let revenue = price * quantity
+	let fixedCosts = 5_000.0
+	let variableCost = 4.0
+	let totalCosts = fixedCosts + variableCost * quantity
+	return revenue - totalCosts
+}
+
+let optimizer_GS = GoalSeekOptimizer<Double>(
+	target: 0.0,
+	tolerance: 0.0001,
+	maxIterations: 1000
+)
+
+let result_GS = optimizer_GS.optimize(
+	objective: profitFunction,
+	constraints: [],
+	initialGuess: 4.0,
+	bounds: (lower: 0.0, upper: 100.0)
+)
+
+print("Solution: \(result_GS.optimalValue.currency(2))")
+print("Converged: \(result_GS.converged)")
+print("Iterations: \(result_GS.iterations)")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.3-CoreOptimization.md">BusinessMath Docs – 5.3 Core Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Find the profit-maximizing price (use <code>minimize()</code> on negative profit)</li><li>Solve for multiple roots by trying different initial guesses</li><li>Build a breakeven calculator for a business with complex cost structure</li><li>Compare convergence speed: Newton-Raphson vs. bisection method</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Financial planning</strong>: Automate target-seeking for revenue, margin, ROI goals</li><li><strong>Pricing analysis</strong>: Find breakeven prices accounting for price elasticity</li><li><strong>Investment analysis</strong>: Calculate IRR for complex cash flow patterns</li><li><strong>Engineering</strong>: Solve implicit equations (e.g., pipe flow, heat transfer)</li></ul><p><strong>CFO use case</strong>: “We need to hit $5M EBITDA next quarter. What revenue do we need given our cost structure and operating leverage?”</p><p>Goal-seeking automates this calculation instantly.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Newton-Raphson Converges Quadratically</strong></p><p>Newton-Raphson doubles the number of correct digits with each iteration when close to the solution. This is called <strong>quadratic convergence</strong>.</p><p><strong>Example progression</strong> (finding √2):</p><ul><li>Iteration 1: 1.5 (1 digit correct)</li><li>Iteration 2: 1.416… (2 digits correct)</li><li>Iteration 3: 1.414215… (5 digits correct)</li><li>Iteration 4: 1.41421356237… (11 digits correct)</li></ul><p><strong>Why?</strong> Taylor series analysis shows the error decreases proportional to the square of the previous error: ε_{n+1} ∝ ε_n²</p><p><strong>Trade-off:</strong> Fast convergence requires good initial guess. Bad guesses may diverge or converge to wrong root.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part was <strong>making numerical differentiation robust</strong> across all <code>Real</code> types (Float, Double, Decimal, etc.).</p><p><strong>Challenge:</strong> The step size <code>h</code> for f’(x) ≈ (f(x+h) - f(x-h)) / (2h) must be:</p><ul><li>Large enough to avoid catastrophic cancellation (subtracting nearly equal numbers)</li><li>Small enough to approximate the true derivative</li></ul><p>We settled on <code>h = √ε × max(|x|, 1)</code> where ε is machine epsilon. This adapts to:</p><ul><li>Float vs. Double vs. Decimal precision</li><li>Magnitude of x (avoid tiny steps for large x)</li></ul><p><strong>Result:</strong> Goal-seeking works reliably across all numeric types without user tuning.</p><p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered catastrophic cancellation and condition numbers.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Thursday</strong>: Vector Operations - Understanding the VectorSpace protocol, Vector2D, Vector3D, and VectorN for multivariate optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 24/~48</li><li>Playgrounds: 21 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, goal-seeking, root-finding, irr, breakeven, error-handling</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
