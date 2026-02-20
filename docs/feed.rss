@@ -1,7 +1,459 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis</guid><title>Core Optimization APIs: Goal-Seeking and Error Handling</title><link>https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis</link><description><![CDATA[Part 24 of 12-Week BusinessMath Series]]></description><pubDate>Wed, 18 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[goal-seeking]]></category><category><![CDATA[root-finding]]></category><category><![CDATA[irr]]></category><category><![CDATA[breakeven]]></category><category><![CDATA[error-handling]]></category><content:encoded><![CDATA[<p><strong>Part 24 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Using the <code>goalSeek()</code> function for root-finding problems</li><li>Finding breakeven prices, target revenues, and IRR automatically</li><li>Understanding Newton-Raphson convergence and numerical differentiation</li><li>Handling convergence failures and division by zero errors</li><li>Choosing initial guesses for robust convergence</li><li>Using the <code>GoalSeekOptimizer</code> class for constrained problems</li></ul><hr /><h2>The Problem</h2><p>Many business problems require <strong>inverse solving</strong>—finding an input that produces a target output:</p><ul><li><strong>Breakeven analysis</strong>: What price gives zero profit?</li><li><strong>Target seeking</strong>: What sales volume achieves $1M revenue?</li><li><strong>IRR calculation</strong>: What discount rate makes NPV = 0?</li><li><strong>Equation solving</strong>: Find x where f(x) = target</li></ul><p><strong>Manual trial-and-error (guessing values in Excel) is slow, imprecise, and doesn’t scale.</strong></p><hr /><h2>The Solution</h2><p>Goal-seeking (also called root-finding) automates the inverse problem. BusinessMath implements Newton-Raphson iteration with numerical differentiation for robust convergence.</p><h3>Goal-Seeking vs. Optimization</h3><p>Understanding the difference is critical:</p><table><thead><th><strong>Goal-Seeking</strong></th><th><strong>Optimization</strong></th></thead><tbody><tr><td>Find where <strong>f(x) = target</strong></td><td>Find where <strong>f’(x) = 0</strong></td></tr><tr><td>Root-finding</td><td>Minimize/Maximize</td></tr><tr><td>Example: Breakeven price</td><td>Example: Optimal price</td></tr><tr><td>Uses: <code>goalSeek()</code></td><td>Uses: <code>minimize()</code>, <code>maximize()</code></td></tr></tbody></table><hr /><h3>Basic Goal-Seeking</h3><pre><code class="language-swift">import BusinessMath
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/04-thu-vector-operations</guid><title>Vector Operations: Foundation for Multivariate Optimization</title><link>https://www.justinpurnell.com/BusinessMath/week-07/04-thu-vector-operations</link><description><![CDATA[Part 25 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 19 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[vectors]]></category><category><![CDATA[vectorspace]]></category><category><![CDATA[linear-algebra]]></category><category><![CDATA[protocols]]></category><category><![CDATA[generics]]></category><content:encoded><![CDATA[<p><strong>Part 25 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding the <code>VectorSpace</code> protocol and why it matters</li><li>Working with Vector2D, Vector3D, and VectorN types</li><li>Performing vector operations: norms, dot products, projections</li><li>Using generic algorithms that work across all vector types</li><li>Creating type-safe multivariate constraints</li><li>Building portfolio weights and feature vectors</li></ul><hr /><h2>The Problem</h2><p>Multivariate optimization requires working with vectors of different dimensions:</p><ul><li><strong>Portfolio optimization</strong>: N-dimensional weights for N assets</li><li><strong>Pricing models</strong>: 2D or 3D parameter spaces</li><li><strong>Machine learning</strong>: High-dimensional feature vectors</li><li><strong>Generic algorithms</strong>: Code that works for any dimension</li></ul><p><strong>Without a unified vector abstraction, you’d write duplicate code for each dimension (optimize2D, optimize3D, optimizeND, etc.).</strong></p><hr /><h2>The Solution</h2><p>BusinessMath’s <code>VectorSpace</code> protocol provides a generic interface for vector operations. Write optimization algorithms once, they work for all dimensions.</p><h3>The VectorSpace Protocol</h3><p>A <strong>vector space</strong> is a mathematical structure supporting:</p><ul><li><strong>Vector addition</strong>: v + w</li><li><strong>Scalar multiplication</strong>: α · v</li><li><strong>Zero element</strong>: 0</li><li><strong>Norms and distances</strong>: ‖v‖, ‖v - w‖</li></ul><p><strong>Protocol Definition</strong> (simplified):</p><pre><code class="language-swift">public protocol VectorSpace: AdditiveArithmetic {
+    associatedtype Scalar: Real
+
+    // Required operations
+    static var zero: Self { get }
+    static func + (lhs: Self, rhs: Self) -> Self
+    static func * (lhs: Scalar, rhs: Self) -> Self
+
+    // Norm and distance
+    var norm: Scalar { get }
+    func dot(_ other: Self) -> Scalar
+
+    // Conversion
+    static func fromArray(_ array: [Scalar]) -> Self?
+    func toArray() -> [Scalar]
+}
+</code></pre><p><strong>Why it matters:</strong></p><pre><code class="language-swift">// ❌ Before: Duplicate implementations
+func optimize2D(_ f: (Vector2D) -> Double, ...) -> Vector2D
+func optimize3D(_ f: (Vector3D) -> Double, ...) -> Vector3D
+func optimizeND(_ f: (VectorN) -> Double, ...) -> VectorN
+
+// ✅ After: One generic implementation
+func optimize<V: VectorSpace>(_ f: (V) -> V.Scalar, ...) -> V
+</code></pre><p>One algorithm works for all vector types!</p><hr /><h2>Vector Implementations</h2><p>BusinessMath provides three vector types optimized for different use cases.</p><h3>Vector2D: Fixed 2D Vectors</h3><p><strong>Use Cases:</strong></p><ul><li>Two-variable optimization</li><li>Coordinate systems (x, y)</li><li>Complex numbers (real, imaginary)</li></ul><p><strong>Performance:</strong> Fastest (compile-time optimization, zero array overhead)</p><pre><code class="language-swift">import BusinessMath
+
+// Create a 2D vector
+let v = Vector2D<Double>(x: 3.0, y: 4.0)
+let w = Vector2D(x: 1.0, y: 2.0)
+
+// Basic operations
+let sum = v + w                    // Vector2D(x: 4.0, y: 6.0)
+let scaled = 2.0 * v               // Vector2D(x: 6.0, y: 8.0)
+
+// Norm and distance
+print(v.norm)                      // 5.0 (√(3² + 4²))
+print(v.distance(to: w))           // 2.828...
+print(v.dot(w))                    // 11.0 (3*1 + 4*2)
+
+// 2D-specific operations
+print(v.cross(w))                  // 2.0 (pseudo-cross product)
+print(v.angle)                     // 0.927... radians (~53°)
+let rotated = v.rotated(by: .pi/2) // Vector2D(x: -4.0, y: 3.0)
+</code></pre><p><strong>Output:</strong></p><pre><code>5.0
+2.8284271247461903
+11.0
+2.0
+0.9272952180016122
+Vector2D(x: -4.0, y: 3.0)
+</code></pre><hr /><h3>Vector3D: Fixed 3D Vectors</h3><p><strong>Use Cases:</strong></p><ul><li>Three-variable optimization</li><li>3D coordinate systems</li><li>RGB color spaces</li><li>Cross product calculations</li></ul><p><strong>Performance:</strong> Very fast (compile-time optimization)</p><pre><code class="language-swift">import BusinessMath
+
+// Create 3D vectors
+let v3 = Vector3D<Double>(x: 1.0, y: 2.0, z: 3.0)
+let w3 = Vector3D<Double>(x: 4.0, y: 5.0, z: 6.0)
+
+// Basic operations
+let sum3 = v3 + w3                 // Vector3D(x: 5.0, y: 7.0, z: 9.0)
+let scaled3 = 2.0 * v3             // Vector3D(x: 2.0, y: 4.0, z: 6.0)
+
+// Norm and dot product
+print(v3.norm)                     // 3.742... (√(1² + 2² + 3²))
+print(v3.dot(w3))                  // 32.0 (1*4 + 2*5 + 3*6)
+
+// 3D-specific: Cross product
+let cross = v3.cross(w3)           // Vector3D perpendicular to both
+print(cross)                       // Vector3D(x: -3.0, y: 6.0, z: -3.0)
+
+// Verify perpendicularity
+print(v3.dot(cross))               // ~0.0 (perpendicular)
+print(w3.dot(cross))               // ~0.0 (perpendicular)
+</code></pre><p><strong>Output:</strong></p><pre><code>3.7416573867739413
+32.0
+Vector3D(x: -3.0, y: 6.0, z: -3.0)
+0.0
+0.0
+</code></pre><p><strong>The insight</strong>: Cross product gives a vector perpendicular to both inputs—useful for 3D geometry and physics.</p><hr /><h3>VectorN: Variable N-Dimensional Vectors</h3><p><strong>Use Cases:</strong></p><ul><li>High-dimensional optimization (N > 3)</li><li>Portfolio weights (N assets)</li><li>Machine learning feature vectors</li><li>Any variable or runtime-determined dimension</li></ul><p><strong>Performance:</strong> Flexible but has array bounds checking overhead</p><pre><code class="language-swift">import BusinessMath
+
+// Create an N-dimensional vector
+let vN = VectorN<Double>([1.0, 2.0, 3.0, 4.0, 5.0])
+let wN = VectorN([5.0, 4.0, 3.0, 2.0, 1.0])
+
+// Basic operations
+let sumN = vN + wN                 // VectorN([6, 6, 6, 6, 6])
+let scaledN = 2.0 * vN             // VectorN([2, 4, 6, 8, 10])
+
+// Norm and dot product
+print(vN.norm)                     // 7.416... (√55)
+print(vN.dot(wN))                  // 35.0
+
+// Element access
+print(vN[0])                       // 1.0
+print(vN[2])                       // 3.0
+
+// Statistical operations
+print(vN.dimension)                // 5
+print(vN.sum)                      // 15.0
+print(vN.mean)                     // 3.0
+print(vN.standardDeviation())      // 1.581...
+print(vN.min)                      // 1.0
+print(vN.max)                      // 5.0
+</code></pre><p><strong>Output:</strong></p><pre><code>7.416198487095663
+35.0
+1.0
+3.0
+5
+15.0
+3.0
+1.5811388300841898
+1.0
+5.0
+</code></pre><hr /><h2>Common Operations</h2><p>All vector types share these operations through the <code>VectorSpace</code> protocol:</p><h3>Arithmetic Operations</h3><pre><code class="language-swift">let v = VectorN([1.0, 2.0, 3.0])
+let w = VectorN([4.0, 5.0, 6.0])
+
+// Addition and subtraction
+let sum = v + w                    // [5, 7, 9]
+let diff = v - w                   // [-3, -3, -3]
+
+// Scalar multiplication
+let scaled = 3.0 * v               // [3, 6, 9]
+let divided = v / 2.0              // [0.5, 1.0, 1.5]
+
+// Negation
+let negated = -v                   // [-1, -2, -3]
+</code></pre><hr /><h3>Norms and Distances</h3><pre><code class="language-swift">let v = VectorN([3.0, 4.0])
+let w = VectorN([0.0, 0.0])
+
+// Euclidean norm
+print(v.norm)                      // 5.0 (√(3² + 4²))
+print(v.squaredNorm)               // 25.0 (faster for comparisons)
+
+// Distance metrics
+print(v.distance(to: w))           // 5.0 (Euclidean)
+print(v.manhattanDistance(to: w))  // 7.0 (|3| + |4|)
+print(v.chebyshevDistance(to: w))  // 4.0 (max(|3|, |4|))
+</code></pre><p><strong>Use cases:</strong></p><ul><li><strong>Euclidean</strong>: Standard distance (geometric)</li><li><strong>Manhattan</strong>: City-block distance (grids, taxi routes)</li><li><strong>Chebyshev</strong>: Chessboard distance (king moves)</li></ul><hr /><h3>Dot Products and Angles</h3><pre><code class="language-swift">let v = VectorN([1.0, 0.0, 0.0])
+let w = VectorN([0.0, 1.0, 0.0])
+
+// Dot product
+print(v.dot(w))                    // 0.0 (perpendicular)
+
+// Cosine similarity
+print(v.cosineSimilarity(with: w)) // 0.0 (orthogonal)
+
+// Angle between vectors
+let angle = v.angle(with: w)       // π/2 radians (90°)
+print(angle * 180 / .pi)           // 90.0 degrees
+</code></pre><hr /><h3>Projections</h3><pre><code class="language-swift">let v = VectorN([3.0, 4.0])
+let w = VectorN([1.0, 0.0])
+
+// Project v onto w
+let projection = v.projection(onto: w)  // [3.0, 0.0]
+
+// Rejection (component perpendicular to w)
+let rejection = v.rejection(from: w)    // [0.0, 4.0]
+
+// Verify: v = projection + rejection
+print(v == projection + rejection)      // true
+</code></pre><p><strong>Application</strong>: Decompose a vector into parallel and perpendicular components.</p><hr /><h3>Normalization</h3><pre><code class="language-swift">let v = VectorN([3.0, 4.0])
+
+// Normalize to unit length
+let unit = v.normalized()          // [0.6, 0.8]
+print(unit.norm)                   // 1.0
+
+// Verify direction preserved
+print(v.cosineSimilarity(with: unit))  // 1.0 (same direction)
+</code></pre><p><strong>Use case</strong>: Unit vectors for direction without magnitude.</p><hr /><h2>VectorN-Specific Operations</h2><h3>Construction Methods</h3><pre><code class="language-swift">// From array
+let v1 = VectorN([1.0, 2.0, 3.0])
+
+// Repeating value
+let v2 = VectorN(repeating: 5.0, count: 10)
+
+// Zero vector
+let v3 = VectorN<Double>.zero
+
+// Ones vector
+let v4 = VectorN<Double>.ones(dimension: 5)
+
+// Basis vector (one component = 1, rest = 0)
+let e2 = VectorN<Double>.basisVector(dimension: 5, index: 2)
+// [0, 0, 1, 0, 0]
+
+// Linear space (evenly spaced)
+let v5 = VectorN.linearSpace(from: 0.0, to: 10.0, count: 11)
+// [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+// Log space (logarithmically spaced)
+let v6 = VectorN.logSpace(from: 1.0, to: 100.0, count: 3)
+// [1, 10, 100]
+</code></pre><hr /><h3>Functional Operations</h3><pre><code class="language-swift">let v = VectorN([-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])
+
+// Map (element-wise transform)
+let squared = v.map { $0 * $0 }    // [4, 1, 0, 1, 4, 9]
+
+// Filter
+let positive = v.filter { $0 > 0 } // [1, 2, 3]
+
+// Reduce
+let sum = v.reduce(0.0, +)         // 3.0
+
+// Zip with another vector
+let w = VectorN([4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+let product = v.zipWith(w, *)      // [-8, -5, 0, 7, 16, 27]
+</code></pre><hr /><h2>Real-World Example: Portfolio Weights</h2><pre><code class="language-swift">import BusinessMath
+
+// 4-asset portfolio
+let assets = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]
+let weights = VectorN([0.40, 0.25, 0.25, 0.10])
+let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.08])
+
+// Verify fully invested (weights sum to 1.0)
+print("Fully invested: \(weights.sum == 1.0)")
+
+// Portfolio expected return (weighted average)
+let portfolioReturn = weights.dot(expectedReturns)
+print("Portfolio return: \(portfolioReturn.percent(1))")
+
+// Normalize to equal weights for comparison
+let equalWeights = VectorN<Double>.equalWeights(dimension: 4)
+let equalReturn = equalWeights.dot(expectedReturns)
+print("Equal-weight return: \(equalReturn.percent(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Fully invested: true
+Portfolio return: 8.8%
+Equal-weight return: 8.5%
+</code></pre><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+
+// Create a 2D vector
+let v = Vector2D<Double>(x: 3.0, y: 4.0)
+let w = Vector2D(x: 1.0, y: 2.0)
+
+// Basic operations
+let sum = v + w                    // Vector2D(x: 4.0, y: 6.0)
+let scaled = 2.0 * v               // Vector2D(x: 6.0, y: 8.0)
+
+// Norm and distance
+print(v.norm)                      // 5.0 (√(3² + 4²))
+print(v.distance(to: w))           // 2.828...
+print(v.dot(w))                    // 11.0 (3*1 + 4*2)
+
+// 2D-specific operations
+print(v.cross(w))                  // 2.0 (pseudo-cross product)
+print(v.angle)                     // 0.927... radians (~53°)
+let rotated = v.rotated(by: .pi/2) // Vector2D(x: -4.0, y: 3.0)
+print(rotated.toArray())
+
+// MARK: Vector3D
+
+	// Create 3D vectors
+let v_3d = Vector3D<Double>(x: 1.0, y: 2.0, z: 3.0)
+let w_3d = Vector3D<Double>(x: 4.0, y: 5.0, z: 6.0)
+
+// Basic operations
+let sum3 = v_3d + w_3d                 // Vector3D(x: 5.0, y: 7.0, z: 9.0)
+let scaled3 = 2.0 * v_3d             // Vector3D(x: 2.0, y: 4.0, z: 6.0)
+
+// Norm and dot product
+print(v_3d.norm)                     // 3.742... (√(1² + 2² + 3²))
+print(v_3d.dot(w_3d))                  // 32.0 (1*4 + 2*5 + 3*6)
+
+// 3D-specific: Cross product
+let cross = v_3d.cross(w_3d)           // Vector3D perpendicular to both
+print(cross)                       // Vector3D(x: -3.0, y: 6.0, z: -3.0)
+
+// Verify perpendicularity
+print(v_3d.dot(cross))               // ~0.0 (perpendicular)
+print(w_3d.dot(cross))               // ~0.0 (perpendicular)
+
+// MARK: VectorN
+
+	// Create an N-dimensional vector
+	let vN = VectorN<Double>([1.0, 2.0, 3.0, 4.0, 5.0])
+	let wN = VectorN([5.0, 4.0, 3.0, 2.0, 1.0])
+
+	// Basic operations
+	let sumN = vN + wN                 // VectorN([6, 6, 6, 6, 6])
+	let scaledN = 2.0 * vN             // VectorN([2, 4, 6, 8, 10])
+
+	// Norm and dot product
+	print(vN.norm)                     // 7.416... (√55)
+	print(vN.dot(wN))                  // 35.0
+
+	// Element access
+	print(vN[0])                       // 1.0
+	print(vN[2])                       // 3.0
+
+	// Statistical operations
+	print(vN.dimension)                // 5
+	print(vN.sum)                      // 15.0
+	print(vN.mean)                     // 3.0
+	print(vN.standardDeviation())      // 1.581...
+	print(vN.min)                      // 1.0
+	print(vN.max)                      // 5.0
+
+// MARK: - Arithmetic Operations
+
+let v_arith = VectorN([1.0, 2.0, 3.0])
+let w_arith = VectorN([4.0, 5.0, 6.0])
+
+// Addition and subtraction
+let sum_arith = v_arith + w_arith                    // [5, 7, 9]
+let diff_arith = v_arith - w_arith                   // [-3, -3, -3]
+
+// Scalar multiplication
+let scaled_arith = 3.0 * v_arith               // [3, 6, 9]
+let divided = v_arith / 2.0              // [0.5, 1.0, 1.5]
+
+// Negation
+let negated = -v_arith                   // [-1, -2, -3]
+
+// MARK: - Norms and Distances
+
+let v_norm = VectorN([3.0, 4.0])
+let w_norm = VectorN([0.0, 0.0])
+
+// Euclidean norm
+print(v_norm.norm)                      // 5.0 (√(3² + 4²))
+print(v_norm.squaredNorm)               // 25.0 (faster for comparisons)
+
+// Distance metrics
+print(v_norm.distance(to: w_norm))           // 5.0 (Euclidean)
+print(v_norm.manhattanDistance(to: w_norm))  // 7.0 (|3| + |4|)
+print(v_norm.chebyshevDistance(to: w_norm))  // 4.0 (max(|3|, |4|))
+
+
+// MARK: - Dot Products and Angles
+
+let v_dot = VectorN([1.0, 0.0, 0.0])
+let w_dot = VectorN([0.0, 1.0, 0.0])
+
+// Dot product
+print(v_dot.dot(w_dot))                    // 0.0 (perpendicular)
+
+// Cosine similarity
+print(v_dot.cosineSimilarity(with: w_dot)) // 0.0 (orthogonal)
+
+// Angle between vectors
+let angle_dot = v_dot.angle(with: w_dot)       // π/2 radians (90°)
+print(angle_dot * 180 / .pi)           // 90.0 degrees
+
+
+// MARK: Projections
+
+let v_proj = VectorN([3.0, 4.0])
+let w_proj = VectorN([1.0, 0.0])
+
+// Project v onto w
+let projection = v_proj.projection(onto: w_proj)  // [3.0, 0.0]
+
+// Rejection (component perpendicular to w)
+let rejection = v_proj.rejection(from: w_proj)    // [0.0, 4.0]
+
+// Verify: v = projection + rejection
+print(v_proj == projection + rejection)      // true
+
+// MARK: - Normalization
+
+
+
+// Normalize to unit length
+let unit = v_norm.normalized()          // [0.6, 0.8]
+print(unit.norm)                   // 1.0
+
+// Verify direction preserved
+print(v_norm.cosineSimilarity(with: unit))  // 1.0 (same direction)
+
+
+// MARK: - VectorN Specific Construction
+
+	// From array
+	let v1 = VectorN([1.0, 2.0, 3.0])
+
+	// Repeating value
+	let v2 = VectorN(repeating: 5.0, count: 10)
+
+	// Zero vector
+	let v3 = VectorN<Double>.zero
+
+	// Ones vector
+	let v4 = VectorN<Double>.ones(dimension: 5)
+
+	// Basis vector (one component = 1, rest = 0)
+	let e2 = VectorN<Double>.basisVector(dimension: 5, index: 2)
+	// [0, 0, 1, 0, 0]
+
+	// Linear space (evenly spaced)
+	let v5 = VectorN.linearSpace(from: 0.0, to: 10.0, count: 11)
+	// [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+	// Log space (logarithmically spaced)
+	let v6 = VectorN.logSpace(from: 1.0, to: 100.0, count: 3)
+	// [1, 10, 100]
+
+// MARK: - Functional Operations
+
+let v_func = VectorN([-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])
+
+// Map (element-wise transform)
+let squared_func = v_func.map { $0 * $0 }    // [4, 1, 0, 1, 4, 9]
+
+// Filter
+let positive_func = v_func.filter { $0 > 0 } // [1, 2, 3]
+
+// Reduce
+let sum_func = v_func.reduce(0.0, +)         // 3.0
+
+// Zip with another vector
+let w_func = VectorN([4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+let product_func = v_func.zipWith(w_func, *)      // [-8, -5, 0, 7, 16, 27]
+print(product_func)
+
+
+// MARK: Portfolio Weights Example
+
+// 4-asset portfolio
+let assets = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]
+let weights = VectorN([0.40, 0.25, 0.25, 0.10])
+let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.08])
+
+// Verify fully invested (weights sum to 1.0)
+print("Fully invested: \(weights.sum == 1.0)")
+
+// Portfolio expected return (weighted average)
+let portfolioReturn = weights.dot(expectedReturns)
+print("Portfolio return: \(portfolioReturn.percent(1))")
+
+// Equal weights for comparison (each asset gets 25%)
+let equalWeights = VectorN<Double>.equalWeights(dimension: 4)
+print("Equal weights: \(equalWeights.toArray())")  // [0.25, 0.25, 0.25, 0.25]
+print("Sum: \(equalWeights.sum)")  // 1.0
+let equalReturn = equalWeights.dot(expectedReturns)
+print("Equal-weight return: \(equalReturn.percent(1))")  // 8.5%
+
+// MARK: - Simplex Projection vs Normalization
+
+// Demonstrate the difference between simplex projection and normalization
+let rawScores = VectorN([3.0, 1.0, 2.0])
+
+// Simplex projection: components sum to 1.0
+let probabilities = rawScores.simplexProjection()
+print("\nSimplex projection (sum = 1.0):")
+print("  Values: \(probabilities.toArray().map { $0.number(3) })")
+print("  Sum: \(probabilities.sum.number(2))")
+print("  Norm: \(probabilities.norm.number(3))")
+
+// Normalization: Euclidean norm = 1.0
+let unitVector = rawScores.normalized()
+print("\nNormalization (norm = 1.0):")
+print("  Values: \(unitVector.toArray().map { $0.number(3) })")
+print("  Sum: \(unitVector.sum.number(3))")
+print("  Norm: \(unitVector.norm.number(2))")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.4-VectorOperations.md">BusinessMath Docs – 5.4 Vector Operations</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Build a 10-asset portfolio and compute risk contribution per asset</li><li>Use cross product to compute area of triangle (3D vectors)</li><li>Implement Gram-Schmidt orthogonalization using projections</li><li>Compare performance: Vector2D vs. VectorN for 2D optimization</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Portfolio management</strong>: Represent asset allocations as vectors</li><li><strong>Machine learning</strong>: Feature vectors, gradient descent</li><li><strong>Engineering</strong>: Force vectors, velocity vectors, state spaces</li><li><strong>Optimization</strong>: Multivariate parameter spaces</li></ul><p><strong>Data scientist use case</strong>: “I need to optimize hyperparameters for a model with 20 features. The algorithm should work whether I have 2 features or 200.”</p><p>Generic vector operations make this trivial.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Dot Product Measures Similarity</strong></p><p>The dot product v · w = ‖v‖ ‖w‖ cos(θ) combines magnitude and angle.</p><p><strong>Cosine similarity</strong> normalizes out magnitude: cos(θ) = (v · w) / (‖v‖ ‖w‖)</p><p><strong>Interpretation:</strong></p><ul><li>cos(θ) = 1: Same direction (parallel)</li><li>cos(θ) = 0: Perpendicular (orthogonal)</li><li>cos(θ) = -1: Opposite direction (antiparallel)</li></ul><p><strong>Application - Portfolio correlation:</strong>If returns for two assets are vectors over time, their cosine similarity measures correlation. High similarity means they move together (bad for diversification).</p><p><strong>Rule of thumb:</strong> Maximize portfolio diversity = minimize pairwise cosine similarity.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest design decision was <strong>choosing the right vector protocol hierarchy</strong>. We considered:</p><ol><li><strong>Single protocol</strong> (what we chose): <code>VectorSpace</code> with all operations</li><li><strong>Layered protocols</strong>: <code>VectorAddition</code>, <code>VectorNorm</code>, <code>VectorDot</code></li><li><strong>Class hierarchy</strong>: <code>AbstractVector</code> base class</li></ol><p><strong>We chose single protocol because:</strong></p><ul><li>Swift favors protocol composition over class inheritance</li><li>All vector operations need all capabilities (no partial implementations)</li><li>Generic constraints are simpler: <code><V: VectorSpace></code> vs. <code><V: VectorAddition & VectorNorm & VectorDot></code></li></ul><p><strong>Trade-off:</strong> Implementing VectorSpace requires all methods. But this ensures every vector type is fully functional.</p><p><strong>Related Methodology</strong>: <a href="../week-01/03-wed-architecture-patterns">Protocol-Oriented Design</a> (Week 1) - Covered protocol composition and generic programming.</p><hr /><h2>Next Steps</h2><p><strong>Coming up next week</strong>: Advanced Optimization (Week 8) - Multivariate Newton-Raphson, constrained optimization with Lagrange multipliers, and a portfolio optimization case study.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 25/~48</li><li>Playgrounds: 21 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis</guid><title>Core Optimization APIs: Goal-Seeking and Error Handling</title><link>https://www.justinpurnell.com/BusinessMath/week-07/03-wed-core-optimization-apis</link><description><![CDATA[Part 24 of 12-Week BusinessMath Series]]></description><pubDate>Wed, 18 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[goal-seeking]]></category><category><![CDATA[root-finding]]></category><category><![CDATA[irr]]></category><category><![CDATA[breakeven]]></category><category><![CDATA[error-handling]]></category><content:encoded><![CDATA[<p><strong>Part 24 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Using the <code>goalSeek()</code> function for root-finding problems</li><li>Finding breakeven prices, target revenues, and IRR automatically</li><li>Understanding Newton-Raphson convergence and numerical differentiation</li><li>Handling convergence failures and division by zero errors</li><li>Choosing initial guesses for robust convergence</li><li>Using the <code>GoalSeekOptimizer</code> class for constrained problems</li></ul><hr /><h2>The Problem</h2><p>Many business problems require <strong>inverse solving</strong>—finding an input that produces a target output:</p><ul><li><strong>Breakeven analysis</strong>: What price gives zero profit?</li><li><strong>Target seeking</strong>: What sales volume achieves $1M revenue?</li><li><strong>IRR calculation</strong>: What discount rate makes NPV = 0?</li><li><strong>Equation solving</strong>: Find x where f(x) = target</li></ul><p><strong>Manual trial-and-error (guessing values in Excel) is slow, imprecise, and doesn’t scale.</strong></p><hr /><h2>The Solution</h2><p>Goal-seeking (also called root-finding) automates the inverse problem. BusinessMath implements Newton-Raphson iteration with numerical differentiation for robust convergence.</p><h3>Goal-Seeking vs. Optimization</h3><p>Understanding the difference is critical:</p><table><thead><th><strong>Goal-Seeking</strong></th><th><strong>Optimization</strong></th></thead><tbody><tr><td>Find where <strong>f(x) = target</strong></td><td>Find where <strong>f’(x) = 0</strong></td></tr><tr><td>Root-finding</td><td>Minimize/Maximize</td></tr><tr><td>Example: Breakeven price</td><td>Example: Optimal price</td></tr><tr><td>Uses: <code>goalSeek()</code></td><td>Uses: <code>minimize()</code>, <code>maximize()</code></td></tr></tbody></table><hr /><h3>Basic Goal-Seeking</h3><pre><code class="language-swift">import BusinessMath
 import Foundation
 
 // Find x where x² = 4
@@ -9796,143 +10248,4 @@ BusinessMath's standards documents:
 - **Previous**: [The Master Plan: Organizing Complexity](#) - How to maintain project context
 - **Next**: [Case Study #2: Capital Equipment Decision](#) - Standards documents in action
 - **See Also**: [Building with Claude: A Reflection](#) - Full methodology overview
-</code></pre>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-03/02-tue-master-plan</guid><title>The Master Plan: Organizing Complexity</title><link>https://www.justinpurnell.com/BusinessMath/week-03/02-tue-master-plan</link><description><![CDATA[Development Journey Series]]></description><pubDate>Tue, 20 Jan 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[ai-collaboration]]></category><category><![CDATA[project-management]]></category><category><![CDATA[planning]]></category><category><![CDATA[organization]]></category><category><![CDATA[development journey]]></category><content:encoded><![CDATA[<p><strong>Development Journey Series</strong></p><hr /><h2>The Context</h2><p>At the end of a week or two, we had tackled the core of BusinessMath. We had unlocked the power of the TimeSeries data structure, and had shown the proof of concept in a simple topic like the Time Value of Money using Test-Driven Development and our document-first approach. That was great, but we had a long road ahead of us, with some much trickier topics.</p><ul><li>Statistical Distributions</li><li>Time Series Analysis</li><li>Loans & Amortization</li><li>Depreciation</li><li>Investment Analysis</li><li>Portfolio Optimization</li><li>Monte Carlo Simulation</li><li>Sensitivity Analysis</li><li>Financial Statements</li><li>Options Pricing</li></ul><p>Each topic had 5-15 functions, dozens of tests, complete DocC documentation, and playground examples.</p><p>Even with domain expertise and working with a capable AI agent, this required a structured and methodical approach or risked sprialing out of control.</p><hr /><h2>The Challenge</h2><p>Large projects with AI have a unique problem: <strong>AI has no memory across sessions.</strong></p><p>Traditional development preserves context naturally:</p><ul><li>You work on the same codebase daily</li><li>You remember what’s done and what’s next</li><li>Your IDE shows project structure</li><li>Your brain maintains the big picture</li></ul><p>With AI collaboration:</p><ul><li>Each session starts fresh</li><li>AI doesn’t remember yesterday’s priorities</li><li>No inherent sense of progress or dependencies</li><li>Easy to lose track of the overall plan</li></ul><p>Without explicit project memory, it’s very, <strong>very</strong> easy to drift. If you bounce around and work on whatever seems interesting, dependencies go forgotten, coding patterns start to diverge, and momentum comes to a halt.</p><p>I needed a way to maintain project context across sessions—a shared memory between me and AI.</p><hr /><h2>The Solution</h2><p><strong>Create a living MASTER_PLAN.md document.</strong></p><h3>The Master Plan Structure</h3><p>The master plan is a single markdown file that serves as the project’s memory:</p><pre><code class="language-markdown"># BusinessMath Master Plan
-
-**Last Updated**: Week 5
-
-## Project Goals
-
-Build a production-quality Swift library for financial calculations with:
-- 100% DocC documentation coverage
-- Comprehensive test suite (target: 200+ tests)
-- Support for generic numeric types
-- Playground tutorials for each topic
-
-## Topics
-
-### 1. Time Value of Money [✅ Complete]
-**Status**: 24 tests, fully documented
-**Effort**: Medium (M)
-**Dependencies**: None
-**Completed**: Week 4
-
-**Functions**:
-- `presentValue`, `futureValue`, `payment`
-- `npv`, `irr`, `xnpv`, `xirr`
-
----
-
-### 2. Statistical Distributions [🟡 In Progress]
-**Status**: 8/25 tests
-**Effort**: Large (L)
-**Dependencies**: None
-**Target Completion**: Week 7
-
-**Functions**:
-- Normal distribution (CDF, PDF, inverse)
-- T-distribution, Chi-squared, F-distribution
-- Binomial, Poisson distributions
-
-**Remaining Work**:
-- Complete distribution functions
-- Add quantile functions
-- Write DocC tutorials
-
----
-
-### 3. Time Series Analysis [⬜ Not Started]
-**Status**: 0 tests
-**Effort**: Large (L)
-**Dependencies**: Statistical Distributions
-**Target Completion**: Week 10
-
-**Functions**:
-- Period types (Day, Month, Quarter, Year)
-- TimeSeries container
-- Moving averages, exponential smoothing
-- Trend analysis
-
-**Notes**:
-- Blocked on Statistical Distributions completion
-- Consider using Foundation.Calendar for date arithmetic
-
----
-
-[... rest of 10 topics ...]
-
-## Current Phase: Foundation (Weeks 1-8)
-
-**Goal**: Complete Topics 1-4, establish 75 tests total
-
-**Progress**:
-- ✅ Topic 1: TVM Complete (24 tests)
-- 🟡 Topic 2: Distributions 30% complete (8 tests)
-- ⬜ Topic 3: Time Series (not started)
-- ⬜ Topic 4: Loans & Amortization (not started)
-
-**Next Session Priority**: Complete normal distribution tests
-
-## Effort Estimates
-
-- **Small (S)**: 1-2 sessions, <10 tests
-- **Medium (M)**: 3-5 sessions, 10-25 tests
-- **Large (L)**: 6-10 sessions, 25-50 tests
-- **XL**: 10+ sessions, 50+ tests
-</code></pre><hr /><h2>What Worked</h2><h3>1. Visual Progress Tracking</h3><p>Checkboxes provide instant visual feedback:</p><ul><li>✅ Complete (feels great!)</li><li>🟡 In Progress (clear focus)</li><li>⬜ Not Started (known future work)</li></ul><p>At a glance, you see: “I’ve completed 1/11 topics, making progress on 1 more.”</p><hr /><h3>2. Dependency Graph Prevented Confusion</h3><p>Time Series depends on Statistical Distributions (for confidence intervals).</p><p><strong>Without the master plan</strong>, I might start Time Series, realize I need distribution functions, context-switch to implement those, forget where I was in Time Series, and end up with half-finished work everywhere.</p><p><strong>With dependencies documented</strong>, I know: “Finish Distributions first, THEN start Time Series.”</p><hr /><h3>3. Effort Estimates Helped Time Management</h3><p>Knowing a topic is “Large (L)” sets expectations:</p><ul><li>Don’t try to finish it in one session</li><li>Break it into sub-tasks</li><li>Allocate multiple sessions</li></ul><p>Initial estimates were too optimistic (I thought Statistical Distributions was Medium, but it took Large effort). That’s fine—I updated the plan.</p><hr /><h3>4. The Master Plan is AI’s Memory</h3><p>Every session starts with:</p><blockquote><p>“Read MASTER_PLAN.md. What’s the current priority?”</p></blockquote><p>AI responds:</p><blockquote><p>“You’re 30% through Statistical Distributions. The next task is completing normal distribution tests. Time Series is blocked waiting for this.”</p></blockquote><p><strong>Instant context restoration.</strong> No wasted time figuring out where you left off.</p><hr /><h2>What Didn’t Work</h2><h3>1. Initial Estimates Were Too Optimistic</h3><p>I thought Statistical Distributions would take 3-5 sessions (Medium). It took 8+ (Large).</p><p><strong>Fix</strong>: I adjusted the plan. Effort estimates improve over time as you calibrate.</p><hr /><h3>2. Forgot to Plan for Integration Testing</h3><p>The master plan listed 11 topics as independent work. But after completing several topics, I needed integration tests: “Do TVM and Time Series work together?”</p><p>I hadn’t planned for this.</p><p><strong>Fix</strong>: Added a Phase 4 “Integration & Polish” with dedicated time for cross-topic validation.</p><hr /><h3>3. No Mechanism for Prioritization Changes</h3><p>The master plan was linear (Topic 1 → Topic 2 → Topic 3…). But sometimes priorities shift:</p><ul><li>A user requests a specific feature</li><li>You discover a critical bug</li><li>Integration reveals missing functionality</li></ul><p>The plan didn’t accommodate this gracefully.</p><p><strong>Fix</strong>: Added a “Current Session Priority” section that can override the default order.</p><hr /><h2>The Insight</h2><p><strong>AI has no memory across sessions. The master plan document serves as the project’s memory.</strong></p><p>Traditional development preserves context implicitly (your brain, IDE state, recent commits). AI collaboration requires <strong>explicit context preservation</strong>.</p><p>The master plan serves as:</p><ul><li><strong>Roadmap</strong>: What needs to be done</li><li><strong>Memory</strong>: What’s already done</li><li><strong>Prioritization</strong>: What to work on next</li><li><strong>Dependency tracker</strong>: What blocks what</li><li><strong>Progress indicator</strong>: How far you’ve come</li></ul><p>Without it, you drift. With it, you maintain momentum across weeks and months.</p><blockquote><p><strong>Key Takeaway</strong>: Create a living master plan document. Update it at the end of each session. Start each new session by reading it.</p></blockquote><hr /><h2>How to Apply This</h2><p><strong>For your next project</strong>:</p><p><strong>1. Create MASTER_PLAN.md at Project Start</strong></p><ul><li>List all major topics/features</li><li>Estimate effort (S/M/L/XL)</li><li>Map dependencies</li><li>Set completion targets</li></ul><p><strong>2. Structure the Plan</strong></p><pre><code class="language-markdown">## Topics
-
-### 1. [Topic Name] [Status Emoji]
-**Status**: [Specific completion metric]
-**Effort**: [S/M/L/XL]
-**Dependencies**: [What must be done first]
-**Target Completion**: [Week/Sprint number]
-
-**Functions/Features**:
-- List of specific work items
-
-**Remaining Work**:
-- What's left to do
-</code></pre><p><strong>3. Update at End of Each Session</strong></p><ul><li>Mark completed items</li><li>Update progress percentages</li><li>Adjust estimates based on reality</li><li>Note blockers or discoveries</li></ul><p><strong>4. Start Each Session by Reading the Plan</strong></p><ul><li>“What’s the current priority?”</li><li>“What did I complete last time?”</li><li>“What should I work on next?”</li></ul><p><strong>5. Use It as AI Specification</strong></p><ul><li>Paste relevant section when starting work</li><li>“Here’s the master plan. Focus on Topic 2: Statistical Distributions. The next task is completing normal distribution tests.”</li></ul><hr /><h2>See It In Action</h2><p>The master plan guided the entire BusinessMath development:</p><p><strong>Technical Examples</strong>:</p><ul><li><strong>Week 5-7</strong>: Statistical Distributions (originally estimated M, actually L)</li><li><strong>Week 8-10</strong>: Time Series (blocked until Distributions complete)</li><li><strong>Week 15</strong>: Integration testing (added after initial plan)</li></ul><p><strong>Methodology Integration</strong>:</p><ul><li><strong>Test-First Development</strong> (Week 1): Each topic’s test count tracked in plan</li><li><strong>Documentation as Design</strong> (Week 2): DocC coverage tracked in plan</li><li><strong>Coding Standards</strong> (Week 5): Standards violations tracked as plan items</li></ul><hr /><h2>Common Pitfalls</h2><h3>❌ Pitfall 1: Making the plan too detailed</h3><p><strong>Problem</strong>: 50-page plan with every function documented upfront<strong>Solution</strong>: High-level topics with detail added as you go</p><h3>❌ Pitfall 2: Never updating the plan</h3><p><strong>Problem</strong>: Plan becomes stale, loses value<strong>Solution</strong>: Update at end of EVERY session, even if it’s just checking a box</p><h3>❌ Pitfall 3: Treating estimates as commitments</h3><p><strong>Problem</strong>: Feeling bad when Medium takes Large effort<strong>Solution</strong>: Estimates are guesses that improve over time. Update them!</p><h3>❌ Pitfall 4: Skipping dependency tracking</h3><p><strong>Problem</strong>: Starting work that’s blocked, wasting time<strong>Solution</strong>: Explicitly list “Dependencies: [Topic X complete]”</p><hr /><h2>Template</h2><p>Here’s a starter template for your master plan:</p><pre><code class="language-markdown"># [Project Name] Master Plan
-
-**Last Updated**: [Date]
-
-## Project Goals
-
-[1-3 sentences describing what you're building and key quality criteria]
-
-## Topics / Features
-
-### 1. [Feature Name] [✅ | 🟡 | ⬜]
-**Status**: [Specific completion metric]
-**Effort**: [S/M/L/XL]
-**Dependencies**: [None | Topic X complete]
-**Target Completion**: [Week/Sprint]
-
-**Work Items**:
-- [ ] Item 1
-- [ ] Item 2
-
-**Remaining Work**:
-- [What's left]
-
----
-
-[Repeat for each topic/feature]
-
-## Current Phase
-
-**Goal**: [Phase objective]
-
-**Progress**:
-- ✅ [Completed items]
-- 🟡 [In progress]
-- ⬜ [Not started]
-
-**Next Session Priority**: [Specific task]
-
-## Effort Legend
-
-- **Small (S)**: [Your time estimate]
-- **Medium (M)**: [Your time estimate]
-- **Large (L)**: [Your time estimate]
-- **XL**: [Your time estimate]
-</code></pre><hr /><h2>Discussion</h2><p><strong>Questions to consider</strong>:</p><ol><li>How detailed should the master plan be?</li><li>How often should you update it?</li><li>What do you do when priorities shift mid-project?</li></ol><p><strong>Share your experience</strong>: Do you use a master plan or roadmap document? What works for you?</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 10/~48</li><li>Methodology Posts: 3/12</li><li>Practices Covered: Test-First, Documentation as Design, Master Planning</li></ul>]]></content:encoded></item></channel></rss>
+</code></pre>]]></content:encoded></item></channel></rss>
