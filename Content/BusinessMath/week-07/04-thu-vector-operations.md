@@ -8,7 +8,7 @@ docc_source: "5.4-VectorOperations.md"
 playground: "Week07/Optimization.playground"
 tags: businessmath, swift, vectors, vectorspace, linear-algebra, protocols, generics
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Vector Operations: Foundation for Multivariate Optimization
