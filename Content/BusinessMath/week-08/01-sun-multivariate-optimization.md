@@ -1,6 +1,6 @@
 ---
 title: Multivariate Optimization: Gradient Descent to Newton-Raphson
-date: 2026-02-24 13:00
+date: 2026-02-23 16:54
 series: BusinessMath Quarterly Series
 week: 8
 post: 1
@@ -8,7 +8,7 @@ docc_source: "5.5-MultivariateOptimization.md"
 playground: "Week08/Advanced-Optimization.playground"
 tags: businessmath, swift, optimization, gradient-descent, bfgs, newton-raphson, numerical-methods
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Multivariate Optimization: Gradient Descent to Newton-Raphson
