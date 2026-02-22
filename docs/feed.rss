@@ -1,7 +1,383 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/04-thu-vector-operations</guid><title>Vector Operations: Foundation for Multivariate Optimization</title><link>https://www.justinpurnell.com/BusinessMath/week-07/04-thu-vector-operations</link><description><![CDATA[Part 25 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 19 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[vectors]]></category><category><![CDATA[vectorspace]]></category><category><![CDATA[linear-algebra]]></category><category><![CDATA[protocols]]></category><category><![CDATA[generics]]></category><content:encoded><![CDATA[<p><strong>Part 25 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding the <code>VectorSpace</code> protocol and why it matters</li><li>Working with Vector2D, Vector3D, and VectorN types</li><li>Performing vector operations: norms, dot products, projections</li><li>Using generic algorithms that work across all vector types</li><li>Creating type-safe multivariate constraints</li><li>Building portfolio weights and feature vectors</li></ul><hr /><h2>The Problem</h2><p>Multivariate optimization requires working with vectors of different dimensions:</p><ul><li><strong>Portfolio optimization</strong>: N-dimensional weights for N assets</li><li><strong>Pricing models</strong>: 2D or 3D parameter spaces</li><li><strong>Machine learning</strong>: High-dimensional feature vectors</li><li><strong>Generic algorithms</strong>: Code that works for any dimension</li></ul><p><strong>Without a unified vector abstraction, you’d write duplicate code for each dimension (optimize2D, optimize3D, optimizeND, etc.).</strong></p><hr /><h2>The Solution</h2><p>BusinessMath’s <code>VectorSpace</code> protocol provides a generic interface for vector operations. Write optimization algorithms once, they work for all dimensions.</p><h3>The VectorSpace Protocol</h3><p>A <strong>vector space</strong> is a mathematical structure supporting:</p><ul><li><strong>Vector addition</strong>: v + w</li><li><strong>Scalar multiplication</strong>: α · v</li><li><strong>Zero element</strong>: 0</li><li><strong>Norms and distances</strong>: ‖v‖, ‖v - w‖</li></ul><p><strong>Protocol Definition</strong> (simplified):</p><pre><code class="language-swift">public protocol VectorSpace: AdditiveArithmetic {
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization</guid><title>Multivariate Optimization: Gradient Descent to Newton-Raphson</title><link>https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization</link><description><![CDATA[Part 26 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 23 Feb 2026 16:54:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[optimization]]></category><category><![CDATA[gradient-descent]]></category><category><![CDATA[bfgs]]></category><category><![CDATA[newton-raphson]]></category><category><![CDATA[numerical-methods]]></category><content:encoded><![CDATA[<p><strong>Part 26 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding numerical differentiation for gradients and Hessians</li><li>Using gradient descent with momentum and Nesterov acceleration</li><li>Applying Newton-Raphson and BFGS quasi-Newton methods</li><li>Choosing the right optimization algorithm for your problem</li><li>Using AdaptiveOptimizer for automatic algorithm selection</li><li>Understanding convergence rates and algorithm trade-offs</li></ul><hr /><h2>The Problem</h2><p>Real-world optimization problems have multiple variables:</p><ul><li><strong>Parameter fitting</strong>: Minimize error across 10+ parameters</li><li><strong>Cost minimization</strong>: Optimize production mix across multiple products/facilities</li><li><strong>Portfolio construction</strong>: Find optimal weights for N assets</li><li><strong>Machine learning</strong>: Fit models with thousands of parameters</li></ul><p><strong>Single-variable methods (like goal-seeking) don’t extend to multivariate problems—you need algorithms designed for N dimensions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides a progression of multivariate optimizers, from simple gradient descent to sophisticated second-order methods. All work generically with any <code>VectorSpace</code> type.</p><h3>Numerical Differentiation</h3><p>When you can’t compute derivatives analytically, BusinessMath computes them numerically:</p><pre><code class="language-swift">import BusinessMath
+
+// Define f(x,y) = x² + 2y²
+let function: (VectorN<Double>) -> Double = { v in
+    let x = v[0]
+    let y = v[1]
+    return x*x + 2*y*y
+}
+
+// Compute gradient at (1, 2)
+let point = VectorN([1.0, 2.0])
+let gradient = try numericalGradient(function, at: point)
+print("Gradient: \(gradient.toArray())")  // ≈ [2.0, 8.0]
+// Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓
+
+// Compute Hessian (curvature matrix)
+let hessian = try numericalHessian(function, at: point)
+print("Hessian:")
+for row in hessian {
+    print(row.map { $0.number(1) })
+}
+// [[2.0, 0.0], [0.0, 4.0]]
+</code></pre><p><strong>Output:</strong></p><pre><code>Gradient: [2.0, 8.0]
+Hessian:
+[2.0, 0.0]
+[0.0, 4.0]
+</code></pre><p><strong>How it works</strong>:</p><ul><li><strong>Gradient</strong>: Central finite differences <code>(f(x+h) - f(x-h)) / 2h</code></li><li><strong>Hessian</strong>: Second-order finite differences (N² function evaluations)</li></ul><hr /><h3>Gradient Descent: The Workhorse</h3><p>Gradient descent iteratively moves in the direction of steepest descent:</p><pre><code class="language-swift">import BusinessMath
+
+// Minimize f(x,y) = x² + 4y²
+let function: (VectorN<Double>) -> Double = { v in
+    v[0]*v[0] + 4*v[1]*v[1]
+}
+
+// Basic gradient descent
+let optimizer = MultivariateGradientDescent<VectorN<Double>>(
+    learningRate: 0.01,
+    maxIterations: 1000,
+    tolerance: 1e-6
+)
+
+let result = try optimizer.minimize(
+    function: function,
+    gradient: { x in try numericalGradient(function, at: x) },
+    initialGuess: VectorN([5.0, 5.0])
+)
+
+print("Minimum at: \(result.solution.toArray().map({ $0.number(3) }))")
+print("Value: \(result.objectiveValue.number(6))")
+print("Iterations: \(result.iterations)")
+print("Converged: \(result.converged)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Minimum at: [0.0, 0.0]
+Value: 0.000000
+Iterations: 247
+Converged: true
+</code></pre><hr /><h3>Gradient Descent with Momentum</h3><p>Momentum accelerates convergence and reduces oscillations:</p><pre><code class="language-swift">import BusinessMath
+
+// Rosenbrock function: classic test problem
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+    let x = v[0], y = v[1]
+    let a = 1 - x
+    let b = y - x*x
+    return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Gradient descent with momentum (default 0.9)
+let optimizerWithMomentum = GradientDescentOptimizer<Double>(
+	learningRate: 0.01,
+	maxIterations: 5000,
+	momentum: 0.9,
+	useNesterov: false
+)
+
+// Note: Using scalar optimizer for demonstration
+// For VectorN, use MultivariateGradientDescent
+
+let result = optimizerWithMomentum.optimize(
+    objective: { x in (x - 5) * (x - 5) },
+    constraints: [],
+    initialGuess: 0.0,
+    bounds: nil
+)
+
+print("Converged to: \(result.optimalValue.number(4))")
+print("Iterations: \(result.iterations)")
+</code></pre><p><strong>Nesterov Acceleration</strong> (look-ahead gradient) often converges even faster:</p><pre><code class="language-swift">let nesterovOptimizer = GradientDescentOptimizer<Double>(
+    learningRate: 0.01,
+    momentum: 0.9,
+    useNesterov: true  // Nesterov acceleration
+)
+</code></pre><hr /><h3>Newton-Raphson: Quadratic Convergence</h3><p>Newton-Raphson uses second-order information (Hessian) for much faster convergence:</p><pre><code class="language-swift">import BusinessMath
+
+// Quadratic function: f(x,y) = x² + 4y² + 2xy
+let quadratic: (VectorN<Double>) -> Double = { v in
+    let x = v[0], y = v[1]
+    return x*x + 4*y*y + 2*x*y
+}
+
+// Full Newton-Raphson (uses exact Hessian)
+let newtonOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
+    maxIterations: 100,
+    tolerance: 1e-8,
+    useLineSearch: true
+)
+
+let result = try newtonOptimizer.minimize(
+    function: quadratic,
+    gradient: { try numericalGradient(quadratic, at: $0) },
+    hessian: { try numericalHessian(quadratic, at: $0) },
+    initialGuess: VectorN([10.0, 10.0])
+)
+
+print("Solution: \(result.solution.toArray().map({ $0.number(6) }))")
+print("Converged in: \(result.iterations) iterations")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.000000, 0.000000]
+Converged in: 3 iterations
+</code></pre><p><strong>The power</strong>: Newton-Raphson found the minimum in 3 iterations vs. 247 for gradient descent!</p><hr /><h3>BFGS: Quasi-Newton Sweet Spot</h3><p>BFGS approximates the Hessian, giving Newton-like speed without expensive Hessian computation:</p><pre><code class="language-swift">import BusinessMath
+
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+    let x = v[0], y = v[1]
+    let a = 1 - x
+    let b = y - x*x
+    return a*a + 100*b*b
+}
+
+// BFGS quasi-Newton
+let bfgsOptimizer = MultivariateNewtonRaphson<VectorN<Double>>()
+
+let result = try bfgsOptimizer.minimizeBFGS(
+    function: rosenbrock,
+    gradient: { try numericalGradient(rosenbrock, at: $0) },
+    initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result.solution.toArray().map({ $0.rounded(toPlaces: 4) }))")
+print("Iterations: \(result.iterations)")
+print("Final value: \(result.objectiveValue.rounded(toPlaces: 8))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [1.0000, 1.0000]
+Iterations: 24
+Final value: 0.00000001
+</code></pre><p><strong>Comparison</strong>:</p><table><thead><th>Method</th><th>Iterations</th><th>Function Evals</th><th>Speed</th></thead><tbody><tr><td>Gradient Descent</td><td>4,782</td><td>~10,000</td><td>Slow</td></tr><tr><td>Momentum/Nesterov</td><td>1,200</td><td>~2,500</td><td>Medium</td></tr><tr><td>Full Newton</td><td>12</td><td>~150</td><td>Very Fast</td></tr><tr><td>BFGS</td><td>24</td><td>~50</td><td>Fast</td></tr></tbody></table><p><strong>The trade-off</strong>: BFGS balances speed and computational cost—best for most practical problems.</p><hr /><h3>AdaptiveOptimizer: Automatic Algorithm Selection</h3><p>Don’t know which algorithm to use? Let AdaptiveOptimizer decide:</p><pre><code class="language-swift">import BusinessMath
+
+// AdaptiveOptimizer chooses the best algorithm automatically
+let optimizer = AdaptiveOptimizer<VectorN<Double>>()
+
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+    let x = v[0], y = v[1]
+    return (1-x)*(1-x) + 100*(y-x*x)*(y-x*x)
+}
+
+let result = try optimizer.optimize(
+    objective: rosenbrock,
+    initialGuess: VectorN([0.0, 0.0]),
+    constraints: []
+)
+
+print("Solution: \(result.solution.toArray().map({ $0.rounded(toPlaces: 4) }))")
+print("Algorithm used: \(result.algorithmUsed ?? "N/A")")
+print("Reason: \(result.selectionReason ?? "N/A")")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [1.0000, 1.0000]
+Algorithm used: Newton-Raphson
+Reason: Small problem (2 variables) - using Newton-Raphson for fast convergence
+</code></pre><p><strong>How it works</strong>:</p><ul><li>Analyzes problem size, constraints, gradient availability</li><li>Selects: Gradient Descent, Newton-Raphson, BFGS, or Constrained optimizer</li><li>Reports which algorithm was chosen and why</li></ul><hr /><h2>Choosing the Right Algorithm</h2><table><thead><th>Algorithm</th><th>Speed</th><th>Stability</th><th>Memory</th><th>Best For</th></thead><tbody><tr><td>Gradient Descent</td><td>Slow</td><td>High</td><td>Low</td><td>Noisy functions, large-scale (10K+ vars)</td></tr><tr><td>Momentum</td><td>Medium</td><td>Medium</td><td>Low</td><td>Smooth landscapes, valleys</td></tr><tr><td>Nesterov</td><td>Fast</td><td>Medium</td><td>Low</td><td>Convex problems</td></tr><tr><td>Full Newton</td><td>Very Fast</td><td>Low</td><td>High</td><td>Small, smooth quadratic problems</td></tr><tr><td>BFGS</td><td>Fast</td><td>High</td><td>Medium</td><td><strong>Most practical problems (recommended)</strong></td></tr><tr><td>AdaptiveOptimizer</td><td>Varies</td><td>High</td><td>Medium</td><td>Unknown problem characteristics</td></tr></tbody></table><p><strong>Rule of thumb</strong>:</p><ul><li><strong>< 100 variables + smooth</strong>: Use BFGS</li><li><strong>100-10,000 variables</strong>: Use Momentum/Nesterov</li><li><strong>> 10,000 variables</strong>: Use basic Gradient Descent</li><li><strong>Constraints</strong>: Use ConstrainedOptimizer or InequalityOptimizer (Week 8 Wednesday)</li></ul><hr /><h2>Real-World Example: Parameter Fitting</h2><p>Fit a curve to noisy data:</p><pre><code class="language-swift">import BusinessMath
+
+// Data: y = a*x² + b*x + c + noise
+let xData = VectorN.linearSpace(from: 0.0, to: 10.0, count: 50)
+let yData = xData.map { x in
+    2.0 * x * x + 3.0 * x + 5.0 + Double.random(in: -5...5)
+}
+
+// Objective: Minimize sum of squared errors
+let objective: (VectorN<Double>) -> Double = { params in
+    let a = params[0], b = params[1], c = params[2]
+    var sse = 0.0
+    for i in 0..<xData.dimension {
+        let x = xData[i]
+        let predicted = a * x * x + b * x + c
+        let error = yData[i] - predicted
+        sse += error * error
+    }
+    return sse
+}
+
+// BFGS for fast convergence
+let optimizer = MultivariateNewtonRaphson<VectorN<Double>>()
+let result = try optimizer.minimizeBFGS(
+    function: objective,
+    gradient: { try numericalGradient(objective, at: $0) },
+	initialGuess: VectorN([1.0, 2.0, 3.0])
+)
+
+print("Fitted parameters:")
+print("  a = \(result_params.solution[0].number(2)) (true: 2.0)")
+print("  b = \(result_params.solution[1].number(2)) (true: 3.0)")
+print("  c = \(result_params.solution[2].number(2)) (true: 5.0)")
+print("SSE: \(result_params.objectiveValue.number(1))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Fitted parameters:
+  a = 1.98 (true: 2.0)
+  b = 3.17 (true: 3.0)
+  c = 4.82 (true: 5.0)
+SSE: 311.7
+</code></pre><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+
+// MARK: - Numerical Differentiation
+
+// Define f(x,y) = x² + 2y²
+let function_nd: (VectorN<Double>) -> Double = { v in
+	let x = v[0]
+	let y = v[1]
+	return x*x + 2*y*y
+}
+
+// Compute gradient at (1, 2)
+let point_nd = VectorN([1.0, 2.0])
+let gradient_nd = try numericalGradient(function_nd, at: point_nd)
+print("Gradient: \(gradient_nd.toArray())")  // ≈ [2.0, 8.0]
+// Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓
+
+// Compute Hessian (curvature matrix)
+let hessian = try numericalHessian(function_nd, at: point_nd)
+print("Hessian:")
+for row in hessian {
+	print(row.map { $0.number(1) })
+}
+// [[2.0, 0.0], [0.0, 4.0]]
+
+// MARK: - Gradient Descent
+
+// Minimize f(x,y) = x² + 4y²
+let function_gd: (VectorN<Double>) -> Double = { v in
+	v[0]*v[0] + 4*v[1]*v[1]
+}
+
+// Basic gradient descent
+let optimizer_gd = MultivariateGradientDescent<VectorN<Double>>(
+	learningRate: 0.01,
+	maxIterations: 1000,
+	tolerance: 1e-6
+)
+
+let result_gd = try optimizer_gd.minimize(
+	function: function_gd,
+	gradient: { x in try numericalGradient(function_gd, at: x) },
+	initialGuess: VectorN([5.0, 5.0])
+)
+
+print("Minimum at: \(result_gd.solution.toArray().map({ $0.number(3)  }))")
+print("Value: \(result_gd.objectiveValue.number(6))")
+print("Iterations: \(result_gd.iterations)")
+print("Converged: \(result_gd.converged)")
+
+// MARK: Gradient Descent with Momentum
+
+// Rosenbrock function: classic test problem
+let rosenbrock: (VectorN<Double>) -> Double = { v in
+	let x = v[0], y = v[1]
+	let a = 1 - x
+	let b = y - x*x
+	return a*a + 100*b*b  // Minimum at (1, 1)
+}
+
+// Gradient descent with momentum (default 0.9)
+let optimizerWithMomentum = GradientDescentOptimizer<Double>(
+	learningRate: 0.01,
+	maxIterations: 5000,
+	momentum: 0.9,
+	useNesterov: false
+)
+
+// Note: Using scalar optimizer for demonstration
+// For VectorN, use MultivariateGradientDescent
+
+let result_gdm = optimizerWithMomentum.optimize(
+	objective: { x in (x - 5) * (x - 5) },
+	constraints: [],
+	initialGuess: 0.0,
+	bounds: nil
+)
+
+print("Converged to: \(result_gdm.optimalValue.number(1))")
+print("Iterations: \(result_gdm.iterations)")
+
+// MARK: - Newton-Raphson: Quadratic Convergence
+
+	// Quadratic function: f(x,y) = x² + 4y² + 2xy
+	let quadratic: (VectorN<Double>) -> Double = { v in
+		let x = v[0], y = v[1]
+		return x*x + 4*y*y + 2*x*y
+	}
+
+	// Full Newton-Raphson (uses exact Hessian)
+	let newtonOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
+		maxIterations: 100,
+		tolerance: 1e-8,
+		useLineSearch: true
+	)
+
+	let result_newton = try newtonOptimizer.minimize(
+		function: quadratic,
+		gradient: { try numericalGradient(quadratic, at: $0) },
+		hessian: { try numericalHessian(quadratic, at: $0) },
+		initialGuess: VectorN([10.0, 10.0])
+	)
+
+	print("Solution: \(result_newton.solution.toArray().map({ $0.number(6) }))")
+	print("Converged in: \(result_newton.iterations) iterations")
+
+// MARK: - BFGS: Quasi-Newton Sweet Spot
+
+// BFGS quasi-Newton
+let bfgsOptimizer = MultivariateNewtonRaphson<VectorN<Double>>()
+
+let result_bfgs = try bfgsOptimizer.minimizeBFGS(
+	function: rosenbrock,
+	gradient: { try numericalGradient(rosenbrock, at: $0) },
+	initialGuess: VectorN([0.0, 0.0])
+)
+
+print("Solution: \(result_bfgs.solution.toArray().map({ $0.number(4) }))")
+print("Iterations: \(result_bfgs.iterations)")
+print("Final value: \(result_bfgs.objectiveValue.number(8))")
+
+// MARK: - Adaptive Optimizer
+
+// AdaptiveOptimizer chooses the best algorithm automatically
+let optimizer_adaptive = AdaptiveOptimizer<VectorN<Double>>()
+
+let result_adaptive = try optimizer_adaptive.optimize(
+	objective: rosenbrock,
+	initialGuess: VectorN([0.0, 0.0]),
+	constraints: []
+)
+
+print("Solution: \(result_adaptive.solution.toArray().map({ $0.number(4) }))")
+print("Algorithm used: \(result_adaptive.algorithmUsed)")
+print("Reason: \(result_adaptive.selectionReason)")
+
+
+// MARK: - Parameter Fitting Example
+
+// Data: y = a*x² + b*x + c + noise
+let xData = VectorN.linearSpace(from: 0.0, to: 10.0, count: 50)
+let yData = xData.map { x in
+	2.0 * x * x + 3.0 * x + 5.0 + Double.random(in: -5...5)
+}
+
+// Objective: Minimize sum of squared errors
+let objective_params: (VectorN<Double>) -> Double = { params in
+	let a = params[0], b = params[1], c = params[2]
+	var sse = 0.0
+	for i in 0..<xData.dimension {
+		let x = xData[i]
+		let predicted = a * x * x + b * x + c
+		let error = yData[i] - predicted
+		sse += error * error
+	}
+	return sse
+}
+
+// BFGS for fast convergence
+let optimizer_params = MultivariateNewtonRaphson<VectorN<Double>>()
+let result_params = try optimizer_params.minimizeBFGS(
+	function: objective_params,
+	gradient: { try numericalGradient(objective_params, at: $0) },
+	initialGuess: VectorN([1.0, 2.0, 3.0])
+)
+
+print("Fitted parameters:")
+print("  a = \(result_params.solution[0].number(2)) (true: 2.0)")
+print("  b = \(result_params.solution[1].number(2)) (true: 3.0)")
+print("  c = \(result_params.solution[2].number(2)) (true: 5.0)")
+print("SSE: \(result_params.objectiveValue.number(1))")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.5-MultivariateOptimization.md">BusinessMath Docs – 5.5 Multivariate Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Compare convergence rates: plot iteration vs. objective value for each algorithm</li><li>Fit a 10-parameter model (polynomial, exponential, custom function)</li><li>Optimize a high-dimensional problem (100+ variables) with Momentum</li><li>Test robustness: start from different initial guesses and compare results</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Machine learning</strong>: Train models by minimizing loss functions</li><li><strong>Engineering</strong>: Optimize design parameters (aerodynamics, materials, structures)</li><li><strong>Finance</strong>: Calibrate option pricing models to market data</li><li><strong>Operations</strong>: Optimize production schedules, routing, inventory</li></ul><p><strong>Data scientist use case</strong>: “I need to fit a pricing model with 15 parameters to historical transaction data. Manual tuning is infeasible—I need automated optimization.”</p><p>BFGS converges in seconds, not hours of manual tweaking.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why BFGS Beats Full Newton for Most Problems</strong></p><p>Full Newton requires computing the Hessian (N² second derivatives). For a 100-variable problem:</p><ul><li><strong>Full Newton</strong>: 10,000 Hessian elements per iteration</li><li><strong>BFGS</strong>: 0 Hessian evaluations (approximated from gradients)</li></ul><p><strong>BFGS maintains a Hessian approximation</strong> updated using gradient changes:</p><pre><code>H_{k+1} = H_k + correction terms based on (∇f_{k+1} - ∇f_k)
+</code></pre><p><strong>Result</strong>: BFGS gets ~90% of Newton’s convergence speed with ~10% of the cost.</p><p><strong>When Full Newton wins</strong>: Very small problems (< 10 variables) where Hessian computation is cheap and you need extreme precision.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest challenge was <strong>making numerical differentiation robust across all Real types</strong> (Float, Double, Decimal).</p><p><strong>Problem</strong>: The step size <code>h</code> for <code>(f(x+h) - f(x-h)) / 2h</code> must be:</p><ul><li>Small enough to approximate the true derivative</li><li>Large enough to avoid catastrophic cancellation (subtracting nearly equal floating-point numbers)</li></ul><p><strong>Solution</strong>: Adaptive step size <code>h = √ε × max(|x|, 1)</code> where ε is machine epsilon:</p><ul><li>Float (ε ≈ 10⁻⁷): h ≈ 10⁻³</li><li>Double (ε ≈ 10⁻¹⁶): h ≈ 10⁻⁸</li><li>Decimal (ε ≈ 10⁻²⁸): h ≈ 10⁻¹⁴</li></ul><p>This automatically adjusts to the numeric type’s precision.</p><p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered machine epsilon and catastrophic cancellation.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: Constrained Optimization - Lagrange multipliers, augmented Lagrangian methods, and handling equality/inequality constraints.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 8/12</li><li>Posts Published: 26/~48</li><li>Playgrounds: 22 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/04-thu-vector-operations</guid><title>Vector Operations: Foundation for Multivariate Optimization</title><link>https://www.justinpurnell.com/BusinessMath/week-07/04-thu-vector-operations</link><description><![CDATA[Part 25 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 19 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[vectors]]></category><category><![CDATA[vectorspace]]></category><category><![CDATA[linear-algebra]]></category><category><![CDATA[protocols]]></category><category><![CDATA[generics]]></category><content:encoded><![CDATA[<p><strong>Part 25 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding the <code>VectorSpace</code> protocol and why it matters</li><li>Working with Vector2D, Vector3D, and VectorN types</li><li>Performing vector operations: norms, dot products, projections</li><li>Using generic algorithms that work across all vector types</li><li>Creating type-safe multivariate constraints</li><li>Building portfolio weights and feature vectors</li></ul><hr /><h2>The Problem</h2><p>Multivariate optimization requires working with vectors of different dimensions:</p><ul><li><strong>Portfolio optimization</strong>: N-dimensional weights for N assets</li><li><strong>Pricing models</strong>: 2D or 3D parameter spaces</li><li><strong>Machine learning</strong>: High-dimensional feature vectors</li><li><strong>Generic algorithms</strong>: Code that works for any dimension</li></ul><p><strong>Without a unified vector abstraction, you’d write duplicate code for each dimension (optimize2D, optimize3D, optimizeND, etc.).</strong></p><hr /><h2>The Solution</h2><p>BusinessMath’s <code>VectorSpace</code> protocol provides a generic interface for vector operations. Write optimization algorithms once, they work for all dimensions.</p><h3>The VectorSpace Protocol</h3><p>A <strong>vector space</strong> is a mathematical structure supporting:</p><ul><li><strong>Vector addition</strong>: v + w</li><li><strong>Scalar multiplication</strong>: α · v</li><li><strong>Zero element</strong>: 0</li><li><strong>Norms and distances</strong>: ‖v‖, ‖v - w‖</li></ul><p><strong>Protocol Definition</strong> (simplified):</p><pre><code class="language-swift">public protocol VectorSpace: AdditiveArithmetic {
     associatedtype Scalar: Real
 
     // Required operations
@@ -9960,292 +10336,4 @@ func buildRevenueModel() throws {
 
 try buildRevenueModel()
 </code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.3-BuildingRevenueModel.md">BusinessMath Docs – 3.3 Revenue Forecasting</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Use your company’s historical revenue data</li><li>Try exponential trend instead of linear</li><li>Create monthly forecasts instead of quarterly</li><li>Add confidence intervals to forecasts</li></ol><hr /><h2>Real-World Application</h2><p>Think about using this for annual planning:</p><ul><li><strong>Historical data</strong>: 3 years of monthly MRR</li><li><strong>Seasonality</strong>: Summer slump (July-August), year-end spike (December)</li><li><strong>Trend</strong>: Exponential (consistent % growth)</li><li><strong>Forecast horizon</strong>: 12 months</li><li><strong>Scenarios</strong>: Conservative (5% CAGR), Base (12% CAGR), Optimistic (20% CAGR)</li></ul><p>Rather than saying “we’re growing 10% per month, so we’ll hit $30mm,” it’s far more credible to say: “Our base case projects $24M ARR, with 80% confidence interval of $22M-$26M.”</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Forecast with Scenarios?</strong></p><p>Point forecasts are always wrong. The question is: how wrong?</p><p>Scenarios communicate uncertainty:</p><ul><li><strong>Conservative</strong>: What if growth slows?</li><li><strong>Base</strong>: What if trends continue?</li><li><strong>Optimistic</strong>: What if we accelerate?</li></ul><p>Present all three with probabilities (e.g., 20% / 60% / 20%).</p><p>This is a much more nuanced and thoughful approach, that sets realistic expectations and prepares stakeholders for variance.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing revenue forecasting wasn’t the math—it was deciding how opinionated to be about the workflow.</p><p><strong>Option 1</strong>: Provide primitive functions (<code>seasonalIndices</code>, <code>fit</code>, <code>project</code>) and let users compose them.</p><p><strong>Option 2</strong>: Provide a high-level <code>forecast(historical:periods:)</code> function that does everything automatically.</p><p>We chose <strong>Option 1</strong> because forecasting requires judgment:</p><ul><li>Which trend model? (Linear vs. exponential vs. logistic)</li><li>How much seasonality damping? (Full seasonal pattern vs. muted)</li><li>Confidence intervals? (95% vs. 80%?)</li></ul><p>A fully automated forecast hides these choices, producing results users don’t understand.</p><p><strong>The lesson</strong>: For workflows requiring judgment, provide composable primitives rather than black-box automation.</p><p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - Designing learnable APIs</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: <a href="../04-fri-case-capital-equipment">Capital Equipment Decision (Friday)</a> - Case study combining depreciation + TVM + financial ratios.</p><p><strong>Week 4</strong>: We’ll explore investment analysis and portfolio optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 11/~48</li><li>Topics Covered: Foundation + Analysis + Operational Models (in progress)</li><li>Playgrounds: 10 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-03/02.5-wed-tooling-guides</guid><title>The Supporting Cast: Coding Rules, DocC Guidelines, and Testing Standards</title><link>https://www.justinpurnell.com/BusinessMath/week-03/02.5-wed-tooling-guides</link><description><![CDATA[Development Journey Series]]></description><pubDate>Wed, 21 Jan 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[ai-collaboration]]></category><category><![CDATA[coding-standards]]></category><category><![CDATA[documentation]]></category><category><![CDATA[testing]]></category><category><![CDATA[development-journey]]></category><content:encoded><![CDATA[<p><strong>Development Journey Series</strong></p><hr /><h2>The Context</h2><p>In the previous post, we discussed how the Master Plan serves as the project’s memory across sessions. But the master plan only answers “what to build next”—it doesn’t answer <strong>how to build it consistently</strong>.</p><p>After a few weeks of BusinessMath development, I had a different problem: <strong>pattern drift</strong>.</p><ul><li>Week 1: Functions used <code>guard</code> statements for validation</li><li>Week 3: Some functions started using early returns with <code>if !condition</code></li><li>Week 5: Parameter naming became inconsistent (<code>rate</code> vs. <code>r</code> vs. <code>discountRate</code>)</li><li>Week 7: DocC comments had three different documentation styles</li></ul><p>Each individual choice made sense in isolation. But across 200+ tests and 11 topic areas, the inconsistency was creating friction:</p><ul><li>“Wait, did we decide to use external parameter labels?”</li><li>“Should this throw an error or return zero for empty input?”</li><li>“What’s the format for DocC mathematical formulas?”</li></ul><p>Without explicit standards, every decision becomes a mini research project. AI doesn’t remember past decisions, so it defaults to whatever seems reasonable <em>right now</em>.</p><hr /><h2>The Solution</h2><p><strong>Create living standards documents that serve as the project’s consistency engine.</strong></p><p>We developed three core documents:</p><ol><li><strong>CODING_RULES.md</strong> - How to write code</li><li><strong>DOCC_GUIDELINES.md</strong> - How to document APIs</li><li><strong>TEST_DRIVEN_DEVELOPMENT.md</strong> - How to test code</li></ol><p>These aren’t heavyweight “process manuals”—they’re quick-reference guides that answer common questions in seconds.</p><hr /><h2>Document 1: Coding Rules</h2><p><strong>The Problem It Solves</strong>: “How should I structure this code?”</p><h3>What It Contains</h3><pre><code class="language-markdown"># Coding Rules for BusinessMath Library
-
-## 1. Generic Programming
-- Use `<T: Real>` for all numeric functions
-- Enables flexibility across Float, Double, Float16, etc.
-
-## 2. Function Signatures
-- Public API: All user-facing functions marked `public`
-- Descriptive parameter labels
-- Default parameters for common cases
-
-## 3. Guard Clauses & Validation
-- Use `guard` for input validation
-- Return sensible defaults for empty inputs (e.g., `T(0)`)
-- Throw errors for truly invalid cases
-
-## 4. Formatting Rules
-- NEVER use String(format:) for number formatting
-- ALWAYS use Swift's formatted() API
-- Respect user locales automatically
-</code></pre><h3>Real Example: The String Formatting Rule</h3><p>Early in the project, we used C-style formatting:</p><pre><code class="language-swift">// Week 2 code
-let output = String(format: "%.2f", value)
-</code></pre><p>This created problems:</p><ul><li>Doesn’t respect user locales</li><li>Breaks with non-decimal numeric types</li><li>Error-prone format strings</li></ul><p>We established a rule:</p><pre><code class="language-swift">// RULE: Never use String(format:)
-// ALWAYS use formatted() API
-
-// Correct approach
-let output = value.formatted(.number.precision(.fractionLength(2)))
-</code></pre><p><strong>Before the rule</strong>: 30 minutes per session debating formatting approaches.</p><p><strong>After the rule</strong>: 0 minutes. “Check CODING_RULES.md. Use formatted().”</p><hr /><h3>Why This Worked</h3><h4>1. AI Can Follow Rules It Can Read</h4><p>When starting a session:</p><blockquote><p>“Read CODING_RULES.md. Implement the IRR function following these standards.”</p></blockquote><p>AI responds:</p><blockquote><p>“Using <code><T: Real></code> generic constraint, <code>guard</code> for validation, and Swift’s formatted() API as specified in CODING_RULES.md.”</p></blockquote><p><strong>Result</strong>: Consistent code on first try.</p><h4>2. Rules Prevent Regression</h4><p>Week 10, implementing a new feature:</p><pre><code class="language-swift">// AI's first attempt
-let result = String(format: "%.4f", value)
-</code></pre><p>My review:</p><blockquote><p>“This violates CODING_RULES.md section 4. Use formatted() API.”</p></blockquote><p>AI immediately corrects:</p><pre><code class="language-swift">let result = value.formatted(.number.precision(.fractionLength(4)))
-</code></pre><p><strong>Without the documented rule</strong>, I’d have to re-explain <em>why</em> every single time.</p><h4>3. Rules Capture Hard-Won Lessons</h4><p>The string formatting rule exists because we spent 2 hours debugging locale issues in Week 2. The rule captures that lesson so it’s never repeated.</p><hr /><h2>Document 2: DocC Guidelines</h2><p><strong>The Problem It Solves</strong>: “How should I document this API?”</p><h3>What It Contains</h3><pre><code class="language-markdown"># DocC Documentation Guidelines
-
-## Required for All Public APIs
-
-1. Brief one-line summary
-2. Detailed explanation including:
-   - What problem it solves
-   - How it works (if non-obvious)
-   - When to use it
-3. Parameter documentation
-4. Return value documentation
-5. Throws documentation (if applicable)
-6. Usage example
-7. Mathematical formula (for math functions)
-8. Excel equivalent (if applicable)
-9. See Also links
-
-## Documentation Template
-
-///
-/// Brief one-line summary.
-///
-/// Detailed explanation...
-///
-/// - Parameters:
-///   - param1: Description with valid ranges
-/// - Returns: Description of return value and guarantees
-/// - Throws: Specific errors and when they occur
-///
-/// ## Usage Example
-/// 
-/// let result = function(param: value)
-/// // Output: expected result
-/// 
-///
-/// ## Mathematical Formula
-/// [LaTeX or ASCII math notation]
-///
-/// - SeeAlso:
-///   - ``RelatedType``
-///   - ``relatedFunction(_:)``
-</code></pre><h3>Real Example: The Formula Format</h3><p>Week 4, documenting the NPV function. First attempt:</p><pre><code class="language-swift">/// NPV = sum of (cash flow / (1 + rate)^period)
-</code></pre><p><strong>Problems</strong>:</p><ul><li>Unclear notation</li><li>No variable definitions</li><li>Doesn’t render well in DocC</li></ul><p>After establishing guidelines:</p><pre><code class="language-swift">/// ## Mathematical Formula
-/// NPV is calculated as:
-/// 
-/// NPV = Σ (CFₜ / (1 + r)ᵗ)
-/// 
-/// where:
-/// - CFₜ = cash flow at time t
-/// - r = discount rate
-/// - t = time period
-</code></pre><p><strong>Result</strong>: Consistent, readable mathematical notation across all 200+ documented functions.</p><hr /><h3>Why This Worked</h3><h4>1. Documentation as Design Tool</h4><p>Writing DocC comments before implementation forced clarification:</p><p><strong>Question</strong>: “What errors can calculateIRR throw?”</p><p><strong>DocC forces answer</strong>:</p><pre><code class="language-swift">/// - Throws: `FinancialError.convergenceFailure` if calculation
-///   does not converge within `maxIterations`.
-///   `FinancialError.invalidInput` if cash flows array is empty.
-</code></pre><p>Now I know <em>exactly</em> what to implement.</p><h4>2. Examples Must Compile</h4><p>The guidelines require runnable examples:</p><pre><code class="language-swift">/// ## Usage Example
-/// 
-/// let cashFlows = [-1000.0, 300.0, 400.0, 500.0]
-/// let irr = try calculateIRR(cashFlows: cashFlows)
-/// print(irr.formatted(.percent))  // Output: 12.5%
-/// 
-</code></pre><p><strong>Rule</strong>: Every example must run successfully in a playground.</p><p>We manually verified all of the documented examples to make sure we had correct values and an ergonomic approach for users.</p><p>This caught:</p><ul><li>API design issues (awkward to use → redesign)</li><li>Missing error handling (forgot to mark <code>throws</code>)</li><li>Incorrect output claims (example output didn’t match reality)</li></ul><h4>3. Prevents Documentation Drift</h4><p>Week 15, adding async versions of functions. The template ensures consistent documentation:</p><pre><code class="language-swift">/// [Async version follows same structure as sync version]
-/// - Same brief summary
-/// - Same parameter docs
-/// - Added: Concurrency section
-/// - Same usage examples (with await)
-</code></pre><p><strong>Without guidelines</strong>: 15 different documentation styles for 15 async functions.</p><p><strong>With guidelines</strong>: Perfect consistency.</p><hr /><h2>Document 3: Test-Driven Development Standards</h2><p><strong>The Problem It Solves</strong>: “How should I test this function?”</p><h3>What It Contains</h3><pre><code class="language-markdown"># Test-Driven Development Standards
-
-## Test Structure (Swift Testing)
-
-- Use `@Test` attribute with descriptive names
-- Use `@Suite` to group related tests
-- Use `#expect` for assertions
-- Use parameterized tests for multiple scenarios
-
-## Test Organization
-
-Tests mirror source structure:
-
-Tests/BusinessMathTests/
-├── Time Series Tests/
-│   ├── PeriodTests.swift
-│   └── TVM Tests/
-│       └── NPVTests.swift
-
-
-## RED-GREEN-REFACTOR Cycle
-
-1. RED: Write failing test
-2. GREEN: Minimal implementation to pass
-3. REFACTOR: Improve code quality (tests still pass)
-
-## Deterministic Testing for Random Functions
-
-**Always use seeded random number generators**
-
-
-@Test("Monte Carlo with seed is deterministic")
-func testDeterministic() {
-    let seed: UInt64 = 12345
-    let result1 = runSimulation(trials: 10000, seed: seed)
-    let result2 = runSimulation(trials: 10000, seed: seed)
-    #expect(result1 == result2)  // Must be identical
-}
-</code></pre><h3>Real Example: The Deterministic Testing Rule</h3><p>Week 6, implementing Monte Carlo simulations. First test:</p><pre><code class="language-swift">@Test("Monte Carlo converges to expected value")
-func testConvergence() {
-    let result = runSimulation(trials: 10000)
-    #expect(abs(result.mean - 100.0) < 1.0)
-}
-</code></pre><p><strong>Problem</strong>: Flaky test. Sometimes passed, sometimes failed (randomness).</p><p>After establishing the rule:</p><pre><code class="language-swift">@Test("Monte Carlo with seed converges to expected value")
-func testConvergence() {
-    let seed: UInt64 = 12345
-    let result = runSimulation(trials: 10000, seed: seed)
-    #expect(abs(result.mean - 100.023) < 0.001)  // Exact value
-}
-</code></pre><p><strong>Result</strong>: 100% reliable tests. CI never flakes.</p><hr /><h3>Why This Worked</h3><h4>1. Tests as Specifications</h4><p>The RED-GREEN-REFACTOR rule means tests are written <em>before</em> code:</p><pre><code class="language-swift">// STEP 1: Write test (RED)
-@Test("IRR calculates correctly")
-func testIRR() {
-    let cashFlows = [-1000.0, 300.0, 400.0, 500.0]
-    let result = try calculateIRR(cashFlows: cashFlows)
-    #expect(abs(result - 0.125) < 0.001)  // 12.5%
-}
-// ❌ Test fails: calculateIRR doesn't exist yet
-
-// STEP 2: Implement function (GREEN)
-public func calculateIRR<T: Real>(cashFlows: [T]) throws -> T {
-    // ... implementation ...
-}
-// ✅ Test passes
-
-// STEP 3: Refactor (tests still pass)
-// Extract validation logic, improve performance, etc.
-// ✅ Tests still pass after refactoring
-</code></pre><p><strong>The test specifies behavior before implementation exists.</strong></p><h4>2. Parameterized Tests Prevent Duplication</h4><p>Instead of:</p><pre><code class="language-swift">@Test("NPV at 5%") func npv5() { /* ... */ }
-@Test("NPV at 10%") func npv10() { /* ... */ }
-@Test("NPV at 15%") func npv15() { /* ... */ }
-</code></pre><p>Use parameterized tests:</p><pre><code class="language-swift">@Test("NPV at multiple discount rates",
-      arguments: [
-          (rate: 0.05, expected: 297.59),
-          (rate: 0.10, expected: 146.87),
-          (rate: 0.15, expected: 20.42)
-      ])
-func multipleRates(rate: Double, expected: Double) {
-    let cashFlows = [-1000.0, 300.0, 300.0, 300.0, 300.0]
-    let result = npv(discountRate: rate, cashFlows: cashFlows)
-    #expect(abs(result - expected) < 0.01)
-}
-</code></pre><p><strong>Result</strong>: 3 test cases, 10 lines of code instead of 30.</p><hr /><h2>The Triad Working Together</h2><p>These three documents form a complete system:</p><pre><code>┌─────────────────────────────────────────────┐
-│          MASTER_PLAN.md                     │
-│   "What to build next"                      │
-└─────────────────────┬───────────────────────┘
-                      │
-         ┌────────────┴────────────┐
-         │                         │
-    ┌────▼──────┐         ┌────────▼───────┐
-    │  CODING   │         │  TEST_DRIVEN   │
-    │  RULES    │◄────────┤  DEVELOPMENT   │
-    └────┬──────┘         └────────┬───────┘
-         │                         │
-         │                         │
-    ┌────▼─────────────────────────▼───────┐
-    │       DOCC_GUIDELINES.md              │
-    │   "How to document it"                │
-    └───────────────────────────────────────┘
-</code></pre><p><strong>Master Plan</strong>: “Implement Statistical Distributions (Topic 2)”</p><p><strong>Test-Driven Development</strong>: “Write tests for normalCDF first, then implement”</p><p><strong>Coding Rules</strong>: “Use <code><T: Real></code>, guard clauses, and formatted() API”</p><p><strong>DocC Guidelines</strong>: “Document with formula, example, Excel equivalent, and See Also links”</p><p><strong>Result</strong>: Consistent, high-quality implementation on the first try.</p><hr /><h2>What Worked</h2><h3>1. Quick Reference Beats Long Documents</h3><p>Each document is 200-500 lines—scannable in 60 seconds.</p><p><strong>Anti-pattern</strong>: 50-page “Software Development Manual” that nobody reads.</p><p><strong>Better</strong>: “Check CODING_RULES.md section 3 for guard clause patterns.”</p><h3>2. Living Documents That Evolve</h3><p>Week 2: CODING_RULES.md has 5 rules.Week 10: CODING_RULES.md has 15 rules.Week 20: CODING_RULES.md has 25 rules.</p><p>As we discovered patterns that worked, we documented them. As we hit issues, we added rules to prevent recurrence.</p><h3>3. AI Follows Written Rules Reliably</h3><p>Unwritten rule: “We prefer functional patterns.”</p><ul><li>AI interpretation: Uses <code>reduce</code> even when a loop is clearer.</li></ul><p>Written rule: “Prefer functional patterns (<code>reduce</code>, <code>map</code>) where readable. Use loops when clarity demands it.”</p><ul><li>AI gets it right every time.</li></ul><p><strong>Lesson</strong>: Make implicit standards explicit.</p><h3>4. Standards Prevent “Why Did We Do It This Way?” Debates</h3><p>Week 15, reviewing code:</p><p><strong>Without standards</strong>:</p><ul><li>“Should we use String(format:) here?”</li><li>“I don’t remember why we decided against it…”</li><li><em>30 minutes lost to research and re-debate</em></li></ul><p><strong>With standards</strong>:</p><ul><li>“Check CODING_RULES.md—String(format:) is forbidden, use formatted().”</li><li><em>0 minutes lost</em></li></ul><hr /><h2>The Insight</h2><p><strong>The master plan answers “what to build.” The standards documents answer “how to build it consistently.”</strong></p><p>Without standards:</p><ul><li>Every decision is re-litigated</li><li>Patterns drift across sessions</li><li>AI generates inconsistent code</li><li>Code reviews become re-teaching sessions</li></ul><p>With standards:</p><ul><li>Decisions are made once, documented, and followed</li><li>Consistency across 200+ functions</li><li>AI generates correct code on first attempt</li><li>Code reviews verify adherence to documented standards</li></ul><p><strong>Key Takeaway</strong>: Create quick-reference standards documents. Start with 5-10 rules. Evolve as you discover what matters.</p><hr /><h2>How to Apply This</h2><p><strong>For your next project</strong>:</p><h3>1. Start Small</h3><p>Don’t try to write comprehensive standards on day 1. Start with:</p><ul><li>3 coding rules that matter most</li><li>1 documentation template</li><li>1 testing pattern</li></ul><h3>2. Document Decisions As You Make Them</h3><p>When you decide something important:</p><ul><li>Add it to the relevant document immediately</li><li>Include the “why” (so you don’t forget)</li><li>Show an example</li></ul><h3>3. Use Templates</h3><p>Create copy-paste templates for:</p><ul><li>Function documentation</li><li>Test structure</li><li>Common patterns</li></ul><h3>4. Reference Documents in Prompts</h3><p>When working with AI:</p><blockquote><p>“Read CODING_RULES.md. Implement calculateXIRR following these standards.”</p></blockquote><p>Not:</p><blockquote><p>“Implement calculateXIRR. Oh, and use generics. And guard clauses. And formatted(). And…”</p></blockquote><h3>5. Update After Mistakes</h3><p>Made a mistake this session? Add a rule to prevent it next time.</p><p><strong>Example</strong>: Week 5, forgot to handle empty array in mean() function. Added rule: “Always validate array input with guard.”</p><hr /><h2>Template Starter Pack</h2><h3>CODING_RULES.md Template</h3><pre><code class="language-markdown"># Coding Rules for [Project Name]
-
-**Updated**: [Date]
-
-## MUST (Non-Negotiable)
-
-1. [Critical rule with rationale]
-   ```swift
-   // Example
-</code></pre><h2>SHOULD (Strong Preference)</h2><ol><li>[Preferred pattern]<pre><code class="language-swift">// Example
-</code></pre></li></ol><h2>CONSIDER (Suggestions)</h2><ol><li>[Optional guideline]</li></ol><pre><code>
-### DOCC_GUIDELINES.md Template
-
-```markdown
-# Documentation Guidelines
-
-## Required Sections
-
-1. Brief summary
-2. Detailed explanation
-3. Parameters/Returns/Throws
-4. Usage example
-5. See Also
-
-## Template
-
-///
-/// [Brief one-line summary]
-///
-/// [Detailed explanation]
-///
-/// - Parameters:
-///   - param: [Description]
-/// - Returns: [Description]
-///
-/// ## Usage Example
-/// ```swift
-/// [Runnable code]
-/// ```
-</code></pre><h3>TEST_DRIVEN_DEVELOPMENT.md Template</h3><pre><code class="language-markdown"># Testing Standards
-
-## Test Structure
-
-```swift
-@Suite("[Topic] Tests")
-struct TopicTests {
-    @Test("[What this tests]")
-    func descriptiveName() {
-        // Arrange
-        // Act
-        // Assert with #expect
-    }
-}
-</code></pre><h2>RED-GREEN-REFACTOR</h2><ol><li>Write failing test (RED)</li><li>Minimal implementation (GREEN)</li><li>Improve quality (REFACTOR)</li></ol><pre><code>
----
-
-## See It In Action
-
-BusinessMath's standards documents:
-- **CODING_RULES.md**: 25 rules developed over 20 weeks
-- **DOCC_GUIDELINES.md**: Complete documentation template with 9 required sections
-- **TEST_DRIVEN_DEVELOPMENT.md**: Testing patterns for deterministic behavior
-
-**Results**:
-- 200+ functions with consistent style
-- 100% documentation coverage
-- 250+ tests with 0 flaky tests
-- Code reviews focus on logic, not style
-
----
-
-## Discussion
-
-**Questions to consider**:
-1. How detailed should your standards be?
-2. When do you add a new rule vs. accepting variation?
-3. How do you balance flexibility with consistency?
-
-**Share your experience**: Do you maintain coding standards documents? What works for your team?
-
----
-
-**Series Progress**:
-- Week: 3/12
-- Posts Published: 10.5/~48
-- Methodology Posts: 4/12
-- Practices Covered: Test-First, Documentation as Design, Master Planning, **Standards Documents**
-- Standards Established: Coding Rules, DocC Guidelines, Testing Patterns
-
----
-
-**Related Posts**:
-- **Previous**: [The Master Plan: Organizing Complexity](#) - How to maintain project context
-- **Next**: [Case Study #2: Capital Equipment Decision](#) - Standards documents in action
-- **See Also**: [Building with Claude: A Reflection](#) - Full methodology overview
-</code></pre>]]></content:encoded></item></channel></rss>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.3-BuildingRevenueModel.md">BusinessMath Docs – 3.3 Revenue Forecasting</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Use your company’s historical revenue data</li><li>Try exponential trend instead of linear</li><li>Create monthly forecasts instead of quarterly</li><li>Add confidence intervals to forecasts</li></ol><hr /><h2>Real-World Application</h2><p>Think about using this for annual planning:</p><ul><li><strong>Historical data</strong>: 3 years of monthly MRR</li><li><strong>Seasonality</strong>: Summer slump (July-August), year-end spike (December)</li><li><strong>Trend</strong>: Exponential (consistent % growth)</li><li><strong>Forecast horizon</strong>: 12 months</li><li><strong>Scenarios</strong>: Conservative (5% CAGR), Base (12% CAGR), Optimistic (20% CAGR)</li></ul><p>Rather than saying “we’re growing 10% per month, so we’ll hit $30mm,” it’s far more credible to say: “Our base case projects $24M ARR, with 80% confidence interval of $22M-$26M.”</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Forecast with Scenarios?</strong></p><p>Point forecasts are always wrong. The question is: how wrong?</p><p>Scenarios communicate uncertainty:</p><ul><li><strong>Conservative</strong>: What if growth slows?</li><li><strong>Base</strong>: What if trends continue?</li><li><strong>Optimistic</strong>: What if we accelerate?</li></ul><p>Present all three with probabilities (e.g., 20% / 60% / 20%).</p><p>This is a much more nuanced and thoughful approach, that sets realistic expectations and prepares stakeholders for variance.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing revenue forecasting wasn’t the math—it was deciding how opinionated to be about the workflow.</p><p><strong>Option 1</strong>: Provide primitive functions (<code>seasonalIndices</code>, <code>fit</code>, <code>project</code>) and let users compose them.</p><p><strong>Option 2</strong>: Provide a high-level <code>forecast(historical:periods:)</code> function that does everything automatically.</p><p>We chose <strong>Option 1</strong> because forecasting requires judgment:</p><ul><li>Which trend model? (Linear vs. exponential vs. logistic)</li><li>How much seasonality damping? (Full seasonal pattern vs. muted)</li><li>Confidence intervals? (95% vs. 80%?)</li></ul><p>A fully automated forecast hides these choices, producing results users don’t understand.</p><p><strong>The lesson</strong>: For workflows requiring judgment, provide composable primitives rather than black-box automation.</p><p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - Designing learnable APIs</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: <a href="../04-fri-case-capital-equipment">Capital Equipment Decision (Friday)</a> - Case study combining depreciation + TVM + financial ratios.</p><p><strong>Week 4</strong>: We’ll explore investment analysis and portfolio optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 11/~48</li><li>Topics Covered: Foundation + Analysis + Operational Models (in progress)</li><li>Playgrounds: 10 available</li></ul>]]></content:encoded></item></channel></rss>
