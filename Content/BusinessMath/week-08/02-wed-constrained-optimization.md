@@ -8,7 +8,7 @@ docc_source: "5.6-ConstrainedOptimization.md"
 playground: "Week08/Advanced-Optimization.playground"
 tags: businessmath, swift, constrained-optimization, lagrange-multipliers, shadow-prices, augmented-lagrangian
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Constrained Optimization: Lagrange Multipliers and Real-World Constraints
