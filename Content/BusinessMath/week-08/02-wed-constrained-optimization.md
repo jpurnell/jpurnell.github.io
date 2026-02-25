@@ -1,6 +1,6 @@
 ---
 title: Constrained Optimization: Lagrange Multipliers and Real-World Constraints
-date: 2026-02-26 13:00
+date: 2026-02-25 13:00
 series: BusinessMath Quarterly Series
 week: 8
 post: 2
