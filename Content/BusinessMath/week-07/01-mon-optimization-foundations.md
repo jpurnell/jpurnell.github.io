@@ -1,5 +1,5 @@
 ---
-title: Optimization Foundations: From Goal-Seeking to Multivariate
+title: "Optimization Foundations: From Goal-Seeking to Multivariate"
 date: 2026-02-16 13:00
 series: BusinessMath Quarterly Series
 week: 7
