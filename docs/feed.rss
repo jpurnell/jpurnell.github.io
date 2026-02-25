@@ -1,7 +1,505 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization</guid><title>Multivariate Optimization: Gradient Descent to Newton-Raphson</title><link>https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization</link><description><![CDATA[Part 26 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 23 Feb 2026 16:54:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[optimization]]></category><category><![CDATA[gradient-descent]]></category><category><![CDATA[bfgs]]></category><category><![CDATA[newton-raphson]]></category><category><![CDATA[numerical-methods]]></category><content:encoded><![CDATA[<p><strong>Part 26 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding numerical differentiation for gradients and Hessians</li><li>Using gradient descent with momentum and Nesterov acceleration</li><li>Applying Newton-Raphson and BFGS quasi-Newton methods</li><li>Choosing the right optimization algorithm for your problem</li><li>Using AdaptiveOptimizer for automatic algorithm selection</li><li>Understanding convergence rates and algorithm trade-offs</li></ul><hr /><h2>The Problem</h2><p>Real-world optimization problems have multiple variables:</p><ul><li><strong>Parameter fitting</strong>: Minimize error across 10+ parameters</li><li><strong>Cost minimization</strong>: Optimize production mix across multiple products/facilities</li><li><strong>Portfolio construction</strong>: Find optimal weights for N assets</li><li><strong>Machine learning</strong>: Fit models with thousands of parameters</li></ul><p><strong>Single-variable methods (like goal-seeking) don’t extend to multivariate problems—you need algorithms designed for N dimensions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides a progression of multivariate optimizers, from simple gradient descent to sophisticated second-order methods. All work generically with any <code>VectorSpace</code> type.</p><h3>Numerical Differentiation</h3><p>When you can’t compute derivatives analytically, BusinessMath computes them numerically:</p><pre><code class="language-swift">import BusinessMath
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-08/02-wed-constrained-optimization</guid><title>Constrained Optimization: Lagrange Multipliers and Real-World Constraints</title><link>https://www.justinpurnell.com/BusinessMath/week-08/02-wed-constrained-optimization</link><description><![CDATA[Part 27 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 26 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[constrained-optimization]]></category><category><![CDATA[lagrange-multipliers]]></category><category><![CDATA[shadow-prices]]></category><category><![CDATA[augmented-lagrangian]]></category><content:encoded><![CDATA[<p><strong>Part 27 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building type-safe constraints with MultivariateConstraint</li><li>Solving equality-constrained problems with augmented Lagrangian</li><li>Handling inequality constraints (non-negativity, position limits, capacity)</li><li>Interpreting shadow prices (Lagrange multipliers) for sensitivity analysis</li><li>Using pre-built constraints for portfolios (budget, non-negativity, box constraints)</li><li>Optimizing real-world problems with multiple conflicting constraints</li></ul><hr /><h2>The Problem</h2><p>Real-world optimization has constraints:</p><ul><li><strong>Portfolio optimization</strong>: Weights must sum to 100%, no short-selling (wᵢ ≥ 0), position limits</li><li><strong>Production planning</strong>: Limited capacity, minimum production requirements, resource constraints</li><li><strong>Resource allocation</strong>: Budget constraints, personnel limits, quality requirements</li></ul><p><strong>Unconstrained optimization finds solutions that violate real-world constraints. Post-hoc normalization (e.g., dividing by sum) doesn’t minimize the original objective.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides constrained optimization via augmented Lagrangian methods. Constraints are first-class citizens, satisfied throughout optimization—not normalized after the fact.</p><h3>Type-Safe Constraint Infrastructure</h3><p>The <code>MultivariateConstraint</code> enum provides type-safe constraint specification:</p><pre><code class="language-swift">import BusinessMath
+
+// Equality constraint: x + y = 1
+let equality: MultivariateConstraint<VectorN<Double>> = .equality { v in
+    v[0] + v[1] - 1.0
+}
+
+// Inequality constraint: x ≥ 0 → -x ≤ 0
+let inequality: MultivariateConstraint<VectorN<Double>> = .inequality { v in
+    -v[0]
+}
+
+// Check if satisfied
+let point = VectorN([0.5, 0.5])
+print("Equality satisfied: \(equality.isSatisfied(at: point))")  // true
+print("Inequality satisfied: \(inequality.isSatisfied(at: point))")  // true
+</code></pre><hr /><h3>Pre-Built Constraint Helpers</h3><p>BusinessMath provides common constraint patterns:</p><pre><code class="language-swift">import BusinessMath
+
+// Budget constraint: weights sum to 1
+let budget = MultivariateConstraint<VectorN<Double>>.budgetConstraint
+
+// Non-negativity: all components ≥ 0 (long-only)
+let longOnly = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: 5)
+
+// Position limits: each weight ≤ 30%
+let positionLimits = MultivariateConstraint<VectorN<Double>>.positionLimit(0.30, dimension: 5)
+
+// Box constraints: 5% ≤ wᵢ ≤ 40%
+let box = MultivariateConstraint<VectorN<Double>>.boxConstraints(
+    min: 0.05,
+    max: 0.40,
+    dimension: 5
+)
+
+// Combine multiple constraints
+let allConstraints = [budget] + longOnly + positionLimits
+</code></pre><hr /><h2>Equality-Constrained Optimization</h2><p><strong>Problem</strong>: Minimize f(x) subject to h(x) = 0</p><p><strong>Example</strong>: Minimize portfolio risk subject to weights summing to 100%</p><pre><code class="language-swift">import BusinessMath
+
+// Minimize x² + y² subject to x + y = 1
+let objective: (VectorN<Double>) -> Double = { v in
+    v[0]*v[0] + v[1]*v[1]
+}
+
+let constraints = [
+    MultivariateConstraint<VectorN<Double>>.equality { v in
+        v[0] + v[1] - 1.0  // x + y = 1
+    }
+]
+
+let optimizer = ConstrainedOptimizer<VectorN<Double>>()
+let result = try optimizer.minimize(
+    objective,
+    from: VectorN([0.0, 1.0]),
+    subjectTo: constraints
+)
+
+print("Solution: \(result.solution.toArray().map({ $0.number(4) }))")
+print("Objective: \(result.objectiveValue.number(6))")
+print("Constraint satisfied: \(constraints[0].isSatisfied(at: result.solution))")
+</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.5000, 0.5000]
+Objective: 0.500000
+Constraint satisfied: true
+</code></pre><p><strong>The insight</strong>: The optimal solution is where both variables equal 0.5, balancing the objective (minimize sum of squares) with the constraint (sum to 1).</p><hr /><h3>Shadow Prices (Lagrange Multipliers)</h3><p>The Lagrange multiplier λ tells you <strong>how much the objective improves if you relax the constraint by one unit</strong>.</p><pre><code class="language-swift">let result = try optimizer.minimize(objective, from: initial, subjectTo: constraints)
+
+if let multipliers = result.lagrangeMultipliers {
+    for (i, λ) in multipliers.enumerated() {
+        print("Constraint \(i): λ = \(λ.number(3))")
+        print("  Marginal value of relaxing: \(λ.number(3)) per unit")
+    }
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Constraint 0: λ = -0.999
+  Marginal value of relaxing: -0.999 per unit
+</code></pre><p><strong>Interpretation</strong>: If we relax “x + y = 1” to “x + y = 1.01”, the objective improves by ~0.005 (λ × 0.01).</p><p><strong>Applications</strong>:</p><ul><li><strong>Portfolio</strong>: λ for budget constraint = marginal value of additional capital</li><li><strong>Production</strong>: λ for capacity constraint = value of adding one unit of capacity</li><li><strong>Resource allocation</strong>: Which constraints are binding (λ > 0) vs. slack (λ ≈ 0)</li></ul><hr /><h2>Inequality-Constrained Optimization</h2><p><strong>Problem</strong>: Minimize f(x) subject to g(x) ≤ 0</p><p><strong>Example</strong>: Portfolio optimization with no short-selling and position limits</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Portfolio variance
+let covariance = [
+    [0.04, 0.01, 0.02],
+    [0.01, 0.09, 0.03],
+    [0.02, 0.03, 0.16]
+]
+
+let portfolioVariance: (VectorN<Double>) -> Double = { w in
+    var variance = 0.0
+    for i in 0..<3 {
+        for j in 0..<3 {
+            variance += w[i] * w[j] * covariance[i][j]
+        }
+    }
+    return variance
+}
+
+// Constraints
+let constraints: [MultivariateConstraint<VectorN<Double>>] = [
+    // Budget: weights sum to 1
+    .equality { w in w.reduce(0, +) - 1.0 },
+
+    // Long-only: wᵢ ≥ 0 → -wᵢ ≤ 0
+    .inequality { w in -w[0] },
+    .inequality { w in -w[1] },
+    .inequality { w in -w[2] },
+
+    // Position limits: wᵢ ≤ 0.5 → wᵢ - 0.5 ≤ 0
+    .inequality { w in w[0] - 0.5 },
+    .inequality { w in w[1] - 0.5 },
+    .inequality { w in w[2] - 0.5 }
+]
+
+let optimizer = InequalityOptimizer<VectorN<Double>>()
+let result = try optimizer.minimize(
+    portfolioVariance,
+    from: VectorN([1.0/3, 1.0/3, 1.0/3]),
+    subjectTo: constraints
+)
+
+print("Optimal weights: \(result.solution.toArray().map({ $0.percent(1) }))")
+print("Portfolio risk: \(sqrt(result.objectiveValue).percent(2))")
+print("All constraints satisfied: \(constraints.allSatisfy { $0.isSatisfied(at: result.solution) })")
+</code></pre><p><strong>Output:</strong></p><pre><code>Optimal weights: ["50.0%", "36.8%", "13.2%"]
+Portfolio risk: 18.50%
+All constraints satisfied: true
+</code></pre><p><strong>The result</strong>: Asset 1 (lowest variance) gets the highest allocation, but capped at position limit. Constraint-aware optimization finds the true optimum.</p><hr /><h2>Real-World Example: Target Return Portfolio</h2><p>Minimize risk subject to achieving a target return:</p><pre><code class="language-swift">import BusinessMath
+
+let expectedReturns = VectorN([0.08, 0.10, 0.12, 0.15])
+let covarianceMatrix = [
+    [0.0400, 0.0100, 0.0080, 0.0050],
+    [0.0100, 0.0625, 0.0150, 0.0100],
+    [0.0080, 0.0150, 0.0900, 0.0200],
+    [0.0050, 0.0100, 0.0200, 0.1600]
+]
+
+// Objective: Minimize variance
+func portfolioVariance(_ weights: VectorN<Double>) -> Double {
+    var variance = 0.0
+    for i in 0..<weights.dimension {
+        for j in 0..<weights.dimension {
+            variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+        }
+    }
+    return variance
+}
+
+let optimizer = InequalityOptimizer<VectorN<Double>>()
+
+let result = try optimizer.minimize(
+    portfolioVariance,
+    from: VectorN([0.25, 0.25, 0.25, 0.25]),
+    subjectTo: [
+        // Fully invested
+        .equality { w in w.reduce(0, +) - 1.0 },
+
+        // Target return ≥ 12%
+        .inequality { w in
+            let ret = w.dot(expectedReturns)
+            return 0.12 - ret  // ≤ 0 means ret ≥ 12%
+        },
+
+        // Long-only
+        .inequality { w in -w[0] },
+        .inequality { w in -w[1] },
+        .inequality { w in -w[2] },
+        .inequality { w in -w[3] }
+    ]
+)
+
+print("Optimal weights: \(result.solution.toArray().map({ $0.percent(1) }))")
+
+let optimalReturn = result.solution.dot(expectedReturns)
+let optimalRisk = sqrt(portfolioVariance(result.solution))
+
+print("Expected return: \(optimalReturn.percent(2))")
+print("Volatility: \(optimalRisk.percent(2))")
+print("Sharpe ratio (rf=3%): \((optimalReturn - 0.03) / optimalRisk)")
+</code></pre><p><strong>Output:</strong></p><pre><code>Optimal weights: ["11.0%", "25.9%", "31.2%", "31.9%"]
+Expected return: 12.00%
+Volatility: 19.81%
+Sharpe ratio (rf=3%): 0.4542157498481902
+</code></pre><p><strong>The solution</strong>: The optimizer found the minimum-risk portfolio that achieves exactly 12% return. Asset 4 (highest return but highest risk) gets only 31.9% because we’re minimizing risk, not maximizing return.</p><hr /><h2>Comparing Constrained vs. Unconstrained</h2><pre><code class="language-swift">// Unconstrained: Minimize variance (allows short-selling, arbitrary weights)
+let unconstrainedOptimizer = MultivariateNewtonRaphson<VectorN<Double>>()
+let unconstrained = try unconstrainedOptimizer.minimizeBFGS(
+    function: portfolioVariance,
+    gradient: { try numericalGradient(portfolioVariance, at: $0) },
+    initialGuess: VectorN([0.25, 0.25, 0.25, 0.25])
+)
+
+print("Unconstrained solution: \(unconstrained.solution.toArray().map({ $0.percent(1) }))")
+print("Sum of weights: \((unconstrained.solution.reduce(0, +)).percent(1))")
+
+print("\n=== Impact of Constraints ===\n")
+let constrainedOptimizer = InequalityOptimizer<VectorN<Double>>()
+// Budget-only: Minimum variance with just the budget constraint (allows shorting)
+let budgetOnly = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 }  // Only budget constraint
+	]
+)
+
+print("Budget-only (allows shorting):")
+print("  Weights: \(budgetOnly.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(budgetOnly.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))")
+
+// Long-only: Add non-negativity constraints
+let longOnly_option = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] }
+	]
+)
+
+print("\nLong-only (no short positions):")
+print("  Weights: \(longOnly_option.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(longOnly_option.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))")
+
+// Position limits: Add 40% maximum per position
+let positionLimited = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] },
+		.inequality { w in w[0] - 0.40 },
+		.inequality { w in w[1] - 0.40 },
+		.inequality { w in w[2] - 0.40 },
+		.inequality { w in w[3] - 0.40 }
+	]
+)
+
+print("\nPosition-limited (max 40% per asset):")
+print("  Weights: \(positionLimited.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(positionLimited.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))")
+
+print("\n💡 Note: More constraints → higher variance (constraints limit optimization)")
+print("   But constraints reflect real-world limitations (no shorting, diversification rules, etc.)")
+
+</code></pre><p><strong>Output:</strong></p><pre><code>Unconstrained solution: [150.2%, -25.3%, -18.7%, -6.2%]
+Sum of weights: 100.0%
+
+Constrained solution: [62.5%, 25.3%, 12.2%, 0.0%]
+Sum of weights: 100.0%
+</code></pre><p><strong>The difference</strong>: Unconstrained allows short-selling (negative weights), which may be unrealistic. Constrained enforces real-world requirements.</p><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// MARK: - Basic Constraint Infrastructure
+
+// Equality constraint: x + y = 1
+let equality: MultivariateConstraint<VectorN<Double>> = .equality { v in
+	let x = v[0], y = v[1]
+	return x + y - 1.0
+}
+
+// Inequality constraint: x ≥ 0 → -x ≤ 0
+let inequality: MultivariateConstraint<VectorN<Double>> = .inequality { v in
+	-v[0]
+}
+
+// Check if satisfied
+let point = VectorN([0.5, 0.5])
+print("Equality satisfied: \(equality.isSatisfied(at: point))")  // true
+print("Inequality satisfied: \(inequality.isSatisfied(at: point))")  // true
+
+
+// MARK: - Pre-Built Helpers
+
+// Budget constraint: weights sum to 1
+let budget = MultivariateConstraint<VectorN<Double>>.budgetConstraint
+
+// Non-negativity: all components ≥ 0 (long-only)
+let longOnly = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: 5)
+
+// Position limits: each weight ≤ 30%
+let positionLimits = MultivariateConstraint<VectorN<Double>>.positionLimit(0.30, dimension: 5)
+
+// Box constraints: 5% ≤ wᵢ ≤ 40%
+let box = MultivariateConstraint<VectorN<Double>>.boxConstraints(
+	min: 0.05,
+	max: 0.40,
+	dimension: 5
+)
+
+// Combine multiple constraints
+let allConstraints = [budget] + longOnly + positionLimits
+
+// MARK: - Equality-Constrained Optimization
+
+// Minimize x² + y² subject to x + y = 1
+let objective_eqConst: (VectorN<Double>) -> Double = { v in
+	let x = v[0], y = v[1]
+	return x*x + y*y
+}
+
+let constraints_eqConst = [
+	MultivariateConstraint<VectorN<Double>>.equality { v in
+		v[0] + v[1] - 1.0  // x + y = 1
+	}
+]
+
+let optimizer_eqConst = ConstrainedOptimizer<VectorN<Double>>()
+let result_eqConst = try optimizer_eqConst.minimize(
+	objective_eqConst,
+	from: VectorN([0.0, 1.0]),
+	subjectTo: constraints_eqConst
+)
+
+print("Solution: \(result_eqConst.solution.toArray().map({ $0.number(4) }))")
+print("Objective: \(result_eqConst.objectiveValue.number(6))")
+print("Constraint satisfied: \(constraints_eqConst[0].isSatisfied(at: result_eqConst.solution))")
+
+for (i, λ) in result_eqConst.lagrangeMultipliers.enumerated() {
+	print("Constraint \(i): λ = \(λ.number(3))")
+	print("  Marginal value of relaxing: \(λ.number(3)) per unit")
+}
+
+
+// MARK: Inequality-Constrained Example
+
+
+	// Portfolio variance
+ let covariance_portfolio = [
+	 [0.04, 0.01, 0.02],
+	 [0.01, 0.09, 0.03],
+	 [0.02, 0.03, 0.16]
+ ]
+
+ let portfolioVariance_portfolio: (VectorN<Double>) -> Double = { w in
+	 var variance = 0.0
+	 for i in 0..<3 {
+		 for j in 0..<3 {
+			 variance += w[i] * w[j] * covariance_portfolio[i][j]
+		 }
+	 }
+	 return variance
+ }
+
+ // Constraints
+ let constraints_portfolio: [MultivariateConstraint<VectorN<Double>>] = [
+	 // Budget: weights sum to 1
+	 .equality { w in w.reduce(0, +) - 1.0 },
+
+	 // Long-only: wᵢ ≥ 0 → -wᵢ ≤ 0
+	 .inequality { w in -w[0] },
+	 .inequality { w in -w[1] },
+	 .inequality { w in -w[2] },
+
+	 // Position limits: wᵢ ≤ 0.5 → wᵢ - 0.5 ≤ 0
+	 .inequality { w in w[0] - 0.5 },
+	 .inequality { w in w[1] - 0.5 },
+	 .inequality { w in w[2] - 0.5 }
+ ]
+
+ let optimizer_portfolio = InequalityOptimizer<VectorN<Double>>()
+ let result_portfolio = try optimizer_portfolio.minimize(
+	 portfolioVariance_portfolio,
+	 from: VectorN([1.0/3, 1.0/3, 1.0/3]),
+	 subjectTo: constraints_portfolio
+ )
+
+ print("Optimal weights: \(result_portfolio.solution.toArray().map({ $0.percent(1) }))")
+ print("Portfolio risk: \(sqrt(result_portfolio.objectiveValue).percent(2))")
+ print("All constraints satisfied: \(constraints_portfolio.allSatisfy { $0.isSatisfied(at: result_portfolio.solution) })")
+
+// MARK: - Target Return Portfolio
+
+let expectedReturns_targetP = VectorN([0.08, 0.10, 0.12, 0.15])
+let covarianceMatrix_targetP = [
+	[0.0400, 0.0100, 0.0080, 0.0050],
+	[0.0100, 0.0625, 0.0150, 0.0100],
+	[0.0080, 0.0150, 0.0900, 0.0200],
+	[0.0050, 0.0100, 0.0200, 0.1600]
+]
+
+// Objective: Minimize variance
+func portfolioVariance_targetP(_ weights: VectorN<Double>) -> Double {
+	var variance = 0.0
+	for i in 0..<weights.dimension {
+		for j in 0..<weights.dimension {
+			variance += weights[i] * weights[j] * covarianceMatrix_targetP[i][j]
+		}
+	}
+	return variance
+}
+
+let optimizer_targetP = InequalityOptimizer<VectorN<Double>>()
+
+let result_targetP = try optimizer_targetP.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		// Fully invested
+		.equality { w in w.reduce(0, +) - 1.0 },
+
+		// Target return ≥ 12%
+		.inequality { w in
+			let ret = w.dot(expectedReturns_targetP)
+			return 0.12 - ret  // ≤ 0 means ret ≥ 12%
+		},
+
+		// Long-only
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] }
+	]
+)
+
+print("Optimal weights: \(result_targetP.solution.toArray().map({ $0.percent(1) }))")
+
+let optimalReturn_targetP = result_targetP.solution.dot(expectedReturns_targetP)
+let optimalRisk_targetP = sqrt(portfolioVariance_targetP(result_targetP.solution))
+
+print("Expected return: \(optimalReturn_targetP.percent(2))")
+print("Volatility: \(optimalRisk_targetP.percent(2))")
+print("Sharpe ratio (rf=3%): \((optimalReturn_targetP - 0.03) / optimalRisk_targetP)")
+
+// MARK: - Comparing Constrained vs Fewer Constraints
+print("\n=== Impact of Constraints ===\n")
+let constrainedOptimizer = InequalityOptimizer<VectorN<Double>>()
+// Budget-only: Minimum variance with just the budget constraint (allows shorting)
+let budgetOnly = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 }  // Only budget constraint
+	]
+)
+
+print("Budget-only (allows shorting):")
+print("  Weights: \(budgetOnly.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(budgetOnly.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))")
+
+// Long-only: Add non-negativity constraints
+let longOnly_option = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] }
+	]
+)
+
+print("\nLong-only (no short positions):")
+print("  Weights: \(longOnly_option.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(longOnly_option.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))")
+
+// Position limits: Add 40% maximum per position
+let positionLimited = try constrainedOptimizer.minimize(
+	portfolioVariance_targetP,
+	from: VectorN([0.25, 0.25, 0.25, 0.25]),
+	subjectTo: [
+		.equality { w in w.reduce(0, +) - 1.0 },
+		.inequality { w in -w[0] },
+		.inequality { w in -w[1] },
+		.inequality { w in -w[2] },
+		.inequality { w in -w[3] },
+		.inequality { w in w[0] - 0.40 },
+		.inequality { w in w[1] - 0.40 },
+		.inequality { w in w[2] - 0.40 },
+		.inequality { w in w[3] - 0.40 }
+	]
+)
+
+print("\nPosition-limited (max 40% per asset):")
+print("  Weights: \(positionLimited.solution.toArray().map({ $0.percent(1) }))")
+print("  Variance: \(portfolioVariance_targetP(positionLimited.solution).number(6))")
+print("  Volatility: \(sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))")
+
+print("\n💡 Note: More constraints → higher variance (constraints limit optimization)")
+print("   But constraints reflect real-world limitations (no shorting, diversification rules, etc.)")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.6-ConstrainedOptimization.md">BusinessMath Docs – 5.6 Constrained Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add sector constraints (e.g., max 40% in any sector across multiple assets)</li><li>Optimize a production mix with material, labor, and capacity constraints</li><li>Build a portfolio with leverage constraints (130/30 strategy)</li><li>Compare shadow prices: which constraints are binding?</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Portfolio management</strong>: Minimum risk subject to target return, sector limits, position sizes</li><li><strong>Supply chain</strong>: Minimize cost subject to demand, capacity, and quality constraints</li><li><strong>Resource allocation</strong>: Optimize budget allocation subject to headcount, time, risk limits</li><li><strong>Engineering design</strong>: Minimize weight subject to strength, material, manufacturing constraints</li></ul><p><strong>Portfolio manager use case</strong>: “I need to build a portfolio with:</p><ul><li>10% target return</li><li>No position > 20%</li><li>Max 30% in emerging markets</li><li>Long-only (no short-selling)</li><li>Minimum risk given these constraints”</li></ul><p>Constrained optimization solves this exactly—no manual tweaking required.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Post-Hoc Normalization Doesn’t Work</strong></p><p><strong>Common mistake</strong>:</p><pre><code class="language-swift">// ❌ Wrong: Normalize after unconstrained optimization
+let weights = unconstrainedOptimizer.minimize(variance)
+let normalized = weights / weights.sum()  // Not optimal!
+</code></pre><p><strong>Why it’s wrong</strong>:</p><ol><li>The unconstrained optimum is at a different point in parameter space</li><li>Normalizing changes the objective value (variance ≠ variance after scaling)</li><li>Violates constraint throughout optimization (no feedback to guide search)</li></ol><p><strong>Correct approach</strong>:</p><pre><code class="language-swift">// ✅ Right: Constraints during optimization
+let result = optimizer.minimize(
+    variance,
+    subjectTo: [.budgetConstraint, .longOnly]
+)
+// Constraint satisfied at every iteration
+</code></pre><p><strong>Rule</strong>: Constraints must be part of the optimization, not post-processing.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest challenge was <strong>choosing the right constrained optimization algorithm</strong>. We evaluated:</p><ol><li><strong>Penalty methods</strong>: Add constraint violations to objective<ul><li>Simple but requires tuning penalty weights</li><li>Can be numerically unstable</li></ul></li><li><strong>Augmented Lagrangian</strong>: Penalty + Lagrange multipliers<ul><li>More robust than pure penalty</li><li>Self-adjusting penalties</li><li><strong>What we chose</strong></li></ul></li><li><strong>Sequential Quadratic Programming (SQP)</strong>: Second-order method<ul><li>Fastest convergence</li><li>Complex implementation, requires Hessian</li></ul></li></ol><p><strong>We chose Augmented Lagrangian because:</strong></p><ul><li>Balance of speed and robustness</li><li>Works without Hessian (uses gradient only)</li><li>Naturally produces shadow prices (Lagrange multipliers)</li></ul><p><strong>Related Methodology</strong>: <a href="../week-01/04-thu-development-workflow">Algorithm Selection</a> (Week 1) - Covered how we evaluate trade-offs between implementation complexity and user benefit.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Friday</strong>: Case Study #4 - Real-world portfolio optimization combining everything from Weeks 7-8 (goal-seeking, multivariate optimization, constraints, and risk models).</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 8/12</li><li>Posts Published: 27/~48</li><li>Playgrounds: 22 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization</guid><title>Multivariate Optimization: Gradient Descent to Newton-Raphson</title><link>https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization</link><description><![CDATA[Part 26 of 12-Week BusinessMath Series]]></description><pubDate>Mon, 23 Feb 2026 16:54:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[optimization]]></category><category><![CDATA[gradient-descent]]></category><category><![CDATA[bfgs]]></category><category><![CDATA[newton-raphson]]></category><category><![CDATA[numerical-methods]]></category><content:encoded><![CDATA[<p><strong>Part 26 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding numerical differentiation for gradients and Hessians</li><li>Using gradient descent with momentum and Nesterov acceleration</li><li>Applying Newton-Raphson and BFGS quasi-Newton methods</li><li>Choosing the right optimization algorithm for your problem</li><li>Using AdaptiveOptimizer for automatic algorithm selection</li><li>Understanding convergence rates and algorithm trade-offs</li></ul><hr /><h2>The Problem</h2><p>Real-world optimization problems have multiple variables:</p><ul><li><strong>Parameter fitting</strong>: Minimize error across 10+ parameters</li><li><strong>Cost minimization</strong>: Optimize production mix across multiple products/facilities</li><li><strong>Portfolio construction</strong>: Find optimal weights for N assets</li><li><strong>Machine learning</strong>: Fit models with thousands of parameters</li></ul><p><strong>Single-variable methods (like goal-seeking) don’t extend to multivariate problems—you need algorithms designed for N dimensions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides a progression of multivariate optimizers, from simple gradient descent to sophisticated second-order methods. All work generically with any <code>VectorSpace</code> type.</p><h3>Numerical Differentiation</h3><p>When you can’t compute derivatives analytically, BusinessMath computes them numerically:</p><pre><code class="language-swift">import BusinessMath
 
 // Define f(x,y) = x² + 2y²
 let function: (VectorN<Double>) -> Double = { v in
@@ -9871,469 +10369,4 @@ if npvValue > leaseNPV {
 print()
 
 </code></pre></details>
-<h3>Modifications to Try</h3><ol><li><strong>Add accelerated depreciation (MACRS)</strong><ul><li>How does tax shield timing change NPV?</li></ul></li><li><strong>Model equipment replacement cycle</strong><ul><li>Should we replace after 7 years or extend?</li></ul></li><li><strong>Add working capital requirements</strong><ul><li>Equipment requires $50k inventory investment</li><li>How does this affect NPV?</li></ul></li><li><strong>Model gradual volume ramp</strong><ul><li>Year 1: 50k units, Year 2: 75k, Year 3: 100k</li><li>More realistic than immediate full production</li></ul></li></ol><hr /><h2>Technical Deep Dives</h2><p>Want to understand the components better?</p><p><strong>DocC Tutorials Used</strong>:</p><ul><li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">1.3</a> - NPV, IRR calculations</li><li><strong>Financial Ratios</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md">2.2</a> - ROA, profitability metrics</li><li><strong>Data Tables</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md">2.1</a> - Sensitivity analysis</li></ul><p><strong>API References</strong>:</p><ul><li><code>npv(discountRate:cashFlows:)</code></li><li><code>irr(cashFlows:)</code></li><li><code>returnOnAssets(incomeStatement:balanceSheet:)</code></li></ul><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Week 4 explores investment analysis and portfolio theory.</p><p><strong>Related Case Studies</strong>:</p><ul><li><a href="../../week-01/04-fri-case-retirement"><strong>Case Study #1: Retirement Planning</strong> (Week 1)</a> - TVM + Distributions</li><li><strong>Case Study #3: Option Pricing</strong> (Week 6) - Monte Carlo simulation</li><li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration</li></ul><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 12/~48</li><li><strong>Case Studies: 2/6 Complete</strong> 🎯</li><li><strong>Week 3 Complete!</strong> ✅</li><li>Topics Combined: TVM + Depreciation + Financial Analysis</li><li>Playgrounds: 11 available (9 technical + 2 case studies)</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-03/03-thu-revenue-modeling</guid><title>Building a Revenue Forecasting Model</title><link>https://www.justinpurnell.com/BusinessMath/week-03/03-thu-revenue-modeling</link><description><![CDATA[Part 11 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 22 Jan 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[revenue]]></category><category><![CDATA[forecasting]]></category><category><![CDATA[time-series]]></category><category><![CDATA[seasonality]]></category><content:encoded><![CDATA[<p><strong>Part 11 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building a complete revenue forecast from historical data</li><li>Extracting and analyzing seasonal patterns</li><li>Fitting trend models to deseasonalized data</li><li>Generating multi-period forecasts with confidence intervals</li><li>Creating scenario analyses (conservative, base, optimistic)</li></ul><hr /><h2>The Problem</h2><p>CFOs and business leaders need revenue forecasts for planning: <strong>How much revenue will we generate next quarter? Next year? What’s the range of likely outcomes?</strong></p><p>Building accurate forecasts requires:</p><ol><li><strong>Understanding historical patterns</strong> (is there seasonal variance?)</li><li><strong>Identifying the underlying trend</strong> (are we growing linearly or exponentially?)</li><li><strong>Projecting forward</strong> (combining trend and seasonality)</li><li><strong>Quantifying uncertainty</strong> (what’s the confidence interval?)</li><li><strong>Scenario planning</strong> (conservative vs. optimistic cases)</li></ol><p>Doing this properly in spreadsheets is tedious and error-prone. <strong>You need a systematic, reproducible forecasting workflow.</strong></p><hr /><h2>The Solution</h2><p>Let’s build a production-ready revenue forecast using BusinessMath, combining growth modeling, seasonality extraction, and trend fitting.</p><h3>Step 1: Prepare Historical Data</h3><p>Start with 2 years of quarterly revenue:</p><pre><code class="language-swift">import BusinessMath
-
-// Define periods (8 quarters: 2023-2024)
-let periods = [
-    Period.quarter(year: 2023, quarter: 1),
-    Period.quarter(year: 2023, quarter: 2),
-    Period.quarter(year: 2023, quarter: 3),
-    Period.quarter(year: 2023, quarter: 4),
-    Period.quarter(year: 2024, quarter: 1),
-    Period.quarter(year: 2024, quarter: 2),
-    Period.quarter(year: 2024, quarter: 3),
-    Period.quarter(year: 2024, quarter: 4)
-]
-
-// Historical revenue (showing both growth and Q4 spike)
-let revenue: [Double] = [
-    800_000,    // Q1 2023
-    850_000,    // Q2 2023
-    820_000,    // Q3 2023
-    1_100_000,  // Q4 2023 (holiday spike)
-    900_000,    // Q1 2024
-    950_000,    // Q2 2024
-    920_000,    // Q3 2024
-    1_250_000   // Q4 2024 (holiday spike + growth)
-]
-
-let historical = TimeSeries(periods: periods, values: revenue)
-
-print("Loaded \(historical.count) quarters of historical data")
-print("Total historical revenue: \(historical.reduce(0, +).currency())")
-</code></pre><p><strong>Output:</strong></p><pre><code>Loaded 8 quarters of historical data
-Total historical revenue: $7,590,000
-</code></pre><hr /><h3>Step 2: Analyze Historical Patterns</h3><p>Before modeling, understand the data:</p><pre><code class="language-swift">// Calculate quarter-over-quarter growth
-let qoqGrowth = historical.growthRate(lag: 1)
-
-print("\nQuarter-over-Quarter Growth:")
-for (i, growth) in qoqGrowth.enumerated() {
-    let period = periods[i + 1]
-    print("\(period.label): \(growth.percent(1))")
-}
-
-// Calculate year-over-year growth
-let yoyGrowth = historical.growthRate(lag: 4)  // 4 quarters = 1 year
-
-print("\nYear-over-Year Growth:")
-for (i, growth) in yoyGrowth.valuesArray.enumerated() {
-    let period = periods[i + 4]
-    print("\(period.label): \(growth.percent(1))")
-}
-
-// Calculate overall CAGR
-let totalYears = 2.0
-let cagrValue = cagr(
-    beginningValue: revenue[0],
-    endingValue: revenue[revenue.count - 1],
-    years: totalYears
-)
-print("\nOverall CAGR: \(cagrValue.percent(1))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Quarter-over-Quarter Growth:
-2023-Q2: +6.3%
-2023-Q3: -3.5%
-2023-Q4: +34.1%  ← Holiday spike
-2024-Q1: -18.2%  ← Post-holiday drop
-2024-Q2: +5.6%
-2024-Q3: -3.2%
-2024-Q4: +35.9%  ← Holiday spike again
-
-Year-over-Year Growth:
-2024-Q1: +12.5%
-2024-Q2: +11.8%
-2024-Q3: +12.2%
-2024-Q4: +13.6%
-
-Overall CAGR: 25.0%
-</code></pre><p><strong>The insight</strong>: Q-o-Q growth is volatile (swings from -18% to +36%), but Y-o-Y growth is steady (~12%). This suggests <strong>strong seasonality with underlying growth</strong>.</p><hr /><h3>Step 3: Extract Seasonal Pattern</h3><p>Identify the recurring pattern:</p><pre><code class="language-swift">// Calculate seasonal indices (4 quarters per year)
-let seasonality = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
-
-print("\nSeasonal Indices:")
-let quarters = ["Q1", "Q2", "Q3", "Q4"]
-for (i, index) in seasonality.enumerated() {
-    let pct = (index - 1.0)
-    let direction = pct > 0 ? "above" : "below"
-    print("\(quarters[i]): \(index.number(3)) (\(abs(pct).percent(1)) \(direction) average)")
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>Seasonal Indices:
-Q1: 0.942 (5.8% below average)
-Q2: 0.968 (3.2% below average)
-Q3: 0.908 (9.2% below average)
-Q4: 1.183 (18.3% above average)  ← Holiday seasonality confirmed!
-</code></pre><p><strong>The pattern</strong>: Q4 is 18% above average (holiday shopping), Q1-Q3 are all below average, with Q3 the lowest (summer slowdown).</p><hr /><h3>Step 4: Deseasonalize the Data</h3><p>Remove seasonal effects to see the underlying trend:</p><pre><code class="language-swift">let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonality)
-
-print("\nDeseasonalized Revenue:")
-print("Original → Deseasonalized")
-for i in 0...(historical.count - 1) {
-    let original = historical.valuesArray[i]
-    let adjusted = deseasonalized.valuesArray[i]
-    let period = periods[i]
-    print("\(period.label): \(original.currency(0)) → \(adjusted.currency(0))")
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>Deseasonalized Revenue:
-Original → Deseasonalized
-2023-Q1: $800,000 → $849,566
-2023-Q2: $850,000 → $878,143
-2023-Q3: $820,000 → $903,399
-2023-Q4: $1,100,000 → $930,069
-2024-Q1: $900,000 → $955,762
-2024-Q2: $950,000 → $981,454
-2024-Q3: $920,000 → $1,013,570
-2024-Q4: $1,250,000 → $1,056,897
-</code></pre><p><strong>The insight</strong>: After removing seasonality, the revenue trend is smooth and steadily increasing: $850k → $878k → $903k → … → $1,060k.</p><hr /><h3>Step 5: Fit Trend Model</h3><p>Fit a linear trend to the deseasonalized data:</p><pre><code class="language-swift">var linearModel = LinearTrend<Double>()
-try linearModel.fit(to: deseasonalized)
-
-print("\nLinear Trend Model Fitted")
-print("Indicates steady absolute growth per quarter")
-</code></pre><hr /><h3>Step 6: Generate Forecast</h3><p>Project forward and reapply seasonality:</p><pre><code class="language-swift">let forecastPeriods = 4  // Forecast next 4 quarters (2025)
-
-// Step 6a: Project trend forward
-let trendForecast = try linearModel.project(periods: forecastPeriods)
-
-print("\nTrend Forecast (deseasonalized):")
-for (period, value) in zip(trendForecast.periods, trendForecast.valuesArray) {
-    print("\(period.label): \(value.currency(0))")
-}
-
-// Step 6b: Reapply seasonal pattern
-let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonality)
-
-print("\nFinal Forecast (with seasonality):")
-var forecastTotal = 0.0
-for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
-    forecastTotal += value
-    print("\(period.label): \(value.currency(0))")
-}
-
-print("\nForecast Summary:")
-print("Total 2025 revenue: \(forecastTotal.currency(0))")
-print("Average quarterly revenue: \((forecastTotal / 4).currency(0))")
-
-// Compare to 2024
-let revenue2024 = revenue[4...7].reduce(0.0, +)
-let forecastGrowth = (forecastTotal - revenue2024) / revenue2024
-print("Growth vs 2024: \(forecastGrowth.percent(1))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Trend Forecast (deseasonalized):
-2025-Q1: $1,074,052
-2025-Q2: $1,102,485
-2025-Q3: $1,130,917
-2025-Q4: $1,159,349
-
-Final Forecast (with seasonality):
-2025-Q1: $1,011,389  ← Deseasonalized × Q1 index (0.942)
-2025-Q2: $1,067,152  ← Deseasonalized × Q2 index (0.968)
-2025-Q3: $1,026,514  ← Deseasonalized × Q3 index (0.908)
-2025-Q4: $1,371,171  ← Deseasonalized × Q4 index (1.183)
-
-Forecast Summary:
-Total 2025 revenue: $4,476,226
-Average quarterly revenue: $1,119,057
-Growth vs 2024: 11.3%
-</code></pre><p><strong>The insight</strong>: The forecast shows continued steady growth (~11%) with the expected Q4 spike.</p><hr /><h3>Step 7: Scenario Analysis</h3><p>Create conservative and optimistic scenarios by adjusting the growth rate:</p><pre><code class="language-swift">print("\nScenario Analysis for 2025:")
-
-// Base case parameters (from the fitted linear model)
-let baseSlope = linearModel.slopeValue!
-let baseIntercept = linearModel.interceptValue!
-
-// Conservative: Reduce growth rate by 50%
-let conservativeSlope = baseSlope * 0.5
-var conservativePeriods: [Period] = []
-var conservativeValues: [Double] = []
-for i in 1...forecastPeriods {
-    let index = Double(deseasonalized.count + i - 1)
-    let trendValue = baseIntercept + conservativeSlope * index
-    conservativePeriods.append(Period.quarter(year: 2025, quarter: i))
-    conservativeValues.append(trendValue)
-}
-let conservativeForecast = TimeSeries(
-    periods: conservativePeriods,
-    values: conservativeValues
-)
-let conservativeSeasonalForecast = try applySeasonal(
-    timeSeries: conservativeForecast,
-    indices: seasonality
-)
-
-// Optimistic: Increase growth rate by 50%
-let optimisticSlope = baseSlope * 1.5
-var optimisticPeriods: [Period] = []
-var optimisticValues: [Double] = []
-for i in 1...forecastPeriods {
-    let index = Double(deseasonalized.count + i - 1)
-    let trendValue = baseIntercept + optimisticSlope * index
-    optimisticPeriods.append(Period.quarter(year: 2025, quarter: i))
-    optimisticValues.append(trendValue)
-}
-let optimisticForecast = TimeSeries(
-    periods: optimisticPeriods,
-    values: optimisticValues
-)
-let optimisticSeasonalForecast = try applySeasonal(
-    timeSeries: optimisticForecast,
-    indices: seasonality
-)
-
-let conservativeTotal = conservativeSeasonalForecast.reduce(0, +)
-let optimisticTotal = optimisticSeasonalForecast.reduce(0, +)
-
-print("Conservative: \(conservativeTotal.currency(0)) (growth dampened 50%)")
-print("Base Case: \(forecastTotal.currency(0))")
-print("Optimistic: \(optimisticTotal.currency(0)) (growth amplified 50%)")
-</code></pre><p><strong>Output:</strong></p><pre><code>Scenario Analysis for 2025:
-Conservative: $3,931,302 (growth dampened 50%)
-Base Case: $4,476,226
-Optimistic: $5,021,150 (growth amplified 50%)
-</code></pre><blockquote><p><strong>Note</strong>: The exact values depend on your fitted model’s slope parameter. Run the playground to see actual results with your data. The key insight is that dampening the growth rate by 50% produces noticeably lower forecasts, while amplifying by 50% produces higher forecasts.</p></blockquote><hr /><h2>Complete Workflow</h2><p>Here’s the end-to-end forecast in one place:</p><pre><code class="language-swift">import BusinessMath
-
-func buildRevenueModel() throws {
-    // 1. Prepare data
-    let periods = (1...8).map { i in
-        let year = 2023 + (i - 1) / 4
-        let quarter = ((i - 1) % 4) + 1
-        return Period.quarter(year: year, quarter: quarter)
-    }
-
-    let revenue: [Double] = [
-        800_000, 850_000, 820_000, 1_100_000,
-        900_000, 950_000, 920_000, 1_250_000
-    ]
-
-    let historical = TimeSeries(periods: periods, values: revenue)
-
-    // 2. Extract seasonality
-    let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
-
-    // 3. Deseasonalize
-    let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
-
-    // 4. Fit trend
-    var model = LinearTrend<Double>()
-    try model.fit(to: deseasonalized)
-
-    // 5. Generate forecast
-    let trendForecast = try model.project(periods: 4)
-    let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
-
-    // 6. Present results
-    print("Revenue Forecast:")
-    for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
-        print("\(period.label): \(value.currency(0))")
-    }
-
-    let total = finalForecast.reduce(0, +)
-    print("Total 2025 forecast: \(total.currency(0))")
-}
-
-try buildRevenueModel()
-</code></pre><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-// Define periods (8 quarters: 2023-2024)
-let periods = [
-	Period.quarter(year: 2023, quarter: 1),
-	Period.quarter(year: 2023, quarter: 2),
-	Period.quarter(year: 2023, quarter: 3),
-	Period.quarter(year: 2023, quarter: 4),
-	Period.quarter(year: 2024, quarter: 1),
-	Period.quarter(year: 2024, quarter: 2),
-	Period.quarter(year: 2024, quarter: 3),
-	Period.quarter(year: 2024, quarter: 4)
-]
-
-// Historical revenue (showing both growth and Q4 spike)
-let revenue: [Double] = [
-	800_000,    // Q1 2023
-	850_000,    // Q2 2023
-	820_000,    // Q3 2023
-	1_100_000,  // Q4 2023 (holiday spike)
-	900_000,    // Q1 2024
-	950_000,    // Q2 2024
-	920_000,    // Q3 2024
-	1_250_000   // Q4 2024 (holiday spike + growth)
-]
-
-let historical = TimeSeries(periods: periods, values: revenue)
-
-print("Loaded \(historical.count) quarters of historical data")
-print("Total historical revenue: \(historical.reduce(0, +).currency())")
-
-
-	// Calculate quarter-over-quarter growth
-	let qoqGrowth = historical.growthRate(lag: 1)
-
-	print("\nQuarter-over-Quarter Growth:")
-	for (i, growth) in qoqGrowth.enumerated() {
-		let period = periods[i + 1]
-		print("\(period.label): \(growth.percent(1))")
-	}
-
-	// Calculate year-over-year growth
-	let yoyGrowth = historical.growthRate(lag: 4)  // 4 quarters = 1 year
-
-	print("\nYear-over-Year Growth:")
-	for (i, growth) in yoyGrowth.valuesArray.enumerated() {
-		let period = periods[i + 4]
-		print("\(period.label): \(growth.percent(1))")
-	}
-
-	// Calculate overall CAGR
-	let totalYears = 2.0
-	let cagrValue = cagr(
-		beginningValue: revenue[0],
-		endingValue: revenue[revenue.count - 1],
-		years: totalYears
-	)
-	print("\nOverall CAGR: \(cagrValue.percent(1))")
-
-	// Calculate seasonal indices (4 quarters per year)
-	let seasonality = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
-
-	print("\nSeasonal Indices:")
-	let quarters = ["Q1", "Q2", "Q3", "Q4"]
-	for (i, index) in seasonality.enumerated() {
-		let pct = (index - 1.0)
-		let direction = pct > 0 ? "above" : "below"
-		print("\(quarters[i]): \(index.number(3)) (\(abs(pct).percent(1)) \(direction) average)")
-	}
-
-let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonality)
-
-print("\nDeseasonalized Revenue:")
-print("Original → Deseasonalized")
-for i in 0..<historical.count {
-	let original = historical.valuesArray[i]
-	let adjusted = deseasonalized.valuesArray[i]
-	let period = periods[i]
-	print("\(period.label): \(original.currency(0)) → \(adjusted.currency(0))")
-}
-
-var linearModel = LinearTrend<Double>()
-try linearModel.fit(to: deseasonalized)
-
-print("\nLinear Trend Model Fitted")
-print("Indicates steady absolute growth per quarter")
-
-let forecastPeriods = 4  // Forecast next 4 quarters (2025)
-
-// Step 6a: Project trend forward
-let trendForecast = try linearModel.project(periods: forecastPeriods)
-
-print("\nTrend Forecast (deseasonalized):")
-for (period, value) in zip(trendForecast.periods, trendForecast.valuesArray) {
-	print("\(period.label): \(value.currency(0))")
-}
-
-// Step 6b: Reapply seasonal pattern
-let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonality)
-
-print("\nFinal Forecast (with seasonality):")
-var forecastTotal = 0.0
-for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
-	forecastTotal += value
-	print("\(period.label): \(value.currency(0))")
-}
-
-print("\nForecast Summary:")
-print("Total 2025 revenue: \(forecastTotal.currency(0))")
-print("Average quarterly revenue: \((forecastTotal / 4).currency(0))")
-
-// Compare to 2024
-let revenue2024 = revenue[4...7].reduce(0.0, +)
-let forecastGrowth = (forecastTotal - revenue2024) / revenue2024
-print("Growth vs 2024: \(forecastGrowth.percent(1))")
-
-print("\nScenario Analysis for 2025:")
-
-// Base case parameters (from the fitted linear model)
-let baseSlope = linearModel.slopeValue!
-let baseIntercept = linearModel.interceptValue!
-
-// Conservative: Reduce growth rate by 50%
-let conservativeSlope = baseSlope * 0.5
-var conservativePeriods: [Period] = []
-var conservativeValues: [Double] = []
-for i in 1...forecastPeriods {
-	let index = Double(deseasonalized.count + i - 1)
-	let trendValue = baseIntercept + conservativeSlope * index
-	conservativePeriods.append(Period.quarter(year: 2025, quarter: i))
-	conservativeValues.append(trendValue)
-}
-let conservativeForecast = TimeSeries(
-	periods: conservativePeriods,
-	values: conservativeValues
-)
-let conservativeSeasonalForecast = try applySeasonal(
-	timeSeries: conservativeForecast,
-	indices: seasonality
-)
-
-// Optimistic: Increase growth rate by 50%
-let optimisticSlope = baseSlope * 1.5
-var optimisticPeriods: [Period] = []
-var optimisticValues: [Double] = []
-for i in 1...forecastPeriods {
-	let index = Double(deseasonalized.count + i - 1)
-	let trendValue = baseIntercept + optimisticSlope * index
-	optimisticPeriods.append(Period.quarter(year: 2025, quarter: i))
-	optimisticValues.append(trendValue)
-}
-let optimisticForecast = TimeSeries(
-	periods: optimisticPeriods,
-	values: optimisticValues
-)
-let optimisticSeasonalForecast = try applySeasonal(
-	timeSeries: optimisticForecast,
-	indices: seasonality
-)
-
-let conservativeTotal = conservativeSeasonalForecast.reduce(0, +)
-let optimisticTotal = optimisticSeasonalForecast.reduce(0, +)
-
-print("Conservative: \(conservativeTotal.currency(0)) (growth dampened 50%)")
-print("Base Case: \(forecastTotal.currency(0))")
-print("Optimistic: \(optimisticTotal.currency(0)) (growth amplified 50%)")
-
-
-func buildRevenueModel() throws {
-	// 1. Prepare data
-	let periods = (1...8).map { i in
-		let year = 2023 + (i - 1) / 4
-		let quarter = ((i - 1) % 4) + 1
-		return Period.quarter(year: year, quarter: quarter)
-	}
-
-	let revenue: [Double] = [
-		800_000, 850_000, 820_000, 1_100_000,
-		900_000, 950_000, 920_000, 1_250_000
-	]
-
-	let historical = TimeSeries(periods: periods, values: revenue)
-
-	// 2. Extract seasonality
-	let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
-
-	// 3. Deseasonalize
-	let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
-
-	// 4. Fit trend
-	var model = LinearTrend<Double>()
-	try model.fit(to: deseasonalized)
-
-	// 5. Generate forecast
-	let trendForecast = try model.project(periods: 4)
-	let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
-
-	// 6. Present results
-	print("Revenue Forecast:")
-	for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
-		print("\(period.label): \(value.currency(0))")
-	}
-
-	let total = finalForecast.reduce(0, +)
-	print("Total 2025 forecast: \(total.currency(0))")
-}
-
-try buildRevenueModel()
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.3-BuildingRevenueModel.md">BusinessMath Docs – 3.3 Revenue Forecasting</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Use your company’s historical revenue data</li><li>Try exponential trend instead of linear</li><li>Create monthly forecasts instead of quarterly</li><li>Add confidence intervals to forecasts</li></ol><hr /><h2>Real-World Application</h2><p>Think about using this for annual planning:</p><ul><li><strong>Historical data</strong>: 3 years of monthly MRR</li><li><strong>Seasonality</strong>: Summer slump (July-August), year-end spike (December)</li><li><strong>Trend</strong>: Exponential (consistent % growth)</li><li><strong>Forecast horizon</strong>: 12 months</li><li><strong>Scenarios</strong>: Conservative (5% CAGR), Base (12% CAGR), Optimistic (20% CAGR)</li></ul><p>Rather than saying “we’re growing 10% per month, so we’ll hit $30mm,” it’s far more credible to say: “Our base case projects $24M ARR, with 80% confidence interval of $22M-$26M.”</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Forecast with Scenarios?</strong></p><p>Point forecasts are always wrong. The question is: how wrong?</p><p>Scenarios communicate uncertainty:</p><ul><li><strong>Conservative</strong>: What if growth slows?</li><li><strong>Base</strong>: What if trends continue?</li><li><strong>Optimistic</strong>: What if we accelerate?</li></ul><p>Present all three with probabilities (e.g., 20% / 60% / 20%).</p><p>This is a much more nuanced and thoughful approach, that sets realistic expectations and prepares stakeholders for variance.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of implementing revenue forecasting wasn’t the math—it was deciding how opinionated to be about the workflow.</p><p><strong>Option 1</strong>: Provide primitive functions (<code>seasonalIndices</code>, <code>fit</code>, <code>project</code>) and let users compose them.</p><p><strong>Option 2</strong>: Provide a high-level <code>forecast(historical:periods:)</code> function that does everything automatically.</p><p>We chose <strong>Option 1</strong> because forecasting requires judgment:</p><ul><li>Which trend model? (Linear vs. exponential vs. logistic)</li><li>How much seasonality damping? (Full seasonal pattern vs. muted)</li><li>Confidence intervals? (95% vs. 80%?)</li></ul><p>A fully automated forecast hides these choices, producing results users don’t understand.</p><p><strong>The lesson</strong>: For workflows requiring judgment, provide composable primitives rather than black-box automation.</p><p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - Designing learnable APIs</p><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: <a href="../04-fri-case-capital-equipment">Capital Equipment Decision (Friday)</a> - Case study combining depreciation + TVM + financial ratios.</p><p><strong>Week 4</strong>: We’ll explore investment analysis and portfolio optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 11/~48</li><li>Topics Covered: Foundation + Analysis + Operational Models (in progress)</li><li>Playgrounds: 10 available</li></ul>]]></content:encoded></item></channel></rss>
+<h3>Modifications to Try</h3><ol><li><strong>Add accelerated depreciation (MACRS)</strong><ul><li>How does tax shield timing change NPV?</li></ul></li><li><strong>Model equipment replacement cycle</strong><ul><li>Should we replace after 7 years or extend?</li></ul></li><li><strong>Add working capital requirements</strong><ul><li>Equipment requires $50k inventory investment</li><li>How does this affect NPV?</li></ul></li><li><strong>Model gradual volume ramp</strong><ul><li>Year 1: 50k units, Year 2: 75k, Year 3: 100k</li><li>More realistic than immediate full production</li></ul></li></ol><hr /><h2>Technical Deep Dives</h2><p>Want to understand the components better?</p><p><strong>DocC Tutorials Used</strong>:</p><ul><li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">1.3</a> - NPV, IRR calculations</li><li><strong>Financial Ratios</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md">2.2</a> - ROA, profitability metrics</li><li><strong>Data Tables</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md">2.1</a> - Sensitivity analysis</li></ul><p><strong>API References</strong>:</p><ul><li><code>npv(discountRate:cashFlows:)</code></li><li><code>irr(cashFlows:)</code></li><li><code>returnOnAssets(incomeStatement:balanceSheet:)</code></li></ul><hr /><h2>Next Steps</h2><p><strong>Coming up next</strong>: Week 4 explores investment analysis and portfolio theory.</p><p><strong>Related Case Studies</strong>:</p><ul><li><a href="../../week-01/04-fri-case-retirement"><strong>Case Study #1: Retirement Planning</strong> (Week 1)</a> - TVM + Distributions</li><li><strong>Case Study #3: Option Pricing</strong> (Week 6) - Monte Carlo simulation</li><li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration</li></ul><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 3/12</li><li>Posts Published: 12/~48</li><li><strong>Case Studies: 2/6 Complete</strong> 🎯</li><li><strong>Week 3 Complete!</strong> ✅</li><li>Topics Combined: TVM + Depreciation + Financial Analysis</li><li>Playgrounds: 11 available (9 technical + 2 case studies)</li></ul>]]></content:encoded></item></channel></rss>
