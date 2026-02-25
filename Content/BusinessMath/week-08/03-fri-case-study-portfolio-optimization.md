@@ -1,5 +1,5 @@
 ---
-title: "Case Study #4: Complete Portfolio Optimization (MIDPOINT)"
+title: Case Study #4: Complete Portfolio Optimization (MIDPOINT)
 date: 2026-02-28 13:00
 series: BusinessMath Quarterly Series
 week: 8
