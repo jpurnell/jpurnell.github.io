@@ -8,7 +8,7 @@ docc_source: 5.10-ParallelOptimization.md
 playground: Week09/04-thu-parallel-optimization.playground
 tags: businessmath, swift, optimization, parallel-computing, concurrency, multi-start, global-optimization
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Parallel Multi-Start Optimization: Finding Global Optima
