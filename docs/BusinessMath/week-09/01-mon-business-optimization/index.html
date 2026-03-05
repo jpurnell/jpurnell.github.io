@@ -1,0 +1,588 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 29 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Business Optimization Patterns: From Theory to Practice</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-09/01-mon-business-optimization" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Business Optimization Patterns: From Theory to Practice"><meta property="twitter:title" content="Business Optimization Patterns: From Theory to Practice"><meta property="og:description" content="Business Optimization Patterns: From Theory to Practice"><meta name="twitter:description" content="Business Optimization Patterns: From Theory to Practice"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-09/01-mon-business-optimization"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Business Optimization Patterns: From Theory to Practice</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">13 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 29 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Translating business problems into optimization formulations</li><li>Common patterns: resource allocation, scheduling, cost minimization</li><li>Building constraint-based models for real-world problems</li><li>Choosing between continuous and integer optimization</li><li>Handling multiple objectives and conflicting goals</li><li>Performance considerations for large-scale problems</li></ul><hr /><h2>The Problem</h2><p>Business optimization problems rarely come pre-packaged with objective functions and constraints. You face scenarios like:</p><ul><li><strong>Resource Allocation</strong>: “Maximize profit across 5 products with limited materials and labor”</li><li><strong>Production Scheduling</strong>: “Minimize costs while meeting demand and capacity constraints”</li><li><strong>Portfolio Construction</strong>: “Maximize returns while limiting risk and sector exposure”</li><li><strong>Logistics</strong>: “Minimize transportation costs across warehouses and destinations”</li></ul><p><strong>The challenge isn’t just solving the optimization problem—it’s formulating it correctly from business requirements.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides patterns for translating business problems into mathematical optimization models. Once formulated, you can use the appropriate solver (gradient descent, simplex, genetic algorithms).</p><h3>Pattern 1: Resource Allocation</h3><p><strong>Business Problem</strong>: You manufacture 3 products. Each requires different amounts of material and labor. Maximize profit subject to resource constraints.</p><pre><code class="language-swift">import BusinessMath
+
+// Define the problem
+struct Product {
+    let name: String
+    let profitPerUnit: Double
+    let materialRequired: Double  // kg per unit
+    let laborRequired: Double     // hours per unit
+}
+
+let products = [
+    Product(name: "Widget A", profitPerUnit: 50, materialRequired: 2.0, laborRequired: 1.5),
+    Product(name: "Widget B", profitPerUnit: 80, materialRequired: 3.5, laborRequired: 2.0),
+    Product(name: "Widget C", profitPerUnit: 60, materialRequired: 1.5, laborRequired: 1.0)
+]
+
+// Available resources
+let availableMaterial = 1000.0  // kg
+let availableLabor = 600.0      // hours
+
+
+// Formulate optimization
+let optimizer = InequalityOptimizer<VectorN<Double>>()
+
+// Objective: Maximize profit (minimize negative profit)
+let objective: (VectorN<Double>) -> Double = { quantities in
+    -zip(products, quantities.toArray()).map { product, qty in
+        product.profitPerUnit * qty
+    }.reduce(0, +)
+}
+
+// Constraint 1: Material availability (inequality: materialUsed ≤ availableMaterial)
+let materialConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+    let materialUsed = zip(products, quantities.toArray()).map { product, qty in
+        product.materialRequired * qty
+    }.reduce(0, +)
+    return materialUsed - availableMaterial  // ≤ 0
+}
+
+// Constraint 2: Labor availability (inequality: laborUsed ≤ availableLabor)
+let laborConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+    let laborUsed = zip(products, quantities.toArray()).map { product, qty in
+        product.laborRequired * qty
+    }.reduce(0, +)
+    return laborUsed - availableLabor  // ≤ 0
+}
+
+// Constraint 3: Non-negativity (quantities ≥ 0 → -quantities ≤ 0)
+let nonNegativityConstraints = (0..<products.count).map { i in
+    MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+        -quantities[i]  // ≤ 0 means quantities[i] ≥ 0
+    }
+}
+
+// Solve
+let initialGuess = VectorN(repeating: 100.0, count: products.count)  // Start with feasible guess
+let result = try optimizer.minimize(
+    objective,
+    from: initialGuess,
+    subjectTo: [materialConstraint, laborConstraint] + nonNegativityConstraints
+)
+
+// Interpret results
+print("Optimal Production Plan:")
+for (product, quantity) in zip(products, result.solution.toArray()) {
+    print("  \(product.name): \(quantity.number(2)) units")
+}
+
+let totalProfit = -result.objectiveValue  // Remember we minimized negative profit
+print("\nTotal Profit: \(totalProfit.currency(0))")
+
+// Check constraint utilization
+let materialUsed = zip(products, result.solution.toArray())
+    .map { $0.materialRequired * $1 }
+    .reduce(0, +)
+let laborUsed = zip(products, result.solution.toArray())
+    .map { $0.laborRequired * $1 }
+    .reduce(0, +)
+
+print("\nResource Utilization:")
+print("  Material: \(materialUsed.number()) / \(availableMaterial.number()) kg (\((materialUsed/availableMaterial * 100).number())%)")
+print("  Labor: \(laborUsed.number()) / \(availableLabor.number()) hours (\((laborUsed/availableLabor * 100).number())%)")
+</code></pre><h3>Pattern 2: Cost Minimization with Quality Constraints</h3><p><strong>Business Problem</strong>: Minimize production costs while maintaining minimum quality standards.</p><pre><code class="language-swift">// Production facilities with different cost structures
+struct Facility {
+    let name: String
+    let fixedCost: Double       // Cost if any production occurs
+    let variableCost: Double    // Cost per unit
+    let qualityScore: Double    // Quality rating (0-100)
+    let capacity: Int           // Max units per period
+}
+
+let facilities = [
+    Facility(name: "Factory A", fixedCost: 10_000, variableCost: 15, qualityScore: 95, capacity: 500),
+    Facility(name: "Factory B", fixedCost: 8_000, variableCost: 12, qualityScore: 85, capacity: 800),
+    Facility(name: "Factory C", fixedCost: 5_000, variableCost: 10, qualityScore: 70, capacity: 1000)
+]
+
+let requiredUnits = 1200
+let minimumAverageQuality = 80.0
+
+// Objective: Minimize total cost (fixed + variable)
+let costObjective: (VectorN<Double>) -> Double = { quantities in
+    zip(facilities, quantities.toArray()).map { facility, qty in
+        let fixed = qty > 0 ? facility.fixedCost : 0.0
+        let variable = facility.variableCost * qty
+        return fixed + variable
+    }.reduce(0, +)
+}
+
+// Constraint 1: Meet demand (inequality: totalProduced ≥ requiredUnits)
+let demandConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+    Double(requiredUnits) - quantities.toArray().reduce(0, +)  // ≤ 0 means we meet demand
+}
+
+// Constraint 2: Quality weighted average (inequality: avgQuality ≥ minimumAverageQuality)
+let qualityConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+    let totalQuality = zip(facilities, quantities.toArray())
+        .map { $0.qualityScore * $1 }
+        .reduce(0, +)
+    let totalUnits = quantities.toArray().reduce(0, +)
+    let avgQuality = totalQuality / max(totalUnits, 1.0)
+
+    return minimumAverageQuality - avgQuality  // ≤ 0 means quality is sufficient
+}
+
+// Constraint 3: Capacity limits (inequality: qty[i] ≤ capacity[i])
+let capacityConstraints = facilities.enumerated().map { i, facility in
+    MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+        quantities[i] - Double(facility.capacity)  // ≤ 0
+    }
+}
+
+// Constraint 4: Non-negativity
+let nonNegConstraints = (0..<facilities.count).map { i in
+    MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+        -quantities[i]  // ≤ 0 means quantities[i] ≥ 0
+    }
+}
+
+// Solve with inequality optimizer
+let costOptimizer = InequalityOptimizer<VectorN<Double>>()
+let initialGuess = VectorN(repeating: Double(requiredUnits) / Double(facilities.count), count: facilities.count)
+
+let solution = try costOptimizer.minimize(
+    costObjective,
+    from: initialGuess,
+    subjectTo: [demandConstraint, qualityConstraint] + capacityConstraints + nonNegConstraints
+)
+
+print("Optimal Production Allocation:")
+for (facility, qty) in zip(facilities, solution.solution.toArray()) {
+    if qty > 0 {
+        print("  \(facility.name): \(qty.number(1)) units")
+    }
+}
+
+let totalCost = solution.objectiveValue
+print("\nTotal Cost: \(totalCost.currency(0))")
+
+// Verify quality
+let totalQuality = zip(facilities, solution.solution.toArray())
+    .map { $0.qualityScore * $1 }
+    .reduce(0, +)
+let totalUnits = solution.solution.toArray().reduce(0, +)
+let avgQuality = totalQuality / totalUnits
+
+print("Average Quality: \(avgQuality.number(1)) (required: ≥ \(minimumAverageQuality.number(1)))")
+</code></pre><h3>Pattern 3: Multi-Objective Optimization</h3><p><strong>Business Problem</strong>: Balance conflicting objectives—maximize revenue AND minimize risk.</p><pre><code class="language-swift">// Multi-objective optimization via weighted sum
+struct MultiObjectiveProblem {
+    let objectives: [(weight: Double, function: (VectorN<Double>) -> Double)]
+
+    func combinedObjective(_ x: VectorN<Double>) -> Double {
+        objectives.map { $0.weight * $0.function(x) }.reduce(0, +)
+    }
+}
+
+// Example portfolio data (you would define these based on your assets)
+let expectedReturns = VectorN([0.08, 0.10, 0.12, 0.15])
+let covarianceMatrix = [
+    [0.0400, 0.0100, 0.0080, 0.0050],
+    [0.0100, 0.0625, 0.0150, 0.0100],
+    [0.0080, 0.0150, 0.0900, 0.0200],
+    [0.0050, 0.0100, 0.0200, 0.1600]
+]
+let assets = ["Stock A", "Stock B", "Stock C", "Stock D"]
+
+// Example: Portfolio optimization with revenue and risk
+let revenueObjective: (VectorN<Double>) -> Double = { weights in
+    // Maximize expected return (minimize negative return)
+    let expectedReturn = zip(expectedReturns.toArray(), weights.toArray())
+        .map { $0 * $1 }
+        .reduce(0, +)
+    return -expectedReturn
+}
+
+let riskObjective: (VectorN<Double>) -> Double = { weights in
+    // Minimize portfolio variance
+    var variance = 0.0
+    let w = weights.toArray()
+    for i in 0..<w.count {
+        for j in 0..<w.count {
+            variance += w[i] * w[j] * covarianceMatrix[i][j]
+        }
+    }
+    return variance
+}
+
+// Budget constraint: weights sum to 1
+let sumToOneConstraint = MultivariateConstraint<VectorN<Double>>.equality { w in
+    w.toArray().reduce(0, +) - 1.0  // = 0
+}
+
+// Non-negativity: weights ≥ 0
+let portfolioNonNegativityConstraints = (0..<assets.count).map { i in
+    MultivariateConstraint<VectorN<Double>>.inequality { w in
+        -w[i]  // ≤ 0 means w[i] ≥ 0
+    }
+}
+
+// Create weighted multi-objective
+let problem = MultiObjectiveProblem(objectives: [
+    (weight: 0.7, function: revenueObjective),  // 70% weight on revenue
+    (weight: 0.3, function: riskObjective)      // 30% weight on risk
+])
+
+// Solve
+let portfolioOptimizer = InequalityOptimizer<VectorN<Double>>()
+let portfolioResult = try portfolioOptimizer.minimize(
+    problem.combinedObjective,
+    from: VectorN(repeating: 1.0 / Double(assets.count), count: assets.count),
+    subjectTo: [sumToOneConstraint] + portfolioNonNegativityConstraints
+)
+
+print("Optimal Portfolio (70% revenue focus, 30% risk focus):")
+for (asset, weight) in zip(assets, portfolioResult.solution.toArray()) {
+	if weight > 0.01 {
+		print("  \(asset): \(weight.percent(1))")
+	}
+}
+
+// Try different weight combinations to explore Pareto frontier
+let rates = Array(stride(from: 0.1, through: 0.9, by: 0.2))
+let weightCombinations = rates.map({ (1 - $0, $0)})
+print("\nPareto Frontier Exploration:")
+for (revWeight, riskWeight) in weightCombinations {
+	let problem = MultiObjectiveProblem(objectives: [
+		(weight: revWeight, function: revenueObjective),
+		(weight: riskWeight, function: riskObjective)
+	])
+
+	let result = try portfolioOptimizer.minimize(
+		problem.combinedObjective,
+		from: portfolioResult.solution,
+		subjectTo: [sumToOneConstraint] + portfolioNonNegativityConstraints
+	)
+
+	let returnVal = -revenueObjective(result.solution)
+	let riskVal = riskObjective(result.solution)
+
+	print("  Weights (\(revWeight.percent()) rev, \(riskWeight.percent()) risk): Return = \(returnVal.percent(1)), Risk = \(sqrt(riskVal).percent(1))")
+}
+</code></pre><hr /><h2>How It Works</h2><h3>Problem Formulation Process</h3><ol><li><strong>Identify Decision Variables</strong>: What can you control? (production quantities, allocations, schedules)</li><li><strong>Define Objective Function</strong>: What are you optimizing? (maximize profit, minimize cost)</li><li><strong>List Constraints</strong>: What limits exist? (capacity, budget, quality, time)</li><li><strong>Choose Solver</strong>: Continuous vs. discrete? Linear vs. nonlinear? Convex vs. non-convex?</li></ol><h3>Solver Selection Guide</h3><table><thead><th>Problem Type</th><th>Recommended Solver</th><th>Why</th></thead><tbody><tr><td>Linear, continuous</td><td>Simplex</td><td>Guaranteed global optimum</td></tr><tr><td>Smooth, unconstrained</td><td>BFGS, Newton</td><td>Fast convergence</td></tr><tr><td>Smooth, constrained</td><td>Penalty method + BFGS</td><td>Handles constraints well</td></tr><tr><td>Non-smooth, fixed costs</td><td>Genetic algorithm</td><td>Robust to discontinuities</td></tr><tr><td>Integer variables</td><td>Branch-and-bound + simplex</td><td>Exact integer solutions</td></tr><tr><td>Black-box objective</td><td>Simulated annealing</td><td>No gradient needed</td></tr><tr><td>Multi-modal</td><td>Particle swarm</td><td>Explores search space</td></tr></tbody></table><hr /><h2>Real-World Application</h2><h3>Manufacturing: Production Mix Optimization</h3><p><strong>Company</strong>: Mid-size manufacturer with 8 product lines, 3 facilities<strong>Challenge</strong>: Maximize quarterly profit subject to material, labor, and demand constraints</p><p><strong>Before BusinessMath</strong>:</p><ul><li>Excel Solver with manual constraint updates</li><li>Re-run optimization weekly (30 min per run)</li><li>No scenario analysis</li></ul><p><strong>After BusinessMath</strong>:</p><pre><code class="language-swift">// Automated weekly optimization
+let productionOptimizer = ProductionMixOptimizer(
+    products: productCatalog,
+    facilities: manufacturingFacilities,
+    constraints: weeklyConstraints
+)
+
+// Run optimization
+let optimalMix = try productionOptimizer.optimize()
+
+// Scenario analysis: What if material costs increase 10%?
+let scenario = productionOptimizer.withMaterialCostIncrease(0.10)
+let scenarioResult = try scenario.optimize()
+
+print("Profit impact of 10% material cost increase: \((scenarioResult.profit - optimalMix.profit).currency())")
+</code></pre><p><strong>Results</strong>:</p><ul><li>Optimization runtime: 8 seconds (down from 30 minutes)</li><li>Scenario analysis: 5 scenarios in 40 seconds</li><li>Profit improvement: $120K/quarter from better allocation</li></ul><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Define the problem
+struct Product {
+	let name: String
+	let profitPerUnit: Double
+	let materialRequired: Double  // kg per unit
+	let laborRequired: Double     // hours per unit
+}
+
+let products = [
+	Product(name: "Widget A", profitPerUnit: 80, materialRequired: 2.0, laborRequired: 1.5),
+	Product(name: "Widget B", profitPerUnit: 120, materialRequired: 3.5, laborRequired: 2.0),
+	Product(name: "Widget C", profitPerUnit: 60, materialRequired: 1.5, laborRequired: 1.0)
+]
+
+do {
+	// Available resources
+	let availableMaterial = 1000.0  // kg
+	let availableLabor = 600.0      // hours
+
+	// Formulate optimization
+	let optimizer = InequalityOptimizer<VectorN<Double>>()
+
+	// Objective: Maximize profit (minimize negative profit)
+	let objective: (VectorN<Double>) -> Double = { quantities in
+		-zip(products, quantities.toArray()).map { product, qty in
+			product.profitPerUnit * qty
+		}.reduce(0, +)
+	}
+
+	// Constraint 1: Material availability
+	let materialConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+		let materialUsed = zip(products, quantities.toArray()).map { product, qty in
+			product.materialRequired * qty
+		}.reduce(0, +)
+		return materialUsed - availableMaterial  // ≤ 0
+	}
+
+	// Constraint 2: Labor availability
+	let laborConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+		let laborUsed = zip(products, quantities.toArray()).map { product, qty in
+			product.laborRequired * qty
+		}.reduce(0, +)
+		return laborUsed - availableLabor  // ≤ 0
+	}
+
+	// Constraint 3: Non-negativity (quantities ≥ 0)
+	let nonNegativityConstraints = (0..<products.count).map { i in
+		MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+				-quantities[i] // ≤ 0 means quantities[i] ≥ 0
+		}
+	}
+
+	// Solve
+	let initialGuess = VectorN(repeating: 1000.0, count: products.count)
+	let result = try optimizer.minimize(
+		objective,
+		from: initialGuess,
+		constraints: [materialConstraint, laborConstraint] + nonNegativityConstraints
+	)
+
+	// Interpret results
+	print("Optimal Production Plan:")
+	for (product, quantity) in zip(products, result.solution.toArray()) {
+		print("  \(product.name): \(quantity.number(0)) units")
+	}
+
+	let totalProfit = -result.value  // Remember we minimized negative profit
+	print("\nTotal Profit: \(totalProfit.currency())")
+
+	// Check constraint utilization
+	let materialUsed = zip(products, result.solution.toArray())
+		.map { $0.materialRequired * $1 }
+		.reduce(0, +)
+	let laborUsed = zip(products, result.solution.toArray())
+		.map { $0.laborRequired * $1 }
+		.reduce(0, +)
+	
+	print("\nResource Utilization:")
+	print("  Material: \(materialUsed.number()) / \(availableMaterial.number()) kg (\((materialUsed/availableMaterial).percent()))")
+	print("  Labor: \(laborUsed.number()) / \(availableLabor.number()) hours (\((laborUsed/availableLabor).percent()))")
+
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking failed: Division by zero encountered"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try a different initial guess away from stationary points"
+	}
+}
+
+// MARK: - Cost Minimization with Quality Constraints
+
+// Production facilities with different cost structures
+struct Facility {
+	let name: String
+	let fixedCost: Double       // Cost if any production occurs
+	let variableCost: Double    // Cost per unit
+	let qualityScore: Double    // Quality rating (0-100)
+	let capacity: Int           // Max units per period
+}
+
+let facilities = [
+	Facility(name: "Factory A", fixedCost: 10_000, variableCost: 15, qualityScore: 95, capacity: 500),
+	Facility(name: "Factory B", fixedCost: 8_000, variableCost: 12, qualityScore: 85, capacity: 800),
+	Facility(name: "Factory C", fixedCost: 5_000, variableCost: 10, qualityScore: 70, capacity: 1000)
+]
+
+let requiredUnits = 1200
+let minimumAverageQuality = 80.0
+
+// Objective: Minimize total cost (fixed + variable)
+do {
+	let costObjective: (VectorN<Double>) -> Double = { quantities in
+		zip(facilities, quantities.toArray()).map { facility, qty in
+			let fixed = qty > 0 ? facility.fixedCost : 0.0
+			let variable = facility.variableCost * qty
+			return fixed + variable
+		}.reduce(0, +)
+	}
+
+	// Constraint 1: Meet demand (inequality: totalProduced ≥ requiredUnits)
+	let demandConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+		Double(requiredUnits) - quantities.toArray().reduce(0, +)  // ≤ 0 means we meet demand
+	}
+
+	// Constraint 2: Quality weighted average (inequality: avgQuality ≥ minimumAverageQuality)
+	let qualityConstraint = MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+		let totalQuality = zip(facilities, quantities.toArray())
+			.map { $0.qualityScore * $1 }
+			.reduce(0, +)
+		let totalUnits = quantities.toArray().reduce(0, +)
+		let avgQuality = totalQuality / max(totalUnits, 1.0)
+
+		return minimumAverageQuality - avgQuality  // ≤ 0 means quality is sufficient
+	}
+
+	// Constraint 3: Capacity limits (inequality: qty[i] ≤ capacity[i])
+	let capacityConstraints = facilities.enumerated().map { i, facility in
+		MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+			quantities[i] - Double(facility.capacity)  // ≤ 0
+		}
+	}
+
+	// Constraint 4: Non-negativity
+	let nonNegConstraints = (0..<facilities.count).map { i in
+		MultivariateConstraint<VectorN<Double>>.inequality { quantities in
+			-quantities[i]  // ≤ 0 means quantities[i] ≥ 0
+		}
+	}
+
+	// Solve with inequality optimizer
+	let costOptimizer = InequalityOptimizer<VectorN<Double>>()
+	let initialGuess = VectorN(repeating: Double(requiredUnits) / Double(facilities.count), count: facilities.count)
+
+	let solution = try costOptimizer.minimize(
+		costObjective,
+		from: initialGuess,
+		subjectTo: [demandConstraint, qualityConstraint] + capacityConstraints + nonNegConstraints
+	)
+
+	print("Optimal Production Allocation:")
+	for (facility, qty) in zip(facilities, solution.solution.toArray()) {
+		if qty > 0 {
+			print("  \(facility.name): \(qty.number(1)) units")
+		}
+	}
+
+	let totalCost = solution.objectiveValue
+	print("\nTotal Cost: \(totalCost.currency(0))")
+
+	// Verify quality
+	let totalQuality = zip(facilities, solution.solution.toArray())
+		.map { $0.qualityScore * $1 }
+		.reduce(0, +)
+	let totalUnits = solution.solution.toArray().reduce(0, +)
+	let avgQuality = totalQuality / totalUnits
+
+	print("Average Quality: \(avgQuality.number(1)) (required: ≥ \(minimumAverageQuality.number(1)))")
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking failed: Division by zero encountered"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try a different initial guess away from stationary points"
+	}
+}
+
+// MARK: - Multi-Objective Optimization
+
+do {
+		// Multi-objective optimization via weighted sum
+		struct MultiObjectiveProblem {
+			let objectives: [(weight: Double, function: (VectorN<Double>) -> Double)]
+
+			func combinedObjective(_ x: VectorN<Double>) -> Double {
+				objectives.map { $0.weight * $0.function(x) }.reduce(0, +)
+			}
+		}
+
+		// Example portfolio data (you would define these based on your assets)
+		let expectedReturns = VectorN([0.08, 0.10, 0.12, 0.15])
+		let covarianceMatrix = [
+			[0.0400, 0.0100, 0.0080, 0.0050],
+			[0.0100, 0.0625, 0.0150, 0.0100],
+			[0.0080, 0.0150, 0.0900, 0.0200],
+			[0.0050, 0.0100, 0.0200, 0.1600]
+		]
+		let assets = ["Stock A", "Stock B", "Stock C", "Stock D"]
+
+		// Example: Portfolio optimization with revenue and risk
+		let revenueObjective: (VectorN<Double>) -> Double = { weights in
+			// Maximize expected return (minimize negative return)
+			let expectedReturn = zip(expectedReturns.toArray(), weights.toArray())
+				.map { $0 * $1 }
+				.reduce(0, +)
+			return -expectedReturn
+		}
+
+		let riskObjective: (VectorN<Double>) -> Double = { weights in
+			// Minimize portfolio variance
+			var variance = 0.0
+			let w = weights.toArray()
+			for i in 0..<w.count {
+				for j in 0..<w.count {
+					variance += w[i] * w[j] * covarianceMatrix[i][j]
+				}
+			}
+			return variance
+		}
+
+		// Budget constraint: weights sum to 1
+		let sumToOneConstraint = MultivariateConstraint<VectorN<Double>>.equality { w in
+			w.toArray().reduce(0, +) - 1.0  // = 0
+		}
+
+		// Non-negativity: weights ≥ 0
+		let portfolioNonNegativityConstraints = (0..<assets.count).map { i in
+			MultivariateConstraint<VectorN<Double>>.inequality { w in
+				-w[i]  // ≤ 0 means w[i] ≥ 0
+			}
+		}
+
+		// Create weighted multi-objective
+		let problem = MultiObjectiveProblem(objectives: [
+			(weight: 0.7, function: revenueObjective),  // 70% weight on revenue
+			(weight: 0.3, function: riskObjective)      // 30% weight on risk
+		])
+
+		// Solve
+		let portfolioOptimizer = InequalityOptimizer<VectorN<Double>>()
+		let portfolioResult = try portfolioOptimizer.minimize(
+			problem.combinedObjective,
+			from: VectorN(repeating: 1.0 / Double(assets.count), count: assets.count),
+			subjectTo: [sumToOneConstraint] + portfolioNonNegativityConstraints
+		)
+
+		print("Optimal Portfolio (70% revenue focus, 30% risk focus):")
+		for (asset, weight) in zip(assets, portfolioResult.solution.toArray()) {
+			if weight > 0.01 {
+				print("  \(asset): \(weight.percent(1))")
+			}
+		}
+
+		// Try different weight combinations to explore Pareto frontier
+		let rates = Array(stride(from: 0.1, through: 0.9, by: 0.2))
+		let weightCombinations = rates.map({ (1 - $0, $0)})
+		print("\nPareto Frontier Exploration:")
+		for (revWeight, riskWeight) in weightCombinations {
+			let problem = MultiObjectiveProblem(objectives: [
+				(weight: revWeight, function: revenueObjective),
+				(weight: riskWeight, function: riskObjective)
+			])
+
+			let result = try portfolioOptimizer.minimize(
+				problem.combinedObjective,
+				from: portfolioResult.solution,
+				subjectTo: [sumToOneConstraint] + portfolioNonNegativityConstraints
+			)
+
+			let returnVal = -revenueObjective(result.solution)
+			let riskVal = riskObjective(result.solution)
+
+			print("  Weights (\(revWeight.percent()) rev, \(riskWeight.percent()) risk): Return = \(returnVal.percent(1)), Risk = \(sqrt(riskVal).percent(1))")
+		}
+} catch let error as BusinessMathError {
+	print(error.localizedDescription)
+	// "Goal-seeking failed: Division by zero encountered"
+
+	if let recovery = error.recoverySuggestion {
+		print("How to fix:\n\(recovery)")
+		// "Try a different initial guess away from stationary points"
+	}
+}
+
+</code></pre></details>
+<p>Download the complete playground with 5 business optimization patterns:</p><p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.7-BusinessOptimization.md">BusinessMath Docs – Business Optimization Guide</a></p><h3>Modifications to Try</h3><ol><li><strong>Add a New Constraint</strong>: Minimum production per facility to maintain workforce</li><li><strong>Multi-Period Planning</strong>: Extend to quarterly planning with inventory carryover</li><li><strong>Stochastic Demand</strong>: Use Monte Carlo to model uncertain demand</li><li><strong>Sensitivity Analysis</strong>: How sensitive is profit to each constraint?</li></ol><hr /><h2>Next Steps</h2><p><strong>Tomorrow</strong>: We’ll explore <strong>Integer Programming</strong> for problems requiring whole-number decisions (e.g., number of machines to purchase, shift schedules).</p><p><strong>Friday</strong>: Week 9 continues with <strong>Adaptive Selection</strong> and <strong>Parallel Optimization</strong> for large-scale problems.</p><hr /><p><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Resource allocation • Cost minimization • Multi-objective optimization • Constraint formulation • Solver selection</p><p><strong>Playgrounds</strong>: [Week 1-9 available] • [Next: Integer programming]</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, business-problems, resource-allocation, scheduling, cost-minimization</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
