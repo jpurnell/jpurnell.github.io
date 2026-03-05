@@ -8,7 +8,7 @@ docc_source: 5.8-IntegerProgramming.md
 playground: Week09/Integer-Programming.playground
 tags: businessmath, swift, optimization, integer-programming, branch-and-bound, discrete-optimization, scheduling
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Integer Programming: Optimal Decisions with Whole Numbers

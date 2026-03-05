@@ -8,7 +8,7 @@ docc_source: 5.9-AdaptiveSelection.md
 playground: Week09/Adaptive-Selection.playground
 tags: businessmath, swift, optimization, adaptive-algorithms, algorithm-selection, performance, automation
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Adaptive Selection: Let BusinessMath Choose the Best Algorithm
