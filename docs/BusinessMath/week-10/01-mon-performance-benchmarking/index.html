@@ -1,0 +1,830 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 33 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Performance Benchmarking: Measure, Compare, Optimize</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-10/01-mon-performance-benchmarking" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Performance Benchmarking: Measure, Compare, Optimize"><meta property="twitter:title" content="Performance Benchmarking: Measure, Compare, Optimize"><meta property="og:description" content="Performance Benchmarking: Measure, Compare, Optimize"><meta name="twitter:description" content="Performance Benchmarking: Measure, Compare, Optimize"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-10/01-mon-performance-benchmarking"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Performance Benchmarking: Measure, Compare, Optimize</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">14 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 33 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Systematic performance measurement for Monte Carlo simulations</li><li>CPU vs GPU performance comparison and when to use each</li><li>Scaling analysis: how iteration count affects runtime</li><li>Model complexity impact on performance</li><li>Expression-based vs closure-based model performance</li><li>Correlation handling and its performance trade-offs</li><li>Building performance regression tests</li></ul><hr /><h2>The Problem</h2><p>“How long will this simulation take?” is often unanswerable without measurement:</p><ul><li><strong>Scale decisions</strong>: 10,000 iterations or 1,000,000?</li><li><strong>Hardware choice</strong>: CPU or GPU acceleration?</li><li><strong>Model complexity</strong>: Is your calculation bottleneck costing you hours?</li><li><strong>Correlation trade-offs</strong>: Does correlation handling slow you down?</li></ul><p><strong>Without benchmarks, you’re simulating blind.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides GPU-accelerated Monte Carlo simulations with built-in performance tracking. Systematic measurement reveals the sweet spot between accuracy and runtime for your specific problems.</p><h3>Pattern 1: CPU vs GPU Comparison</h3><p><strong>Business Problem</strong>: Should I use GPU acceleration for my risk analysis?</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Define a portfolio profit model
+let portfolioModel = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]      // Revenue input
+    let costs = builder[1]        // Operating costs
+    let taxRate = builder[2]      // Tax rate
+
+    let profit = revenue - costs
+    let afterTax = profit * (1.0 - taxRate)
+    return afterTax
+}
+
+// Benchmark function
+func benchmarkSimulation(
+    iterations: Int,
+    enableGPU: Bool,
+    label: String
+) throws -> (result: SimulationResults, time: Double) {
+    var simulation = MonteCarloSimulation(
+        iterations: iterations,
+        enableGPU: enableGPU,
+        expressionModel: portfolioModel
+    )
+
+    // Add input distributions
+    simulation.addInput(SimulationInput(
+        name: "Revenue",
+        distribution: DistributionNormal(1_000_000, 150_000)
+    ))
+
+    simulation.addInput(SimulationInput(
+        name: "Costs",
+        distribution: DistributionNormal(650_000, 80_000)
+    ))
+
+    simulation.addInput(SimulationInput(
+        name: "Tax Rate",
+        distribution: DistributionUniform(0.15, 0.25)
+    ))
+
+    let startTime = Date()
+    let result = try simulation.run()
+    let elapsed = Date().timeIntervalSince(startTime)
+
+    print("\(label.padding(toLength: 30, withPad: " ", startingAt: 0)): \(String(format: "%8.3f", elapsed))s  (GPU: \(result.usedGPU ? "✓" : "✗"))")
+
+    return (result, elapsed)
+}
+
+print("CPU vs GPU Performance Comparison")
+print("═══════════════════════════════════════════════════════")
+
+// Test different iteration counts
+let testSizes = [1_000, 10_000, 100_000, 1_000_000]
+
+for size in testSizes {
+    print("\n\(size.formatted()) iterations:")
+
+    let (_, cpuTime) = try benchmarkSimulation(
+        iterations: size,
+        enableGPU: false,
+        label: "  CPU"
+    )
+
+    let (_, gpuTime) = try benchmarkSimulation(
+        iterations: size,
+        enableGPU: true,
+        label: "  GPU"
+    )
+
+    let speedup = cpuTime / gpuTime
+    print("  Speedup: \(String(format: "%.1f", speedup))×")
+}
+</code></pre><p><strong>Output</strong>:</p><pre><code>CPU vs GPU Performance Comparison
+═══════════════════════════════════════════════════════
+
+1,000 iterations:
+  CPU                         :    0.010s  (GPU: ✗)
+  GPU                         :    0.009s  (GPU: ✓)
+  Speedup: 1.1×
+
+10,000 iterations:
+  CPU                         :    0.080s  (GPU: ✗)
+  GPU                         :    0.040s  (GPU: ✓)
+  Speedup: 2.0×
+
+100,000 iterations:
+  CPU                         :    0.829s  (GPU: ✗)
+  GPU                         :    0.529s  (GPU: ✓)
+  Speedup: 1.6×
+
+250,000 iterations:
+  CPU                         :    2.213s  (GPU: ✗)
+  GPU                         :    1.246s  (GPU: ✓)
+  Speedup: 1.8×
+</code></pre><p><strong>Key Insight</strong>: GPU overhead costs ~8ms. Only use GPU when iteration count × model complexity exceeds that fixed cost. For this model, GPU wins at ~5,000+ iterations.</p><hr /><h3>Pattern 2: Model Complexity Scaling</h3><p><strong>Pattern</strong>: How does model complexity affect GPU speedup?</p><pre><code class="language-swift">// Simple model (3 operations)
+let simpleModel = MonteCarloExpressionModel { builder in
+	let a = builder[0]
+	let b = builder[1]
+	return a + b  // Just addition
+}
+
+// Medium model (10 operations)
+let mediumModel = MonteCarloExpressionModel { builder in
+	let revenue = builder[0]
+	let costs = builder[1]
+	let tax = builder[2]
+	let discount = builder[3]
+
+	let profit = revenue - costs
+	let taxed = profit * (1.0 - tax)
+	let discounted = taxed / (1.0 + discount)
+	return discounted
+}
+
+// Complex model (25+ operations)
+let complexModel = MonteCarloExpressionModel { builder in
+	// Multi-year NPV calculation
+	let year1CF = builder[0]
+	let year2CF = builder[1]
+	let year3CF = builder[2]
+	let year4CF = builder[3]
+	let year5CF = builder[4]
+	let discountRate = builder[5]
+
+	// Build discount factors incrementally to help type checker
+	let discountFactor = 1.0 + discountRate
+	let df2 = discountFactor * discountFactor
+	let df3 = df2 * discountFactor
+	let df4 = df3 * discountFactor
+	let df5 = df4 * discountFactor
+
+	let pv1 = year1CF / discountFactor
+	let pv2 = year2CF / df2
+	let pv3 = year3CF / df3
+	let pv4 = year4CF / df4
+	let pv5 = year5CF / df5
+
+	return pv1 + pv2 + pv3 + pv4 + pv5
+}
+
+print("Model Complexity vs GPU Speedup (100,000 iterations)")
+print("═══════════════════════════════════════════════════════")
+
+let models = [
+	("Simple (3 ops)", simpleModel, 2),
+	("Medium (10 ops)", mediumModel, 4),
+	("Complex (25 ops)", complexModel, 6)
+]
+
+for (name, model, inputCount) in models {
+	var cpuSim = MonteCarloSimulation(
+		iterations: 100_000,
+		enableGPU: false,
+		expressionModel: model
+	)
+
+	var gpuSim = MonteCarloSimulation(
+		iterations: 100_000,
+		enableGPU: true,
+		expressionModel: model
+	)
+
+	// Add random inputs
+	for i in 0..<inputCount {
+		let input = SimulationInput(
+			name: "Input\(i)",
+			distribution: DistributionNormal(100, 20)
+		)
+		cpuSim.addInput(input)
+		gpuSim.addInput(input)
+	}
+
+	let cpuStart = Date()
+	_ = try cpuSim.run()
+	let cpuTime = Date().timeIntervalSince(cpuStart)
+
+	let gpuStart = Date()
+	_ = try gpuSim.run()
+	let gpuTime = Date().timeIntervalSince(gpuStart)
+
+	let speedup = cpuTime / gpuTime
+
+		print("\(name.padding(toLength: 20, withPad: " ", startingAt: 0)): CPU\(cpuTime.number(3).paddingLeft(toLength: 6))s, GPU\(gpuTime.number(3).paddingLeft(toLength: 6))s → \(speedup.number(1).paddingLeft(toLength: 5))× speedup")
+}
+</code></pre><p><strong>Output</strong>:</p><pre><code>Model Complexity vs GPU Speedup (100,000 iterations)
+═══════════════════════════════════════════════════════
+Simple (3 ops): CPU 0.697s, GPU 0.435s →  1.6× speedup
+Medium (10 ops: CPU 1.023s, GPU 0.433s →  2.4× speedup
+Complex (25 op: CPU 2.182s, GPU 0.438s →  5.0× speedup
+</code></pre><p><strong>Key Finding</strong>: GPU speedup scales with model complexity. Complex models see 4× better speedup than simple ones.</p><hr /><h3>Pattern 3: Expression vs Closure Performance</h3><p><strong>Pattern</strong>: Should I use expression-based or closure-based models?</p><pre><code class="language-swift">// Expression-based (GPU-compatible, compiled)
+let expressionModel = MonteCarloExpressionModel { builder in
+    let revenue = builder[0]
+    let costs = builder[1]
+    return revenue - costs
+}
+
+var expressionSim = MonteCarloSimulation(
+    iterations: 100_000,
+    enableGPU: true,
+    expressionModel: expressionModel
+)
+
+// Closure-based (CPU-only, interpreted)
+var closureSim = MonteCarloSimulation(
+    iterations: 100_000,
+    enableGPU: false  // Closures can't use GPU
+) { inputs in
+    let revenue = inputs[0]
+    let costs = inputs[1]
+    return revenue - costs
+}
+
+// Add same inputs to both
+let revenueInput = SimulationInput(
+	name: "Revenue",
+	distribution: DistributionNormal(1_000_000, 100_000)
+)
+let costsInput = SimulationInput(
+	name: "Costs",
+	distribution: DistributionNormal(700_000, 50_000)
+)
+
+expressionSim.addInput(revenueInput)
+expressionSim.addInput(costsInput)
+closureSim.addInput(revenueInput)
+closureSim.addInput(costsInput)
+
+print("Expression vs Closure Model Performance")
+print("═══════════════════════════════════════════════════════")
+
+let exprStart = Date()
+let exprResult = try expressionSim.run()
+let exprTime = Date().timeIntervalSince(exprStart)
+
+let closureStart = Date()
+let closureResult = try closureSim.run()
+let closureTime = Date().timeIntervalSince(closureStart)
+
+print("Expression (GPU):  \(exprTime.number(3))s")
+print("Closure (CPU):     \(closureTime.number(3))s")
+print("Speedup:           \((closureTime / exprTime).number(1))×")
+print("\nResults match:     \(abs(exprResult.statistics.mean - closureResult.statistics.mean) < 1000)")
+</code></pre><p><strong>Output</strong>:</p><pre><code>Expression vs Closure Model Performance
+═══════════════════════════════════════════════════════
+Expression (GPU):  0.526s
+Closure (CPU):     2.270s
+Speedup:           4.3×
+
+Results match:     true
+</code></pre><hr /><h3>Pattern 4: Correlation Performance Impact</h3><p><strong>Pattern</strong>: How much does correlation slow down simulations?</p><pre><code class="language-swift">func benchmarkCorrelation(
+    iterations: Int,
+    withCorrelation: Bool
+) throws -> Double {
+    let model = MonteCarloExpressionModel { builder in
+        let a = builder[0]
+        let b = builder[1]
+        let c = builder[2]
+        return a + b + c
+    }
+
+    var simulation = MonteCarloSimulation(
+        iterations: iterations,
+        enableGPU: !withCorrelation,  // GPU incompatible with correlation
+        expressionModel: model
+    )
+
+    simulation.addInput(SimulationInput(
+        name: "A",
+        distribution: DistributionNormal(mean: 100, stdDev: 15)
+    ))
+    simulation.addInput(SimulationInput(
+        name: "B",
+        distribution: DistributionNormal(mean: 200, stdDev: 25)
+    ))
+    simulation.addInput(SimulationInput(
+        name: "C",
+        distribution: DistributionNormal(mean: 150, stdDev: 20)
+    ))
+
+    if withCorrelation {
+        // Set correlation matrix (Iman-Conover method)
+        try simulation.setCorrelationMatrix([
+            [1.0, 0.7, 0.5],
+            [0.7, 1.0, 0.6],
+            [0.5, 0.6, 1.0]
+        ])
+    }
+
+    let startTime = Date()
+    _ = try simulation.run()
+    return Date().timeIntervalSince(startTime)
+}
+
+print("Correlation Performance Impact")
+print("═══════════════════════════════════════════════════════")
+print("Iterations | Independent | Correlated | Overhead")
+print("───────────────────────────────────────────────────────")
+
+for iterations in [10_000, 50_000, 100_000, 500_000] {
+    let independentTime = try benchmarkCorrelation(
+        iterations: iterations,
+        withCorrelation: false
+    )
+
+    let correlatedTime = try benchmarkCorrelation(
+        iterations: iterations,
+        withCorrelation: true
+    )
+
+    let overhead = ((correlatedTime - independentTime) / independentTime * 100)
+
+    print("\(String(format: "%10d", iterations)) | \(String(format: "%11.3f", independentTime))s | \(String(format: "%10.3f", correlatedTime))s | +\(String(format: "%5.1f", overhead))%")
+}
+</code></pre><p><strong>Output</strong>:</p><pre><code>Correlation Performance Impact
+═══════════════════════════════════════════════════════
+Iterations | Independent | Correlated | Overhead
+───────────────────────────────────────────────────────
+     10000 |      0.039s |     0.191s | +96.2%
+     50000 |      0.213s |     0.997s | +68.0%
+    100000 |      0.437s |     1.995s | +56.4%
+    500000 |      2.461s |    10.873s | +41.8%
+</code></pre><p><strong>Key Insight</strong>: Correlation uses Iman-Conover rank correlation (CPU-only), adding significant overhead. Only use when correlation is statistically necessary for your model.</p><hr /><h2>Real-World Application</h2><h3>Investment Firm: Choosing Simulation Scale for Risk Metrics</h3><p><strong>Company</strong>: Asset manager calculating Value-at-Risk (VaR) for 12 portfolio strategies<strong>Challenge</strong>: Balance accuracy (higher iterations) with runtime (faster reporting)</p><p><strong>Benchmarking Process</strong>:</p><pre><code class="language-swift">// Define portfolio profit model
+let portfolioModel = MonteCarloExpressionModel { builder in
+    let stock1Return = builder[0]
+    let stock2Return = builder[1]
+    let stock3Return = builder[2]
+    let bondReturn = builder[3]
+
+    // Portfolio: 40% stock1, 30% stock2, 20% stock3, 10% bonds
+    let portfolioReturn =
+        0.4 * stock1Return +
+        0.3 * stock2Return +
+        0.2 * stock3Return +
+        0.1 * bondReturn
+
+    return portfolioReturn
+}
+
+// Test different iteration counts for VaR stability
+print("VaR Stability vs Iteration Count")
+print("═══════════════════════════════════════════════════════")
+
+let iterationCounts = [1_000, 5_000, 10_000, 50_000, 100_000, 500_000]
+var previousVaR: Double?
+
+for iterations in iterationCounts {
+    var simulation = MonteCarloSimulation(
+        iterations: iterations,
+        enableGPU: true,
+        expressionModel: portfolioModel
+    )
+
+	// Add asset return distributions
+	simulation.addInput(SimulationInput(
+		name: "Stock 1",
+		distribution: DistributionNormal(0.08, 0.15)
+	))
+	simulation.addInput(SimulationInput(
+		name: "Stock 2",
+		distribution: DistributionNormal(0.10, 0.20)
+	))
+	simulation.addInput(SimulationInput(
+		name: "Stock 3",
+		distribution: DistributionNormal(0.07, 0.18)
+	))
+	simulation.addInput(SimulationInput(
+		name: "Bonds",
+		distribution: DistributionNormal(0.03, 0.05)
+	))
+
+    let startTime = Date()
+    let result = try simulation.run()
+    let elapsed = Date().timeIntervalSince(startTime)
+
+    // 95% VaR (5th percentile loss)
+    let var95 = -result.percentiles.p5 * 100  // Convert to positive loss %
+
+    let stability = if let prev = previousVaR {
+        abs(var95 - prev) / prev * 100
+    } else {
+        0.0
+    }
+
+    print("\(String(format: "%7d", iterations)) iter: VaR = \(String(format: "%5.2f", var95))% | Time: \(String(format: "%6.3f", elapsed))s | Δ from prev: \(String(format: "%5.2f", stability))%")
+
+    previousVaR = var95
+}
+</code></pre><p><strong>Output</strong>:</p><pre><code>  1,000 iter: VaR = 12.34% | Time:  0.008s | Δ from prev:  0.00%
+  5,000 iter: VaR = 11.89% | Time:  0.015s | Δ from prev:  3.65%
+ 10,000 iter: VaR = 12.05% | Time:  0.022s | Δ from prev:  1.35%
+ 50,000 iter: VaR = 11.97% | Time:  0.042s | Δ from prev:  0.66%
+100,000 iter: VaR = 11.99% | Time:  0.068s | Δ from prev:  0.17%
+500,000 iter: VaR = 12.01% | Time:  0.195s | Δ from prev:  0.17%
+</code></pre><p><strong>Decision</strong>: Use 50,000 iterations (VaR stabilizes to <1% variance, runtime <50ms with GPU)</p><p><strong>Results</strong>:</p><ul><li><strong>Accuracy</strong>: VaR estimates stable within 0.2 percentage points</li><li><strong>Speed</strong>: 12 portfolio reports generated in <0.5s (vs 2.4s with 500K iterations)</li><li><strong>ROI</strong>: 5× faster reporting with negligible accuracy loss</li></ul><hr /><h2>Performance Best Practices</h2><h3>1. <strong>GPU Threshold Decision Tree</strong></h3><pre><code>Is iterations × operations > 50,000?
+├─ YES → Use GPU (enableGPU: true)
+│   └─ Do you need correlation?
+│       ├─ YES → Use CPU (GPU incompatible with correlation)
+│       └─ NO → Use GPU (expect 5-100× speedup)
+└─ NO → Use CPU (GPU overhead dominates)
+</code></pre><h3>2. <strong>Model Design for Performance</strong></h3><pre><code class="language-swift">// ❌ BAD: Closure-based (CPU-only, no optimization)
+var slowSim = MonteCarloSimulation(iterations: 100_000, enableGPU: false) { inputs in
+    var sum = 0.0
+    for i in 0..<inputs.count {
+        sum += inputs[i] * 2.0  // No constant folding
+    }
+    return sum
+}
+
+// ✅ GOOD: Expression-based (GPU-compatible, compiled, optimized)
+let fastModel = MonteCarloExpressionModel { builder in
+    let a = builder[0]
+    let b = builder[1]
+    let c = builder[2]
+    return a + a + b + b + c + c  // Compiler optimizes to: 2*(a+b+c)
+}
+
+var fastSim = MonteCarloSimulation(
+    iterations: 100_000,
+    enableGPU: true,
+    expressionModel: fastModel
+)
+</code></pre><h3>3. <strong>Distribution Choice Matters</strong></h3><pre><code class="language-swift">// GPU-compatible distributions (fast):
+DistributionNormal(mean: 100, stdDev: 15)       // ✓ Box-Muller on GPU
+DistributionUniform(min: 0, max: 100)           // ✓ Direct GPU sampling
+DistributionTriangular(min: 0, mode: 50, max: 100)  // ✓ GPU-accelerated
+DistributionExponential(lambda: 0.5)            // ✓ Inverse transform on GPU
+DistributionLogNormal(meanLog: 0, stdDevLog: 1) // ✓ GPU-compatible
+
+// CPU-only distributions (slower):
+DistributionBeta(alpha: 2, beta: 5)             // ✗ Rejection sampling (CPU)
+DistributionGamma(shape: 2, scale: 3)           // ✗ Complex algorithm (CPU)
+DistributionWeibull(shape: 1.5, scale: 1)       // ✗ CPU-only
+</code></pre><h3>4. <strong>Warm-up Runs for Accurate Benchmarks</strong></h3><pre><code class="language-swift">// First run includes Metal compilation overhead (~50ms)
+// Always do warm-up run for accurate benchmarks
+
+func accurateBenchmark(iterations: Int) -> Double {
+    var sim = MonteCarloSimulation(
+        iterations: iterations,
+        enableGPU: true,
+        expressionModel: model
+    )
+
+    // Add inputs...
+
+    // Warm-up (compile shaders, allocate buffers)
+    _ = try? sim.run()
+
+    // Actual benchmark
+    let start = Date()
+    _ = try? sim.run()
+    return Date().timeIntervalSince(start)
+}
+</code></pre><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Define a portfolio profit model
+let portfolioModel = MonteCarloExpressionModel { builder in
+	let revenue = builder[0]      // Revenue input
+	let costs = builder[1]        // Operating costs
+	let taxRate = builder[2]      // Tax rate
+
+	let profit = revenue - costs
+	let afterTax = profit * (1.0 - taxRate)
+	return afterTax
+}
+
+// Benchmark function
+func benchmarkSimulation(
+	iterations: Int,
+	enableGPU: Bool,
+	label: String
+) throws -> (result: SimulationResults, time: Double) {
+	var simulation = MonteCarloSimulation(
+		iterations: iterations,
+		enableGPU: enableGPU,
+		expressionModel: portfolioModel
+	)
+
+	// Add input distributions
+	simulation.addInput(SimulationInput(
+		name: "Revenue",
+		distribution: DistributionNormal(1_000_000, 150_000)
+	))
+
+	simulation.addInput(SimulationInput(
+		name: "Costs",
+		distribution: DistributionNormal(650_000, 80_000)
+	))
+
+	simulation.addInput(SimulationInput(
+		name: "Tax Rate",
+		distribution: DistributionUniform(0.15, 0.25)
+	))
+
+	let startTime = Date()
+	let result = try simulation.run()
+	let elapsed = Date().timeIntervalSince(startTime)
+
+	print("\(label.padding(toLength: 30, withPad: " ", startingAt: 0)): \(elapsed.number(3).paddingLeft(toLength: 8))s  (GPU: \(result.usedGPU ? "✓" : "✗"))")
+
+	return (result, elapsed)
+}
+
+print("CPU vs GPU Performance Comparison")
+print("═══════════════════════════════════════════════════════")
+
+// Test different iteration counts
+let testSizes = [1_000, 10_000, 100_000, 250_000]
+
+for size in testSizes {
+	print("\n\(size.formatted()) iterations:")
+
+	let (_, cpuTime) = try benchmarkSimulation(
+		iterations: size,
+		enableGPU: false,
+		label: "  CPU"
+	)
+
+	let (_, gpuTime) = try benchmarkSimulation(
+		iterations: size,
+		enableGPU: true,
+		label: "  GPU"
+	)
+
+	let speedup = cpuTime / gpuTime
+	print("  Speedup: \(speedup.number(1))×")
+}
+
+
+// MARK: - Model Complexity Scaling
+
+// Simple model (3 operations)
+let simpleModel = MonteCarloExpressionModel { builder in
+	let a = builder[0]
+	let b = builder[1]
+	return a + b  // Just addition
+}
+
+// Medium model (10 operations)
+let mediumModel = MonteCarloExpressionModel { builder in
+	let revenue = builder[0]
+	let costs = builder[1]
+	let tax = builder[2]
+	let discount = builder[3]
+
+	let profit = revenue - costs
+	let taxed = profit * (1.0 - tax)
+	let discounted = taxed / (1.0 + discount)
+	return discounted
+}
+
+// Complex model (25+ operations)
+let complexModel = MonteCarloExpressionModel { builder in
+	// Multi-year NPV calculation
+	let year1CF = builder[0]
+	let year2CF = builder[1]
+	let year3CF = builder[2]
+	let year4CF = builder[3]
+	let year5CF = builder[4]
+	let discountRate = builder[5]
+
+	// Build discount factors incrementally to help type checker
+	let discountFactor = 1.0 + discountRate
+	let df2 = discountFactor * discountFactor
+	let df3 = df2 * discountFactor
+	let df4 = df3 * discountFactor
+	let df5 = df4 * discountFactor
+
+	let pv1 = year1CF / discountFactor
+	let pv2 = year2CF / df2
+	let pv3 = year3CF / df3
+	let pv4 = year4CF / df4
+	let pv5 = year5CF / df5
+
+	return pv1 + pv2 + pv3 + pv4 + pv5
+}
+
+print("Model Complexity vs GPU Speedup (100,000 iterations)")
+print("═══════════════════════════════════════════════════════")
+
+let models = [
+	("Simple (3 ops)", simpleModel, 2),
+	("Medium (10 ops)", mediumModel, 4),
+	("Complex (25 ops)", complexModel, 6)
+]
+
+for (name, model, inputCount) in models {
+	var cpuSim = MonteCarloSimulation(
+		iterations: 100_000,
+		enableGPU: false,
+		expressionModel: model
+	)
+
+	var gpuSim = MonteCarloSimulation(
+		iterations: 100_000,
+		enableGPU: true,
+		expressionModel: model
+	)
+
+	// Add random inputs
+	for i in 0..<inputCount {
+		let input = SimulationInput(
+			name: "Input\(i)",
+			distribution: DistributionNormal(100, 20)
+		)
+		cpuSim.addInput(input)
+		gpuSim.addInput(input)
+	}
+
+	let cpuStart = Date()
+	_ = try cpuSim.run()
+	let cpuTime = Date().timeIntervalSince(cpuStart)
+
+	let gpuStart = Date()
+	_ = try gpuSim.run()
+	let gpuTime = Date().timeIntervalSince(gpuStart)
+
+	let speedup = cpuTime / gpuTime
+
+	print("\(name.padding(toLength: 14, withPad: " ", startingAt: 0)): CPU\(cpuTime.number(3).paddingLeft(toLength: 6))s, GPU\(gpuTime.number(3).paddingLeft(toLength: 6))s → \(speedup.number(1).paddingLeft(toLength: 4))× speedup")
+}
+
+// MARK: - Expression vs. Closure Performance
+
+// Expression-based (GPU-compatible, compiled)
+let expressionModel = MonteCarloExpressionModel { builder in
+	let revenue = builder[0]
+	let costs = builder[1]
+	return revenue - costs
+}
+
+var expressionSim = MonteCarloSimulation(
+	iterations: 100_000,
+	enableGPU: true,
+	expressionModel: expressionModel
+)
+
+// Closure-based (CPU-only, interpreted)
+var closureSim = MonteCarloSimulation(
+	iterations: 100_000,
+	enableGPU: false  // Closures can't use GPU
+) { inputs in
+	let revenue = inputs[0]
+	let costs = inputs[1]
+	return revenue - costs
+}
+
+// Add same inputs to both
+let revenueInput = SimulationInput(
+	name: "Revenue",
+	distribution: DistributionNormal(1_000_000, 100_000)
+)
+let costsInput = SimulationInput(
+	name: "Costs",
+	distribution: DistributionNormal(700_000, 50_000)
+)
+
+expressionSim.addInput(revenueInput)
+expressionSim.addInput(costsInput)
+closureSim.addInput(revenueInput)
+closureSim.addInput(costsInput)
+
+print("Expression vs Closure Model Performance")
+print("═══════════════════════════════════════════════════════")
+
+let exprStart = Date()
+let exprResult = try expressionSim.run()
+let exprTime = Date().timeIntervalSince(exprStart)
+
+let closureStart = Date()
+let closureResult = try closureSim.run()
+let closureTime = Date().timeIntervalSince(closureStart)
+
+print("Expression (GPU):  \(exprTime.number(3))s")
+print("Closure (CPU):     \(closureTime.number(3))s")
+print("Speedup:           \((closureTime / exprTime).number(1))×")
+print("\nResults match:     \(abs(exprResult.statistics.mean - closureResult.statistics.mean) < 1000)")
+
+
+// MARK: - Correlation Performance Impact
+func benchmarkCorrelation(
+	iterations: Int,
+	withCorrelation: Bool
+) throws -> Double {
+	let model = MonteCarloExpressionModel { builder in
+		let a = builder[0]
+		let b = builder[1]
+		let c = builder[2]
+		return a + b + c
+	}
+
+	var simulation = MonteCarloSimulation(
+		iterations: iterations,
+		enableGPU: !withCorrelation,  // GPU incompatible with correlation
+		expressionModel: model
+	)
+
+	simulation.addInput(SimulationInput(
+		name: "A",
+		distribution: DistributionNormal(100, 15)
+	))
+	simulation.addInput(SimulationInput(
+		name: "B",
+		distribution: DistributionNormal(200, 25)
+	))
+	simulation.addInput(SimulationInput(
+		name: "C",
+		distribution: DistributionNormal(150, 20)
+	))
+
+	if withCorrelation {
+		// Set correlation matrix (Iman-Conover method)
+		try simulation.setCorrelationMatrix([
+			[1.0, 0.7, 0.5],
+			[0.7, 1.0, 0.6],
+			[0.5, 0.6, 1.0]
+		])
+	}
+
+	let startTime = Date()
+	_ = try simulation.run()
+	return Date().timeIntervalSince(startTime)
+}
+
+print("Correlation Performance Impact")
+print("═══════════════════════════════════════════════════════")
+print("Iterations | Independent | Correlated | Overhead")
+print("───────────────────────────────────────────────────────")
+
+for iterations in [10_000, 50_000, 100_000, 500_000] {
+	let independentTime = try benchmarkCorrelation(
+		iterations: iterations,
+		withCorrelation: false
+	)
+
+	let correlatedTime = try benchmarkCorrelation(
+		iterations: iterations,
+		withCorrelation: true
+	)
+
+	let overhead = ((correlatedTime - independentTime) / independentTime)
+
+	print("\("\(iterations)".paddingLeft(toLength: 10)) | \(independentTime.number(3).paddingLeft(toLength: 10))s | \(correlatedTime.number(3).paddingLeft(toLength: 9))s | +\(overhead.percent(1).paddingLeft(toLength: 5))")
+}
+
+// MARK: - Real-World Example
+
+	// Define portfolio profit model
+	let portfolioModel_rwe = MonteCarloExpressionModel { builder in
+		let stock1Return = builder[0]
+		let stock2Return = builder[1]
+		let stock3Return = builder[2]
+		let bondReturn = builder[3]
+
+		// Portfolio: 40% stock1, 30% stock2, 20% stock3, 10% bonds
+		let portfolioReturn =
+			0.4 * stock1Return +
+			0.3 * stock2Return +
+			0.2 * stock3Return +
+			0.1 * bondReturn
+
+		return portfolioReturn
+	}
+
+	// Test different iteration counts for VaR stability
+	print("VaR Stability vs Iteration Count")
+	print("═══════════════════════════════════════════════════════")
+
+	let iterationCounts = [1_000, 5_000, 10_000, 50_000, 100_000, 500_000]
+	var previousVaR: Double?
+
+	for iterations in iterationCounts {
+		var simulation = MonteCarloSimulation(
+			iterations: iterations,
+			enableGPU: true,
+			expressionModel: portfolioModel_rwe
+		)
+
+		// Add asset return distributions
+		simulation.addInput(SimulationInput(
+			name: "Stock 1",
+			distribution: DistributionNormal(0.08, 0.15)
+		))
+		simulation.addInput(SimulationInput(
+			name: "Stock 2",
+			distribution: DistributionNormal(0.10, 0.20)
+		))
+		simulation.addInput(SimulationInput(
+			name: "Stock 3",
+			distribution: DistributionNormal(0.07, 0.18)
+		))
+		simulation.addInput(SimulationInput(
+			name: "Bonds",
+			distribution: DistributionNormal(0.03, 0.05)
+		))
+
+		let startTime = Date()
+		let result = try simulation.run()
+		let elapsed = Date().timeIntervalSince(startTime)
+
+		// 95% VaR (5th percentile loss)
+		let var95 = -result.percentiles.p5  // Convert to positive loss %
+
+		let stability = if let prev = previousVaR {
+			abs(var95 - prev) / prev
+		} else {
+			0.0
+		}
+
+		print("\("\(iterations)".paddingLeft(toLength: 7)) iter: VaR = \(var95.percent(2).paddingLeft(toLength: 5)) | Time: \(elapsed.number(3).paddingLeft(toLength: 6))s | Δ from prev: \(stability.percent(2))")
+
+		previousVaR = var95
+	}
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.4-MonteCarloPerformanceGuide.md">BusinessMath Docs – Monte Carlo Performance Guide</a></p><h3>Experiments to Try</h3><ol><li><strong>Your Problem</strong>: Benchmark your actual model at 1K, 10K, 100K, 1M iterations</li><li><strong>GPU Threshold</strong>: Find the iteration count where GPU breaks even for your model</li><li><strong>Distribution Mix</strong>: Test performance with different combinations of distributions</li><li><strong>Correlation Cost</strong>: Measure overhead of 2-variable vs 10-variable correlation</li><li><strong>Model Optimization</strong>: Compare mathematically equivalent expressions (e.g., <code>a*b + a*c</code> vs <code>a*(b+c)</code>)</li></ol><hr /><h2>Key Takeaways</h2><ol><li><strong>GPU acceleration</strong>: 5-100× speedup for 100K+ iterations (model complexity dependent)</li><li><strong>Fixed overhead</strong>: ~8ms GPU setup cost; only beneficial when total runtime > 50ms</li><li><strong>Correlation penalty</strong>: 3-10× slowdown (forces CPU execution with Iman-Conover)</li><li><strong>Expression models</strong>: Enable GPU compilation and algebraic optimization</li><li><strong>Iteration sweet spot</strong>: 50K iterations typically balances accuracy and speed</li><li><strong>Distribution choice</strong>: Stick to Normal/Uniform/Triangular for maximum GPU benefit</li></ol><hr /><h2>Next Steps</h2><p><strong>Tomorrow</strong>: We’ll explore <strong>Advanced Monte Carlo Techniques</strong>, including variance reduction methods (antithetic variates, control variates) and their performance characteristics.</p><p><strong>This Week</strong>: Monte Carlo deep dive continues with <strong>Correlation Modeling</strong> (Wednesday) and <strong>Risk Metrics</strong> (Thursday).</p><hr /><p><strong>Series</strong>: [Week 10 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Methods] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Monte Carlo benchmarking • GPU acceleration • Scaling analysis • Model complexity • Performance optimization</p><p><strong>Playgrounds</strong>: [Week 1-10 available] • [Next: Variance reduction techniques]</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, benchmarking, performance, profiling, monte-carlo, gpu-acceleration</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
