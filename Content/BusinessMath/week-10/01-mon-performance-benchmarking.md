@@ -1,6 +1,6 @@
 ---
 title: Performance Benchmarking: Measure, Compare, Optimize
-date: 2026-03-10 13:00
+date: 2026-03-10 17:32
 series: BusinessMath Quarterly Series
 week: 10
 post: 1
@@ -8,7 +8,7 @@ docc_source: 5.11-PerformanceBenchmarking.md
 playground: Week10/Performance-Benchmarking.playground
 tags: businessmath, swift, optimization, benchmarking, performance, profiling, monte-carlo, gpu-acceleration
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Performance Benchmarking: Measure, Compare, Optimize

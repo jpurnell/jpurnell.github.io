@@ -1,6 +1,6 @@
 ---
 title: L-BFGS Optimization: Memory-Efficient Large-Scale Optimization
-date: 2026-03-11 13:00
+date: 2026-03-11 07:30
 series: BusinessMath Quarterly Series
 week: 10
 post: 2
@@ -8,7 +8,7 @@ docc_source: 5.20-LBFGSOptimizationTutorial.md
 playground: Week10/LBFGS-Optimization.playground
 tags: businessmath, swift, optimization, lbfgs, large-scale, memory-efficient, quasi-newton
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # L-BFGS Optimization: Memory-Efficient Large-Scale Optimization
