@@ -9,7 +9,7 @@ import Foundation
 import Ignite
 
 struct BusinessMath: StaticPage {
-	var title = "BusinessMath"
+	var title = "BusinessMath | Justin Purnell"
 
 	func body(context: PublishingContext) -> [BlockElement] {
 		for content in context.allContent.filter({$0.title == "Welcome to BusinessMath: A 12-Week Journey"}) {

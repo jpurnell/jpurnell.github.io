@@ -12,7 +12,7 @@ import Ignite
 struct ProjectLayout: ContentPage {
 	func body(content: Content, context: PublishingContext) -> [any BlockElement] {
 		for content in context.content(ofType: "projects") {
-			Text(content.metadata["title"] as! String).font(.title1).fontWeight(.semibold).class("mainTitle")
+			Text((content.metadata["title"] as! String).appending(PersonalSite().titleSuffix)).font(.title1).fontWeight(.semibold).class("mainTitle")
 			Text(content.body).frame(width: "70%", maxWidth: "800px")
 			if content.hasTags {
 				Group {

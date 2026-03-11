@@ -2,7 +2,7 @@ import Foundation
 import Ignite
 
 struct cv: StaticPage {
-	var title = "Justin Purnell - CV"
+	var title = "CV | Justin Purnell"
 	
 	func body(context: PublishingContext) -> [BlockElement] {
 		

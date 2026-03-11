@@ -71,6 +71,10 @@ struct PersonalSite: Site {
 		ProjectLayout()
 		BlogPostLayout()
 	}
+	
+	func titleAppendix() -> String? {
+		return " | author"
+	}
 }
 
 

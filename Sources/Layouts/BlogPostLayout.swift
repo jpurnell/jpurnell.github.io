@@ -10,6 +10,7 @@ import Foundation
 import Ignite
 
 struct BlogPostLayout: ContentPage {
+		
 	func body(content: Content, context: PublishingContext) -> [any BlockElement] {
 		// Display the post title
 		Text(content.metadata["title"] as? String ?? content.title)

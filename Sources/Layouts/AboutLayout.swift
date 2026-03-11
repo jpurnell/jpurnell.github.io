@@ -8,7 +8,6 @@
 
 import Foundation
 import Ignite
-
 struct AboutLayout: ContentPage {
 	func body(content: Content, context: PublishingContext) -> [any BlockElement] {
 		Text("About").font(.title1).class("mainTitle")

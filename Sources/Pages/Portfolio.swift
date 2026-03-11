@@ -44,7 +44,7 @@ let reunions: PortfolioSite = PortfolioSite(name: "Princeton 2000 Reunions",
 let portfolioSites: [PortfolioSite] = [shopMarriott, shopWithGolf, ucbComedy, reunions, nassauWeekly]
 
 struct Portfolio: StaticPage {
-    var title = "Portfolio"
+    var title = "Portfolio | Justin Purnell"
 
     func body(context: PublishingContext) -> [BlockElement] {
 		Text("Portfolio").font(.title1).class("mainTitle")

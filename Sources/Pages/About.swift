@@ -2,7 +2,7 @@ import Foundation
 import Ignite
 
 struct About: StaticPage {
-    var title = "Justin Purnell"
+    var title = "About | Justin Purnell"
 
     func body(context: PublishingContext) -> [BlockElement] {
 		Text("About").font(.title1).class("mainTitle")
