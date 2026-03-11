@@ -1,0 +1,347 @@
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 33 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Newton-Raphson: When Fast Convergence Becomes a Liability</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-09/05-fri-newton-raphson-guide" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Newton-Raphson: When Fast Convergence Becomes a Liability"><meta property="twitter:title" content="Newton-Raphson: When Fast Convergence Becomes a Liability"><meta property="og:description" content="Newton-Raphson: When Fast Convergence Becomes a Liability"><meta name="twitter:description" content="Newton-Raphson: When Fast Convergence Becomes a Liability"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-09/05-fri-newton-raphson-guide"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">"Newton-Raphson: When Fast Convergence Becomes a Liability"</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">10 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 33 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>How Newton-Raphson achieves quadratic convergence</li><li>Why it’s the gold standard for small, smooth problems</li><li>When numerical Hessians cause crashes and NaN propagation</li><li>Portfolio optimization: A case study in Newton-Raphson failure</li><li>Practical rules for choosing Newton-Raphson vs alternatives</li><li>What “numerically unstable” really means in practice</li></ul><hr /><h2>The Promise: Quadratic Convergence</h2><p>Newton-Raphson is the <strong>Ferrari of optimization algorithms</strong>:</p><ul><li>Converges in 3-5 iterations (vs 100+ for gradient descent)</li><li>Uses second-order information (Hessian matrix)</li><li>Near-optimal for smooth, unconstrained problems</li></ul><p><strong>Example</strong>: Finding the minimum of f(x, y) = (x - 1)² + (y - 2)²</p><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Simple quadratic objective
+let simpleObjective: (VectorN<Double>) -> Double = { v in
+    let x = v[0] - 1.0
+    let y = v[1] - 2.0
+    return x*x + y*y
+}
+
+let nrOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
+    maxIterations: 10,
+    tolerance: 1e-8
+)
+
+do {
+    let result = try nrOptimizer.minimize(
+        function: simpleObjective,
+        gradient: { try numericalGradient(simpleObjective, at: $0) },
+        hessian: { try numericalHessian(simpleObjective, at: $0) },
+        initialGuess: VectorN([0.0, 0.0])
+    )
+
+    print("Newton-Raphson on Simple Quadratic:")
+    print("  Solution: [\(result.solution[0].number(6)), \(result.solution[1].number(6))]")
+    print("  Iterations: \(result.iterations)")
+    print("  Converged: \(result.converged)")
+    print("  Final value: \(result.value.number(10))")
+}
+</code></pre><p><strong>Output:</strong></p><pre><code>Newton-Raphson on Simple Quadratic:
+  Solution: [1.000000, 2.000000]
+  Iterations: 1
+  Converged: true
+  Final value: 0.0000000000
+</code></pre><p><strong>Perfect!</strong> One iteration to machine precision. For smooth quadratics, Newton-Raphson is unbeatable.</p><hr /><h2>The Problem: When Theory Meets Reality</h2><p>Now let’s try Newton-Raphson on a <strong>real business problem</strong>: portfolio optimization with Sharpe ratio maximization.</p><h3>The Crash</h3><pre><code class="language-swift">import BusinessMath
+import Foundation
+
+let assets = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]
+let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09])
+let riskFreeRate = 0.03
+
+let covarianceMatrix = [
+    [0.0400, 0.0150, 0.0020, 0.0180],
+    [0.0150, 0.0625, 0.0015, 0.0200],
+    [0.0020, 0.0015, 0.0036, 0.0010],
+    [0.0180, 0.0200, 0.0010, 0.0400]
+]
+
+// Portfolio Sharpe ratio (the objective that crashes Newton-Raphson)
+let portfolioObjective: (VectorN<Double>) -> Double = { weights in
+    let expectedReturn = weights.dot(expectedReturns)
+
+    var variance = 0.0
+    for i in 0..<weights.dimension {
+        for j in 0..<weights.dimension {
+            variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+        }
+    }
+
+    let risk = sqrt(variance)
+    let sharpeRatio = (expectedReturn - riskFreeRate) / risk
+
+    return -sharpeRatio  // Minimize negative = maximize positive
+}
+
+// Attempt Newton-Raphson
+let nrOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
+    maxIterations: 100,
+    tolerance: 1e-6
+)
+
+do {
+    print("Attempting Newton-Raphson on Portfolio Optimization...")
+    print("(This will likely crash or timeout)\n")
+
+    let result = try nrOptimizer.minimize(
+        function: portfolioObjective,
+        gradient: { try numericalGradient(portfolioObjective, at: $0) },
+        hessian: { try numericalHessian(portfolioObjective, at: $0) },
+        initialGuess: VectorN.equalWeights(dimension: 4)
+    )
+
+    print("Somehow succeeded:")
+    print("  Solution: \(result.solution.toArray().map { $0.percent() })")
+
+} catch {
+    print("Newton-Raphson FAILED (as expected):")
+    print("  Error: \(error)")
+}
+</code></pre><p><strong>What happens:</strong></p><ul><li><strong>Playground crash</strong>: Thread exits during execution</li><li><strong>Or</strong>: Takes >2 minutes and times out</li><li><strong>Or</strong>: Returns NaN values that propagate through calculation</li></ul><hr /><h2>Why Newton-Raphson Crashes: A Deep Dive</h2><h3>1. Computational Explosion</h3><p><strong>Hessian matrix for n variables:</strong></p><ul><li>Requires n² second-order partial derivatives</li><li>Each second derivative needs ~5 function evaluations</li><li><strong>4 variables = 16 × 5 = 80 function calls per iteration</strong></li></ul><pre><code class="language-swift">// What numericalHessian actually does internally:
+func numericalHessian<V: VectorSpace>(
+    _ f: (V) -> Double,
+    at x: V,
+    h: Double = 1e-5
+) throws -> [[Double]] where V.Scalar == Double {
+    let n = x.toArray().count
+    var hessian = [[Double]](repeating: [Double](repeating: 0, count: n), count: n)
+
+    for i in 0..<n {
+        for j in 0..<n {
+            // Compute ∂²f/∂xᵢ∂xⱼ using finite differences
+            // Requires 4 function evaluations: f(x±hᵢ±hⱼ)
+            var xpp = x  // x + hᵢ + hⱼ
+            // ... (4 more evaluations)
+
+            hessian[i][j] = (fpp - fpm - fmp + fmm) / (4 * h * h)
+        }
+    }
+
+    return hessian
+}
+</code></pre><p><strong>For portfolio optimization:</strong></p><ul><li>80 evaluations × 20 iterations = <strong>1,600 Sharpe ratio calculations</strong></li><li>Each calculation involves matrix multiplication and sqrt</li><li>Total time: <strong>minutes</strong> instead of seconds</li></ul><h3>2. Numerical Instability: Division by Near-Zero</h3><p><strong>The Sharpe ratio formula:</strong></p><pre><code class="language-swift">let sharpeRatio = (expectedReturn - riskFreeRate) / sqrt(variance)
+</code></pre><p><strong>What goes wrong:</strong></p><pre><code class="language-swift">// During Hessian computation, we perturb weights:
+weights[0] += h  // Tiny perturbation (1e-5)
+
+// This might create an invalid portfolio:
+// [0.25001, 0.25, 0.25, 0.25] → variance changes unpredictably
+
+// If variance becomes tiny (0.0001):
+let risk = sqrt(0.0001)  // = 0.01
+let sharpe = 0.07 / 0.01  // = 7.0 (huge!)
+
+// Then another perturbation:
+weights[1] += h
+// Now variance = 0.00001
+let risk2 = sqrt(0.00001)  // = 0.003
+let sharpe2 = 0.07 / 0.003  // = 23.3 (even bigger!)
+
+// The second derivative of 1/sqrt(variance) explodes
+// Result: ∂²f/∂w² ≈ 10^6 or NaN
+</code></pre><h3>3. Constraint Violations During Perturbation</h3><p><strong>The problem:</strong></p><pre><code class="language-swift">// Your constraints: weights sum to 1, all ≥ 0
+let weights = VectorN([0.25, 0.25, 0.25, 0.25])  // Valid
+
+// During numerical differentiation:
+weights[0] -= h  // = 0.24999
+// Still valid, but sum ≠ 1.0
+
+// Multiple perturbations compound:
+weights[0] -= h
+weights[1] -= h
+// Now sum = 0.99998, and covariance calculation is slightly off
+
+// Eventually:
+weights[2] = -0.00001  // INVALID! Negative weight
+// Matrix multiplication with negative weights → meaningless variance
+</code></pre><h3>4. Playground Execution Limits</h3><pre><code class="language-swift">// Playgrounds have hard limits:
+// - 2 minute timeout
+// - Limited memory for intermediate calculations
+// - Can't recover from NaN propagation
+
+// When Newton-Raphson encounters NaN:
+let hessian = try numericalHessian(portfolioObjective, at: weights)
+// hessian[2][3] = NaN
+
+// Matrix inversion fails:
+let hessianInverse = try invertMatrix(hessian)  // Throws or returns garbage
+
+// Next iteration uses garbage:
+weights = weights - learningRate * hessianInverse * gradient  // All NaN
+
+// Playground crashes with "Thread exited"
+</code></pre><hr /><h2>When to Use Newton-Raphson: Decision Tree</h2><pre><code>Is your problem smooth and twice-differentiable?
+├─ NO → Don't use Newton-Raphson
+│        Use: Gradient descent, genetic algorithms, simulated annealing
+│
+└─ YES → How many variables?
+    ├─ > 10 variables → Don't use Newton-Raphson (too expensive)
+    │                   Use: BFGS, L-BFGS, conjugate gradient
+    │
+    └─ ≤ 10 variables → Do you have analytical Hessian?
+        ├─ NO (numerical Hessian) → Is objective numerically stable?
+        │   ├─ NO (involves 1/x, sqrt, exp) → Don't use Newton-Raphson
+        │   │                                  Use: BFGS (approximate Hessian)
+        │   │
+        │   └─ YES (simple polynomial) → Are there constraints?
+        │       ├─ YES → Don't use Newton-Raphson
+        │       │        Use: Constrained optimizer, penalty methods
+        │       │
+        │       └─ NO → ✓ USE NEWTON-RAPHSON
+        │                (Fast convergence, no issues)
+        │
+        └─ YES (analytical Hessian) → ✓ USE NEWTON-RAPHSON
+                                       (Best case scenario)
+</code></pre><hr /><h2>Safe Use Cases for Newton-Raphson</h2><h3>1. Simple Unconstrained Quadratics</h3><p><strong>✓ Perfect for Newton-Raphson:</strong></p><pre><code class="language-swift">// Least-squares regression: minimize ||Ax - b||²
+let leastSquares: (VectorN<Double>) -> Double = { x in
+    let residual = matrixMultiply(A, x) - b
+    return residual.dot(residual)
+}
+
+// Analytical gradient: ∇f = 2Aᵀ(Ax - b)
+let gradient: (VectorN<Double>) -> VectorN<Double> = { x in
+    let residual = matrixMultiply(A, x) - b
+    return 2.0 * matrixMultiply(A_transpose, residual)
+}
+
+// Analytical Hessian: H = 2AᵀA (constant!)
+let hessian: (VectorN<Double>) -> [[Double]] = { _ in
+    return 2.0 * matrixMultiply(A_transpose, A)
+}
+
+let result = try nrOptimizer.minimize(
+    function: leastSquares,
+    gradient: gradient,
+    hessian: hessian,
+    initialGuess: VectorN(repeating: 0.0, count: numVariables)
+)
+
+// Converges in 1 iteration (Hessian is constant)
+</code></pre><h3>2. Small-Dimensional Root Finding</h3><p><strong>✓ Newton-Raphson for solving f(x) = 0:</strong></p><pre><code class="language-swift">// Find interest rate r where NPV = 0
+// NPV(r) = Σ (cashFlow[t] / (1 + r)^t) - initialInvestment
+
+let npvObjective: (VectorN<Double>) -> Double = { v in
+    let r = v[0]
+    var npv = -initialInvestment
+
+    for (t, cashFlow) in cashFlows.enumerated() {
+        npv += cashFlow / pow(1.0 + r, Double(t + 1))
+    }
+
+    return npv * npv  // Minimize squared NPV (find root)
+}
+
+// Only 1 variable, smooth function, no constraints
+let result = try nrOptimizer.minimize(
+    function: npvObjective,
+    gradient: { try numericalGradient(npvObjective, at: $0) },
+    hessian: { try numericalHessian(npvObjective, at: $0) },
+    initialGuess: VectorN([0.10])  // Start at 10% IRR
+)
+
+print("Internal Rate of Return: \(result.solution[0].percent(2))")
+</code></pre><h3>3. Maximum Likelihood with Analytical Derivatives</h3><p><strong>✓ When you have closed-form derivatives:</strong></p><pre><code class="language-swift">// Normal distribution MLE: maximize log-likelihood
+// ℓ(μ, σ) = -n/2 log(2π) - n log(σ) - Σ(xᵢ - μ)²/(2σ²)
+
+let logLikelihood: (VectorN<Double>) -> Double = { params in
+    let mu = params[0]
+    let sigma = params[1]
+
+    var sumSquares = 0.0
+    for x in data {
+        sumSquares += (x - mu) * (x - mu)
+    }
+
+    return -Double(data.count) * log(sigma) - sumSquares / (2 * sigma * sigma)
+}
+
+// Analytical gradient and Hessian available from statistics textbook
+let gradient: (VectorN<Double>) -> VectorN<Double> = { params in
+    // ... closed-form derivatives
+}
+
+let hessian: (VectorN<Double>) -> [[Double]] = { params in
+    // ... closed-form second derivatives
+}
+
+// Fast convergence with analytical derivatives
+let result = try nrOptimizer.minimize(
+    function: { -logLikelihood($0) },  // Maximize = minimize negative
+    gradient: gradient,
+    hessian: hessian,
+    initialGuess: VectorN([sampleMean, sampleStdDev])
+)
+</code></pre><hr /><h2>Dangerous Use Cases: When Newton-Raphson Crashes</h2><h3>1. Portfolio Optimization (Sharpe Ratio)</h3><p><strong>✗ Crashes due to 1/sqrt(variance):</strong></p><pre><code class="language-swift">// Sharpe ratio: (return - rf) / sqrt(variance)
+// Second derivative of 1/sqrt(x) → explodes near zero
+// Result: NaN propagation, playground crash
+
+// USE INSTEAD: BFGS, gradient descent, or constrained optimizers
+let optimizer = InequalityOptimizer<VectorN<Double>>()  // Safe alternative
+</code></pre><h3>2. Constrained Problems</h3><p><strong>✗ Perturbations violate constraints:</strong></p><pre><code class="language-swift">// Weights must sum to 1 and be ≥ 0
+// Numerical Hessian perturbs weights → temporarily invalid
+// Matrix calculations with invalid weights → garbage
+
+// USE INSTEAD: ConstrainedOptimizer, penalty methods
+let optimizer = ConstrainedOptimizer<VectorN<Double>>()
+</code></pre><h3>3. Large-Scale Problems (>10 variables)</h3><p><strong>✗ Hessian computation too expensive:</strong></p><pre><code class="language-swift">// 100 variables → 10,000 second derivatives
+// 10,000 × 5 evaluations = 50,000 function calls per iteration
+// Minutes to hours of computation
+
+// USE INSTEAD: BFGS (approximates Hessian), L-BFGS (memory-efficient)
+let optimizer = AdaptiveOptimizer<VectorN<Double>>()  // Chooses BFGS for you
+</code></pre><h3>4. Non-Smooth Objectives</h3><p><strong>✗ Discontinuities break second derivatives:</strong></p><pre><code class="language-swift">// Transaction costs: cost = |turnover| * rate
+// Absolute value is not differentiable at 0
+// Numerical Hessian returns garbage near discontinuities
+
+// USE INSTEAD: Genetic algorithms, simulated annealing
+let optimizer = ParallelOptimizer<VectorN<Double>>(algorithm: .gradientDescent(learningRate: 0.01))
+</code></pre><hr /><h2>Practical Alternatives</h2><h3>When Newton-Raphson Fails → Use BFGS</h3><p><strong>BFGS approximates the Hessian</strong> using gradient information:</p><pre><code class="language-swift">// BusinessMath doesn't expose BFGS directly yet, but AdaptiveOptimizer
+// uses BFGS-like methods internally for medium-sized problems
+
+let optimizer = AdaptiveOptimizer<VectorN<Double>>(
+    preferAccuracy: true,  // Use sophisticated methods
+    maxIterations: 1000,
+    tolerance: 1e-6
+)
+
+// For portfolio optimization:
+let result = try optimizer.optimize(
+    objective: portfolioObjective,
+    initialGuess: VectorN.equalWeights(dimension: 4),
+    constraints: constraints
+)
+
+// AdaptiveOptimizer detects:
+// - 4 variables → small enough for advanced methods
+// - Has constraints → uses InequalityOptimizer (not Newton-Raphson)
+// - Result: Safe, fast convergence without crashes
+</code></pre><h3>When You Need Guaranteed Stability → Gradient Descent</h3><p><strong>Gradient descent never crashes</strong> (just slower):</p><pre><code class="language-swift">let safeOptimizer = MultivariateGradientDescent<VectorN<Double>>(
+    learningRate: 0.01,  // Conservative step size
+    maxIterations: 2000,  // More iterations needed
+    tolerance: 1e-6
+)
+
+let result = try safeOptimizer.minimize(
+    function: portfolioObjective,
+    gradient: { try numericalGradient(portfolioObjective, at: $0) },
+    initialGuess: VectorN.equalWeights(dimension: 4)
+)
+
+// Takes 100-200 iterations instead of 5
+// But guaranteed to converge without crashing
+</code></pre><hr /><h2>Key Takeaways</h2><h3>The Good</h3><p><strong>Newton-Raphson is unbeatable when:</strong></p><ul><li>Small problem (≤5 variables)</li><li>Smooth, twice-differentiable objective</li><li>No constraints</li><li>Analytical Hessian available (or numerically stable)</li><li>Need fastest possible convergence</li></ul><p><strong>Example</strong>: Least-squares regression, simple curve fitting, root finding</p><h3>The Bad</h3><p><strong>Newton-Raphson crashes when:</strong></p><ul><li>Numerical Hessian on unstable objectives (1/x, sqrt, exp)</li><li>Constraints that get violated during perturbation</li><li>Large problems (>10 variables) → too expensive</li><li>Non-smooth objectives (absolute value, max/min)</li></ul><p><strong>Example</strong>: Portfolio optimization, constrained problems, non-convex objectives</p><h3>The Solution</h3><p><strong>Let AdaptiveOptimizer choose for you:</strong></p><pre><code class="language-swift">let optimizer = AdaptiveOptimizer<VectorN<Double>>()
+
+// Automatically selects:
+// - Newton-Raphson for tiny, smooth problems (≤5 vars, unconstrained)
+// - Gradient descent for medium problems (10-100 vars)
+// - InequalityOptimizer for constrained problems
+// - Never crashes, always picks appropriate algorithm
+
+let result = try optimizer.optimize(
+    objective: yourObjective,
+    initialGuess: yourInitialGuess,
+    constraints: yourConstraints
+)
+</code></pre><hr /><!--## Try It Yourself-->
+<!---->
+<!--Download the complete playground with crash examples and safe alternatives:-->
+<!--→ Full API Reference: [BusinessMath Docs – Newton-Raphson Guide]-->
+<h3>Experiments to Try</h3><ol><li><strong>Crash Test</strong>: Try Newton-Raphson on portfolio optimization. Watch it fail. Then try AdaptiveOptimizer.</li><li><strong>Variable Scaling</strong>: Test Newton-Raphson on 2, 4, 8, 16 variables. When does it become impractical?</li><li><strong>Constraint Impact</strong>: Add constraints to a simple quadratic. See how perturbations violate them.</li><li><strong>Numerical Stability</strong>: Test Newton-Raphson on <code>f(x) = 1/x²</code> near x=0. See NaN propagation.</li></ol><hr /><h2>Next Steps</h2><p><strong>Next Week</strong>: Week 10 explores <strong>Performance Benchmarking</strong> - systematically comparing algorithms on your specific problems, not just theory.</p><p><strong>Coming Soon</strong>: Advanced optimization algorithms including BFGS, L-BFGS, conjugate gradient, and when to use each.</p><hr /><p><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Completed</strong>: [5/6]</p><p><strong>Topics Covered</strong>: Newton-Raphson • Numerical Hessians • Algorithm stability • When fast isn’t best • Practical algorithm selection</p><p><strong>Key Insight</strong>: <strong>The fastest algorithm isn’t always the best algorithm.</strong> Stability matters more than speed for real-world problems.</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, newton-raphson, numerical-methods, algorithm-selection, numerical-stability</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
