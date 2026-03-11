@@ -8,7 +8,7 @@ docc_source: 5.21-ConjugateGradientTutorial.md
 playground: Week10/Conjugate-Gradient.playground
 tags: businessmath, swift, optimization, conjugate-gradient, gradient-descent, fletcher-reeves, polak-ribiere
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Conjugate Gradient: Efficient Optimization Without Hessians
