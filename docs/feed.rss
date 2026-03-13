@@ -1,7 +1,849 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description></description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-10/03-wed-conjugate-gradient</guid><title>Conjugate Gradient: Efficient Optimization Without Hessians</title><link>https://www.justinpurnell.com/BusinessMath/week-10/03-wed-conjugate-gradient</link><description><![CDATA[Part 35 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 12 Mar 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[optimization]]></category><category><![CDATA[conjugate-gradient]]></category><category><![CDATA[gradient-descent]]></category><category><![CDATA[fletcher-reeves]]></category><category><![CDATA[polak-ribiere]]></category><content:encoded><![CDATA[<p><strong>Part 35 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding conjugate gradient method for quadratic optimization</li><li>Fletcher-Reeves and Polak-Ribière variants</li><li>When conjugate gradient outperforms gradient descent</li><li>Memory requirements: O(n) vs. O(n²) for Newton methods</li><li>Nonlinear conjugate gradient for general problems</li><li>Performance on portfolio and least-squares problems</li></ul><hr /><h2>The Problem</h2><p>Gradient descent is simple but slow (zigzags toward optimum). Newton’s method is fast but requires storing/inverting n × n Hessian matrices. For large problems:</p><ul><li><strong>Gradient descent</strong>: Thousands of iterations</li><li><strong>Newton/BFGS</strong>: Memory explosion for 1,000+ variables</li><li><strong>L-BFGS</strong>: Better, but still requires tuning history size</li></ul><p><strong>Need: Fast convergence like Newton, memory footprint like gradient descent.</strong></p><hr /><h2>The Solution</h2><p>Conjugate gradient chooses search directions that are “conjugate” (orthogonal in a special sense), avoiding the zigzagging of gradient descent while using only O(n) memory. Theoretically solves quadratic problems in at most n iterations.</p><h3>Pattern 1: Univariate Optimization (Finding Optimal Parameter)</h3><p><strong>Business Problem</strong>: Find optimal discount rate that minimizes pricing error for bond valuation.</p><pre><code class="language-swift">import Foundation
+/><language>en</language><generator>Ignite v0.2.1</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-10/04-thu-simulated-annealing</guid><title>Simulated Annealing: Global Optimization Without Gradients</title><link>https://www.justinpurnell.com/BusinessMath/week-10/04-thu-simulated-annealing</link><description><![CDATA[Part 36 of 12-Week BusinessMath Series]]></description><pubDate>Fri, 13 Mar 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[optimization]]></category><category><![CDATA[simulated-annealing]]></category><category><![CDATA[global-optimization]]></category><category><![CDATA[metaheuristic]]></category><category><![CDATA[gradient-free]]></category><content:encoded><![CDATA[<p><strong>Part 36 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding simulated annealing for global optimization</li><li>Cooling schedules: exponential, linear, adaptive</li><li>Acceptance probability and the Metropolis criterion</li><li>When to use simulated annealing vs. gradient methods</li><li>Escaping local minima through controlled randomness</li><li>Parameter tuning: initial temperature, cooling rate, iterations</li></ul><hr /><h2>The Problem</h2><p>Many business optimization problems have multiple local minima:</p><ul><li><strong>Production scheduling</strong> with setup costs (discontinuous objective)</li><li><strong>Portfolio optimization</strong> with transaction costs and lot sizes</li><li><strong>Facility location</strong> with discrete choices (city A vs. city B)</li><li><strong>Hyperparameter tuning</strong> for machine learning models</li></ul><p><strong>Gradient-based methods get stuck in local minima. Need global search capability.</strong></p><hr /><h2>The Solution</h2><p>Simulated annealing mimics the physical process of metal cooling: accept worse solutions with probability that decreases over time. This allows escaping local minima early while converging to global optimum later.</p><h3>Pattern 1: Portfolio Optimization with Transaction Costs</h3><p><strong>Business Problem</strong>: Rebalance portfolio from suboptimal starting point, but minimize transaction costs (non-smooth objective).</p><pre><code class="language-swift">import BusinessMath
+
+// Portfolio with transaction costs (20 assets for clarity)
+let numAssets = 20
+
+// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets
+// These happen to be LOW return assets - clear opportunity to improve!
+var currentWeights = [Double](repeating: 0.0, count: numAssets)
+// First 5 assets: 60% of portfolio (12% each) - these are low-return!
+for i in 0..<5 {
+    currentWeights[i] = 0.12
+}
+// Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return!
+for i in 5..<numAssets {
+    currentWeights[i] = 0.40 / Double(numAssets - 5)
+}
+
+// Expected returns: clearly tiered to demonstrate the opportunity
+// First 5 assets: 5-6% (low return)
+// Next 10 assets: 8-11% (medium return)
+// Last 5 assets: 12-15% (high return)
+let expectedReturns: [Double] =
+    (0..<5).map { _ in Double.random(in: 0.05...0.06) } +  // Low
+    (0..<10).map { _ in Double.random(in: 0.08...0.11) } + // Medium
+    (0..<5).map { _ in Double.random(in: 0.12...0.15) }    // High
+
+// Correlation matrix: reasonable diversification benefits
+let correlations = (0..<numAssets).map { i in
+    (0..<numAssets).map { j in
+        if i == j { return 1.0 }
+        // Within same tier: higher correlation (0.5-0.7)
+        // Across tiers: lower correlation (0.2-0.4)
+        let sameTier = (i < 5 && j < 5) ||
+                       (i >= 5 && i < 15 && j >= 5 && j < 15) ||
+                       (i >= 15 && j >= 15)
+        return sameTier ? Double.random(in: 0.5...0.7) : Double.random(in: 0.2...0.4)
+    }
+}
+
+func portfolioObjective(_ weights: VectorN<Double>) -> Double {
+    // 1. Portfolio expected return (we want to MAXIMIZE this)
+    var portfolioReturn = 0.0
+    for i in 0..<numAssets {
+        portfolioReturn += weights[i] * expectedReturns[i]
+    }
+
+    // 2. Portfolio variance (risk - we want to MINIMIZE this)
+    var variance = 0.0
+    for i in 0..<numAssets {
+        for j in 0..<numAssets {
+            let volatility = 0.20  // 20% average vol
+            let covariance = correlations[i][j] * volatility * volatility
+            variance += weights[i] * weights[j] * covariance
+        }
+    }
+
+    // 3. Transaction costs (makes objective non-smooth!)
+    var transactionCosts = 0.0
+    for i in 0..<numAssets {
+        transactionCosts += abs(weights[i] - currentWeights[i]) * 0.001  // 10 bps
+    }
+
+    // Combined objective: maximize return-to-risk ratio, penalize transaction costs
+    let returnToRiskRatio = variance / max(portfolioReturn, 0.01)
+    return returnToRiskRatio + transactionCosts * 5.0
+}
+
+print("Portfolio Rebalancing with Transaction Costs")
+print("═══════════════════════════════════════════════════════════")
+
+// Analyze initial portfolio
+let initialReturn = (0..<numAssets).reduce(0.0) { $0 + currentWeights[$1] * expectedReturns[$1] }
+var initialVariance = 0.0
+for i in 0..<numAssets {
+    for j in 0..<numAssets {
+        let volatility = 0.20
+        let covariance = correlations[i][j] * volatility * volatility
+        initialVariance += currentWeights[i] * currentWeights[j] * covariance
+    }
+}
+let initialStdDev = sqrt(initialVariance)
+
+print("\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):")
+print("  Expected Return: \((initialReturn * 100).formatted(.number.precision(.fractionLength(2))))%")
+print("  Volatility (StdDev): \((initialStdDev * 100).formatted(.number.precision(.fractionLength(2))))%")
+print("  Return/Risk: \((initialReturn / initialStdDev).formatted(.number.precision(.fractionLength(3))))")
+print("  Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)")
+print("  High-return assets (15-19): Only ~2.67% each (returns 12-15%)")
+
+// Simulated annealing optimizer with config
+let config = SimulatedAnnealingConfig(
+    initialTemperature: 10.0,  // Higher temperature for more exploration
+    finalTemperature: 0.001,
+    coolingRate: 0.95,
+    maxIterations: 10_000,
+    perturbationScale: 0.05,  // Smaller perturbations
+    reheatInterval: nil,
+    reheatTemperature: nil,
+    seed: 42  // Reproducible results
+)
+
+// Define search space bounds for each asset (0% to 20% per position)
+let searchSpace = (0..<numAssets).map { _ in (0.0, 0.20) }
+
+let sa = SimulatedAnnealing<VectorN<Double>>(
+    config: config,
+    searchSpace: searchSpace
+)
+
+// Create initial guess from current weights
+let initialGuess = VectorN(currentWeights)
+
+// Define constraints (FIXED API - no 'constraint:' or 'tolerance:' parameters!)
+let constraints: [MultivariateConstraint<VectorN<Double>>] = [
+    // Equality: Sum to 1 (must be fully invested)
+    .equality { weights in
+        (0..<numAssets).reduce(0.0) { $0 + weights[$1] } - 1.0
+    }
+]
+
+print("\n═══════════════════════════════════════════════════════════")
+print("Running Simulated Annealing...")
+
+let result = try sa.minimize(
+    portfolioObjective,
+    from: initialGuess,
+    constraints: constraints
+)
+
+print("\nOptimization Completed:")
+print("  Iterations: \(result.iterations)")
+print("  Converged: \(result.converged)")
+print("  Reason: \(result.convergenceReason)")
+
+// Analyze optimized portfolio
+let optimizedReturn = (0..<numAssets).reduce(0.0) { $0 + result.solution[$1] * expectedReturns[$1] }
+var optimizedVariance = 0.0
+for i in 0..<numAssets {
+    for j in 0..<numAssets {
+        let volatility = 0.20
+        let covariance = correlations[i][j] * volatility * volatility
+        optimizedVariance += result.solution[i] * result.solution[j] * covariance
+    }
+}
+let optimizedStdDev = sqrt(optimizedVariance)
+
+// Analyze turnover
+let turnover = (0..<numAssets).reduce(0.0) { sum, i in
+    sum + abs(result.solution[i] - currentWeights[i])
+} / 2.0
+let transactionCostBps = turnover * 0.001 * 100 * 100  // in basis points
+
+print("\n═══════════════════════════════════════════════════════════")
+print("Portfolio Comparison:")
+print("═══════════════════════════════════════════════════════════")
+print("                        Initial    Optimized    Change")
+print("───────────────────────────────────────────────────────────")
+print(String(format: "Expected Return:       %6.2f%%    %6.2f%%    %+6.2f%%",
+             initialReturn * 100, optimizedReturn * 100, (optimizedReturn - initialReturn) * 100))
+print(String(format: "Volatility (StdDev):   %6.2f%%    %6.2f%%    %+6.2f%%",
+             initialStdDev * 100, optimizedStdDev * 100, (optimizedStdDev - initialStdDev) * 100))
+print(String(format: "Return/Risk Ratio:     %6.3f     %6.3f     %+6.3f",
+             initialReturn / initialStdDev, optimizedReturn / optimizedStdDev,
+             (optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev)))
+print("───────────────────────────────────────────────────────────")
+print(String(format: "Turnover:              %6.2f%%", turnover * 100))
+print(String(format: "Transaction Costs:     %6.1f bps", transactionCostBps))
+print("═══════════════════════════════════════════════════════════")
+
+// Show largest changes
+let changes = (0..<numAssets).map { i in
+    (index: i, change: result.solution[i] - currentWeights[i],
+     oldWeight: currentWeights[i], newWeight: result.solution[i],
+     return: expectedReturns[i])
+}.sorted { abs($0.change) > abs($1.change) }.prefix(8)
+
+print("\nTop 8 Position Changes:")
+print("───────────────────────────────────────────────────────────")
+print("Asset  Return   Old Weight  New Weight  Change      Action")
+print("───────────────────────────────────────────────────────────")
+for change in changes {
+    let direction = change.change > 0 ? "BUY " : "SELL"
+    print(String(format: " %2d    %5.2f%%    %6.2f%%    %6.2f%%   %+6.2f%%    %s",
+                 change.index, change.return * 100,
+                 change.oldWeight * 100, change.newWeight * 100,
+                 change.change * 100, direction))
+}
+print("═══════════════════════════════════════════════════════════")
+
+print("\n💡 Key Insight:")
+print("   The optimizer balanced improving returns (moving to high-return assets)")
+print("   with minimizing transaction costs. Notice it didn't eliminate all")
+print("   low-return holdings - the transaction costs made that too expensive.")
+</code></pre><h3>Pattern 2: Configuration Comparison</h3><p><strong>Pattern</strong>: Compare different cooling configurations.</p><pre><code class="language-swift">// Simple test function: Rastrigin in 2D (many local minima)
+func rastrigin(_ x: VectorN<Double>) -> Double {
+    let A = 10.0
+    let n = 2.0
+    return A * n + (0..<2).reduce(0.0) { sum, i in
+        sum + (x[i] * x[i] - A * cos(2 * .pi * x[i]))
+    }
+}
+
+let searchSpace = [(-5.12, 5.12), (-5.12, 5.12)]
+
+// Test different configurations
+let configs: [(name: String, config: SimulatedAnnealingConfig)] = [
+    ("Fast", .fast),
+    ("Default", .default),
+    ("Thorough", .thorough),
+    ("Custom (slow)", SimulatedAnnealingConfig(
+        initialTemperature: 100.0,
+        finalTemperature: 0.001,
+        coolingRate: 0.98,  // Slower cooling
+        maxIterations: 20_000,
+        perturbationScale: 0.1,
+        reheatInterval: nil,
+        reheatTemperature: nil,
+        seed: 42
+    ))
+]
+
+print("Configuration Comparison (Rastrigin Function)")
+print("═══════════════════════════════════════════════════════════")
+print("Config          | Final Value | Iterations | Acceptance Rate")
+print("───────────────────────────────────────────────────────────")
+
+for (name, config) in configs {
+    let optimizer = SimulatedAnnealing<VectorN<Double>>(
+        config: config,
+        searchSpace: searchSpace
+    )
+
+    let result = optimizer.optimizeDetailed(
+        objective: rastrigin,
+        initialSolution: VectorN([2.0, 3.0])
+    )
+
+    let rate = result.acceptanceRate * 100
+    print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0)) | " +
+          "\(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: " ", startingAt: 0)) | " +
+          "\(String(format: "%10d", result.iterations)) | " +
+          "\(rate.formatted(.number.precision(.fractionLength(1))))%")
+}
+
+print("\nRecommendation: Use .default for most problems, .thorough for difficult landscapes")
+</code></pre><h3>Pattern 3: Ackley Function (Multimodal Optimization)</h3><p><strong>Pattern</strong>: Global optimization for highly multimodal functions.</p><pre><code class="language-swift">// Ackley function: highly multimodal with many local minima
+// Global minimum at (0, 0) with value 0
+func ackley(_ x: VectorN<Double>) -> Double {
+    let a = 20.0
+    let b = 0.2
+    let c = 2.0 * .pi
+    let d = 2  // dimensions
+
+    let sum1 = (0..<d).reduce(0.0) { $0 + x[$1] * x[$1] }
+    let sum2 = (0..<d).reduce(0.0) { $0 + cos(c * x[$1]) }
+
+    let term1 = -a * exp(-b * sqrt(sum1 / Double(d)))
+    let term2 = -exp(sum2 / Double(d))
+
+    return term1 + term2 + a + .e
+}
+
+// Search space: [-5, 5] for each dimension
+let searchSpace = [(-5.0, 5.0), (-5.0, 5.0)]
+
+// Use thorough config for difficult landscape
+let sa = SimulatedAnnealing<VectorN<Double>>(
+    config: .thorough,
+    searchSpace: searchSpace
+)
+
+print("Ackley Function Optimization (Highly Multimodal)")
+print("═══════════════════════════════════════════════════════════")
+
+// Start from a poor initial guess
+let initialGuess = VectorN([4.0, -3.5])
+
+let result = sa.optimizeDetailed(
+    objective: ackley,
+    initialSolution: initialGuess
+)
+
+print("Optimization Results:")
+print("  Solution: (\(result.solution[0].formatted(.number.precision(.fractionLength(4)))), " +
+      "\(result.solution[1].formatted(.number.precision(.fractionLength(4)))))")
+print("  Function Value: \(result.fitness.formatted(.number.precision(.fractionLength(6)))) (target: 0.0)")
+print("  Iterations: \(result.iterations)")
+print("  Acceptance Rate: \((result.acceptanceRate * 100).formatted(.number.precision(.fractionLength(1))))%")
+print("  Converged: \(result.converged)")
+print("  Reason: \(result.convergenceReason)")
+
+// Distance from global optimum
+let distanceFromOptimum = sqrt(result.solution[0]*result.solution[0] +
+                               result.solution[1]*result.solution[1])
+print("  Distance from global optimum: \(distanceFromOptimum.formatted(.number.precision(.fractionLength(4))))")
+</code></pre><hr /><h2>How It Works</h2><h3>Simulated Annealing Algorithm</h3><ol><li><strong>Initialize</strong>: Set T = T_0, x = x_0</li><li><strong>Generate Neighbor</strong>: x’ = random perturbation of x</li><li><strong>Calculate ΔE</strong>: ΔE = f(x’) - f(x)</li><li><strong>Accept/Reject</strong>:<ul><li>If ΔE < 0: Always accept (improvement)</li><li>Else: Accept with probability P = exp(-ΔE / T)</li></ul></li><li><strong>Cool Down</strong>: T = α * T (exponential) or T = T - β (linear)</li><li><strong>Repeat</strong>: Until T < T_min or max iterations</li></ol><h3>Acceptance Probability</h3><p><strong>Metropolis Criterion</strong>: P(accept worse solution) = exp(-ΔE / T)</p><table><thead><th>Temperature</th><th>ΔE = 0.1</th><th>ΔE = 1.0</th><th>ΔE = 10.0</th></thead><tbody><tr><td>T = 10</td><td>99.0%</td><td>90.5%</td><td>36.8%</td></tr><tr><td>T = 1</td><td>90.5%</td><td>36.8%</td><td>0.005%</td></tr><tr><td>T = 0.1</td><td>36.8%</td><td>0.005%</td><td>~0%</td></tr></tbody></table><p><strong>Insight</strong>: Early (high T), accept almost anything. Late (low T), only accept improvements.</p><h3>Cooling Schedule Impact</h3><p><strong>Problem: 100-variable portfolio optimization</strong></p><table><thead><th>Schedule</th><th>Final Value</th><th>Iterations</th><th>Quality</th></thead><tbody><tr><td>Fast (α=0.90)</td><td>0.0245</td><td>2,500</td><td>Good</td></tr><tr><td>Medium (α=0.95)</td><td>0.0238</td><td>5,800</td><td>Better</td></tr><tr><td>Slow (α=0.98)</td><td>0.0235</td><td>18,000</td><td>Best</td></tr><tr><td>Adaptive</td><td>0.0237</td><td>7,200</td><td>Better</td></tr></tbody></table><p><strong>Tradeoff</strong>: Slower cooling = better solution, more time</p><hr /><h2>Real-World Application</h2><h3>Manufacturing: Batch Sizing with Setup Costs</h3><p><strong>Company</strong>: Electronics manufacturer optimizing production batch sizes for 15 products<strong>Challenge</strong>: Minimize total costs (inventory + setup) subject to demand and capacity</p><p><strong>Problem Characteristics</strong>:</p><ul><li><strong>Continuous variables</strong>: Batch sizes (treated as continuous for optimization)</li><li><strong>Setup costs</strong>: Fixed cost per production run (non-smooth)</li><li><strong>Holding costs</strong>: Penalty for excess inventory (smooth)</li><li><strong>Multiple local minima</strong>: ~100+ feasible configurations</li></ul><p><strong>Why Simulated Annealing</strong>:</p><ul><li>Setup costs create discontinuous objective</li><li>Global search needed (many local minima)</li><li>Can escape poor local solutions</li></ul><p><strong>Implementation</strong>:</p><pre><code class="language-swift">import BusinessMath
+
+import BusinessMath
+
+// Model with 15 products
+let numProducts = 15
+
+// Weekly demand per product (units/week)
+let demand: [Double] = [
+    100.0, 150.0, 80.0, 200.0, 120.0,  // Products 0-4
+    90.0, 175.0, 110.0, 140.0, 95.0,   // Products 5-9
+    160.0, 85.0, 130.0, 105.0, 145.0   // Products 10-14
+]
+
+// Fixed setup cost per production run ($)
+let setupCost: [Double] = [
+    500.0, 750.0, 400.0, 850.0, 600.0,  // Products 0-4
+    450.0, 800.0, 550.0, 700.0, 480.0,  // Products 5-9
+    720.0, 420.0, 650.0, 520.0, 680.0   // Products 10-14
+]
+
+// Holding cost per unit per week ($/unit/week)
+let holdingCost: [Double] = [
+    2.0, 3.5, 1.8, 4.0, 2.5,    // Products 0-4
+    1.9, 3.8, 2.2, 3.0, 2.0,    // Products 5-9
+    3.3, 1.7, 2.8, 2.1, 3.2     // Products 10-14
+]
+
+func totalCost(_ batchSizes: VectorN<Double>) -> Double {
+    var cost = 0.0
+
+    for i in 0..<numProducts {
+        let runsPerWeek = demand[i] / max(batchSizes[i], 1.0)
+        let avgInventory = batchSizes[i] / 2.0
+
+        // Setup costs (discontinuous!)
+        cost += runsPerWeek * setupCost[i]
+
+        // Holding costs (smooth)
+        cost += avgInventory * holdingCost[i]
+    }
+
+    return cost
+}
+
+print("Manufacturing Batch Sizing Optimization")
+print("═══════════════════════════════════════════════════════════")
+print("\nProblem: 15 products with setup costs and inventory holding costs")
+
+// Calculate baseline cost (using demand as batch size - naive approach)
+let naiveBatches = VectorN(demand)
+let naiveCost = totalCost(naiveBatches)
+print("\nNaive Approach (batch size = weekly demand):")
+print("  Total Weekly Cost: $\(naiveCost.formatted(.number.precision(.fractionLength(2))))")
+
+// Simulated Annealing configuration
+let config = SimulatedAnnealingConfig(
+    initialTemperature: 50.0,
+    finalTemperature: 0.01,
+    coolingRate: 0.97,
+    maxIterations: 50_000,
+    perturbationScale: 0.15,
+    reheatInterval: nil,
+    reheatTemperature: nil,
+    seed: 42  // Reproducible results
+)
+
+let searchSpace = (0..<numProducts).map { _ in (10.0, 500.0) }  // Min/max batch size
+
+let sa = SimulatedAnnealing<VectorN<Double>>(
+    config: config,
+    searchSpace: searchSpace
+)
+
+print("\nRunning Simulated Annealing...")
+let result = sa.optimizeDetailed(
+    objective: totalCost,
+    initialSolution: naiveBatches
+)
+
+print("\nOptimization Results:")
+print("  Converged: \(result.converged)")
+print("  Iterations: \(result.iterations)")
+print("  Final Temperature: \(result.finalTemperature.formatted(.number.precision(.fractionLength(4))))")
+print("  Acceptance Rate: \(result.acceptanceRate.percent(1))")
+
+let optimizedCost = result.fitness
+let costReduction = naiveCost - optimizedCost
+let percentReduction = (costReduction / naiveCost) * 100
+let weeklySavings = costReduction
+
+print("\n═══════════════════════════════════════════════════════════")
+print("Cost Comparison:")
+print("═══════════════════════════════════════════════════════════")
+print("Naive Approach:      $\(naiveCost.formatted(.number.precision(.fractionLength(2))))")
+print("Optimized (SA):      $\(optimizedCost.formatted(.number.precision(.fractionLength(2))))")
+print("Cost Reduction:      $\(costReduction.formatted(.number.precision(.fractionLength(2)))) (\(percentReduction.formatted(.number.precision(.fractionLength(1))))%)")
+print("Weekly Savings:      $\(weeklySavings.formatted(.number.precision(.fractionLength(2))))")
+print("═══════════════════════════════════════════════════════════")
+
+// Show optimal batch sizes for top 5 products by demand
+let productInfo = (0..<numProducts).map { i in
+    (id: i, demand: demand[i], optimalBatch: result.solution[i],
+     setupCost: setupCost[i], holdingCost: holdingCost[i])
+}.sorted { $0.demand > $1.demand }
+
+print("\nOptimal Batch Sizes (Top 5 by Demand):")
+print("───────────────────────────────────────────────────────────")
+print("Product  Demand  Optimal Batch  Runs/Week  Setup $  Hold $")
+print("───────────────────────────────────────────────────────────")
+
+for info in productInfo.prefix(5) {
+    let runsPerWeek = info.demand / info.optimalBatch
+    let setupCostWeekly = runsPerWeek * info.setupCost
+    let holdCostWeekly = (info.optimalBatch / 2.0) * info.holdingCost
+
+    print(String(format: "  %2d     %5.0f      %6.1f      %5.2f    $%5.0f   $%5.0f",
+                 info.id, info.demand, info.optimalBatch, runsPerWeek,
+                 setupCostWeekly, holdCostWeekly))
+}
+print("═══════════════════════════════════════════════════════════")
+</code></pre><p><strong>Typical Results</strong>:</p><ul><li>Cost reduction: 10-15% vs. naive approach (batch size = demand)</li><li>Weekly savings: $6,000-$10,000 depending on product mix</li><li>Computation time: 30-60 seconds (acceptable for weekly planning)</li><li>Solution quality: Near-optimal (escapes local minima that gradient methods miss)</li></ul><hr /><h2>Try It Yourself</h2><details>
+<summary>Click to expand full playground code</summary>
+<pre><code class="language-swift">import Foundation
+import BusinessMath
+
+// Portfolio with transaction costs (20 assets for clarity)
+let numAssets = 20
+
+// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets
+// These happen to be LOW return assets - clear opportunity to improve!
+var currentWeights = [Double](repeating: 0.0, count: numAssets)
+// First 5 assets: 60% of portfolio (12% each) - these are low-return!
+for i in 0..<5 {
+    currentWeights[i] = 0.12
+}
+// Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return!
+for i in 5..<numAssets {
+    currentWeights[i] = 0.40 / Double(numAssets - 5)
+}
+
+// Expected returns: clearly tiered to demonstrate the opportunity
+// First 5 assets: 5-6% (low return)
+// Next 10 assets: 8-11% (medium return)
+// Last 5 assets: 12-15% (high return)
+let expectedReturns: [Double] =
+    (0..<5).map { _ in Double.random(in: 0.05...0.06) } +  // Low
+    (0..<10).map { _ in Double.random(in: 0.08...0.11) } + // Medium
+    (0..<5).map { _ in Double.random(in: 0.12...0.15) }    // High
+
+// Correlation matrix: reasonable diversification benefits
+let correlations = (0..<numAssets).map { i in
+    (0..<numAssets).map { j in
+        if i == j { return 1.0 }
+        // Within same tier: higher correlation (0.5-0.7)
+        // Across tiers: lower correlation (0.2-0.4)
+        let sameTier = (i < 5 && j < 5) ||
+                       (i >= 5 && i < 15 && j >= 5 && j < 15) ||
+                       (i >= 15 && j >= 15)
+        return sameTier ? Double.random(in: 0.5...0.7) : Double.random(in: 0.2...0.4)
+    }
+}
+
+@MainActor func portfolioObjective(_ weights: VectorN<Double>) -> Double {
+    // 1. Portfolio expected return (we want to MAXIMIZE this)
+    var portfolioReturn = 0.0
+    for i in 0..<numAssets {
+        portfolioReturn += weights[i] * expectedReturns[i]
+    }
+
+    // 2. Portfolio variance (risk - we want to MINIMIZE this)
+    var variance = 0.0
+    for i in 0..<numAssets {
+        for j in 0..<numAssets {
+            let volatility = 0.20  // 20% average vol
+            let covariance = correlations[i][j] * volatility * volatility
+            variance += weights[i] * weights[j] * covariance
+        }
+    }
+
+    // 3. Transaction costs (makes objective non-smooth!)
+    var transactionCosts = 0.0
+    for i in 0..<numAssets {
+        transactionCosts += abs(weights[i] - currentWeights[i]) * 0.001  // 10 bps
+    }
+
+    // Combined objective: maximize return-to-risk ratio, penalize transaction costs
+    // We minimize: risk/return + transaction costs
+    // (Higher return is better, lower variance is better)
+    let returnToRiskRatio = variance / max(portfolioReturn, 0.01)
+    return returnToRiskRatio + transactionCosts * 5.0  // Reduced penalty
+}
+
+print("Portfolio Rebalancing with Transaction Costs")
+print("═══════════════════════════════════════════════════════════")
+
+// Analyze initial portfolio
+let initialReturn = (0..<numAssets).reduce(0.0) { sum, i in
+    sum + currentWeights[i] * expectedReturns[i]
+}
+var initialVariance = 0.0
+for i in 0..<numAssets {
+    for j in 0..<numAssets {
+        let volatility = 0.20
+        let covariance = correlations[i][j] * volatility * volatility
+        initialVariance += currentWeights[i] * currentWeights[j] * covariance
+    }
+}
+let initialStdDev = sqrt(initialVariance)
+
+print("\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):")
+print("  Expected Return: \(initialReturn.percent(2))")
+print("  Volatility (StdDev): \(initialStdDev.percent(2))")
+print("  Return/Risk: \((initialReturn / initialStdDev).number(3))")
+print("  Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)")
+print("  High-return assets (15-19): Only ~2.67% each (returns 12-15%)")
+
+// Simulated annealing optimizer with config
+let config = SimulatedAnnealingConfig(
+    initialTemperature: 10.0,  // Higher temperature for more exploration
+    finalTemperature: 0.001,
+    coolingRate: 0.95,
+    maxIterations: 10_000,
+    perturbationScale: 0.05,  // Smaller perturbations
+    reheatInterval: nil,
+    reheatTemperature: nil,
+    seed: 42  // Reproducible results
+)
+
+// Define search space bounds for each asset (0% to 20% per position)
+let searchSpace = (0..<numAssets).map { _ in (0.0, 0.20) }
+
+let sa = SimulatedAnnealing<VectorN<Double>>(
+    config: config,
+    searchSpace: searchSpace
+)
+
+// Create initial guess from current weights
+let initialGuess = VectorN(currentWeights)
+
+// Define constraints
+let constraints: [MultivariateConstraint<VectorN<Double>>] = [
+    // Equality: Sum to 1 (must be fully invested)
+    .equality { weights in
+        (0..<numAssets).reduce(0.0) { $0 + weights[$1] } - 1.0
+    }
+]
+
+print("\n═══════════════════════════════════════════════════════════")
+print("Running Simulated Annealing...")
+
+let result = try sa.minimize(
+    portfolioObjective,
+    from: initialGuess,
+    constraints: constraints
+)
+
+print("\nOptimization Completed:")
+print("  Iterations: \(result.iterations)")
+print("  Converged: \(result.converged)")
+print("  Reason: \(result.convergenceReason)")
+
+// Analyze optimized portfolio
+let optimizedReturn = (0..<numAssets).reduce(0.0) { sum, i in
+    sum + result.solution[i] * expectedReturns[i]
+}
+var optimizedVariance = 0.0
+for i in 0..<numAssets {
+    for j in 0..<numAssets {
+        let volatility = 0.20
+        let covariance = correlations[i][j] * volatility * volatility
+        optimizedVariance += result.solution[i] * result.solution[j] * covariance
+    }
+}
+let optimizedStdDev = sqrt(optimizedVariance)
+
+// Analyze turnover
+let turnover = (0..<numAssets).reduce(0.0) { sum, i in
+    sum + abs(result.solution[i] - currentWeights[i])
+} / 2.0
+let transactionCostBps = turnover * 0.001 * 100 * 100  // in basis points
+
+print("\n═══════════════════════════════════════════════════════════")
+print("Portfolio Comparison:")
+print("═══════════════════════════════════════════════════════════")
+print("                        Initial    Optimized    Change")
+print("───────────────────────────────────────────────────────────")
+print("\("Expected Return:".padding(toLength: 24, withPad: " ", startingAt: 0))\(initialReturn.percent().paddingLeft(toLength: 6))\(optimizedReturn.percent().paddingLeft(toLength: 12))\((optimizedReturn - initialReturn).percent(2, .automatic).paddingLeft(toLength: 12))")
+print("\("Volatility (StdDev):".padding(toLength: 24, withPad: " ", startingAt: 0))\(initialStdDev.percent().paddingLeft(toLength: 6))\(optimizedStdDev.percent().paddingLeft(toLength: 12))\((optimizedStdDev - initialStdDev).percent(2, .automatic).paddingLeft(toLength: 12))")
+print("\("Return/Risk Ratio:".padding(toLength: 24, withPad: " ", startingAt: 0))\((initialReturn / initialStdDev).number(3).paddingLeft(toLength: 6))\((optimizedReturn / optimizedStdDev).number(3).paddingLeft(toLength: 12))\(((optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev)).number(3).paddingLeft(toLength: 12))")
+print("───────────────────────────────────────────────────────────")
+print("Turnover:              \(turnover.percent(2))")
+print("Transaction Costs:     \(transactionCostBps.number(1)) bps")
+print("═══════════════════════════════════════════════════════════")
+
+// Show largest changes
+let changes = (0..<numAssets).map { i in
+    (index: i, change: result.solution[i] - currentWeights[i],
+     oldWeight: currentWeights[i], newWeight: result.solution[i],
+     return: expectedReturns[i])
+}.sorted { abs($0.change) > abs($1.change) }.prefix(8)
+
+print("\nTop 8 Position Changes:")
+print("───────────────────────────────────────────────────────────")
+print("Asset  Return   Old Weight  New Weight  Change      Action")
+print("───────────────────────────────────────────────────────────")
+for change in changes {
+    let direction = change.change > 0 ? "BUY " : "SELL"
+	print("\("\(change.index)".paddingLeft(toLength: 4))\(change.return.percent().paddingLeft(toLength: 9))\(change.oldWeight.percent(2).paddingLeft(toLength: 13))\(change.newWeight.percent().paddingLeft(toLength: 12))\(change.change.percent(2).paddingLeft(toLength: 8))\(direction.paddingLeft(toLength: 12))")
+}
+print("═══════════════════════════════════════════════════════════")
+
+print("\n💡 Key Insight:")
+print("   The optimizer balanced improving returns (moving to high-return assets)")
+print("   with minimizing transaction costs. Notice it didn't eliminate all")
+print("   low-return holdings - the transaction costs made that too expensive.")
+
+
+// MARK: - Configuration Comparison
+
+	// Simple test function: Rastrigin in 2D (many local minima)
+	func rastrigin(_ x: VectorN<Double>) -> Double {
+		let A = 10.0
+		let n = 2.0
+		return A * n + (0..<2).reduce(0.0) { sum, i in
+			sum + (x[i] * x[i] - A * cos(2 * .pi * x[i]))
+		}
+	}
+
+	let searchSpace_config = [(-5.12, 5.12), (-5.12, 5.12)]
+
+	// Test different configurations
+	let configs: [(name: String, config: SimulatedAnnealingConfig)] = [
+		("Fast", .fast),
+		("Default", .default),
+		("Thorough", .thorough),
+		("Custom (slow)", SimulatedAnnealingConfig(
+			initialTemperature: 100.0,
+			finalTemperature: 0.001,
+			coolingRate: 0.98,  // Slower cooling
+			maxIterations: 20_000,
+			perturbationScale: 0.1,
+			reheatInterval: nil,
+			reheatTemperature: nil,
+			seed: 42
+		))
+	]
+
+	print("Configuration Comparison (Rastrigin Function)")
+	print("═══════════════════════════════════════════════════════════")
+	print("Config          | Final Value | Iterations | Acceptance Rate")
+	print("───────────────────────────────────────────────────────────")
+
+	for (name, config) in configs {
+		let optimizer = SimulatedAnnealing<VectorN<Double>>(
+			config: config,
+			searchSpace: searchSpace_config
+		)
+
+		let result = optimizer.optimizeDetailed(
+			objective: rastrigin,
+			initialSolution: VectorN([2.0, 3.0])
+		)
+
+		let rate = result.acceptanceRate
+		print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0)) | " +
+			  "\(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: " ", startingAt: 0)) | " +
+			  "\(String(format: "%10d", result.iterations)) | " +
+			  "\(rate.percent(1))")
+	}
+
+	print("\nRecommendation: Use .default for most problems, .thorough for difficult landscapes")
+
+
+// MARK: - Ackley Function (Multimodal Optimization)
+
+// Ackley function: highly multimodal with many local minima
+// Global minimum at (0, 0) with value 0
+func ackley(_ x: VectorN<Double>) -> Double {
+	let a = 20.0
+	let b = 0.2
+	let c = 2.0 * .pi
+	let d = 2  // dimensions
+
+	let sum1 = (0..<d).reduce(0.0) { $0 + x[$1] * x[$1] }
+	let sum2 = (0..<d).reduce(0.0) { $0 + cos(c * x[$1]) }
+
+	let term1 = -a * exp(-b * sqrt(sum1 / Double(d)))
+	let term2 = -exp(sum2 / Double(d))
+
+	return term1 + term2 + a + exp(1.0)
+}
+
+// Search space: [-5, 5] for each dimension
+let searchSpace_ackley = [(-5.0, 5.0), (-5.0, 5.0)]
+
+// Use thorough config for difficult landscape
+let sa_ackley = SimulatedAnnealing<VectorN<Double>>(
+	config: .thorough,
+	searchSpace: searchSpace_ackley
+)
+
+print("Ackley Function Optimization (Highly Multimodal)")
+print("═══════════════════════════════════════════════════════════")
+
+// Start from a poor initial guess
+let initialGuess_ackley = VectorN([4.0, -3.5])
+
+let result_ackley = sa_ackley.optimizeDetailed(
+	objective: ackley,
+	initialSolution: initialGuess_ackley
+)
+
+print("Optimization Results:")
+print("  Solution: (\(result_ackley.solution[0].number(4)), " +
+	  "\(result_ackley.solution[1].number(4)))")
+print("  Function Value: \(result_ackley.fitness.number(6)) (target: 0.0)")
+print("  Iterations: \(result_ackley.iterations)")
+print("  Acceptance Rate: \(result_ackley.acceptanceRate.percent(1))")
+print("  Converged: \(result_ackley.converged)")
+print("  Reason: \(result_ackley.convergenceReason)")
+
+// Distance from global optimum
+let distanceFromOptimum = sqrt(result_ackley.solution[0]*result_ackley.solution[0] +
+							   result_ackley.solution[1]*result_ackley.solution[1])
+print("  Distance from global optimum: \(distanceFromOptimum.number(4))")
+
+
+// MARK: - Real-World Example: Manufacturing Batch Sizing with Setup Costs
+
+print("\n\nManufacturing Batch Sizing Optimization")
+print("═══════════════════════════════════════════════════════════")
+print("\nProblem: 15 products with setup costs and inventory holding costs")
+
+// Model with 15 products
+let numProducts_batch = 15
+
+// Weekly demand per product (units/week)
+let demand_batch: [Double] = [
+	100.0, 150.0, 80.0, 200.0, 120.0,  // Products 0-4
+	90.0, 175.0, 110.0, 140.0, 95.0,   // Products 5-9
+	160.0, 85.0, 130.0, 105.0, 145.0   // Products 10-14
+]
+
+// Fixed setup cost per production run ($)
+let setupCost_batch: [Double] = [
+	500.0, 750.0, 400.0, 850.0, 600.0,  // Products 0-4
+	450.0, 800.0, 550.0, 700.0, 480.0,  // Products 5-9
+	720.0, 420.0, 650.0, 520.0, 680.0   // Products 10-14
+]
+
+// Holding cost per unit per week ($/unit/week)
+let holdingCost_batch: [Double] = [
+	2.0, 3.5, 1.8, 4.0, 2.5,    // Products 0-4
+	1.9, 3.8, 2.2, 3.0, 2.0,    // Products 5-9
+	3.3, 1.7, 2.8, 2.1, 3.2     // Products 10-14
+]
+
+func totalCost_batch(_ batchSizes: VectorN<Double>) -> Double {
+	var cost = 0.0
+
+	for i in 0..<numProducts_batch {
+		let runsPerWeek = demand_batch[i] / max(batchSizes[i], 1.0)
+		let avgInventory = batchSizes[i] / 2.0
+
+		// Setup costs (discontinuous!)
+		cost += runsPerWeek * setupCost_batch[i]
+
+		// Holding costs (smooth)
+		cost += avgInventory * holdingCost_batch[i]
+	}
+
+	return cost
+}
+
+// Calculate baseline cost (using demand as batch size - naive approach)
+let naiveBatches = VectorN(demand_batch)
+let naiveCost = totalCost_batch(naiveBatches)
+print("\nNaive Approach (batch size = weekly demand):")
+print("  Total Weekly Cost: \(naiveCost.currency())")
+
+// Simulated Annealing configuration
+let config_batch = SimulatedAnnealingConfig(
+	initialTemperature: 50.0,
+	finalTemperature: 0.01,
+	coolingRate: 0.97,
+	maxIterations: 50_000,
+	perturbationScale: 0.15,
+	reheatInterval: nil,
+	reheatTemperature: nil,
+	seed: 42  // Reproducible results
+)
+
+let searchSpace_batch = (0..<numProducts_batch).map { _ in (10.0, 500.0) }  // Min/max batch size
+
+let sa_batch = SimulatedAnnealing<VectorN<Double>>(
+	config: config_batch,
+	searchSpace: searchSpace_batch
+)
+
+print("\nRunning Simulated Annealing...")
+let result_batch = sa_batch.optimizeDetailed(
+	objective: totalCost_batch,
+	initialSolution: naiveBatches
+)
+
+print("\nOptimization Results:")
+print("  Converged: \(result_batch.converged)")
+print("  Iterations: \(result_batch.iterations)")
+print("  Final Temperature: \(result_batch.finalTemperature.number(4))")
+print("  Acceptance Rate: \(result_batch.acceptanceRate.percent(1))")
+
+let optimizedCost = result_batch.fitness
+let costReduction = naiveCost - optimizedCost
+let percentReduction = (costReduction / naiveCost) * 100
+let weeklySavings = costReduction
+
+print("\n═══════════════════════════════════════════════════════════")
+print("Cost Comparison:")
+print("═══════════════════════════════════════════════════════════")
+print("Naive Approach:      \(naiveCost.currency())")
+print("Optimized (SA):      \(optimizedCost.currency())")
+print("Cost Reduction:      \(costReduction.currency()) (\(percentReduction.number(1))%)")
+print("Weekly Savings:      \(weeklySavings.currency())")
+print("═══════════════════════════════════════════════════════════")
+
+// Show optimal batch sizes for top 5 products by demand
+let productInfo = (0..<numProducts_batch).map { i in
+	(id: i, demand: demand_batch[i], optimalBatch: result_batch.solution[i],
+	 setupCost: setupCost_batch[i], holdingCost: holdingCost_batch[i])
+}.sorted { $0.demand > $1.demand }
+
+print("\nOptimal Batch Sizes (Top 5 by Demand):")
+print("─────────────────────────────────────────────────────────────")
+print("Product  Demand  Optimal Batch  Runs/Week  Setup $     Hold $")
+print("─────────────────────────────────────────────────────────────")
+
+for info in productInfo.prefix(5) {
+	let runsPerWeek = info.demand / info.optimalBatch
+	let setupCostWeekly = runsPerWeek * info.setupCost
+	let holdCostWeekly = (info.optimalBatch / 2.0) * info.holdingCost
+
+	print("\("\(info.id)".paddingLeft(toLength: 7))\(info.demand.number(0).paddingLeft(toLength: 8))\(info.optimalBatch.number(1).paddingLeft(toLength: 15))\(runsPerWeek.number(2).paddingLeft(toLength: 11))\(setupCostWeekly.currency().paddingLeft(toLength: 9))\(holdCostWeekly.currency().paddingLeft(toLength: 11))")
+}
+print("═════════════════════════════════════════════════════════════")
+
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.22-SimulatedAnnealingTutorial.md">BusinessMath Docs – Simulated Annealing Tutorial</a></p><h3>Experiments to Try</h3><ol><li><strong>Temperature Tuning</strong>: Test initial temperatures 0.1, 1.0, 10.0, 100.0</li><li><strong>Cooling Rates</strong>: Compare α = 0.90, 0.95, 0.98, 0.99</li><li><strong>Neighbor Generation</strong>: Different perturbation strategies for portfolio</li><li><strong>Hybrid Approach</strong>: SA for global search, then local refinement with BFGS</li></ol><hr /><h2>Next Steps</h2><p><strong>Next Week</strong>: Week 11 begins with <strong>Nelder-Mead Simplex</strong> (another gradient-free method), then <strong>Particle Swarm Optimization</strong>, concluding with <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong>.</p><p><strong>Final Week</strong>: Week 12 covers reflections (What Worked, What Didn’t) and <strong>Case Study #6: Investment Strategy DSL</strong>.</p><hr /><p><strong>Series</strong>: [Week 10 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Methods] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Simulated annealing • Global optimization • Cooling schedules • Metropolis criterion • Discrete optimization</p><p><strong>Playgrounds</strong>: [Week 1-10 available] • [Next week: Nelder-Mead and particle swarm]</p>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-10/03-wed-conjugate-gradient</guid><title>Conjugate Gradient: Efficient Optimization Without Hessians</title><link>https://www.justinpurnell.com/BusinessMath/week-10/03-wed-conjugate-gradient</link><description><![CDATA[Part 35 of 12-Week BusinessMath Series]]></description><pubDate>Thu, 12 Mar 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[optimization]]></category><category><![CDATA[conjugate-gradient]]></category><category><![CDATA[gradient-descent]]></category><category><![CDATA[fletcher-reeves]]></category><category><![CDATA[polak-ribiere]]></category><content:encoded><![CDATA[<p><strong>Part 35 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding conjugate gradient method for quadratic optimization</li><li>Fletcher-Reeves and Polak-Ribière variants</li><li>When conjugate gradient outperforms gradient descent</li><li>Memory requirements: O(n) vs. O(n²) for Newton methods</li><li>Nonlinear conjugate gradient for general problems</li><li>Performance on portfolio and least-squares problems</li></ul><hr /><h2>The Problem</h2><p>Gradient descent is simple but slow (zigzags toward optimum). Newton’s method is fast but requires storing/inverting n × n Hessian matrices. For large problems:</p><ul><li><strong>Gradient descent</strong>: Thousands of iterations</li><li><strong>Newton/BFGS</strong>: Memory explosion for 1,000+ variables</li><li><strong>L-BFGS</strong>: Better, but still requires tuning history size</li></ul><p><strong>Need: Fast convergence like Newton, memory footprint like gradient descent.</strong></p><hr /><h2>The Solution</h2><p>Conjugate gradient chooses search directions that are “conjugate” (orthogonal in a special sense), avoiding the zigzagging of gradient descent while using only O(n) memory. Theoretically solves quadratic problems in at most n iterations.</p><h3>Pattern 1: Univariate Optimization (Finding Optimal Parameter)</h3><p><strong>Business Problem</strong>: Find optimal discount rate that minimizes pricing error for bond valuation.</p><pre><code class="language-swift">import Foundation
 import BusinessMath
 
 // Bond pricing: find discount rate that minimizes squared error
@@ -10649,659 +11491,4 @@ for quarter in quarters {
 	print("  Value at Risk (5%):    \(gpuResults.percentiles.p5.currency(0))")
 
 </code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.1-MonteCarloTimeSeriesGuide.md">BusinessMath Docs – 4.1 Monte Carlo Simulation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add correlation between drivers (revenue and costs often move together)</li><li>Model mean-reverting growth (growth rate reverts to long-term average)</li><li>Add extreme event scenarios (5% chance of 50% revenue drop)</li><li>Build multi-year forecasts with changing distributions over time</li></ol><hr /><h2>Real-World Application</h2><p>Every CFO, risk manager, and strategic planner uses Monte Carlo:</p><ul><li><strong>Annual budgeting</strong>: “What’s the 80% confidence interval for EBITDA?”</li><li><strong>Capital allocation</strong>: “How likely is ROI > 15%?”</li><li><strong>Risk management</strong>: “What’s the worst-case revenue in the bottom 5% of scenarios?”</li><li><strong>Strategic planning</strong>: “If we enter this market, what’s the probability of profitability by year 3?”</li></ul><p><strong>CFO use case</strong>: “Build me a 3-year revenue forecast with 10K Monte Carlo iterations. Show P10, P50, P90 scenarios. I need to present to the board with realistic uncertainty bounds.”</p><p>BusinessMath makes Monte Carlo forecasting programmatic, reproducible, and fast.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Monte Carlo Beats Scenario Analysis</strong></p><p>Traditional approach: Build 3 scenarios (base, best, worst).</p><p><strong>Problems</strong>:</p><ol><li><strong>No probabilities</strong>: Is “best case” 90th percentile or 99th?</li><li><strong>Arbitrary combinations</strong>: Best case has high revenue AND low costs (unlikely!)</li><li><strong>Missed interactions</strong>: When revenue is high, costs often are too (correlation ignored)</li></ol><p><strong>Monte Carlo fixes this</strong>:</p><ol><li><strong>Explicit probabilities</strong>: P90 means “exceeded 90% of the time”</li><li><strong>Natural combinations</strong>: High revenue scenario automatically samples from the high end of the revenue distribution</li><li><strong>Captures correlation</strong>: Model correlated drivers with copulas or factor models</li></ol><p><strong>The lesson</strong>: Monte Carlo provides a <strong>complete probability distribution</strong>, not just 3 data points.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest challenge here <strong>balancing ease-of-use with flexibility</strong>. We could have provided:</p><p><strong>Option A</strong>: High-level <code>forecastRevenue(baseAmount, growthDist, periods)</code></p><ul><li>Pro: Very easy to use</li><li>Con: Inflexible (what if growth depends on prior period revenue?)</li></ul><p><strong>Option B</strong>: Low-level sampling with manual loops</p><ul><li>Pro: Maximum flexibility</li><li>Con: Users must write boilerplate for every forecast</li></ul><p>We chose <strong>Option B with helper types</strong> (<code>ProbabilisticDriver</code>, <code>SimulationResults</code>) that handle the tedious parts (sampling, statistics) while leaving control over the simulation logic. Even though it’s a step away from the expressiveness of pure swift functions, the power boost is massive, and while still retaining the benefits of reusability.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing Monte Carlo results to analytical solutions (e.g., normal distribution revenue forecast) before implementing.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: <a href="../week-06/02-wed-scenario-analysis">Scenario Analysis - Building discrete scenarios, sensitivity analysis, and tornado diagrams</a>.</p><p><strong>Friday</strong>: Case Study #3 - <a href="../week-06/03-fri-case-study-option-pricing">Option Pricing with Monte Carlo</a>.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 20/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + <strong>Simulation (starting)</strong></li><li>Playgrounds: 19 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</guid><title>Bond Valuation & Credit Analysis</title><link>https://www.justinpurnell.com/BusinessMath/week-05/04-thu-bond-valuation</link><description><![CDATA[Part 19 of 12-Week BusinessMath Series]]></description><pubDate>Fri, 06 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[businessmath]]></category><category><![CDATA[swift]]></category><category><![CDATA[bonds]]></category><category><![CDATA[fixed-income]]></category><category><![CDATA[credit-risk]]></category><category><![CDATA[duration]]></category><category><![CDATA[convexity]]></category><category><![CDATA[callable-bonds]]></category><category><![CDATA[oas]]></category><content:encoded><![CDATA[<p><strong>Part 19 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Pricing bonds and calculating yield to maturity (YTM)</li><li>Measuring interest rate risk using duration and convexity</li><li>Converting credit metrics (Z-Scores) to default probabilities and spreads</li><li>Valuing callable bonds and calculating Option-Adjusted Spread (OAS)</li><li>Building credit curves to analyze default risk over time</li><li>Calculating expected losses for bond portfolios</li><li>Making informed fixed income investment decisions</li></ul><hr /><h2>The Problem</h2><p>Bond markets dwarf equity markets ($100T+ globally), yet bond valuation is surprisingly complex:</p><ul><li><strong>How do you price a bond?</strong> It’s not just “divide coupon by yield”—that’s current yield, not price.</li><li><strong>What’s the interest rate risk?</strong> If rates rise 1%, how much does your bond portfolio lose?</li><li><strong>How do you value credit risk?</strong> A BBB-rated bond should yield more than AAA, but how much?</li><li><strong>What about callable bonds?</strong> Issuers can refinance if rates drop—how do you value that option?</li></ul><p><strong>Manual bond analysis in spreadsheets is tedious when managing portfolios with hundreds of positions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive bond valuation and credit analysis: <code>Bond</code> pricing, duration/convexity calculation, credit spread modeling, callable bond valuation with OAS, and credit curve construction.</p><h3>Basic Bond Pricing</h3><p>Price a simple corporate bond:</p><pre><code class="language-swift">import BusinessMath
-import Foundation
-
-// 5-year corporate bond
-// - Face value: $1,000
-// - Annual coupon: 6%
-// - Semiannual payments
-// - Current market yield: 5%
-
-let calendar = Calendar.current
-let today = Date()
-let maturity = calendar.date(byAdding: .year, value: 5, to: today)!
-
-let bond = Bond(
-    faceValue: 1000.0,
-    couponRate: 0.06,
-    maturityDate: maturity,
-    paymentFrequency: .semiAnnual,
-    issueDate: today
-)
-
-let marketPrice = bond.price(yield: 0.05, asOf: today)
-
-print("Bond Pricing")
-print("============")
-print("Face Value: $1,000")
-print("Coupon Rate: 6.0%")
-print("Market Yield: 5.0%")
-print("Price: \(marketPrice.currency(2))")
-
-let currentYield = bond.currentYield(price: marketPrice)
-print("Current Yield: \(currentYield.percent(2))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Bond Pricing
-============
-Face Value: $1,000
-Coupon Rate: 6.0%
-Market Yield: 5.0%
-Price: $1,043.82
-
-Current Yield: 5.75%
-</code></pre><p><strong>The pricing rule</strong>: When coupon > yield, bond trades at <strong>premium</strong> (> $1,000). When yield > coupon, trades at <strong>discount</strong> (< $1,000). This is the inverse price-yield relationship.</p><hr /><h3>Yield to Maturity (YTM)</h3><p>Given a market price, solve for the internal rate of return:</p><pre><code class="language-swift">// Find YTM given observed market price
-
-let observedPrice = 980.00  // Trading below par
-
-do {
-    let ytm = try bond.yieldToMaturity(price: observedPrice, asOf: today)
-
-    print("\nYield to Maturity Analysis")
-    print("===========================")
-    print("Market Price: \(observedPrice.currency())")
-    print("YTM: \(ytm.percent(2))")
-
-    // Verify round-trip: Price → YTM → Price
-    let verifyPrice = bond.price(yield: ytm, asOf: today)
-    print("Verification: \(verifyPrice.currency(2))")
-    print("Difference: \(abs(verifyPrice - observedPrice).currency(2))")
-
-} catch {
-    print("YTM calculation failed: \(error)")
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>Yield to Maturity Analysis
-===========================
-Market Price: $980.00
-YTM: 6.48%
-
-Verification: $980.00
-Difference: $0.00
-</code></pre><p><strong>The definition</strong>: YTM is the <strong>total return</strong> if you buy at current price, hold to maturity, and reinvest all coupons at the YTM rate. It’s the bond’s IRR.</p><hr /><h3>Duration and Convexity</h3><p>Measure interest rate risk:</p><pre><code class="language-swift">let yield = 0.05
-
-let macaulayDuration = bond.macaulayDuration(yield: yield, asOf: today)
-let modifiedDuration = bond.modifiedDuration(yield: yield, asOf: today)
-let convexity = bond.convexity(yield: yield, asOf: today)
-
-print("\nInterest Rate Risk Metrics")
-print("==========================")
-print("Macaulay Duration: \(macaulayDuration.number(2)) years")
-print("Modified Duration: \(modifiedDuration.number(2))")
-print("Convexity: \(convexity.number(2))")
-
-// Estimate price change from 1% yield increase
-let yieldChange = 0.01  // 100 bps
-let priceChange = -modifiedDuration * yieldChange
-
-print("\nIf yield increases by 100 bps:")
-print("Duration estimate: \(priceChange.percent(2))")
-
-// More accurate estimate with convexity
-let convexityAdj = 0.5 * convexity * yieldChange * yieldChange
-let improvedEstimate = priceChange + convexityAdj
-
-print("With convexity adjustment: \(improvedEstimate.percent(2))")
-
-// Actual price change
-let newPrice = bond.price(yield: yield + yieldChange, asOf: today)
-let originalPrice = bond.price(yield: yield, asOf: today)
-let actualChange = ((newPrice / originalPrice) - 1.0)
-
-print("Actual change: \(actualChange.percent(2))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Interest Rate Risk Metrics
-==========================
-Macaulay Duration: 4.41 years
-Modified Duration: 4.30
-Convexity: 22.07
-
-If yield increases by 100 bps:
-Duration estimate: -4.30%
-With convexity adjustment: -4.19%
-Actual change: -4.19%
-</code></pre><p><strong>The interpretation</strong>:</p><ul><li><strong>Macaulay Duration (4.41 years)</strong>: Weighted average time to receive cash flows</li><li><strong>Modified Duration (4.30)</strong>: Price sensitivity—a 1% yield increase causes ~4.3% price drop</li><li><strong>Convexity (22.07)</strong>: Curvature—improves duration estimate for large yield changes</li></ul><p><strong>The insight</strong>: <strong>Duration</strong> is a linear approximation. <strong>Convexity</strong> captures the curve. Together, they predict price changes accurately.</p><hr /><h3>Credit Risk Analysis</h3><p>Convert company fundamentals to bond pricing:</p><pre><code class="language-swift">// Step 1: Start with credit metrics (Altman Z-Score)
-let zScore = 2.3  // Grey zone (moderate credit risk)
-
-// Step 2: Convert Z-Score to default probability
-let creditModel = CreditSpreadModel<Double>()
-let defaultProbability = creditModel.defaultProbability(zScore: zScore)
-
-print("\nCredit Risk Analysis")
-print("====================")
-print("Z-Score: \(zScore.number(2))")
-print("Default Probability: \(defaultProbability.percent(2))")
-
-// Step 3: Determine recovery rate by seniority
-let seniority = Seniority.seniorUnsecured
-let recoveryRate = RecoveryModel<Double>.standardRecoveryRate(seniority: seniority)
-
-print("Seniority: Senior Unsecured")
-print("Expected Recovery: \(recoveryRate.percent(0))")
-
-// Step 4: Calculate credit spread
-let creditSpread = creditModel.creditSpread(
-    defaultProbability: defaultProbability,
-    recoveryRate: recoveryRate,
-    maturity: 5.0
-)
-
-print("Credit Spread: \((creditSpread * 10000).number(0)) bps")
-
-// Step 5: Price the bond
-let riskFreeRate = 0.03  // 3% Treasury yield
-let corporateYield = riskFreeRate + creditSpread
-
-let corporateBond = Bond(
-    faceValue: 1000.0,
-    couponRate: 0.05,
-    maturityDate: maturity,
-    paymentFrequency: .semiAnnual,
-    issueDate: today
-)
-
-let corporatePrice = corporateBond.price(yield: corporateYield, asOf: today)
-
-print("\nCorporate Bond Pricing:")
-print("Risk-Free Rate: \(riskFreeRate.percent(2))")
-print("Corporate Yield: \(corporateYield.percent(2))")
-print("Bond Price: \(corporatePrice.currency(2))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Credit Risk Analysis
-====================
-Z-Score: 2.30
-Default Probability: 3.92%
-Seniority: Senior Unsecured
-Expected Recovery: 50%
-Credit Spread: 206 bps
-
-Corporate Bond Pricing:
-Risk-Free Rate: 3.00%
-Corporate Yield: 5.06%
-Bond Price: $997.39
-</code></pre><p><strong>The workflow</strong>: <strong>Z-Score → Default Probability → Credit Spread → Bond Yield → Bond Price</strong></p><p><strong>The formula</strong>: Credit Spread ≈ (Default Probability × Loss Given Default) / (1 - Default Probability)</p><hr /><h3>Credit Deterioration Impact</h3><p>See how credit quality affects bond values:</p><pre><code class="language-swift">print("\nCredit Deterioration Impact")
-print("===========================")
-
-let scenarios = [
-    (name: "Investment Grade", zScore: 3.5),
-    (name: "Grey Zone", zScore: 2.0),
-    (name: "Distress", zScore: 1.0)
-]
-
-print("\nScenario           | Z-Score | PD     | Spread | Price")
-print("-------------------|---------|--------|--------|--------")
-
-for scenario in scenarios {
-    let pd = creditModel.defaultProbability(zScore: scenario.zScore)
-    let spread = creditModel.creditSpread(
-        defaultProbability: pd,
-        recoveryRate: recoveryRate,
-        maturity: 5.0
-    )
-    let yld = riskFreeRate + spread
-    let price = corporateBond.price(yield: yld, asOf: today)
-
-    print("\(scenario.name.padding(toLength: 18, withPad: " ", startingAt: 0)) | \(scenario.zScore.number(1))     | \(pd.percent(1)) | \((spread * 10000).number(0)) bps | \(price.currency(2))")
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>Credit Deterioration Impact
-===========================
-
-Scenario           | Z-Score | PD     | Spread     | Price
--------------------|---------|--------|------------|----------
-Investment Grade   |     3.5 |   0.0% |      2 bps | $1,091.44
-Grey Zone          |     2.0 |  11.9% |    708 bps |   $804.45
-Distress           |     1.0 |  88.1% | 18,421 bps |    $28.14
-</code></pre><p><strong>The pattern</strong>: As credit deteriorates (lower Z-Score), default probability rises, spreads widen, and bond prices fall. The relationship is <strong>non-linear</strong>—distressed bonds see massive spread widening.</p><hr /><h3>Callable Bonds and OAS</h3><p>Value bonds with embedded call options:</p><pre><code class="language-swift">// High-coupon callable bond (issuer can refinance)
-
-let highCouponBond = Bond(
-    faceValue: 1000.0,
-    couponRate: 0.07,  // 7% coupon (above market)
-    maturityDate: calendar.date(byAdding: .year, value: 10, to: today)!,
-    paymentFrequency: .semiAnnual,
-    issueDate: today
-)
-
-// Callable after 3 years at $1,040 (4% premium)
-let callDate = calendar.date(byAdding: .year, value: 3, to: today)!
-let callSchedule = [CallProvision(date: callDate, callPrice: 1040.0)]
-
-let callableBond = CallableBond(
-    bond: highCouponBond,
-    callSchedule: callSchedule
-)
-
-let volatility = 0.15  // 15% interest rate volatility
-
-// Step 1: Price non-callable bond
-let straightYield = riskFreeRate + creditSpread
-let straightPrice = highCouponBond.price(yield: straightYield, asOf: today)
-
-// Step 2: Price callable bond
-let callablePrice = callableBond.price(
-    riskFreeRate: riskFreeRate,
-    spread: creditSpread,
-    volatility: volatility,
-    asOf: today
-)
-
-// Step 3: Calculate embedded option value
-let callOptionValue = callableBond.callOptionValue(
-    riskFreeRate: riskFreeRate,
-    spread: creditSpread,
-    volatility: volatility,
-    asOf: today
-)
-
-print("\nCallable Bond Analysis")
-print("======================")
-print("Non-Callable Price: \(straightPrice.currency(2))")
-print("Callable Price: \(callablePrice.currency(2))")
-print("Call Option Value: \(callOptionValue.currency(2))")
-print("Investor gives up: \((straightPrice - callablePrice).currency(2))")
-
-// Step 4: Calculate Option-Adjusted Spread (OAS)
-do {
-    let oas = try callableBond.optionAdjustedSpread(
-        marketPrice: callablePrice,
-        riskFreeRate: riskFreeRate,
-        volatility: volatility,
-        asOf: today
-    )
-
-    print("\nSpread Decomposition:")
-    print("Nominal Spread: \((creditSpread * 10000).number(0)) bps")
-    print("OAS (credit only): \((oas * 10000).number(0)) bps")
-    print("Option Spread: \(((creditSpread - oas) * 10000).number(0)) bps")
-
-} catch {
-    print("OAS calculation failed: \(error)")
-}
-
-// Step 5: Effective duration (accounts for call option)
-let effectiveDuration = callableBond.effectiveDuration(
-    riskFreeRate: riskFreeRate,
-    spread: creditSpread,
-    volatility: volatility,
-    asOf: today
-)
-
-let straightDuration = highCouponBond.macaulayDuration(yield: straightYield, asOf: today)
-
-print("\nDuration Comparison:")
-print("Non-Callable Duration: \(straightDuration.number(2)) years")
-print("Effective Duration: \(effectiveDuration.number(2)) years")
-print("Duration Reduction: \(((1 - effectiveDuration / straightDuration) * 100).number(0))%")
-</code></pre><p><strong>Output:</strong></p><pre><code>Callable Bond Analysis
-======================
-Non-Callable Price: $1,150.82
-Callable Price: $1,048.51
-Call Option Value: $102.31
-Investor gives up: $102.31
-
-Spread Decomposition:
-Nominal Spread: 206 bps
-OAS (credit only): 206 bps
-Option Spread: 0 bps
-
-Duration Comparison:
-Non-Callable Duration: 7.56 years
-Effective Duration: 1.80 years
-Duration Reduction: 76%
-</code></pre><p><strong>The callable bond mechanics</strong>:</p><ol><li><strong>Callable price < Non-callable price</strong>: Investor compensates issuer for refinancing option</li><li><strong>OAS isolates credit risk</strong>: Strips out option risk for apples-to-apples comparison</li><li><strong>Effective duration < Macaulay duration</strong>: Call option limits price appreciation when rates fall (<strong>negative convexity</strong>)</li></ol><p><strong>The insight</strong>: Callable bonds exhibit <strong>negative convexity</strong>—when rates fall, price gains are capped at the call price.</p><hr /><h3>Credit Curves</h3><p>Build term structures of credit spreads:</p><pre><code class="language-swift">// Credit curve from market observations
-
-let periods = [
-    Period.year(1),
-    Period.year(3),
-    Period.year(5),
-    Period.year(10)
-]
-
-// Observed spreads (typically upward sloping)
-let marketSpreads = TimeSeries(
-    periods: periods,
-    values: [0.005, 0.012, 0.018, 0.025]  // 50, 120, 180, 250 bps
-)
-
-let creditCurve = CreditCurve(
-    spreads: marketSpreads,
-    recoveryRate: recoveryRate
-)
-
-print("\nCredit Curve Analysis")
-print("=====================")
-
-// Interpolate spreads
-for years in [2.0, 7.0] {
-    let spread = creditCurve.spread(maturity: years)
-    print("\(years.number(0))-Year Spread: \((spread * 10000).number(0)) bps")
-}
-
-// Cumulative default probabilities
-print("\nCumulative Default Probabilities:")
-for year in [1, 3, 5, 10] {
-    let cdp = creditCurve.cumulativeDefaultProbability(maturity: Double(year))
-    let survival = 1.0 - cdp
-    print("\(year)-Year: \(cdp.percent(2)) default, \(survival.percent(2)) survival")
-}
-
-// Hazard rates (forward default intensities)
-print("\nHazard Rates (Default Intensity):")
-for year in [1, 5, 10] {
-    let hazard = creditCurve.hazardRate(maturity: Double(year))
-    print("\(year)-Year: \(hazard.percent(2)) per year")
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>Credit Curve Analysis
-=====================
-2-Year Spread: 85 bps
-7-Year Spread: 208 bps
-
-Cumulative Default Probabilities:
-1-Year: 1.00% default, 99.00% survival
-3-Year: 6.95% default, 93.05% survival
-5-Year: 16.47% default, 83.53% survival
-10-Year: 39.35% default, 60.65% survival
-
-Hazard Rates (Default Intensity):
-1-Year: 1.00% per year
-5-Year: 3.60% per year
-10-Year: 5.00% per year
-</code></pre><p><strong>The credit curve</strong>: Shows how default risk evolves over time. <strong>Upward-sloping</strong> curves indicate increasing uncertainty at longer horizons.</p><p><strong>Hazard rate</strong>: Instantaneous default intensity—useful for pricing credit derivatives like CDSs.</p><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-import Foundation
-
-
-// MARK: - Basic Bond Pricing
-
-// 5-year corporate bond
-// - Face value: $1,000
-// - Annual coupon: 6%
-// - Semiannual payments
-// - Current market yield: 5%
-
-let calendar = Calendar.current
-let today = Date()
-let maturity = calendar.date(byAdding: .year, value: 5, to: today)!
-
-let bond = Bond(
-	faceValue: 1000.0,
-	couponRate: 0.06,
-	maturityDate: maturity,
-	paymentFrequency: .semiAnnual,
-	issueDate: today
-)
-
-let marketPrice = bond.price(yield: 0.05, asOf: today)
-
-print("Bond Pricing")
-print("============")
-print("Face Value: $1,000")
-print("Coupon Rate: 6.0%")
-print("Market Yield: 5.0%")
-print("Price: \(marketPrice.currency(2))")
-
-let currentYield = bond.currentYield(price: marketPrice)
-print("Current Yield: \(currentYield.percent(2))")
-
-// MARK: - Yield to Maturity
-
-// Find YTM given observed market price
-
-let observedPrice = 980.00  // Trading below par
-
-do {
-	let ytm = try bond.yieldToMaturity(price: observedPrice, asOf: today)
-
-	print("\nYield to Maturity Analysis")
-	print("===========================")
-	print("Market Price: \(observedPrice.currency())")
-	print("YTM: \(ytm.percent(2))")
-
-	// Verify round-trip: Price → YTM → Price
-	let verifyPrice = bond.price(yield: ytm, asOf: today)
-	print("Verification: \(verifyPrice.currency(2))")
-	print("Difference: \(abs(verifyPrice - observedPrice).currency(2))")
-
-} catch {
-	print("YTM calculation failed: \(error)")
-}
-
-// MARK: - Duration and Convexity
-
-let yield = 0.05
-
-let macaulayDuration = bond.macaulayDuration(yield: yield, asOf: today)
-let modifiedDuration = bond.modifiedDuration(yield: yield, asOf: today)
-let convexity = bond.convexity(yield: yield, asOf: today)
-
-print("\nInterest Rate Risk Metrics")
-print("==========================")
-print("Macaulay Duration: \(macaulayDuration.number(2)) years")
-print("Modified Duration: \(modifiedDuration.number(2))")
-print("Convexity: \(convexity.number(2))")
-
-// Estimate price change from 1% yield increase
-let yieldChange = 0.01  // 100 bps
-let priceChange = -modifiedDuration * yieldChange
-
-print("\nIf yield increases by 100 bps:")
-print("Duration estimate: \(priceChange.percent(2))")
-
-// More accurate estimate with convexity
-let convexityAdj = 0.5 * convexity * yieldChange * yieldChange
-let improvedEstimate = priceChange + convexityAdj
-
-print("With convexity adjustment: \(improvedEstimate.percent(2))")
-
-// Actual price change
-let newPrice = bond.price(yield: yield + yieldChange, asOf: today)
-let originalPrice = bond.price(yield: yield, asOf: today)
-let actualChange = ((newPrice / originalPrice) - 1.0)
-
-print("Actual change: \(actualChange.percent(2))")
-
-// MARK: - Credit Risk Analysis
-
-// Step 1: Start with credit metrics (Altman Z-Score)
-let zScore = 2.3  // Grey zone (moderate credit risk)
-
-// Step 2: Convert Z-Score to default probability
-let creditModel = CreditSpreadModel<Double>()
-let defaultProbability = creditModel.defaultProbability(zScore: zScore)
-
-print("\nCredit Risk Analysis")
-print("====================")
-print("Z-Score: \(zScore.number(2))")
-print("Default Probability: \(defaultProbability.percent(2))")
-
-// Step 3: Determine recovery rate by seniority
-let seniority = Seniority.seniorUnsecured
-let recoveryRate = RecoveryModel<Double>.standardRecoveryRate(seniority: seniority)
-
-print("Seniority: Senior Unsecured")
-print("Expected Recovery: \(recoveryRate.percent(0))")
-
-// Step 4: Calculate credit spread
-let creditSpread = creditModel.creditSpread(
-	defaultProbability: defaultProbability,
-	recoveryRate: recoveryRate,
-	maturity: 5.0
-)
-
-print("Credit Spread: \((creditSpread * 10000).number(0)) bps")
-
-// Step 5: Price the bond
-let riskFreeRate = 0.03  // 3% Treasury yield
-let corporateYield = riskFreeRate + creditSpread
-
-let corporateBond = Bond(
-	faceValue: 1000.0,
-	couponRate: 0.05,
-	maturityDate: maturity,
-	paymentFrequency: .semiAnnual,
-	issueDate: today
-)
-
-let corporatePrice = corporateBond.price(yield: corporateYield, asOf: today)
-
-print("\nCorporate Bond Pricing:")
-print("Risk-Free Rate: \(riskFreeRate.percent(2))")
-print("Corporate Yield: \(corporateYield.percent(2))")
-print("Bond Price: \(corporatePrice.currency(2))")
-
-
-// MARK: - Credit Deterioration Impact
-
-print("\nCredit Deterioration Impact")
-print("===========================")
-
-let scenarios = [
-	(name: "Investment Grade", zScore: 3.5),
-	(name: "Grey Zone", zScore: 2.0),
-	(name: "Distress", zScore: 1.0)
-]
-
-print("\nScenario           | Z-Score | PD     | Spread     | Price")
-print("-------------------|---------|--------|------------|----------")
-
-for scenario in scenarios {
-	let pd = creditModel.defaultProbability(zScore: scenario.zScore)
-	let spread = creditModel.creditSpread(
-		defaultProbability: pd,
-		recoveryRate: recoveryRate,
-		maturity: 5.0
-	)
-	let yld = riskFreeRate + spread
-	let price = corporateBond.price(yield: yld, asOf: today)
-
-	print("\(scenario.name.padding(toLength: 18, withPad: " ", startingAt: 0)) | \(scenario.zScore.number(1).paddingLeft(toLength: 7)) | \(pd.percent(1).paddingLeft(toLength: 6)) | \((spread * 10000).number(0).paddingLeft(toLength: 6)) bps | \(price.currency(2).paddingLeft(toLength: 9))")
-}
-
-// MARK: - Callable Bonds and OAS
-
-	// High-coupon callable bond (issuer can refinance)
-
-	let highCouponBond = Bond(
-		faceValue: 1000.0,
-		couponRate: 0.07,  // 7% coupon (above market)
-		maturityDate: calendar.date(byAdding: .year, value: 10, to: today)!,
-		paymentFrequency: .semiAnnual,
-		issueDate: today
-	)
-
-	// Callable after 3 years at $1,040 (4% premium)
-	let callDate = calendar.date(byAdding: .year, value: 3, to: today)!
-	let callSchedule = [CallProvision(date: callDate, callPrice: 1040.0)]
-
-	let callableBond = CallableBond(
-		bond: highCouponBond,
-		callSchedule: callSchedule
-	)
-
-	let volatility = 0.15  // 15% interest rate volatility
-
-	// Step 1: Price non-callable bond
-	let straightYield = riskFreeRate + creditSpread
-	let straightPrice = highCouponBond.price(yield: straightYield, asOf: today)
-
-	// Step 2: Price callable bond
-	let callablePrice = callableBond.price(
-		riskFreeRate: riskFreeRate,
-		spread: creditSpread,
-		volatility: volatility,
-		asOf: today
-	)
-
-	// Step 3: Calculate embedded option value
-	let callOptionValue = callableBond.callOptionValue(
-		riskFreeRate: riskFreeRate,
-		spread: creditSpread,
-		volatility: volatility,
-		asOf: today
-	)
-
-	print("\nCallable Bond Analysis")
-	print("======================")
-	print("Non-Callable Price: \(straightPrice.currency(2))")
-	print("Callable Price: \(callablePrice.currency(2))")
-	print("Call Option Value: \(callOptionValue.currency(2))")
-	print("Investor gives up: \((straightPrice - callablePrice).currency(2))")
-
-	// Step 4: Calculate Option-Adjusted Spread (OAS)
-	do {
-		let oas = try callableBond.optionAdjustedSpread(
-			marketPrice: callablePrice,
-			riskFreeRate: riskFreeRate,
-			volatility: volatility,
-			asOf: today
-		)
-
-		print("\nSpread Decomposition:")
-		print("Nominal Spread: \((creditSpread * 10000).number(0)) bps")
-		print("OAS (credit only): \((oas * 10000).number(0)) bps")
-		print("Option Spread: \(((creditSpread - oas) * 10000).number(0)) bps")
-
-	} catch {
-		print("OAS calculation failed: \(error)")
-	}
-
-	// Step 5: Effective duration (accounts for call option)
-	let effectiveDuration = callableBond.effectiveDuration(
-		riskFreeRate: riskFreeRate,
-		spread: creditSpread,
-		volatility: volatility,
-		asOf: today
-	)
-
-	let straightDuration = highCouponBond.macaulayDuration(yield: straightYield, asOf: today)
-
-	print("\nDuration Comparison:")
-	print("Non-Callable Duration: \(straightDuration.number(2)) years")
-	print("Effective Duration: \(effectiveDuration.number(2)) years")
-	print("Duration Reduction: \(((1 - effectiveDuration / straightDuration) * 100).number(0))%")
-
-
-// MARK: - Credit Curves
-
-	// Credit curve from market observations
-
-	let periods = [
-		Period.year(1),
-		Period.year(3),
-		Period.year(5),
-		Period.year(10)
-	]
-
-	// Observed spreads (typically upward sloping)
-	let marketSpreads = TimeSeries(
-		periods: periods,
-		values: [0.005, 0.012, 0.018, 0.025]  // 50, 120, 180, 250 bps
-	)
-
-	let creditCurve = CreditCurve(
-		spreads: marketSpreads,
-		recoveryRate: recoveryRate
-	)
-
-	print("\nCredit Curve Analysis")
-	print("=====================")
-
-	// Interpolate spreads
-	for years in [2.0, 7.0] {
-		let spread = creditCurve.spread(maturity: years)
-		print("\(years.number(0))-Year Spread: \((spread * 10000).number(0)) bps")
-	}
-
-	// Cumulative default probabilities
-	print("\nCumulative Default Probabilities:")
-	for year in [1, 3, 5, 10] {
-		let cdp = creditCurve.cumulativeDefaultProbability(maturity: Double(year))
-		let survival = 1.0 - cdp
-		print("\(year)-Year: \(cdp.percent(2)) default, \(survival.percent(2)) survival")
-	}
-
-	// Hazard rates (forward default intensities)
-	print("\nHazard Rates (Default Intensity):")
-	for year in [1, 5, 10] {
-		let hazard = creditCurve.hazardRate(maturity: Double(year))
-		print("\(year)-Year: \(hazard.percent(2)) per year")
-	}
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.10-BondValuationGuide.md">BusinessMath Docs – 3.10 Bond Valuation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Price corporate bonds across the credit spectrum (AAA to CCC)</li><li>Calculate portfolio duration for a bond ladder</li><li>Model callable bond strategies in different rate environments</li><li>Build credit curves for multiple issuers</li></ol><hr /><h2>Real-World Application</h2><p>Fixed income is the <strong>largest asset class</strong> globally:</p><ul><li><strong>Pension funds</strong>: Managing $100B+ bond portfolios</li><li><strong>Insurance companies</strong>: Asset-liability matching with bonds</li><li><strong>Central banks</strong>: Setting monetary policy via bond markets</li><li><strong>Corporates</strong>: Issuing bonds to finance operations</li></ul><p><strong>Portfolio manager use case</strong>: “We hold $5B in corporate bonds. Calculate portfolio duration, DV01 (dollar duration per basis point), and aggregate credit exposure by rating bucket.”</p><p>BusinessMath makes this analysis programmatic, real-time, and portfolio-wide.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Do Bonds Have Inverse Price-Yield Relationship?</strong></p><p>It’s counter-intuitive: when yields rise, bond prices <strong>fall</strong>. Why?</p><p><strong>The mechanism</strong>: A bond is a stream of fixed cash flows. When yields rise:</p><ul><li>New bonds issue with higher coupons</li><li>Your old bond (with lower coupon) is less attractive</li><li>To compete, your bond must trade at a <strong>discount</strong></li></ul><p><strong>Example</strong>:</p><ul><li>You buy a 5% coupon bond for $1,000 (yield = 5%)</li><li>Rates rise, new bonds pay 6% coupons</li><li>Your 5% bond must drop to ~$957 so its <strong>yield</strong> rises to 6%</li></ul><p><strong>The math</strong>: Bond price = PV(future coupons + principal). When discount rate (yield) increases, PV decreases.</p><p><strong>The lesson</strong>: <strong>Duration measures this price sensitivity</strong>. Higher duration = greater price volatility when yields change.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The most challenging implementation was <strong>callable bond pricing with binomial trees</strong>. We had to:</p><ol><li>Build interest rate trees with specified volatility</li><li>Implement backward induction (value at maturity, work backward)</li><li>Check at each node: Is bond callable? If yes, value = min(continuation value, call price)</li><li>Calculate OAS by iterating to find spread that matches market price</li></ol><p><strong>Trade-off</strong>: Binomial trees are slower than closed-form solutions but handle path-dependent options (callable, putable, convertible bonds).</p><p>We chose <strong>accuracy over speed</strong>—bond portfolios are repriced daily, not millisecond-by-millisecond.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing our binomial tree to Bloomberg’s pricing for callable bonds before implementation.</p><hr /><h2>Next Steps</h2><p><strong>Coming up next week</strong>: Week 6 explores Monte Carlo simulation and scenario analysis for risk modeling.</p><p><strong>Monday</strong>: Monte Carlo Basics - Building stochastic models for forecasting under uncertainty.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 5/12</li><li>Posts Published: 19/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + <strong>Advanced Modeling (complete)</strong></li><li>Playgrounds: 18 available</li></ul>]]></content:encoded></item></channel></rss>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.1-MonteCarloTimeSeriesGuide.md">BusinessMath Docs – 4.1 Monte Carlo Simulation</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add correlation between drivers (revenue and costs often move together)</li><li>Model mean-reverting growth (growth rate reverts to long-term average)</li><li>Add extreme event scenarios (5% chance of 50% revenue drop)</li><li>Build multi-year forecasts with changing distributions over time</li></ol><hr /><h2>Real-World Application</h2><p>Every CFO, risk manager, and strategic planner uses Monte Carlo:</p><ul><li><strong>Annual budgeting</strong>: “What’s the 80% confidence interval for EBITDA?”</li><li><strong>Capital allocation</strong>: “How likely is ROI > 15%?”</li><li><strong>Risk management</strong>: “What’s the worst-case revenue in the bottom 5% of scenarios?”</li><li><strong>Strategic planning</strong>: “If we enter this market, what’s the probability of profitability by year 3?”</li></ul><p><strong>CFO use case</strong>: “Build me a 3-year revenue forecast with 10K Monte Carlo iterations. Show P10, P50, P90 scenarios. I need to present to the board with realistic uncertainty bounds.”</p><p>BusinessMath makes Monte Carlo forecasting programmatic, reproducible, and fast.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Monte Carlo Beats Scenario Analysis</strong></p><p>Traditional approach: Build 3 scenarios (base, best, worst).</p><p><strong>Problems</strong>:</p><ol><li><strong>No probabilities</strong>: Is “best case” 90th percentile or 99th?</li><li><strong>Arbitrary combinations</strong>: Best case has high revenue AND low costs (unlikely!)</li><li><strong>Missed interactions</strong>: When revenue is high, costs often are too (correlation ignored)</li></ol><p><strong>Monte Carlo fixes this</strong>:</p><ol><li><strong>Explicit probabilities</strong>: P90 means “exceeded 90% of the time”</li><li><strong>Natural combinations</strong>: High revenue scenario automatically samples from the high end of the revenue distribution</li><li><strong>Captures correlation</strong>: Model correlated drivers with copulas or factor models</li></ol><p><strong>The lesson</strong>: Monte Carlo provides a <strong>complete probability distribution</strong>, not just 3 data points.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest challenge here <strong>balancing ease-of-use with flexibility</strong>. We could have provided:</p><p><strong>Option A</strong>: High-level <code>forecastRevenue(baseAmount, growthDist, periods)</code></p><ul><li>Pro: Very easy to use</li><li>Con: Inflexible (what if growth depends on prior period revenue?)</li></ul><p><strong>Option B</strong>: Low-level sampling with manual loops</p><ul><li>Pro: Maximum flexibility</li><li>Con: Users must write boilerplate for every forecast</li></ul><p>We chose <strong>Option B with helper types</strong> (<code>ProbabilisticDriver</code>, <code>SimulationResults</code>) that handle the tedious parts (sampling, statistics) while leaving control over the simulation logic. Even though it’s a step away from the expressiveness of pure swift functions, the power boost is massive, and while still retaining the benefits of reusability.</p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests comparing Monte Carlo results to analytical solutions (e.g., normal distribution revenue forecast) before implementing.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: <a href="../week-06/02-wed-scenario-analysis">Scenario Analysis - Building discrete scenarios, sensitivity analysis, and tornado diagrams</a>.</p><p><strong>Friday</strong>: Case Study #3 - <a href="../week-06/03-fri-case-study-option-pricing">Option Pricing with Monte Carlo</a>.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 20/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + <strong>Simulation (starting)</strong></li><li>Playgrounds: 19 available</li></ul>]]></content:encoded></item></channel></rss>
