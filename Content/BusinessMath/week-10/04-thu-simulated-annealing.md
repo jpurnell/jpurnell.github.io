@@ -8,7 +8,7 @@ docc_source: 5.22-SimulatedAnnealingTutorial.md
 playground: Week10/Simulated-Annealing.playground
 tags: businessmath, swift, optimization, simulated-annealing, global-optimization, metaheuristic, gradient-free
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Simulated Annealing: Global Optimization Without Gradients
