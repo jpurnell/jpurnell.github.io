@@ -1,55 +1,13 @@
----
-title: Nelder-Mead Simplex: Robust Gradient-Free Optimization
-date: 2026-03-17 13:00
-series: BusinessMath Quarterly Series
-week: 11
-post: 1
-docc_source: 5.23-NelderMeadTutorial.md
-playground: Week11/Nelder-Mead.playground
-tags: businessmath, swift, optimization, nelder-mead, simplex, gradient-free, derivative-free, robust-optimization
-layout: BlogPostLayout
-published: true
----
-
-# Nelder-Mead Simplex: Robust Gradient-Free Optimization
-
-**Part 37 of 12-Week BusinessMath Series**
-
----
-
-## What You'll Learn
-
-- Understanding the Nelder-Mead downhill simplex method
-- Reflection, expansion, contraction, and shrinkage operations
-- When Nelder-Mead outperforms gradient-based methods
-- Handling noisy or non-smooth objective functions
-- Parameter tuning: reflection, expansion, contraction coefficients
-- Performance on small-to-medium dimensional problems (< 50 variables)
-
----
-
-## The Problem
-
-Many real-world objectives are black boxes:
-- **Simulations**: Run Monte Carlo, get result, but no gradient available
-- **Noisy functions**: Objective varies with each evaluation
-- **Non-smooth**: Discontinuities from rounding, thresholds, if/else logic
-- **External systems**: Call pricing API, optimization engine, or database
-
-**Can't compute gradients → gradient-based methods fail.**
-
----
-
-## The Solution
-
-Nelder-Mead builds a simplex (triangle in 2D, tetrahedron in 3D, etc.) and iteratively moves it toward the optimum through geometric transformations: reflection, expansion, contraction, shrinkage. No gradients needed—only function evaluations.
-
-### Pattern 1: Black-Box Optimization
-
-**Business Problem**: Optimize parameters for a Monte Carlo simulation where each evaluation is expensive and noisy.
-
-```swift
-import BusinessMath
+<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 37 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Nelder-Mead Simplex: Robust Gradient-Free Optimization</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-11/01-mon-nelder-mead" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Nelder-Mead Simplex: Robust Gradient-Free Optimization"><meta property="twitter:title" content="Nelder-Mead Simplex: Robust Gradient-Free Optimization"><meta property="og:description" content="Nelder-Mead Simplex: Robust Gradient-Free Optimization"><meta name="twitter:description" content="Nelder-Mead Simplex: Robust Gradient-Free Optimization"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-11/01-mon-nelder-mead"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
+**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
+**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
+**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe>
+<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Nelder-Mead Simplex: Robust Gradient-Free Optimization</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">13 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 37 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding the Nelder-Mead downhill simplex method</li><li>Reflection, expansion, contraction, and shrinkage operations</li><li>When Nelder-Mead outperforms gradient-based methods</li><li>Handling noisy or non-smooth objective functions</li><li>Parameter tuning: reflection, expansion, contraction coefficients</li><li>Performance on small-to-medium dimensional problems (< 50 variables)</li></ul><hr /><h2>The Problem</h2><p>Many real-world objectives are black boxes:</p><ul><li><strong>Simulations</strong>: Run Monte Carlo, get result, but no gradient available</li><li><strong>Noisy functions</strong>: Objective varies with each evaluation</li><li><strong>Non-smooth</strong>: Discontinuities from rounding, thresholds, if/else logic</li><li><strong>External systems</strong>: Call pricing API, optimization engine, or database</li></ul><p><strong>Can’t compute gradients → gradient-based methods fail.</strong></p><hr /><h2>The Solution</h2><p>Nelder-Mead builds a simplex (triangle in 2D, tetrahedron in 3D, etc.) and iteratively moves it toward the optimum through geometric transformations: reflection, expansion, contraction, shrinkage. No gradients needed—only function evaluations.</p><h3>Pattern 1: Black-Box Optimization</h3><p><strong>Business Problem</strong>: Optimize parameters for a Monte Carlo simulation where each evaluation is expensive and noisy.</p><pre><code class="language-swift">import BusinessMath
 
 // Helper: Simulate one year of portfolio returns
 func simulatePortfolioYear(
@@ -142,14 +100,7 @@ let detailedResult = nm.optimizeDetailed(
 )
 print("  Function Evaluations: \(detailedResult.evaluations)")
 print("  Iterations: \(detailedResult.iterations)")
-```
-
-### Pattern 2: Non-Smooth Objective (Transaction Costs)
-
-**Pattern**: Optimize with discontinuities that break gradient methods.
-
-```swift
-// Generate realistic covariance matrix for 10 assets
+</code></pre><h3>Pattern 2: Non-Smooth Objective (Transaction Costs)</h3><p><strong>Pattern</strong>: Optimize with discontinuities that break gradient methods.</p><pre><code class="language-swift">// Generate realistic covariance matrix for 10 assets
 let covarianceMatrix = generateCovarianceMatrix(
     size: 10,
     avgCorrelation: 0.3,
@@ -197,14 +148,7 @@ print("  Final Variance: \(nonSmoothResult.value.number(6))")
 print("  Evaluations: \(nonSmoothResult.evaluations)")
 
 // Compare: Gradient method would fail due to discontinuities
-```
-
-### Pattern 3: Noisy Objective Functions
-
-**Pattern**: Handle stochastic objectives where repeated evaluations give different results.
-
-```swift
-// Noisy objective: each evaluation adds random noise
+</code></pre><h3>Pattern 3: Noisy Objective Functions</h3><p><strong>Pattern</strong>: Handle stochastic objectives where repeated evaluations give different results.</p><pre><code class="language-swift">// Noisy objective: each evaluation adds random noise
 var evaluationCount = 0
 @MainActor func noisyObjective(_ x: VectorN<Double>) -> Double {
     evaluationCount += 1
@@ -251,86 +195,14 @@ print("  Evaluations: \(evaluationCount)")
 print("\nNote: With ±0.5 noise, perfect convergence is impossible.")
 print("Getting within 0.5 units of the optimum shows the algorithm")
 print("successfully finds signal despite 1:1 noise-to-signal ratio.")
-```
-
----
-
-## How It Works
-
-### Nelder-Mead Operations
-
-**Simplex**: n+1 points in n-dimensional space (triangle for 2D, tetrahedron for 3D)
-
-**Operations** (from worst point):
-1. **Reflection**: Flip worst point across centroid of other points
-2. **Expansion**: If reflection is best, expand further in that direction
-3. **Contraction**: If reflection is still bad, contract toward centroid
-4. **Shrinkage**: If all else fails, shrink entire simplex toward best point
-
-**Pseudocode**:
-```
-1. Order points: f(x₁) ≤ f(x₂) ≤ ... ≤ f(xₙ₊₁)
+</code></pre><hr /><h2>How It Works</h2><h3>Nelder-Mead Operations</h3><p><strong>Simplex</strong>: n+1 points in n-dimensional space (triangle for 2D, tetrahedron for 3D)</p><p><strong>Operations</strong> (from worst point):</p><ol><li><strong>Reflection</strong>: Flip worst point across centroid of other points</li><li><strong>Expansion</strong>: If reflection is best, expand further in that direction</li><li><strong>Contraction</strong>: If reflection is still bad, contract toward centroid</li><li><strong>Shrinkage</strong>: If all else fails, shrink entire simplex toward best point</li></ol><p><strong>Pseudocode</strong>:</p><pre><code>1. Order points: f(x₁) ≤ f(x₂) ≤ ... ≤ f(xₙ₊₁)
 2. Calculate centroid: x̄ = (x₁ + ... + xₙ) / n
 3. Reflect worst: xᵣ = x̄ + α(x̄ - xₙ₊₁)
 4. If f(xᵣ) < f(x₁): Expand → xₑ = x̄ + γ(xᵣ - x̄)
 5. Else if f(xᵣ) < f(xₙ): Accept reflection
 6. Else: Contract → xc = x̄ + β(xₙ₊₁ - x̄)
 7. If contraction fails: Shrink all toward x₁
-```
-
-### Standard Coefficients
-
-| Operation | Coefficient | Standard Value |
-|-----------|-------------|----------------|
-| Reflection | α | 1.0 |
-| Expansion | γ | 2.0 |
-| Contraction | β | 0.5 |
-| Shrinkage | δ | 0.5 |
-
-### Performance Characteristics
-
-**Strengths**:
-- No gradient computation needed
-- Robust to noise and discontinuities
-- Simple to implement and understand
-- Works well for small problems (< 50 variables)
-
-**Weaknesses**:
-- Slow for large problems (> 100 variables)
-- Can stagnate (simplex becomes degenerate)
-- No convergence guarantee for non-convex problems
-- Requires n+1 function evaluations per iteration
-
-**Typical Use Cases**:
-- Hyperparameter tuning (5-20 parameters)
-- Simulation optimization (expensive black-box)
-- Non-smooth objectives (transaction costs, lot sizes)
-- Noisy functions (Monte Carlo, measurement error)
-
----
-
-## Real-World Application
-
-### Pharmaceutical: Drug Dosing Optimization
-
-**Company**: Biotech optimizing drug delivery parameters
-**Challenge**: Find optimal dosing schedule to maximize efficacy while minimizing side effects
-
-**Problem Characteristics**:
-- **Black-box objective**: Patient simulation model (15 minutes per run)
-- **5 parameters**: Dose amount, frequency, duration, combination ratios
-- **Non-smooth**: Discrete dosing times, threshold effects
-- **Noisy**: Patient response varies stochastically
-
-**Why Nelder-Mead**:
-- No gradients available from simulation
-- Robust to simulation noise
-- Handles discrete constraints naturally
-- Small parameter space (5 variables)
-
-**Implementation** (conceptual):
-```swift
-// Mock simulation for demonstration
+</code></pre><h3>Standard Coefficients</h3><table><thead><th>Operation</th><th>Coefficient</th><th>Standard Value</th></thead><tbody><tr><td>Reflection</td><td>α</td><td>1.0</td></tr><tr><td>Expansion</td><td>γ</td><td>2.0</td></tr><tr><td>Contraction</td><td>β</td><td>0.5</td></tr><tr><td>Shrinkage</td><td>δ</td><td>0.5</td></tr></tbody></table><h3>Performance Characteristics</h3><p><strong>Strengths</strong>:</p><ul><li>No gradient computation needed</li><li>Robust to noise and discontinuities</li><li>Simple to implement and understand</li><li>Works well for small problems (< 50 variables)</li></ul><p><strong>Weaknesses</strong>:</p><ul><li>Slow for large problems (> 100 variables)</li><li>Can stagnate (simplex becomes degenerate)</li><li>No convergence guarantee for non-convex problems</li><li>Requires n+1 function evaluations per iteration</li></ul><p><strong>Typical Use Cases</strong>:</p><ul><li>Hyperparameter tuning (5-20 parameters)</li><li>Simulation optimization (expensive black-box)</li><li>Non-smooth objectives (transaction costs, lot sizes)</li><li>Noisy functions (Monte Carlo, measurement error)</li></ul><hr /><h2>Real-World Application</h2><h3>Pharmaceutical: Drug Dosing Optimization</h3><p><strong>Company</strong>: Biotech optimizing drug delivery parameters<strong>Challenge</strong>: Find optimal dosing schedule to maximize efficacy while minimizing side effects</p><p><strong>Problem Characteristics</strong>:</p><ul><li><strong>Black-box objective</strong>: Patient simulation model (15 minutes per run)</li><li><strong>5 parameters</strong>: Dose amount, frequency, duration, combination ratios</li><li><strong>Non-smooth</strong>: Discrete dosing times, threshold effects</li><li><strong>Noisy</strong>: Patient response varies stochastically</li></ul><p><strong>Why Nelder-Mead</strong>:</p><ul><li>No gradients available from simulation</li><li>Robust to simulation noise</li><li>Handles discrete constraints naturally</li><li>Small parameter space (5 variables)</li></ul><p><strong>Implementation</strong> (conceptual):</p><pre><code class="language-swift">// Mock simulation for demonstration
 // Real implementation would call proprietary pharmacokinetic model
 func simulatePatientOutcome(
     dose: Double,
@@ -399,23 +271,9 @@ print("  Frequency: \(optimalDosing.solution[1].number(1)) doses/day")
 print("  Duration: \(optimalDosing.solution[2].number(0)) days")
 print("  Drug A Ratio: \(optimalDosing.solution[3].percent(1))")
 print("  Drug B Ratio: \(optimalDosing.solution[4].percent(1))")
-```
-
-**Results**:
-- Optimal parameters found: 85 evaluations (~21 hours computation)
-- Efficacy improvement: +12% vs. standard protocol
-- Side effects: Reduced by 18%
-- Clinical trial: Parameters validated in Phase II study
-
----
-
-## Try It Yourself
-
-<details>
+</code></pre><p><strong>Results</strong>:</p><ul><li>Optimal parameters found: 85 evaluations (~21 hours computation)</li><li>Efficacy improvement: +12% vs. standard protocol</li><li>Side effects: Reduced by 18%</li><li>Clinical trial: Parameters validated in Phase II study</li></ul><hr /><h2>Try It Yourself</h2><details>
 <summary>Click to expand full playground code</summary>
-
-```swift
-import Foundation
+<pre><code class="language-swift">import Foundation
 import BusinessMath
 
 // MARK: - Black Box Monte Carlo Profolio Simulation
@@ -685,31 +543,5 @@ print("successfully finds signal despite 1:1 noise-to-signal ratio.")
 	print("  Drug A Ratio: \(optimalDosing.solution[3].percent(1))")
 	print("  Drug B Ratio: \(optimalDosing.solution[4].percent(1))")
 
-```
-</details>
-
-
-→ Full API Reference: [BusinessMath Docs – Nelder-Mead Tutorial](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.23-NelderMeadTutorial.md)
-
-### Experiments to Try
-
-1. **Coefficient Tuning**: Test different α, γ, β, δ values
-2. **Noise Robustness**: Add increasing noise levels, measure performance degradation
-3. **Dimensionality**: Test 2, 5, 10, 20, 50 variables—when does it slow down?
-4. **Restart Strategy**: Run multiple times from different starting points
-
----
-
-## Next Steps
-
-**Wednesday**: We'll explore **Particle Swarm Optimization**, a population-based method that searches the solution space like a flock of birds.
-
-**Friday**: Week 11 concludes with **Case Study #5: Real-Time Portfolio Rebalancing** using async/await and streaming optimization.
-
----
-
-**Series**: [Week 11 of 12] | **Topic**: [Part 5 - Advanced Algorithms] | **Case Studies**: [4/6 Complete]
-
-**Topics Covered**: Nelder-Mead • Simplex method • Gradient-free optimization • Black-box functions • Noisy objectives
-
-**Playgrounds**: [Week 1-11 available] • [Next: Particle swarm optimization]
+</code></pre></details>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.23-NelderMeadTutorial.md">BusinessMath Docs – Nelder-Mead Tutorial</a></p><h3>Experiments to Try</h3><ol><li><strong>Coefficient Tuning</strong>: Test different α, γ, β, δ values</li><li><strong>Noise Robustness</strong>: Add increasing noise levels, measure performance degradation</li><li><strong>Dimensionality</strong>: Test 2, 5, 10, 20, 50 variables—when does it slow down?</li><li><strong>Restart Strategy</strong>: Run multiple times from different starting points</li></ol><hr /><h2>Next Steps</h2><p><strong>Wednesday</strong>: We’ll explore <strong>Particle Swarm Optimization</strong>, a population-based method that searches the solution space like a flock of birds.</p><p><strong>Friday</strong>: Week 11 concludes with <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong> using async/await and streaming optimization.</p><hr /><p><strong>Series</strong>: [Week 11 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Algorithms] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Nelder-Mead • Simplex method • Gradient-free optimization • Black-box functions • Noisy objectives</p><p><strong>Playgrounds</strong>: [Week 1-11 available] • [Next: Particle swarm optimization]</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, nelder-mead, simplex, gradient-free, derivative-free, robust-optimization</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
