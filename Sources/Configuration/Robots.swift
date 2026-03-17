@@ -21,9 +21,9 @@ struct Robots: RobotsConfiguration {
 		]
 
 		disallowRules = [
-			DisallowRule(robot: .google, paths: paths),
-			DisallowRule(robot: .bing, paths: paths),
-			DisallowRule(robot: .chatGPT)
+//			DisallowRule(robot: .google, paths: paths),
+//			DisallowRule(robot: .bing, paths: paths),
+//			DisallowRule(robot: .chatGPT)
 		]
 	}
 }
