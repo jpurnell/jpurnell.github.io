@@ -1,961 +1,607 @@
-<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 31 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Adaptive Selection: Let BusinessMath Choose the Best Algorithm</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-09/03-wed-adaptive-selection" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Adaptive Selection: Let BusinessMath Choose the Best Algorithm"><meta property="twitter:title" content="Adaptive Selection: Let BusinessMath Choose the Best Algorithm"><meta property="og:description" content="Adaptive Selection: Let BusinessMath Choose the Best Algorithm"><meta name="twitter:description" content="Adaptive Selection: Let BusinessMath Choose the Best Algorithm"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-09/03-wed-adaptive-selection"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
-**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
-**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
-**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Adaptive Selection: Let BusinessMath Choose the Best Algorithm</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">16 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 31 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding when to use each optimization algorithm</li><li>Leveraging AdaptiveOptimizer for automatic algorithm selection</li><li>Problem characteristics that guide algorithm choice</li><li>Performance profiling and benchmarking</li><li>Fallback strategies when optimization fails</li><li>Building self-tuning optimization pipelines</li></ul><hr /><h2>The Problem</h2><p>BusinessMath provides 10+ optimization algorithms:</p><ul><li>Gradient descent, BFGS, Newton-Raphson</li><li>Simulated annealing, genetic algorithms, particle swarm</li><li>Simplex, branch-and-bound, conjugate gradient</li></ul><p><strong>Which should you use?</strong> The answer depends on:</p><ul><li>Problem size (10 variables vs. 1,000)</li><li>Smoothness (continuous vs. discontinuous objective)</li><li>Constraints (none, linear, nonlinear)</li><li>Budget (seconds vs. minutes)</li></ul><p><strong>Choosing wrong can mean: no solution, slow convergence, or local optima.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath’s <code>AdaptiveOptimizer</code> analyzes your problem and automatically selects the best algorithm. It considers problem characteristics, tries multiple methods in parallel, and returns the best result.</p><h3>Automatic Algorithm Selection</h3><p><strong>Business Problem</strong>: Optimize portfolio allocation without worrying about algorithm details.</p><pre><code class="language-swift">import BusinessMath
-import Foundation
-
-let assets: [String] = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]
-let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09])
-let riskFreeRate = 0.03
-
-// Covariance matrix (variances on diagonal, covariances off-diagonal)
-let covarianceMatrix = [
-	[0.0400, 0.0150, 0.0020, 0.0180],  // US Stocks
-	[0.0150, 0.0625, 0.0015, 0.0200],  // Intl Stocks
-	[0.0020, 0.0015, 0.0036, 0.0010],  // Bonds
-	[0.0180, 0.0200, 0.0010, 0.0400]   // Real Estate
-]
-
-// Define your optimization problem
-let portfolioObjective: @Sendable (VectorN<Double>) -> Double = { weights in
-	// Minimize negative Sharpe ratio
-	let expectedReturn = weights.dot(expectedReturns)
-
-	var variance = 0.0
-	for i in 0..<weights.dimension {
-		for j in 0..<weights.dimension {
-			variance += weights[i] * weights[j] * covarianceMatrix[i][j]
-		}
-	}
-
-	let risk = sqrt(variance)
-	let sharpeRatio = (expectedReturn - riskFreeRate) / risk
-
-	return -sharpeRatio  // Minimize negative = maximize positive
-}
-
-// Constraints
-let budgetConstraint = MultivariateConstraint<VectorN<Double>>.budgetConstraint
-let longOnlyConstraints = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: assets.count)
-let constraints: [MultivariateConstraint<VectorN<Double>>] = [budgetConstraint] + longOnlyConstraints
-
-// Let AdaptiveOptimizer choose the algorithm
-let adaptive = AdaptiveOptimizer<VectorN<Double>>()
-
-do {
-	let result = try adaptive.optimize(
-		objective: portfolioObjective,
-		initialGuess: VectorN.equalWeights(dimension: assets.count),
-		constraints: constraints
-	)
-
-	print("Optimal Portfolio:")
-	for (asset, weight) in zip(assets, result.solution.toArray()) {
-		if weight > 0.01 {
-			print("  \(asset): \(weight.percent())")
-		}
-	}
-
-	print("\nOptimization Details:")
-	print("  Algorithm Used: \(result.algorithmUsed)")
-	print("  Selection Reason: \(result.selectionReason)")
-	print("  Iterations: \(result.iterations)")
-	print("  Sharpe Ratio: \((-result.objectiveValue).number())")
-} catch {
-	print("Optimization failed: \(error)")
-}
-</code></pre><h3>Parallel Multi-Start Optimization</h3><p><strong>Pattern</strong>: Run the same algorithm from multiple starting points in parallel to find global optima.</p><pre><code class="language-swift">import BusinessMath
-import Foundation
-
-// Use ParallelOptimizer for problems with multiple local minima
-let parallelOptimizer = ParallelOptimizer<VectorN<Double>>(
-    algorithm: .inequality,  // Use inequality-constrained optimizer
-    numberOfStarts: 20,       // Try 20 different starting points
-    maxIterations: 1000,
-    tolerance: 1e-6
-)
-
-// Define search region for starting points
-let searchRegion = (
-    lower: VectorN(repeating: 0.0, count: 4),
-    upper: VectorN(repeating: 1.0, count: 4)
-)
-
-// Run optimization in parallel (async/await)
-let parallelResult = try await parallelOptimizer.optimize(
-    objective: portfolioObjective,
-    searchRegion: searchRegion,
-    constraints: constraints
-)
-
-print("Best solution found across \(parallelResult.allResults.count) attempts")
-print("Success rate: \(parallelResult.successRate.percent())")
-print("Objective value: \(parallelResult.objectiveValue.number())")
-</code></pre><h3>Algorithm Selection Based on Problem Characteristics</h3><p><strong>Pattern</strong>: Analyze problem structure to choose algorithm.</p><p>AdaptiveOptimizer uses a decision tree to select the best algorithm:</p><pre><code class="language-swift">// AdaptiveOptimizer's actual selection logic:
-
-// Rule 1: Inequality constraints? → InequalityOptimizer (penalty-barrier method)
-if hasInequalityConstraints {
-    // Use interior-point penalty-barrier method
-    return .inequality
-}
-
-// Rule 2: Equality constraints only? → ConstrainedOptimizer (augmented Lagrangian)
-else if hasEqualityConstraints {
-    // Use augmented Lagrangian method
-    return .constrained
-}
-
-// Rule 3: Large unconstrained problem (>100 variables)? → Gradient Descent
-else if problemSize > 100 {
-    // Memory-efficient gradient descent with adaptive learning rate
-    return .gradientDescent
-}
-
-// Rule 4: Prefer accuracy + small problem (<10 vars)? → Newton-Raphson
-else if preferAccuracy && problemSize < 10 {
-    // Full Newton method with Hessian for quadratic convergence
-    return .newtonRaphson
-}
-
-// Rule 5: Very small problem (≤5 vars)? → Newton-Raphson
-else if problemSize <= 5 {
-    // Newton-Raphson for fast convergence
-    return .newtonRaphson
-}
-
-// Default: Gradient Descent (best balance)
-else {
-    return .gradientDescent
-}
-
-// Use analyzeProblem() to see what will be selected:
-let adaptive = AdaptiveOptimizer<VectorN<Double>>()
-let analysis = adaptive.analyzeProblem(
-    initialGuess: VectorN(repeating: 0.25, count: 4),
-    constraints: constraints,
-    hasGradient: false
-)
-
-print("Problem size: \(analysis.size)")
-print("Has constraints: \(analysis.hasConstraints)")
-print("Has inequalities: \(analysis.hasInequalities)")
-print("Recommended: \(analysis.recommendedAlgorithm)")
-print("Reason: \(analysis.reason)")
-</code></pre><h3>Understanding Optimizer Preferences</h3><p><strong>Pattern</strong>: Control adaptive selection with preferences.</p><pre><code class="language-swift">// Prefer speed: Uses higher learning rates and simpler algorithms
-let fastOptimizer = AdaptiveOptimizer<VectorN<Double>>(
-    preferSpeed: true,
-    maxIterations: 500,
-    tolerance: 1e-4  // Looser tolerance for faster convergence
-)
-
-// Prefer accuracy: Uses Newton-Raphson for small problems
-let accurateOptimizer = AdaptiveOptimizer<VectorN<Double>>(
-    preferAccuracy: true,
-    maxIterations: 2000,
-    tolerance: 1e-8  // Tighter tolerance for precise results
-)
-
-// Example: Portfolio optimization with accuracy preference
-let result = try accurateOptimizer.optimize(
-    objective: portfolioObjective,
-    initialGuess: VectorN.equalWeights(dimension: 4),
-    constraints: constraints
-)
-
-print("With preferAccuracy=true:")
-print("  Algorithm: \(result.algorithmUsed)")
-print("  Reason: \(result.selectionReason)")
-print("  Iterations: \(result.iterations)")
-print("  Converged: \(result.converged)")
-
-// Compare with default settings
-let defaultResult = try AdaptiveOptimizer<VectorN<Double>>().optimize(
-    objective: portfolioObjective,
-    initialGuess: VectorN.equalWeights(dimension: 4),
-    constraints: constraints
-)
-
-print("\nWith default settings:")
-print("  Algorithm: \(defaultResult.algorithmUsed)")
-print("  Reason: \(defaultResult.selectionReason)")
-</code></pre><hr /><h2>How It Works</h2><h3>AdaptiveOptimizer Decision Tree</h3><pre><code>Has Inequality Constraints?
-├─ YES → InequalityOptimizer (penalty-barrier method)
-│
-└─ NO → Has Equality Constraints?
-    ├─ YES → ConstrainedOptimizer (augmented Lagrangian)
-    │
-    └─ NO (Unconstrained) → Problem Size?
-        ├─ > 100 variables → Gradient Descent (memory-efficient)
-        │
-        ├─ ≤ 5 variables → Newton-Raphson (fast convergence)
-        │
-        ├─ < 10 variables + preferAccuracy → Newton-Raphson
-        │
-        └─ Default → Gradient Descent (best balance)
-</code></pre><h3>Comparing Optimizer Performance</h3><pre><code class="language-swift">import Foundation
-
-// Compare different optimizers on the same problem
-struct OptimizerComparison {
-    let objective: (VectorN<Double>) -> Double
-    let initialGuess: VectorN<Double>
-    let constraints: [MultivariateConstraint<VectorN<Double>>]
-
-    func compare() throws {
-        print("Optimizer Performance Comparison")
-        print("═══════════════════════════════════════════════")
-
-        // Test 1: Gradient Descent
-        let startGD = Date()
-        let gdOptimizer = MultivariateGradientDescent<VectorN<Double>>(
-            learningRate: 0.01,
-            maxIterations: 1000,
-            tolerance: 1e-6
-        )
-        let gdResult = try gdOptimizer.minimize(
-            function: objective,
-            gradient: { try numericalGradient(objective, at: $0) },
-            initialGuess: initialGuess
-        )
-        let gdTime = Date().timeIntervalSince(startGD)
-
-        print("Gradient Descent:")
-        print("  Value: \(gdResult.value.number(4))")
-        print("  Time: \(gdTime.number(2))s")
-        print("  Iterations: \(gdResult.iterations)")
-
-//			// Test 2: Newton-Raphson (if problem is small)
-			// NOTE: This will likely crash if run in a playground. To understand when and how to use Newton-Raphson, check out our [Newton-Raphson Guide](../05-fri-newton-raphson-guide)
-//			if initialGuess.dimension <= 10 {
-//				let startNR = Date()
-//				let nrOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
-//					maxIterations: 1000,
-//					tolerance: 1e-6
-//				)
-//				let nrResult = try nrOptimizer.minimize(
-//					function: objective,
-//					gradient: { try numericalGradient(objective, at: $0) },
-//					hessian: { try numericalHessian(objective, at: $0) },
-//					initialGuess: initialGuess
-//				)
-//				let nrTime = Date().timeIntervalSince(startNR)
-//
-//				print("\nNewton-Raphson:")
-//				print("  Value: \(nrResult.value.number(4))")
-//				print("  Time: \(nrTime.number(2))s")
-//				print("  Iterations: \(nrResult.iterations)")
-//			}
-
-        // Test 3: Adaptive (let it choose)
-        let startAdaptive = Date()
-        let adaptiveOptimizer = AdaptiveOptimizer<VectorN<Double>>()
-        let adaptiveResult = try adaptiveOptimizer.optimize(
-            objective: objective,
-            initialGuess: initialGuess,
-            constraints: constraints
-        )
-        let adaptiveTime = Date().timeIntervalSince(startAdaptive)
-
-        print("\nAdaptive Optimizer:")
-        print("  Algorithm chosen: \(adaptiveResult.algorithmUsed)")
-        print("  Value: \(adaptiveResult.objectiveValue.number(4))")
-        print("  Time: \(adaptiveTime.number(2))s")
-        print("  Iterations: \(adaptiveResult.iterations)")
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 31 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Adaptive Selection: Let BusinessMath Choose the Best Algorithm | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-09/03-wed-adaptive-selection" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
     }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Adaptive Selection: Let BusinessMath Choose the Best Algorithm" />
+    <meta name="twitter:title" content="Adaptive Selection: Let BusinessMath Choose the Best Algorithm" />
+    <meta property="og:description" content="Part 31 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 31 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-09/03-wed-adaptive-selection" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
+    }
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-09/03-wed-adaptive-selection",
+      "name" : "Adaptive Selection: Let BusinessMath Choose the Best Algorithm",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="col-md-9223372036854775807">
+      <div class="ig-main-content">
+        <h1 class="mainTitle">Adaptive Selection: Let BusinessMath Choose the Best Algorithm</h1>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">16 min read</p>
+        <div class="blurb" style="width: 70.0%; max-width: 800px">
+          <p><strong>Part 31 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Understanding when to use each optimization algorithm</li>
+            <li>Leveraging AdaptiveOptimizer for automatic algorithm selection</li>
+            <li>Problem characteristics that guide algorithm choice</li>
+            <li>Performance profiling and benchmarking</li>
+            <li>Fallback strategies when optimization fails</li>
+            <li>Building self-tuning optimization pipelines</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>BusinessMath provides 10+ optimization algorithms:
+          <ul>
+            <li>Gradient descent, BFGS, Newton-Raphson</li>
+            <li>Simulated annealing, genetic algorithms, particle swarm</li>
+            <li>Simplex, branch-and-bound, conjugate gradient</li>
+          </ul>
+          <strong>Which should you use?</strong> The answer depends on:
+          <ul>
+            <li>Problem size (10 variables vs. 1,000)</li>
+            <li>Smoothness (continuous vs. discontinuous objective)</li>
+            <li>Constraints (none, linear, nonlinear)</li>
+            <li>Budget (seconds vs. minutes)</li>
+          </ul>
+          <strong>Choosing wrong can mean: no solution, slow convergence, or local optima.</strong>
+          <hr />
+          <h2>The Solution</h2>BusinessMath’s 
+          <code>AdaptiveOptimizer</code> analyzes your problem and automatically selects the best algorithm. It considers problem characteristics, tries multiple methods in parallel, and returns the best result.
+          <h3>Automatic Algorithm Selection</h3>
+          <strong>Business Problem</strong>: Optimize portfolio allocation without worrying about algorithm details.
+          <pre><code class="language-swift">import BusinessMath import Foundation let assets: [String] = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”] let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09]) let riskFreeRate = 0.03<p></p><p>// Covariance matrix (variances on diagonal, covariances off-diagonal) let covarianceMatrix = [ [0.0400, 0.0150, 0.0020, 0.0180], // US Stocks [0.0150, 0.0625, 0.0015, 0.0200], // Intl Stocks [0.0020, 0.0015, 0.0036, 0.0010], // Bonds [0.0180, 0.0200, 0.0010, 0.0400] // Real Estate ]</p></code>
+            <div>
+              <code class="language-swift"><p>// Define your optimization problem let portfolioObjective: @Sendable (VectorN
+                  <double>
+                    ) -&gt; Double = { weights in // Minimize negative Sharpe ratio let expectedReturn = weights.dot(expectedReturns)
+                  </double></p><pre><code>var variance = 0.0 for i in 0..
+                    <weights.dimension { for j in 0..<weights.dimension { variance +="weights[i]" * weights[j] * covariancematrix[i][j] } }< p>
+                      <p>let risk = sqrt(variance) let sharpeRatio = (expectedReturn - riskFreeRate) / risk</p>
+                    </weights.dimension></code><p><code>return -sharpeRatio // Minimize negative = maximize positive </code></p></pre>}<p></p></code>
+            </div><p>// Constraints let budgetConstraint = MultivariateConstraint
+              <vectorn<double>
+                &gt;.budgetConstraint let longOnlyConstraints = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.nonNegativity(dimension: assets.count) let constraints: [MultivariateConstraint
+                  <vectorn<double>
+                    &gt;] = [budgetConstraint] + longOnlyConstraints
+                  </vectorn<double>
+                </vectorn<double>
+              </vectorn<double></p><p>// Let AdaptiveOptimizer choose the algorithm let adaptive = AdaptiveOptimizer
+              <vectorn<double>
+                &gt;()
+              </vectorn<double></p>
+            <div>
+              <p>do { let result = try adaptive.optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints )</p>
+              <pre><code>print(“Optimal Portfolio:”) for (asset, weight) in zip(assets, result.solution.toArray()) { if weight &gt; 0.01 { print(”  (asset): (weight.percent())”) } }<p></p></code><p><code>print(”\nOptimization Details:”) print(” Algorithm Used: (result.algorithmUsed)”) print(” Selection Reason: (result.selectionReason)”) print(” Iterations: (result.iterations)”) print(” Sharpe Ratio: ((-result.objectiveValue).number())”) </code></p></pre>} catch { print(“Optimization failed: (error)”) } 
+            </div></pre>
+          <h3>Parallel Multi-Start Optimization</h3>
+          <strong>Pattern</strong>: Run the same algorithm from multiple starting points in parallel to find global optima.
+          <pre><code class="language-swift">import BusinessMath import Foundation<p></p></code></pre>
+        </div>
+        <p><code class="language-swift">// Use ParallelOptimizer for problems with multiple local minima let parallelOptimizer = ParallelOptimizer
+            <vectorn<double>
+              &gt;( algorithm: .inequality, // Use inequality-constrained optimizer numberOfStarts: 20, // Try 20 different starting points maxIterations: 1000, tolerance: 1e-6 )
+            </vectorn<double></code></p>
+        <p><code class="language-swift">// Define search region for starting points let searchRegion = ( lower: VectorN(repeating: 0.0, count: 4), upper: VectorN(repeating: 1.0, count: 4) )</code></p>
+        <p><code class="language-swift">// Run optimization in parallel (async/await) let parallelResult = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</code></p>
+        <p><code class="language-swift">print(“Best solution found across (parallelResult.allResults.count) attempts”) print(“Success rate: (parallelResult.successRate.percent())”) print(“Objective value: (parallelResult.objectiveValue.number())”) </code></p>
+        <h3>Algorithm Selection Based on Problem Characteristics</h3>
+        <strong>Pattern</strong>: Analyze problem structure to choose algorithm.
+        <p></p>
+        <p>AdaptiveOptimizer uses a decision tree to select the best algorithm:</p>
+        <pre><code class="language-swift">// AdaptiveOptimizer’s actual selection logic:<p></p><p>// Rule 1: Inequality constraints? → InequalityOptimizer (penalty-barrier method) if hasInequalityConstraints { // Use interior-point penalty-barrier method return .inequality }</p><p>// Rule 2: Equality constraints only? → ConstrainedOptimizer (augmented Lagrangian) else if hasEqualityConstraints { // Use augmented Lagrangian method return .constrained }</p><p>// Rule 3: Large unconstrained problem (&gt;100 variables)? → Gradient Descent else if problemSize &gt; 100 { // Memory-efficient gradient descent with adaptive learning rate return .gradientDescent }</p><p>// Rule 4: Prefer accuracy + small problem (&lt;10 vars)? → Newton-Raphson else if preferAccuracy &amp;&amp; problemSize &lt; 10 { // Full Newton method with Hessian for quadratic convergence return .newtonRaphson }</p><p>// Rule 5: Very small problem (≤5 vars)? → Newton-Raphson else if problemSize &lt;= 5 { // Newton-Raphson for fast convergence return .newtonRaphson }</p><p>// Default: Gradient Descent (best balance) else { return .gradientDescent }</p><p>// Use analyzeProblem() to see what will be selected: let adaptive = AdaptiveOptimizer
+              <vectorn<double>
+                &gt;() let analysis = adaptive.analyzeProblem( initialGuess: VectorN(repeating: 0.25, count: 4), constraints: constraints, hasGradient: false )
+              </vectorn<double></p></code><p><code class="language-swift">print(“Problem size: (analysis.size)”) print(“Has constraints: (analysis.hasConstraints)”) print(“Has inequalities: (analysis.hasInequalities)”) print(“Recommended: (analysis.recommendedAlgorithm)”) print(“Reason: (analysis.reason)”) </code></p></pre>
+        <h3>Understanding Optimizer Preferences</h3>
+        <strong>Pattern</strong>: Control adaptive selection with preferences.
+        <pre><code class="language-swift">// Prefer speed: Uses higher learning rates and simpler algorithms let fastOptimizer = AdaptiveOptimizer
+            <vectorn<double>
+              &gt;( preferSpeed: true, maxIterations: 500, tolerance: 1e-4 // Looser tolerance for faster convergence )
+              <p></p>
+              <p>// Prefer accuracy: Uses Newton-Raphson for small problems let accurateOptimizer = AdaptiveOptimizer
+                <vectorn<double>
+                  &gt;( preferAccuracy: true, maxIterations: 2000, tolerance: 1e-8 // Tighter tolerance for precise results )
+                </vectorn<double></p>
+              <p>// Example: Portfolio optimization with accuracy preference let result = try accurateOptimizer.optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: 4), constraints: constraints )</p>
+              <p>print(“With preferAccuracy=true:”) print(” Algorithm: (result.algorithmUsed)”) print(” Reason: (result.selectionReason)”) print(” Iterations: (result.iterations)”) print(” Converged: (result.converged)”)</p>
+              <p>// Compare with default settings let defaultResult = try AdaptiveOptimizer
+                <vectorn<double>
+                  &gt;().optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: 4), constraints: constraints )
+                </vectorn<double></p>
+            </vectorn<double></code><p><code class="language-swift">print(”\nWith default settings:”) print(” Algorithm: (defaultResult.algorithmUsed)”) print(” Reason: (defaultResult.selectionReason)”) </code></p></pre>
+        <hr />
+        <h2>How It Works</h2>
+        <h3>AdaptiveOptimizer Decision Tree</h3>
+        <pre><code>Has Inequality Constraints? ├─ YES → InequalityOptimizer (penalty-barrier method) │ └─ NO → Has Equality Constraints? ├─ YES → ConstrainedOptimizer (augmented Lagrangian) │ └─ NO (Unconstrained) → Problem Size? ├─ &gt; 100 variables → Gradient Descent (memory-efficient) │ ├─ ≤ 5 variables → Newton-Raphson (fast convergence) │ ├─ &lt; 10 variables + preferAccuracy → Newton-Raphson │ └─ Default → Gradient Descent (best balance) </code></pre>
+        <h3>Comparing Optimizer Performance</h3>
+        <pre><code class="language-swift">import Foundation<p></p><p>// Compare different optimizers on the same problem struct OptimizerComparison { let objective: (VectorN
+              <double>
+                ) -&gt; Double let initialGuess: VectorN
+                <double>
+                   let constraints: [MultivariateConstraint
+                  <vectorn<double>
+                    &gt;]
+                  </vectorn<double>
+                </double>
+              </double></p><pre><code>func compare() throws { print(“Optimizer Performance Comparison”) print(“═══════════════════════════════════════════════”)<pre><code>// Test 1: Gradient Descent
+let startGD = Date()
+let gdOptimizer = MultivariateGradientDescent
+                    <vectorn<double>
+                      &gt;( learningRate: 0.01, maxIterations: 1000, tolerance: 1e-6 ) let gdResult = try gdOptimizer.minimize( function: objective, gradient: { try numericalGradient(objective, at: $0) }, initialGuess: initialGuess ) let gdTime = Date().timeIntervalSince(startGD) print("Gradient Descent:") print(" Value: \(gdResult.value.number(4))") print(" Time: \(gdTime.number(2))s") print(" Iterations: \(gdResult.iterations)") 
+                    </vectorn<double></code></pre></code></pre>//			// Test 2: Newton-Raphson (if problem is small) // NOTE: This will likely crash if run in a playground. To understand when and how to use Newton-Raphson, check out our <a href="../05-fri-newton-raphson-guide">Newton-Raphson Guide</a> //			if initialGuess.dimension &lt;= 10 { //				let startNR = Date() //				let nrOptimizer = MultivariateNewtonRaphson
+            <vectorn<double>
+              &gt;( // maxIterations: 1000, // tolerance: 1e-6 // ) // let nrResult = try nrOptimizer.minimize( // function: objective, // gradient: { try numericalGradient(objective, at: $0) }, // hessian: { try numericalHessian(objective, at: $0) }, // initialGuess: initialGuess // ) // let nrTime = Date().timeIntervalSince(startNR) // // print(”\nNewton-Raphson:”) // print(” Value: (nrResult.value.number(4))”) // print(” Time: (nrTime.number(2))s”) // print(” Iterations: (nrResult.iterations)”) // }
+              <pre><code>    // Test 3: Adaptive (let it choose) let startAdaptive = Date() let adaptiveOptimizer = AdaptiveOptimizer
+                  <vectorn<double>
+                    &gt;() let adaptiveResult = try adaptiveOptimizer.optimize( objective: objective, initialGuess: initialGuess, constraints: constraints ) let adaptiveTime = Date().timeIntervalSince(startAdaptive)
+                    <pre><code>print("\nAdaptive Optimizer:")
+print("  Algorithm chosen: \(adaptiveResult.algorithmUsed)")
+print("  Value: \(adaptiveResult.objectiveValue.number(4))")
+print("  Time: \(adaptiveTime.number(2))s")
+print("  Iterations: \(adaptiveResult.iterations)")
+</code></pre>} 
+                  </vectorn<double></code></pre>}
+              <p></p>
+              <p>// Run comparison let comparison = OptimizerComparison( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: 4), constraints: constraints )</p>
+            </vectorn<double></code><p><code class="language-swift">try comparison.compare() </code></p></pre>
+        <hr />
+        <h2>Real-World Application</h2>
+        <h3>Supply Chain Optimization: Multi-Facility Production</h3>
+        <strong>Company</strong>: National manufacturer with 12 facilities, 8 products, 40 distribution centers 
+        <strong>Challenge</strong>: Minimize total costs (production + shipping) subject to capacity and demand
+        <p></p>
+        <p><strong>Problem Characteristics</strong>:</p>
+        <ul>
+          <li>96 variables (12 facilities × 8 products)</li>
+          <li>Nonlinear costs (volume discounts)</li>
+          <li>Multiple constraints (capacity, demand, quality)</li>
+        </ul>
+        <strong>Algorithm Selection Process</strong>:
+        <pre><code class="language-swift">import BusinessMath import Foundation<p></p><p>// Problem dimensions let numFacilities = 12 let numProducts = 8 let numVariables = numFacilities * numProducts // 96 variables</p><p>// Cost structure ($/unit for each facility-product combination) // Lower costs for specialized facilities, higher for general purpose let productionCosts = (0..
+              <numfacilities).flatmap { facility in (0..<numproducts).map { product in each facility has 1-2 products they’re best at let isspecialized="(product" % numfacilities="=" facility) || ((product + 1) % numfacilities="=" facility) return isspecialized ? double.random(in: 8…12) : double.random(in: 15…25) } }< p></numfacilities).flatmap></p><p>// Facility capacities (total units per month) let facilityCapacities: [Double] = (0..
+              <numfacilities).map { _ in double.random(in: 8000…15000) }< p></numfacilities).map></p><p>// Product demand (units per month) let productDemands: [Double] = (0..
+              <numproducts).map { _ in double.random(in: 10000…20000) }< p></numproducts).map></p><p>// Volume discount factor (nonlinear cost reduction for high volume) let volumeDiscountThreshold = 5000.0 let volumeDiscountRate = 0.85 // 15% discount above threshold</p></code>
+          <div>
+            <code class="language-swift"><p>// Objective: Minimize total production cost with volume discounts let totalCostObjective: @Sendable (VectorN
+                <double>
+                  ) -&gt; Double = { production in var totalCost = 0.0
+                </double></p><pre><code>// Production costs with volume discounts for i in 0..
+                  <numvariables { let quantity="production[i]" let basecost="productionCosts[i]" * quantity<pre>
+                    <code>// Apply volume discount if above threshold if quantity &gt; volumeDiscountThreshold { let discountedAmount = quantity - volumeDiscountThreshold totalCost += productionCosts[i] * volumeDiscountThreshold totalCost += productionCosts[i] * volumeDiscountRate * discountedAmount } else { totalCost += baseCost } </code>
+                  </numvariables></code></pre><code>}<p></p></code><p><code>return totalCost </code></p></code>
+          </div></pre>}
+        <p></p>
+      </div>
+      <p>// Current production (starting point) // Distribute demand equally across facilities initially let currentProduction = VectorN((0..
+        <numvariables).map { i in let product="i" % numproducts return productdemands[product] double(numfacilities) })< p></numvariables).map></p>
+      <p>// Constraints</p>
+      <p>// 1. Capacity constraints: Sum of production at each facility ≤ capacity var capacityConstraints: [MultivariateConstraint
+        <vectorn<double>
+          &gt;] = [] for facility in 0..
+          <numfacilities { capacityconstraints.append( .inequality { production in sum production of all products at this facility var facilitytotal="0.0" for product in 0..<numproducts { let idx="facility" * numproducts + product facilitytotal +="production[idx]" } return facilitytotal - facilitycapacities[facility] ≤ 0 } ) }< p></numfacilities>
+        </vectorn<double></p>
+      <p>// 2. Demand constraints: Sum of production of each product across facilities ≥ demand var demandConstraints: [MultivariateConstraint
+        <vectorn<double>
+          &gt;] = [] for product in 0..
+          <numproducts { demandconstraints.append( .inequality { production in sum production of this product across all facilities var producttotal="0.0" for facility in 0..<numfacilities { let idx="facility" * numproducts + product producttotal +="production[idx]" } return productdemands[product] - producttotal ≤ 0 (i.e., production ≥ demand) } ) }< p></numproducts>
+        </vectorn<double></p>
+      <p>// 3. Non-negativity: production quantities must be ≥ 0 let nonNegativityConstraints = MultivariateConstraint
+        <vectorn<double>
+          &gt;.nonNegativity(dimension: numVariables)
+        </vectorn<double></p>
+      <p>let allConstraints = capacityConstraints + demandConstraints + nonNegativityConstraints</p>
+      <div>
+        <p>// Let AdaptiveOptimizer analyze and choose do { print(String(repeating: “=”, count: 70)) print(“SUPPLY CHAIN OPTIMIZATION: MULTI-FACILITY PRODUCTION”) print(String(repeating: “=”, count: 70)) print(“Facilities: (numFacilities)”) print(“Products: (numProducts)”) print(“Variables: (numVariables)”) print(“Total demand: (productDemands.reduce(0, +).number(0)) units/month”) print(“Total capacity: (facilityCapacities.reduce(0, +).number(0)) units/month”) print()</p>
+        <pre><code>let supplyChainOptimizer = AdaptiveOptimizer
+            <vectorn<double>
+              &gt;( maxIterations: 2000, tolerance: 1e-5 )
+              <p></p>
+              <p>// First, analyze what algorithm will be selected let analysis = supplyChainOptimizer.analyzeProblem( initialGuess: currentProduction, constraints: allConstraints, hasGradient: false )</p>
+              <p>print(“Problem Analysis:”) print(” Size: (analysis.size) variables”) print(” Constraints: (analysis.hasConstraints)”) print(” Inequalities: (analysis.hasInequalities)”) print(” Recommended: (analysis.recommendedAlgorithm)”) print(” Reason: (analysis.reason)”) print()</p>
+              <p>// Run optimization let startTime = Date() let supplyChainResult = try supplyChainOptimizer.optimize( objective: totalCostObjective, initialGuess: currentProduction, constraints: allConstraints ) let elapsedTime = Date().timeIntervalSince(startTime)</p>
+              <p>print(“Supply Chain Optimization Results:”) print(” Algorithm Selected: (supplyChainResult.algorithmUsed)”) print(” Total Cost: (supplyChainResult.objectiveValue.currency())”) print(” Time: (elapsedTime.number())s”) print(” Iterations: (supplyChainResult.iterations)”) print(” Converged: (supplyChainResult.converged)”)</p>
+              <p>// Calculate cost savings vs initial let initialCost = totalCostObjective(currentProduction) let savings = initialCost - supplyChainResult.objectiveValue let savingsPercent = (savings / initialCost)</p>
+              <p>print(”\nCost Savings:”) print(” Initial cost: (initialCost.currency())”) print(” Optimized cost: (supplyChainResult.objectiveValue.currency())”) print(” Savings: (savings.currency()) ((savingsPercent.percent(1)))”)</p>
+              <p>// Show production summary var facilitiesUsed = 0 for facility in 0..
+                <numfacilities { var facilitytotal="0.0" for product in 0..<numproducts { let idx="facility" * numproducts + product facilitytotal +="supplyChainResult.solution[idx]" } if facilitytotal>
+                   1.0 { facilitiesUsed += 1 } }
+                </numfacilities></p>
+            </vectorn<double></code><p><code>print(”\nProduction Summary:”) print(” Active facilities: (facilitiesUsed)/(numFacilities)”) print(” Total units produced: (supplyChainResult.solution.sum.number(0))”) </code></p></pre>} catch { print(“Optimization failed: (error)”) } 
+        <strong>AdaptiveOptimizer Analysis</strong>:
+        <ul>
+          <li>Problem size: 96 variables → “medium-large”</li>
+          <li>Constraints: Mix of equality and inequality → InequalityOptimizer</li>
+          <li><strong>Decision</strong>: Use penalty-barrier method (InequalityOptimizer)</li>
+        </ul>
+        <strong>Results</strong>:
+        <ul>
+          <li>Cost reduction: $2.4M/year (8% improvement)</li>
+          <li>Optimization time: 3.2 minutes (acceptable for weekly planning)</li>
+          <li>Solution quality: Consistently within 1% of best-known solutions</li>
+        </ul>
+        <hr />
+        <h2>Try It Yourself</h2>
+        <details>
+          <summary>Click to expand full playground code</summary>
+          <pre><code class="language-swift">import BusinessMath import Foundation // MARK: - Basic Portfolio Optimization with AdaptiveOptimizer<p></p></code></pre>
+        </details>
+      </div>
+      <p><code class="language-swift">let assets = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”] let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09]) let riskFreeRate = 0.03</code></p>
+      <p><code class="language-swift">// Covariance matrix (variances on diagonal, covariances off-diagonal) let covarianceMatrix = [ [0.0400, 0.0150, 0.0020, 0.0180], // US Stocks [0.0150, 0.0625, 0.0015, 0.0200], // Intl Stocks [0.0020, 0.0015, 0.0036, 0.0010], // Bonds [0.0180, 0.0200, 0.0010, 0.0400] // Real Estate ]</code></p>
+      <div>
+        <p><code class="language-swift">// Define optimization problem - maximize Sharpe ratio let portfolioObjective: @Sendable (VectorN
+            <double>
+              ) -&gt; Double = { weights in // Minimize negative Sharpe ratio let expectedReturn = weights.dot(expectedReturns)
+            </double></code></p>
+        <pre><code class="language-swift"><code>var variance = 0.0 for i in 0..
+              <weights.dimension { for j in 0..<weights.dimension { variance +="weights[i]" * weights[j] * covariancematrix[i][j] } }< p>
+                <p>let risk = sqrt(variance) let sharpeRatio = (expectedReturn - riskFreeRate) / risk</p>
+              </weights.dimension></code></code><p><code class="language-swift"><code>return -sharpeRatio // Minimize negative = maximize positive </code></code></p></pre>}
+        <p></p>
+      </div>
+      <p>// Constraints: budget + long-only let budgetConstraint = MultivariateConstraint
+        <vectorn<double>
+          &gt;.budgetConstraint let longOnlyConstraints = MultivariateConstraint
+          <vectorn<double>
+            &gt;.nonNegativity(dimension: assets.count) let constraints: [MultivariateConstraint
+            <vectorn<double>
+              &gt;] = [budgetConstraint] + longOnlyConstraints
+            </vectorn<double>
+          </vectorn<double>
+        </vectorn<double></p>
+      <p>// Let AdaptiveOptimizer choose the algorithm let adaptive = AdaptiveOptimizer
+        <vectorn<double>
+          &gt;()
+        </vectorn<double></p>
+      <div>
+        <p>do {</p>
+        <pre><code>// First, analyze what algorithm will be selected let analysis = adaptive.analyzeProblem( initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints, hasGradient: false )<p></p><p>print(“Problem Analysis:”) print(” Size: (analysis.size) variables”) print(” Has constraints: (analysis.hasConstraints)”) print(” Has inequalities: (analysis.hasInequalities)”) print(” Recommended: (analysis.recommendedAlgorithm)”) print(” Reason: (analysis.reason)”) print()</p><p>// Run optimization let result = try adaptive.optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints )</p><p>print(“Optimal Portfolio:”) for (asset, weight) in zip(assets, result.solution.toArray()) { if weight &gt; 0.01 { print(” (asset): (weight.percent())”) } }</p><p>print(”\nOptimization Details:”) print(” Algorithm Used: (result.algorithmUsed)”) print(” Selection Reason: (result.selectionReason)”) print(” Iterations: (result.iterations)”) print(” Converged: (result.converged)”) print(” Sharpe Ratio: ((-result.objectiveValue).number())”)</p><p>// Calculate portfolio metrics let optimalReturn = result.solution.dot(expectedReturns) var optimalVariance = 0.0 for i in 0..
+              <result.solution.dimension { for j in 0..<result.solution.dimension { optimalvariance +="result.solution[i]" * result.solution[j] * covariancematrix[i][j] } } let optimalvolatility="sqrt(optimalVariance)</p"></result.solution.dimension></p></code><p><code>print(”\nPortfolio Metrics:”) print(” Expected Return: (optimalReturn.percent(2))”) print(” Volatility: (optimalVolatility.percent(2))”) print(” Risk-Free Rate: (riskFreeRate.percent(2))”) </code></p></pre>} catch let error as BusinessMathError { print(“Optimization failed: (error.localizedDescription)”) }
+        <p></p>
+      </div>
+      <p>// MARK: - Comparing Speed vs Accuracy Preferences</p>
+      <p>print(”\n” + String(repeating: “=”, count: 60)) print(“COMPARING OPTIMIZER PREFERENCES”) print(String(repeating: “=”, count: 60))</p>
+      <p>// Prefer speed: Looser tolerance, more aggressive let fastOptimizer = AdaptiveOptimizer
+        <vectorn<double>
+          &gt;( preferSpeed: true, maxIterations: 500, tolerance: 1e-4 )
+        </vectorn<double></p>
+      <p>do { let fastResult = try fastOptimizer.optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints )</p>
+      <pre><code>print(”\nWith preferSpeed=true:”) print(”  Algorithm: (fastResult.algorithmUsed)”) print(”  Iterations: (fastResult.iterations)”) print(”  Sharpe Ratio: ((-fastResult.objectiveValue).number())”) </code></pre>} catch { print(“Fast optimization failed: (error)”) }
+      <p></p>
+      <p>// Prefer accuracy: Tighter tolerance, uses Newton when possible let accurateOptimizer = AdaptiveOptimizer
+        <vectorn<double>
+          &gt;( preferAccuracy: true, maxIterations: 2000, tolerance: 1e-8 )
+        </vectorn<double></p>
+      <p>do { let accurateResult = try accurateOptimizer.optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints )</p>
+      <pre><code>print(”\nWith preferAccuracy=true:”) print(”  Algorithm: (accurateResult.algorithmUsed)”) print(”  Iterations: (accurateResult.iterations)”) print(”  Sharpe Ratio: ((-accurateResult.objectiveValue).number())”) </code></pre>} catch { print(“Accurate optimization failed: (error)”) }
+      <p></p>
+      <p>// MARK: - Testing Decision Tree with Different Problem Sizes</p>
+      <p>print(”\n” + String(repeating: “=”, count: 60)) print(“TESTING DECISION TREE”) print(String(repeating: “=”, count: 60))</p>
+      <p>// Small unconstrained problem (≤5 variables) → Newton-Raphson let smallObjective: (VectorN
+        <double>
+          ) -&gt; Double = { x in (x[0] - 1)
+          <em>(x[0] - 1) + (x[1] - 2)</em>(x[1] - 2) + (x[2] - 3)*(x[2] - 3) }
+        </double></p>
+      <p>let smallAnalysis = AdaptiveOptimizer
+        <vectorn<double>
+          &gt;().analyzeProblem( initialGuess: VectorN([0.0, 0.0, 0.0]), constraints: [], hasGradient: false )
+        </vectorn<double></p>
+      <p>print(”\nSmall unconstrained (3 variables):”) print(” Recommended: (smallAnalysis.recommendedAlgorithm)”) print(” Reason: (smallAnalysis.reason)”)</p>
+      <p>// Large unconstrained problem (&gt;100 variables) → Gradient Descent let largeAnalysis = AdaptiveOptimizer
+        <vectorn<double>
+          &gt;().analyzeProblem( initialGuess: VectorN(repeating: 0.0, count: 150), constraints: [], hasGradient: false )
+        </vectorn<double></p>
+      <p>print(”\nLarge unconstrained (150 variables):”) print(” Recommended: (largeAnalysis.recommendedAlgorithm)”) print(” Reason: (largeAnalysis.reason)”)</p>
+      <p>// Problem with inequality constraints → InequalityOptimizer let inequalityAnalysis = AdaptiveOptimizer
+        <vectorn<double>
+          &gt;().analyzeProblem( initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints, // Has inequalities (long-only) hasGradient: false )
+        </vectorn<double></p>
+      <p>print(”\nWith inequality constraints:”) print(” Recommended: (inequalityAnalysis.recommendedAlgorithm)”) print(” Reason: (inequalityAnalysis.reason)”)</p>
+      <p>// Problem with only equality constraints → ConstrainedOptimizer let equalityOnly = [MultivariateConstraint
+        <vectorn<double>
+          &gt;.budgetConstraint] let equalityAnalysis = AdaptiveOptimizer
+          <vectorn<double>
+            &gt;().analyzeProblem( initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: equalityOnly, hasGradient: false )
+          </vectorn<double>
+        </vectorn<double></p>
+      <p>print(”\nWith only equality constraints:”) print(” Recommended: (equalityAnalysis.recommendedAlgorithm)”) print(” Reason: (equalityAnalysis.reason)”)</p>
+      <p>print(”\n” + String(repeating: “=”, count: 60)) print(“✓ AdaptiveOptimizer automatically selects the best algorithm”) print(” based on problem characteristics!”) print(String(repeating: “=”, count: 60))</p>
+      <p>// Use ParallelOptimizer for problems with multiple local minima let parallelOptimizer = ParallelOptimizer
+        <vectorn<double>
+          &gt;( algorithm: .inequality, // Use inequality-constrained optimizer numberOfStarts: 20, // Try 20 different starting points maxIterations: 1000, tolerance: 1e-6 )
+        </vectorn<double></p>
+      <p>// Define search region for starting points let searchRegion = ( lower: VectorN(repeating: 0.0, count: assets.count), upper: VectorN(repeating: 1.0, count: assets.count) )</p>
+      <p>// Run optimization in parallel (async/await) let parallelResult = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</p>
+      <p>print(“Best solution found across (parallelResult.allResults.count) attempts”) print(“Success rate: (parallelResult.successRate.percent())”) print(“Objective value: (parallelResult.objectiveValue.number())”)</p>
+      <p>do { // Compare different optimizers on the same problem struct OptimizerComparison { let objective: (VectorN
+        <double>
+          ) -&gt; Double let initialGuess: VectorN
+          <double>
+             let constraints: [MultivariateConstraint
+            <vectorn<double>
+              &gt;]
+            </vectorn<double>
+          </double>
+        </double></p>
+      <pre><code>		func compare() throws { print(“Optimizer Performance Comparison”) print(“═══════════════════════════════════════════════”)<pre><code>		// Test 1: Gradient Descent
+		let startGD = Date()
+		let gdOptimizer = MultivariateGradientDescent
+              <vectorn<double>
+                &gt;( learningRate: 0.01, maxIterations: 1000, tolerance: 1e-6 ) let gdResult = try gdOptimizer.minimize( function: objective, gradient: { try numericalGradient(objective, at: $0) }, initialGuess: initialGuess ) let gdTime = Date().timeIntervalSince(startGD) print("Gradient Descent:") print(" Value: \(gdResult.value.number(4))") print(" Time: \(gdTime.number(2))s") print(" Iterations: \(gdResult.iterations)") 
+              </vectorn<double></code></pre></code></pre>// // Test 2: Newton-Raphson (if problem is small) // if initialGuess.dimension &lt;= 10 { // let startNR = Date() // let nrOptimizer = MultivariateNewtonRaphson
+      <vectorn<double>
+        &gt;( // maxIterations: 1000, // tolerance: 1e-6 // ) // let nrResult = try nrOptimizer.minimize( // function: objective, // gradient: { try numericalGradient(objective, at: $0) }, // hessian: { try numericalHessian(objective, at: $0) }, // initialGuess: initialGuess // ) // let nrTime = Date().timeIntervalSince(startNR) // // print(”\nNewton-Raphson:”) // print(” Value: (nrResult.value.number(4))”) // print(” Time: (nrTime.number(2))s”) // print(” Iterations: (nrResult.iterations)”) // }
+        <pre><code>			// Test 3: Adaptive (let it choose) let startAdaptive = Date() let adaptiveOptimizer = AdaptiveOptimizer
+            <vectorn<double>
+              &gt;() let adaptiveResult = try adaptiveOptimizer.optimize( objective: objective, initialGuess: initialGuess, constraints: constraints ) let adaptiveTime = Date().timeIntervalSince(startAdaptive)
+              <pre><code>		print("\nAdaptive Optimizer:")
+		print("  Algorithm chosen: \(adaptiveResult.algorithmUsed)")
+		print("  Value: \(adaptiveResult.objectiveValue.number(4))")
+		print("  Time: \(adaptiveTime.number(2))s")
+		print("  Iterations: \(adaptiveResult.iterations)")
+	}
 }
 
 // Run comparison
 let comparison = OptimizerComparison(
-    objective: portfolioObjective,
-    initialGuess: VectorN.equalWeights(dimension: 4),
-    constraints: constraints
-)
-
-try comparison.compare()
-</code></pre><hr /><h2>Real-World Application</h2><h3>Supply Chain Optimization: Multi-Facility Production</h3><p><strong>Company</strong>: National manufacturer with 12 facilities, 8 products, 40 distribution centers<strong>Challenge</strong>: Minimize total costs (production + shipping) subject to capacity and demand</p><p><strong>Problem Characteristics</strong>:</p><ul><li>96 variables (12 facilities × 8 products)</li><li>Nonlinear costs (volume discounts)</li><li>Multiple constraints (capacity, demand, quality)</li></ul><p><strong>Algorithm Selection Process</strong>:</p><pre><code class="language-swift">import BusinessMath
-import Foundation
-
-// Problem dimensions
-let numFacilities = 12
-let numProducts = 8
-let numVariables = numFacilities * numProducts  // 96 variables
-
-// Cost structure ($/unit for each facility-product combination)
-// Lower costs for specialized facilities, higher for general purpose
-let productionCosts = (0..<numFacilities).flatMap { facility in
-    (0..<numProducts).map { product in
-        // Each facility has 1-2 products they're best at
-        let isSpecialized = (product % numFacilities == facility) ||
-                           ((product + 1) % numFacilities == facility)
-        return isSpecialized ? Double.random(in: 8...12) : Double.random(in: 15...25)
-    }
-}
-
-// Facility capacities (total units per month)
-let facilityCapacities: [Double] = (0..<numFacilities).map { _ in
-    Double.random(in: 8000...15000)
-}
-
-// Product demand (units per month)
-let productDemands: [Double] = (0..<numProducts).map { _ in
-    Double.random(in: 10000...20000)
-}
-
-// Volume discount factor (nonlinear cost reduction for high volume)
-let volumeDiscountThreshold = 5000.0
-let volumeDiscountRate = 0.85  // 15% discount above threshold
-
-// Objective: Minimize total production cost with volume discounts
-let totalCostObjective: @Sendable (VectorN<Double>) -> Double = { production in
-    var totalCost = 0.0
-
-    // Production costs with volume discounts
-    for i in 0..<numVariables {
-        let quantity = production[i]
-        let baseCost = productionCosts[i] * quantity
-
-        // Apply volume discount if above threshold
-        if quantity > volumeDiscountThreshold {
-            let discountedAmount = quantity - volumeDiscountThreshold
-            totalCost += productionCosts[i] * volumeDiscountThreshold
-            totalCost += productionCosts[i] * volumeDiscountRate * discountedAmount
-        } else {
-            totalCost += baseCost
-        }
-    }
-
-    return totalCost
-}
-
-// Current production (starting point)
-// Distribute demand equally across facilities initially
-let currentProduction = VectorN((0..<numVariables).map { i in
-    let product = i % numProducts
-    return productDemands[product] / Double(numFacilities)
-})
-
-// Constraints
-
-// 1. Capacity constraints: Sum of production at each facility ≤ capacity
-var capacityConstraints: [MultivariateConstraint<VectorN<Double>>] = []
-for facility in 0..<numFacilities {
-    capacityConstraints.append(
-        .inequality { production in
-            // Sum production of all products at this facility
-            var facilityTotal = 0.0
-            for product in 0..<numProducts {
-                let idx = facility * numProducts + product
-                facilityTotal += production[idx]
-            }
-            return facilityTotal - facilityCapacities[facility]  // ≤ 0
-        }
-    )
-}
-
-// 2. Demand constraints: Sum of production of each product across facilities ≥ demand
-var demandConstraints: [MultivariateConstraint<VectorN<Double>>] = []
-for product in 0..<numProducts {
-    demandConstraints.append(
-        .inequality { production in
-            // Sum production of this product across all facilities
-            var productTotal = 0.0
-            for facility in 0..<numFacilities {
-                let idx = facility * numProducts + product
-                productTotal += production[idx]
-            }
-            return productDemands[product] - productTotal  // ≤ 0 (i.e., production ≥ demand)
-        }
-    )
-}
-
-// 3. Non-negativity: production quantities must be ≥ 0
-let nonNegativityConstraints = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: numVariables)
-
-let allConstraints = capacityConstraints + demandConstraints + nonNegativityConstraints
-
-// Let AdaptiveOptimizer analyze and choose
-do {
-    print(String(repeating: "=", count: 70))
-    print("SUPPLY CHAIN OPTIMIZATION: MULTI-FACILITY PRODUCTION")
-    print(String(repeating: "=", count: 70))
-    print("Facilities: \(numFacilities)")
-    print("Products: \(numProducts)")
-    print("Variables: \(numVariables)")
-    print("Total demand: \(productDemands.reduce(0, +).number(0)) units/month")
-    print("Total capacity: \(facilityCapacities.reduce(0, +).number(0)) units/month")
-    print()
-
-    let supplyChainOptimizer = AdaptiveOptimizer<VectorN<Double>>(
-        maxIterations: 2000,
-        tolerance: 1e-5
-    )
-
-    // First, analyze what algorithm will be selected
-    let analysis = supplyChainOptimizer.analyzeProblem(
-        initialGuess: currentProduction,
-        constraints: allConstraints,
-        hasGradient: false
-    )
-
-    print("Problem Analysis:")
-    print("  Size: \(analysis.size) variables")
-    print("  Constraints: \(analysis.hasConstraints)")
-    print("  Inequalities: \(analysis.hasInequalities)")
-    print("  Recommended: \(analysis.recommendedAlgorithm)")
-    print("  Reason: \(analysis.reason)")
-    print()
-
-    // Run optimization
-    let startTime = Date()
-    let supplyChainResult = try supplyChainOptimizer.optimize(
-        objective: totalCostObjective,
-        initialGuess: currentProduction,
-        constraints: allConstraints
-    )
-    let elapsedTime = Date().timeIntervalSince(startTime)
-
-    print("Supply Chain Optimization Results:")
-    print("  Algorithm Selected: \(supplyChainResult.algorithmUsed)")
-    print("  Total Cost: \(supplyChainResult.objectiveValue.currency())")
-    print("  Time: \(elapsedTime.number())s")
-    print("  Iterations: \(supplyChainResult.iterations)")
-    print("  Converged: \(supplyChainResult.converged)")
-
-    // Calculate cost savings vs initial
-    let initialCost = totalCostObjective(currentProduction)
-    let savings = initialCost - supplyChainResult.objectiveValue
-    let savingsPercent = (savings / initialCost)
-
-    print("\nCost Savings:")
-    print("  Initial cost: \(initialCost.currency())")
-    print("  Optimized cost: \(supplyChainResult.objectiveValue.currency())")
-	print("  Savings: \(savings.currency()) (\(savingsPercent.percent(1)))")
-
-    // Show production summary
-    var facilitiesUsed = 0
-    for facility in 0..<numFacilities {
-        var facilityTotal = 0.0
-        for product in 0..<numProducts {
-            let idx = facility * numProducts + product
-            facilityTotal += supplyChainResult.solution[idx]
-        }
-        if facilityTotal > 1.0 {
-            facilitiesUsed += 1
-        }
-    }
-
-    print("\nProduction Summary:")
-    print("  Active facilities: \(facilitiesUsed)/\(numFacilities)")
-    print("  Total units produced: \(supplyChainResult.solution.sum.number(0))")
-
-} catch {
-    print("Optimization failed: \(error)")
-}
-</code></pre><p><strong>AdaptiveOptimizer Analysis</strong>:</p><ul><li>Problem size: 96 variables → “medium-large”</li><li>Constraints: Mix of equality and inequality → InequalityOptimizer</li><li><strong>Decision</strong>: Use penalty-barrier method (InequalityOptimizer)</li></ul><p><strong>Results</strong>:</p><ul><li>Cost reduction: $2.4M/year (8% improvement)</li><li>Optimization time: 3.2 minutes (acceptable for weekly planning)</li><li>Solution quality: Consistently within 1% of best-known solutions</li></ul><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-import Foundation
-
-// MARK: - Basic Portfolio Optimization with AdaptiveOptimizer
-
-let assets = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]
-let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09])
-let riskFreeRate = 0.03
-
-// Covariance matrix (variances on diagonal, covariances off-diagonal)
-let covarianceMatrix = [
-	[0.0400, 0.0150, 0.0020, 0.0180],  // US Stocks
-	[0.0150, 0.0625, 0.0015, 0.0200],  // Intl Stocks
-	[0.0020, 0.0015, 0.0036, 0.0010],  // Bonds
-	[0.0180, 0.0200, 0.0010, 0.0400]   // Real Estate
-]
-
-// Define optimization problem - maximize Sharpe ratio
-let portfolioObjective: @Sendable (VectorN<Double>) -> Double = { weights in
-	// Minimize negative Sharpe ratio
-	let expectedReturn = weights.dot(expectedReturns)
-
-	var variance = 0.0
-	for i in 0..<weights.dimension {
-		for j in 0..<weights.dimension {
-			variance += weights[i] * weights[j] * covarianceMatrix[i][j]
-		}
-	}
-
-	let risk = sqrt(variance)
-	let sharpeRatio = (expectedReturn - riskFreeRate) / risk
-
-	return -sharpeRatio  // Minimize negative = maximize positive
-}
-
-// Constraints: budget + long-only
-let budgetConstraint = MultivariateConstraint<VectorN<Double>>.budgetConstraint
-let longOnlyConstraints = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: assets.count)
-let constraints: [MultivariateConstraint<VectorN<Double>>] = [budgetConstraint] + longOnlyConstraints
-
-// Let AdaptiveOptimizer choose the algorithm
-let adaptive = AdaptiveOptimizer<VectorN<Double>>()
-
-do {
-	
-	// First, analyze what algorithm will be selected
-	let analysis = adaptive.analyzeProblem(
-		initialGuess: VectorN.equalWeights(dimension: assets.count),
-		constraints: constraints,
-		hasGradient: false
-	)
-
-	print("Problem Analysis:")
-	print("  Size: \(analysis.size) variables")
-	print("  Has constraints: \(analysis.hasConstraints)")
-	print("  Has inequalities: \(analysis.hasInequalities)")
-	print("  Recommended: \(analysis.recommendedAlgorithm)")
-	print("  Reason: \(analysis.reason)")
-	print()
-
-	// Run optimization
-	let result = try adaptive.optimize(
-		objective: portfolioObjective,
-		initialGuess: VectorN.equalWeights(dimension: assets.count),
-		constraints: constraints
-	)
-
-	print("Optimal Portfolio:")
-	for (asset, weight) in zip(assets, result.solution.toArray()) {
-		if weight > 0.01 {
-			print("  \(asset): \(weight.percent())")
-		}
-	}
-
-	print("\nOptimization Details:")
-	print("  Algorithm Used: \(result.algorithmUsed)")
-	print("  Selection Reason: \(result.selectionReason)")
-	print("  Iterations: \(result.iterations)")
-	print("  Converged: \(result.converged)")
-	print("  Sharpe Ratio: \((-result.objectiveValue).number())")
-
-	// Calculate portfolio metrics
-	let optimalReturn = result.solution.dot(expectedReturns)
-	var optimalVariance = 0.0
-	for i in 0..<result.solution.dimension {
-		for j in 0..<result.solution.dimension {
-			optimalVariance += result.solution[i] * result.solution[j] * covarianceMatrix[i][j]
-		}
-	}
-	let optimalVolatility = sqrt(optimalVariance)
-
-	print("\nPortfolio Metrics:")
-	print("  Expected Return: \(optimalReturn.percent(2))")
-	print("  Volatility: \(optimalVolatility.percent(2))")
-	print("  Risk-Free Rate: \(riskFreeRate.percent(2))")
-
-} catch let error as BusinessMathError {
-	print("Optimization failed: \(error.localizedDescription)")
-}
-
-// MARK: - Comparing Speed vs Accuracy Preferences
-
-print("\n" + String(repeating: "=", count: 60))
-print("COMPARING OPTIMIZER PREFERENCES")
-print(String(repeating: "=", count: 60))
-
-// Prefer speed: Looser tolerance, more aggressive
-let fastOptimizer = AdaptiveOptimizer<VectorN<Double>>(
-	preferSpeed: true,
-	maxIterations: 500,
-	tolerance: 1e-4
-)
-
-do {
-	let fastResult = try fastOptimizer.optimize(
-		objective: portfolioObjective,
-		initialGuess: VectorN.equalWeights(dimension: assets.count),
-		constraints: constraints
-	)
-
-	print("\nWith preferSpeed=true:")
-	print("  Algorithm: \(fastResult.algorithmUsed)")
-	print("  Iterations: \(fastResult.iterations)")
-	print("  Sharpe Ratio: \((-fastResult.objectiveValue).number())")
-} catch {
-	print("Fast optimization failed: \(error)")
-}
-
-// Prefer accuracy: Tighter tolerance, uses Newton when possible
-let accurateOptimizer = AdaptiveOptimizer<VectorN<Double>>(
-	preferAccuracy: true,
-	maxIterations: 2000,
-	tolerance: 1e-8
-)
-
-do {
-	let accurateResult = try accurateOptimizer.optimize(
-		objective: portfolioObjective,
-		initialGuess: VectorN.equalWeights(dimension: assets.count),
-		constraints: constraints
-	)
-
-	print("\nWith preferAccuracy=true:")
-	print("  Algorithm: \(accurateResult.algorithmUsed)")
-	print("  Iterations: \(accurateResult.iterations)")
-	print("  Sharpe Ratio: \((-accurateResult.objectiveValue).number())")
-} catch {
-	print("Accurate optimization failed: \(error)")
-}
-
-// MARK: - Testing Decision Tree with Different Problem Sizes
-
-print("\n" + String(repeating: "=", count: 60))
-print("TESTING DECISION TREE")
-print(String(repeating: "=", count: 60))
-
-// Small unconstrained problem (≤5 variables) → Newton-Raphson
-let smallObjective: (VectorN<Double>) -> Double = { x in
-	(x[0] - 1)*(x[0] - 1) + (x[1] - 2)*(x[1] - 2) + (x[2] - 3)*(x[2] - 3)
-}
-
-let smallAnalysis = AdaptiveOptimizer<VectorN<Double>>().analyzeProblem(
-	initialGuess: VectorN([0.0, 0.0, 0.0]),
-	constraints: [],
-	hasGradient: false
-)
-
-print("\nSmall unconstrained (3 variables):")
-print("  Recommended: \(smallAnalysis.recommendedAlgorithm)")
-print("  Reason: \(smallAnalysis.reason)")
-
-// Large unconstrained problem (>100 variables) → Gradient Descent
-let largeAnalysis = AdaptiveOptimizer<VectorN<Double>>().analyzeProblem(
-	initialGuess: VectorN(repeating: 0.0, count: 150),
-	constraints: [],
-	hasGradient: false
-)
-
-print("\nLarge unconstrained (150 variables):")
-print("  Recommended: \(largeAnalysis.recommendedAlgorithm)")
-print("  Reason: \(largeAnalysis.reason)")
-
-// Problem with inequality constraints → InequalityOptimizer
-let inequalityAnalysis = AdaptiveOptimizer<VectorN<Double>>().analyzeProblem(
-	initialGuess: VectorN.equalWeights(dimension: assets.count),
-	constraints: constraints,  // Has inequalities (long-only)
-	hasGradient: false
-)
-
-print("\nWith inequality constraints:")
-print("  Recommended: \(inequalityAnalysis.recommendedAlgorithm)")
-print("  Reason: \(inequalityAnalysis.reason)")
-
-// Problem with only equality constraints → ConstrainedOptimizer
-let equalityOnly = [MultivariateConstraint<VectorN<Double>>.budgetConstraint]
-let equalityAnalysis = AdaptiveOptimizer<VectorN<Double>>().analyzeProblem(
-	initialGuess: VectorN.equalWeights(dimension: assets.count),
-	constraints: equalityOnly,
-	hasGradient: false
-)
-
-print("\nWith only equality constraints:")
-print("  Recommended: \(equalityAnalysis.recommendedAlgorithm)")
-print("  Reason: \(equalityAnalysis.reason)")
-
-print("\n" + String(repeating: "=", count: 60))
-print("✓ AdaptiveOptimizer automatically selects the best algorithm")
-print("  based on problem characteristics!")
-print(String(repeating: "=", count: 60))
-
-
-// Use ParallelOptimizer for problems with multiple local minima
-let parallelOptimizer = ParallelOptimizer<VectorN<Double>>(
-	algorithm: .inequality,  // Use inequality-constrained optimizer
-	numberOfStarts: 20,       // Try 20 different starting points
-	maxIterations: 1000,
-	tolerance: 1e-6
-)
-
-// Define search region for starting points
-let searchRegion = (
-	lower: VectorN(repeating: 0.0, count: assets.count),
-	upper: VectorN(repeating: 1.0, count: assets.count)
-)
-
-// Run optimization in parallel (async/await)
-let parallelResult = try await parallelOptimizer.optimize(
 	objective: portfolioObjective,
-	searchRegion: searchRegion,
+	initialGuess: VectorN.equalWeights(dimension: 4),
 	constraints: constraints
 )
 
-print("Best solution found across \(parallelResult.allResults.count) attempts")
-print("Success rate: \(parallelResult.successRate.percent())")
-print("Objective value: \(parallelResult.objectiveValue.number())")
-
-
-do {
-		// Compare different optimizers on the same problem
-		struct OptimizerComparison {
-			let objective: (VectorN<Double>) -> Double
-			let initialGuess: VectorN<Double>
-			let constraints: [MultivariateConstraint<VectorN<Double>>]
-
-			func compare() throws {
-				print("Optimizer Performance Comparison")
-				print("═══════════════════════════════════════════════")
-
-				// Test 1: Gradient Descent
-				let startGD = Date()
-				let gdOptimizer = MultivariateGradientDescent<VectorN<Double>>(
-					learningRate: 0.01,
-					maxIterations: 1000,
-					tolerance: 1e-6
-				)
-				let gdResult = try gdOptimizer.minimize(
-					function: objective,
-					gradient: { try numericalGradient(objective, at: $0) },
-					initialGuess: initialGuess
-				)
-				let gdTime = Date().timeIntervalSince(startGD)
-
-				print("Gradient Descent:")
-				print("  Value: \(gdResult.value.number(4))")
-				print("  Time: \(gdTime.number(2))s")
-				print("  Iterations: \(gdResult.iterations)")
-
-//				// Test 2: Newton-Raphson (if problem is small)
-//				if initialGuess.dimension <= 10 {
-//					let startNR = Date()
-//					let nrOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
-//						maxIterations: 1000,
-//						tolerance: 1e-6
-//					)
-//					let nrResult = try nrOptimizer.minimize(
-//						function: objective,
-//						gradient: { try numericalGradient(objective, at: $0) },
-//						hessian: { try numericalHessian(objective, at: $0) },
-//						initialGuess: initialGuess
-//					)
-//					let nrTime = Date().timeIntervalSince(startNR)
-//
-//					print("\nNewton-Raphson:")
-//					print("  Value: \(nrResult.value.number(4))")
-//					print("  Time: \(nrTime.number(2))s")
-//					print("  Iterations: \(nrResult.iterations)")
-//				}
-
-				// Test 3: Adaptive (let it choose)
-				let startAdaptive = Date()
-				let adaptiveOptimizer = AdaptiveOptimizer<VectorN<Double>>()
-				let adaptiveResult = try adaptiveOptimizer.optimize(
-					objective: objective,
-					initialGuess: initialGuess,
-					constraints: constraints
-				)
-				let adaptiveTime = Date().timeIntervalSince(startAdaptive)
-
-				print("\nAdaptive Optimizer:")
-				print("  Algorithm chosen: \(adaptiveResult.algorithmUsed)")
-				print("  Value: \(adaptiveResult.objectiveValue.number(4))")
-				print("  Time: \(adaptiveTime.number(2))s")
-				print("  Iterations: \(adaptiveResult.iterations)")
-			}
-		}
-
-		// Run comparison
-		let comparison = OptimizerComparison(
-			objective: portfolioObjective,
-			initialGuess: VectorN.equalWeights(dimension: 4),
-			constraints: constraints
-		)
-
-		try comparison.compare()
-
-} catch let error as BusinessMathError {
-	print("ERROR:\n\t\(error.localizedDescription)")
-}
-
-
-// MARK: - Real-World Application
-
-	// Problem dimensions
-	let numFacilities = 12
-	let numProducts = 8
-	let numVariables = numFacilities * numProducts  // 96 variables
-
-	// Cost structure ($/unit for each facility-product combination)
-	// Lower costs for specialized facilities, higher for general purpose
-	let productionCosts = (0..<numFacilities).flatMap { facility in
-		(0..<numProducts).map { product in
-			// Each facility has 1-2 products they're best at
-			let isSpecialized = (product % numFacilities == facility) ||
-							   ((product + 1) % numFacilities == facility)
-			return isSpecialized ? Double.random(in: 8...12) : Double.random(in: 15...25)
-		}
-	}
-
-	// Facility capacities (total units per month)
-	let facilityCapacities: [Double] = (0..<numFacilities).map { _ in
-		Double.random(in: 8000...15000)
-	}
-
-	// Product demand (units per month)
-	let productDemands: [Double] = (0..<numProducts).map { _ in
-		Double.random(in: 10000...20000)
-	}
-
-	// Volume discount factor (nonlinear cost reduction for high volume)
-	let volumeDiscountThreshold = 5000.0
-	let volumeDiscountRate = 0.85  // 15% discount above threshold
-
-	// Objective: Minimize total production cost with volume discounts
-	let totalCostObjective: @Sendable (VectorN<Double>) -> Double = { production in
-		var totalCost = 0.0
-
-		// Production costs with volume discounts
-		for i in 0..<numVariables {
-			let quantity = production[i]
-			let baseCost = productionCosts[i] * quantity
-
-			// Apply volume discount if above threshold
-			if quantity > volumeDiscountThreshold {
-				let discountedAmount = quantity - volumeDiscountThreshold
-				totalCost += productionCosts[i] * volumeDiscountThreshold
-				totalCost += productionCosts[i] * volumeDiscountRate * discountedAmount
-			} else {
-				totalCost += baseCost
-			}
-		}
-
-		return totalCost
-	}
-
-	// Current production (starting point)
-	// Distribute demand equally across facilities initially
-	let currentProduction = VectorN((0..<numVariables).map { i in
-		let product = i % numProducts
-		return productDemands[product] / Double(numFacilities)
-	})
-
-	// Constraints
-
-	// 1. Capacity constraints: Sum of production at each facility ≤ capacity
-	var capacityConstraints: [MultivariateConstraint<VectorN<Double>>] = []
-	for facility in 0..<numFacilities {
-		capacityConstraints.append(
-			.inequality { production in
-				// Sum production of all products at this facility
-				var facilityTotal = 0.0
-				for product in 0..<numProducts {
-					let idx = facility * numProducts + product
-					facilityTotal += production[idx]
-				}
-				return facilityTotal - facilityCapacities[facility]  // ≤ 0
-			}
-		)
-	}
-
-	// 2. Demand constraints: Sum of production of each product across facilities ≥ demand
-	var demandConstraints: [MultivariateConstraint<VectorN<Double>>] = []
-	for product in 0..<numProducts {
-		demandConstraints.append(
-			.inequality { production in
-				// Sum production of this product across all facilities
-				var productTotal = 0.0
-				for facility in 0..<numFacilities {
-					let idx = facility * numProducts + product
-					productTotal += production[idx]
-				}
-				return productDemands[product] - productTotal  // ≤ 0 (i.e., production ≥ demand)
-			}
-		)
-	}
-
-	// 3. Non-negativity: production quantities must be ≥ 0
-	let nonNegativityConstraints = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: numVariables)
-
-	let allConstraints = capacityConstraints + demandConstraints + nonNegativityConstraints
-
-	// Let AdaptiveOptimizer analyze and choose
-	do {
-		print(String(repeating: "=", count: 70))
-		print("SUPPLY CHAIN OPTIMIZATION: MULTI-FACILITY PRODUCTION")
-		print(String(repeating: "=", count: 70))
-		print("Facilities: \(numFacilities)")
-		print("Products: \(numProducts)")
-		print("Variables: \(numVariables)")
-		print("Total demand: \(productDemands.reduce(0, +).number(0)) units/month")
-		print("Total capacity: \(facilityCapacities.reduce(0, +).number(0)) units/month")
-		print()
-
-		let supplyChainOptimizer = AdaptiveOptimizer<VectorN<Double>>(
-			maxIterations: 2000,
-			tolerance: 1e-5
-		)
-
-		// First, analyze what algorithm will be selected
-		let analysis = supplyChainOptimizer.analyzeProblem(
-			initialGuess: currentProduction,
-			constraints: allConstraints,
-			hasGradient: false
-		)
-
-		print("Problem Analysis:")
-		print("  Size: \(analysis.size) variables")
-		print("  Constraints: \(analysis.hasConstraints)")
-		print("  Inequalities: \(analysis.hasInequalities)")
-		print("  Recommended: \(analysis.recommendedAlgorithm)")
-		print("  Reason: \(analysis.reason)")
-		print()
-
-		// Run optimization
-		let startTime = Date()
-		let supplyChainResult = try supplyChainOptimizer.optimize(
-			objective: totalCostObjective,
-			initialGuess: currentProduction,
-			constraints: allConstraints
-		)
-		let elapsedTime = Date().timeIntervalSince(startTime)
-
-		print("Supply Chain Optimization Results:")
-		print("  Algorithm Selected: \(supplyChainResult.algorithmUsed)")
-		print("  Total Cost: \(supplyChainResult.objectiveValue.currency())")
-		print("  Time: \(elapsedTime.number())s")
-		print("  Iterations: \(supplyChainResult.iterations)")
-		print("  Converged: \(supplyChainResult.converged)")
-
-		// Calculate cost savings vs initial
-		let initialCost = totalCostObjective(currentProduction)
-		let savings = initialCost - supplyChainResult.objectiveValue
-		let savingsPercent = (savings / initialCost)
-
-		print("\nCost Savings:")
-		print("  Initial cost: \(initialCost.currency())")
-		print("  Optimized cost: \(supplyChainResult.objectiveValue.currency())")
-		print("  Savings: \(savings.currency()) (\(savingsPercent.percent(1)))")
-
-		// Show production summary
-		var facilitiesUsed = 0
-		for facility in 0..<numFacilities {
-			var facilityTotal = 0.0
-			for product in 0..<numProducts {
-				let idx = facility * numProducts + product
-				facilityTotal += supplyChainResult.solution[idx]
-			}
-			if facilityTotal > 1.0 {
-				facilitiesUsed += 1
-			}
-		}
-
-		print("\nProduction Summary:")
-		print("  Active facilities: \(facilitiesUsed)/\(numFacilities)")
-		print("  Total units produced: \(supplyChainResult.solution.sum.number(0))")
-
-	} catch {
-		print("Optimization failed: \(error)")
-	}
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.9-AdaptiveSelection.md">BusinessMath Docs – Adaptive Selection Guide</a></p><h3>Experiments to Try</h3><ol><li><strong>Algorithm Racing</strong>: Compare 5 algorithms on portfolio optimization</li><li><strong>Problem Size Scaling</strong>: How does algorithm choice change from 10 to 1,000 variables?</li><li><strong>Custom Heuristics</strong>: Build a problem analyzer for your domain</li><li><strong>Timeout Sensitivity</strong>: How does allowed time affect algorithm choice?</li></ol><hr /><h2>Next Steps</h2><p><strong>Tomorrow</strong>: We’ll conclude Week 9 with <strong>Parallel Optimization</strong>, using multiple CPU cores to speed up large-scale problems.</p><p><strong>Next Week</strong>: Week 10 explores <strong>Performance Benchmarking</strong> and advanced algorithms (L-BFGS, Conjugate Gradient, Simulated Annealing).</p><hr /><p><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Adaptive algorithms • Algorithm selection • Performance profiling • Multi-algorithm racing • Problem analysis</p><p><strong>Playgrounds</strong>: [Week 1-9 available] • [Next: Parallel optimization]</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, adaptive-algorithms, algorithm-selection, performance, automation</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+try comparison.compare()
+</code></pre>
+            </vectorn<double></code></pre>} catch let error as BusinessMathError { print(“ERROR:\n\t(error.localizedDescription)”) }
+        <p></p>
+        <div>
+          <p>// MARK: - Real-World Application</p>
+          <pre><code>// Problem dimensions let numFacilities = 12 let numProducts = 8 let numVariables = numFacilities * numProducts  // 96 variables<p></p><p>// Cost structure ($/unit for each facility-product combination) // Lower costs for specialized facilities, higher for general purpose let productionCosts = (0..
+                <numfacilities).flatmap { facility in (0..<numproducts).map { product in each facility has 1-2 products they’re best at let isspecialized="(product" % numfacilities="=" facility) || ((product + 1) % numfacilities="=" facility) return isspecialized ? double.random(in: 8…12) : double.random(in: 15…25) } }< p></numfacilities).flatmap></p><p>// Facility capacities (total units per month) let facilityCapacities: [Double] = (0..
+                <numfacilities).map { _ in double.random(in: 8000…15000) }< p></numfacilities).map></p><p>// Product demand (units per month) let productDemands: [Double] = (0..
+                <numproducts).map { _ in double.random(in: 10000…20000) }< p></numproducts).map></p><p>// Volume discount factor (nonlinear cost reduction for high volume) let volumeDiscountThreshold = 5000.0 let volumeDiscountRate = 0.85 // 15% discount above threshold</p></code>
+            <div>
+              <code><p>// Objective: Minimize total production cost with volume discounts let totalCostObjective: @Sendable (VectorN
+                  <double>
+                    ) -&gt; Double = { production in var totalCost = 0.0
+                  </double></p><pre><code>// Production costs with volume discounts for i in 0..
+                    <numvariables { let quantity="production[i]" let basecost="productionCosts[i]" * quantity<pre>
+                      <code>// Apply volume discount if above threshold if quantity &gt; volumeDiscountThreshold { let discountedAmount = quantity - volumeDiscountThreshold totalCost += productionCosts[i] * volumeDiscountThreshold totalCost += productionCosts[i] * volumeDiscountRate * discountedAmount } else { totalCost += baseCost } </code>
+                    </numvariables></code></pre><code>}<p></p></code><p><code>return totalCost </code></p></code>
+            </div></pre>}
+          <p></p>
+        </div>
+        <p>// Current production (starting point) // Distribute demand equally across facilities initially let currentProduction = VectorN((0..
+          <numvariables).map { i in let product="i" % numproducts return productdemands[product] double(numfacilities) })< p></numvariables).map></p>
+        <p>// Constraints</p>
+        <p>// 1. Capacity constraints: Sum of production at each facility ≤ capacity var capacityConstraints: [MultivariateConstraint
+          <vectorn<double>
+            &gt;] = [] for facility in 0..
+            <numfacilities { capacityconstraints.append( .inequality { production in sum production of all products at this facility var facilitytotal="0.0" for product in 0..<numproducts { let idx="facility" * numproducts + product facilitytotal +="production[idx]" } return facilitytotal - facilitycapacities[facility] ≤ 0 } ) }< p></numfacilities>
+          </vectorn<double></p>
+        <p>// 2. Demand constraints: Sum of production of each product across facilities ≥ demand var demandConstraints: [MultivariateConstraint
+          <vectorn<double>
+            &gt;] = [] for product in 0..
+            <numproducts { demandconstraints.append( .inequality { production in sum production of this product across all facilities var producttotal="0.0" for facility in 0..<numfacilities { let idx="facility" * numproducts + product producttotal +="production[idx]" } return productdemands[product] - producttotal ≤ 0 (i.e., production ≥ demand) } ) }< p></numproducts>
+          </vectorn<double></p>
+        <p>// 3. Non-negativity: production quantities must be ≥ 0 let nonNegativityConstraints = MultivariateConstraint
+          <vectorn<double>
+            &gt;.nonNegativity(dimension: numVariables)
+          </vectorn<double></p>
+        <p>let allConstraints = capacityConstraints + demandConstraints + nonNegativityConstraints</p>
+        <div>
+          <p>// Let AdaptiveOptimizer analyze and choose do { print(String(repeating: “=”, count: 70)) print(“SUPPLY CHAIN OPTIMIZATION: MULTI-FACILITY PRODUCTION”) print(String(repeating: “=”, count: 70)) print(“Facilities: (numFacilities)”) print(“Products: (numProducts)”) print(“Variables: (numVariables)”) print(“Total demand: (productDemands.reduce(0, +).number(0)) units/month”) print(“Total capacity: (facilityCapacities.reduce(0, +).number(0)) units/month”) print()</p>
+          <pre><code>let supplyChainOptimizer = AdaptiveOptimizer
+              <vectorn<double>
+                &gt;( maxIterations: 2000, tolerance: 1e-5 )
+                <p></p>
+                <p>// First, analyze what algorithm will be selected let analysis = supplyChainOptimizer.analyzeProblem( initialGuess: currentProduction, constraints: allConstraints, hasGradient: false )</p>
+                <p>print(“Problem Analysis:”) print(” Size: (analysis.size) variables”) print(” Constraints: (analysis.hasConstraints)”) print(” Inequalities: (analysis.hasInequalities)”) print(” Recommended: (analysis.recommendedAlgorithm)”) print(” Reason: (analysis.reason)”) print()</p>
+                <p>// Run optimization let startTime = Date() let supplyChainResult = try supplyChainOptimizer.optimize( objective: totalCostObjective, initialGuess: currentProduction, constraints: allConstraints ) let elapsedTime = Date().timeIntervalSince(startTime)</p>
+                <p>print(“Supply Chain Optimization Results:”) print(” Algorithm Selected: (supplyChainResult.algorithmUsed)”) print(” Total Cost: (supplyChainResult.objectiveValue.currency())”) print(” Time: (elapsedTime.number())s”) print(” Iterations: (supplyChainResult.iterations)”) print(” Converged: (supplyChainResult.converged)”)</p>
+                <p>// Calculate cost savings vs initial let initialCost = totalCostObjective(currentProduction) let savings = initialCost - supplyChainResult.objectiveValue let savingsPercent = (savings / initialCost)</p>
+                <p>print(”\nCost Savings:”) print(” Initial cost: (initialCost.currency())”) print(” Optimized cost: (supplyChainResult.objectiveValue.currency())”) print(” Savings: (savings.currency()) ((savingsPercent.percent(1)))”)</p>
+                <p>// Show production summary var facilitiesUsed = 0 for facility in 0..
+                  <numfacilities { var facilitytotal="0.0" for product in 0..<numproducts { let idx="facility" * numproducts + product facilitytotal +="supplyChainResult.solution[idx]" } if facilitytotal>
+                     1.0 { facilitiesUsed += 1 } }
+                  </numfacilities></p>
+              </vectorn<double></code><p><code>print(”\nProduction Summary:”) print(” Active facilities: (facilitiesUsed)/(numFacilities)”) print(” Total units produced: (supplyChainResult.solution.sum.number(0))”) </code></p></pre>} catch { print(“Optimization failed: (error)”) } 
+          <p></p>
+        </div>
+      </vectorn<double>
+    </div>
+    <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.9-AdaptiveSelection.md">BusinessMath Docs – Adaptive Selection Guide</a></p>
+    <h3>Experiments to Try</h3>
+    <ol>
+      <li><strong>Algorithm Racing</strong>: Compare 5 algorithms on portfolio optimization</li>
+      <li><strong>Problem Size Scaling</strong>: How does algorithm choice change from 10 to 1,000 variables?</li>
+      <li><strong>Custom Heuristics</strong>: Build a problem analyzer for your domain</li>
+      <li><strong>Timeout Sensitivity</strong>: How does allowed time affect algorithm choice?</li>
+    </ol>
+    <hr />
+    <h2>Next Steps</h2>
+    <strong>Tomorrow</strong>: We’ll conclude Week 9 with 
+    <strong>Parallel Optimization</strong>, using multiple CPU cores to speed up large-scale problems.
+    <p></p>
+    <p><strong>Next Week</strong>: Week 10 explores <strong>Performance Benchmarking</strong> and advanced algorithms (L-BFGS, Conjugate Gradient, Simulated Annealing).
+      <hr /><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Case Studies</strong>: [4/6 Complete]</p>
+    <p><strong>Topics Covered</strong>: Adaptive algorithms • Algorithm selection • Performance profiling • Multi-algorithm racing • Problem analysis</p>
+    <p><strong>Playgrounds</strong>: [Week 1-9 available] • [Next: Parallel optimization]</p>
+    <hr />
+    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, adaptive-algorithms, algorithm-selection, performance, automation</p>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

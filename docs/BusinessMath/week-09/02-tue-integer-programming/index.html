@@ -1,652 +1,471 @@
-<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 30 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Integer Programming: Optimal Decisions with Whole Numbers</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-09/02-tue-integer-programming" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Integer Programming: Optimal Decisions with Whole Numbers"><meta property="twitter:title" content="Integer Programming: Optimal Decisions with Whole Numbers"><meta property="og:description" content="Integer Programming: Optimal Decisions with Whole Numbers"><meta name="twitter:description" content="Integer Programming: Optimal Decisions with Whole Numbers"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-09/02-tue-integer-programming"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
-**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
-**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
-**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Integer Programming: Optimal Decisions with Whole Numbers</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">14 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 30 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding when integer constraints are necessary</li><li>Implementing branch-and-bound for exact integer solutions</li><li>Using relaxation techniques for faster approximate solutions</li><li>Modeling binary (0/1) decision variables</li><li>Solving scheduling, assignment, and selection problems</li><li>Performance trade-offs: exact vs. heuristic methods</li></ul><hr /><h2>The Problem</h2><p>Many business decisions require whole numbers:</p><ul><li><strong>Capital budgeting</strong>: How many machines to purchase? (Can’t buy 2.7 machines)</li><li><strong>Workforce planning</strong>: How many employees to hire? (Can’t hire 14.3 people)</li><li><strong>Project selection</strong>: Which projects to fund? (Binary yes/no)</li><li><strong>Production scheduling</strong>: How many batches to produce? (Integer batch sizes)</li></ul><p><strong>Continuous optimization solvers give you fractional answers—but you need integers.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides integer programming solvers that find optimal whole-number solutions. The core technique is <strong>branch-and-bound</strong>: solve relaxed continuous problems, then systematically explore integer solutions.</p><h3>Pattern 1: Capital Budgeting (0/1 Knapsack)</h3><p><strong>Business Problem</strong>: You have $500K budget. Which projects should you fund?</p><pre><code class="language-swift">import BusinessMath
-
-// Define projects
-struct Project {
-    let name: String
-    let cost: Double
-    let npv: Double
-    let requiredStaff: Int
-}
-
-let projects = [
-    Project(name: "New Product Launch", cost: 200_000, npv: 350_000, requiredStaff: 5),
-    Project(name: "Factory Upgrade", cost: 180_000, npv: 280_000, requiredStaff: 3),
-    Project(name: "Marketing Campaign", cost: 100_000, npv: 150_000, requiredStaff: 2),
-    Project(name: "IT System", cost: 150_000, npv: 200_000, requiredStaff: 4),
-    Project(name: "R&D Initiative", cost: 120_000, npv: 180_000, requiredStaff: 6)
-]
-
-let budget = 500_000.0
-let availableStaff = 10
-
-// Binary decision variables: x[i] ∈ {0, 1} (fund project i or not)
-// Objective: Maximize total NPV
-// Constraints: Total cost ≤ budget, total staff ≤ available
-
-// Create solver with binary integer specification
-let solver = BranchAndBoundSolver<VectorN<Double>>(
-    maxNodes: 1000,
-    timeLimit: 30.0
-)
-
-let integerSpec = IntegerProgramSpecification.allBinary(dimension: projects.count)
-
-// Objective: Maximize NPV (minimize negative NPV)
-let objective: @Sendable (VectorN<Double>) -> Double = { decisions in
-    -zip(projects, decisions.toArray()).map { project, decision in
-        project.npv * decision
-    }.reduce(0, +)
-}
-
-// Constraint 1: Budget (inequality: totalCost ≤ budget)
-let budgetConstraint = MultivariateConstraint<VectorN<Double>>.inequality { decisions in
-    let totalCost = zip(projects, decisions.toArray()).map { project, decision in
-        project.cost * decision
-    }.reduce(0, +)
-    return totalCost - budget  // ≤ 0
-}
-
-// Constraint 2: Staff availability (inequality: totalStaff ≤ availableStaff)
-let staffConstraint = MultivariateConstraint<VectorN<Double>>.inequality { decisions in
-    let totalStaff = zip(projects, decisions.toArray()).map { project, decision in
-        project.requiredStaff * Int(decision.rounded())
-    }.reduce(0, +)
-    return Double(totalStaff) - Double(availableStaff)  // ≤ 0
-}
-
-// Binary bounds: 0 ≤ x[i] ≤ 1 for each decision variable
-let binaryConstraints = (0..<projects.count).flatMap { i in
-    [
-        MultivariateConstraint<VectorN<Double>>.inequality { x in -x[i] },  // x[i] ≥ 0
-        MultivariateConstraint<VectorN<Double>>.inequality { x in x[i] - 1.0 }  // x[i] ≤ 1
-    ]
-}
-
-// Solve using branch-and-bound
-let result = try solver.solve(
-    objective: objective,
-    from: VectorN(repeating: 0.5, count: projects.count),
-    subjectTo: [budgetConstraint, staffConstraint] + binaryConstraints,
-    integerSpec: integerSpec,
-    minimize: true
-)
-
-// Interpret results
-print("Optimal Project Portfolio:")
-print("Status: \(result.status)")
-var totalCost = 0.0
-var totalNPV = 0.0
-var totalStaff = 0
-
-for (project, decision) in zip(projects, result.solution.toArray()) {
-    if decision > 0.5 {  // Binary: 1 means funded
-        print("  ✓ \(project.name)")
-        print("    Cost: \(project.cost.currency(0)), NPV: \(project.npv.currency(0)), Staff: \(project.requiredStaff)")
-        totalCost += project.cost
-        totalNPV += project.npv
-        totalStaff += project.requiredStaff
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 30 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Integer Programming: Optimal Decisions with Whole Numbers | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-09/02-tue-integer-programming" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
     }
-}
 
-print("\nPortfolio Summary:")
-print("  Total Cost: \(totalCost.currency(0)) / \(budget.currency(0))")
-print("  Total NPV: \(totalNPV.currency(0))")
-print("  Total Staff: \(totalStaff) / \(availableStaff)")
-print("  Budget Utilization: \((totalCost / budget).percent())")
-print("  Nodes Explored: \(result.nodesExplored)")
-</code></pre><h3>Pattern 2: Production Scheduling with Lot Sizes</h3><p><strong>Business Problem</strong>: Minimize production costs. Each product has a fixed setup cost and must be produced in minimum lot sizes.</p><pre><code class="language-swift">// Products with setup costs and lot size requirements
-struct ProductionRun {
-    let product: String
-    let setupCost: Double
-    let variableCost: Double
-    let minimumLotSize: Int
-    let demand: Int
-}
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
 
-let productionRuns = [
-    ProductionRun(product: "Widget A", setupCost: 5_000, variableCost: 10, minimumLotSize: 100, demand: 450),
-    ProductionRun(product: "Widget B", setupCost: 3_000, variableCost: 8, minimumLotSize: 50, demand: 280),
-    ProductionRun(product: "Widget C", setupCost: 4_000, variableCost: 12, minimumLotSize: 75, demand: 350)
-]
-
-let maxProductionCapacity = 1000
-
-// Decision variables: number of lots to produce (integer)
-// Objective: Minimize total cost (setup + variable)
-// Constraints: Meet demand, don't exceed capacity, minimum lot sizes
-
-// Create solver for general integer variables (not just binary)
-let productionSolver = BranchAndBoundSolver<VectorN<Double>>(
-    maxNodes: 5000,
-    timeLimit: 60.0
-)
-
-// Specify which variables are integers (all of them: lots for each product)
-let productionSpec = IntegerProgramSpecification(integerIndices: Set(0..<productionRuns.count))
-
-let costObjective: (VectorN<Double>) -> Double = { lots in
-    zip(productionRuns, lots.toArray()).map { run, numLots in
-        if numLots > 0 {
-            return run.setupCost + (run.variableCost * numLots * Double(run.minimumLotSize))
-        } else {
-            return 0.0
-        }
-    }.reduce(0, +)
-}
-
-// Constraint 1: Meet demand for each product (inequality: production ≥ demand)
-let demandConstraints = productionRuns.enumerated().map { i, run in
-    MultivariateConstraint<VectorN<Double>>.inequality { lots in
-        let production = lots[i] * Double(run.minimumLotSize)
-        return Double(run.demand) - production  // ≤ 0 means production ≥ demand
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
     }
-}
 
-// Constraint 2: Total production within capacity (inequality: total ≤ capacity)
-let capacityConstraint = MultivariateConstraint<VectorN<Double>>.inequality { lots in
-    let totalProduction = zip(productionRuns, lots.toArray()).map { run, numLots in
-        numLots * Double(run.minimumLotSize)
-    }.reduce(0, +)
-    return totalProduction - Double(maxProductionCapacity)  // ≤ 0
-}
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
 
-// Bounds: 0 ≤ lots[i] ≤ 20 for each product
-let lotBoundsConstraints = (0..<productionRuns.count).flatMap { i in
-    [
-        MultivariateConstraint<VectorN<Double>>.inequality { x in -x[i] },  // x[i] ≥ 0
-        MultivariateConstraint<VectorN<Double>>.inequality { x in x[i] - 20.0 }  // x[i] ≤ 20
-    ]
-}
+        if (!syntaxTheme) return;
 
-// Solve
-let productionResult = try productionSolver.solve(
-    objective: costObjective,
-    from: VectorN(repeating: 5.0, count: productionRuns.count),
-    subjectTo: demandConstraints + [capacityConstraint] + lotBoundsConstraints,
-    integerSpec: productionSpec,
-    minimize: true
-)
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
 
-print("Optimal Production Schedule:")
-print("Status: \(productionResult.status)")
-for (run, numLots) in zip(productionRuns, productionResult.solution.toArray()) {
-    let lots = Int(numLots.rounded())
-    let totalUnits = lots * run.minimumLotSize
-    let cost = lots > 0 ? run.setupCost + (run.variableCost * Double(totalUnits)) : 0.0
-
-    print("  \(run.product): \(lots) lots × \(run.minimumLotSize) units = \(totalUnits) units")
-    print("    Demand: \(run.demand), Excess: \(totalUnits - run.demand)")
-    print("    Cost: \(cost.currency(0))")
-}
-
-let totalCost = productionResult.objectiveValue
-print("\nTotal Production Cost: \(totalCost.currency(0))")
-print("Nodes Explored: \(productionResult.nodesExplored)")
-</code></pre><h3>Pattern 3: Assignment Problem (Workers to Tasks)</h3><p><strong>Business Problem</strong>: Assign workers to tasks to minimize total time, where each worker has different efficiencies.</p><pre><code class="language-swift">// Workers and their time to complete each task (hours)
-let workers = ["Alice", "Bob", "Carol", "Dave"]
-let tasks = ["Task 1", "Task 2", "Task 3", "Task 4"]
-
-// Time matrix: timeMatrix[worker][task] = hours
-let timeMatrix = [
-    [8, 12, 6, 10],   // Alice's times
-    [10, 9, 7, 12],   // Bob's times
-    [7, 11, 9, 8],    // Carol's times
-    [11, 8, 10, 7]    // Dave's times
-]
-
-// Binary assignment matrix: x[i][j] = 1 if worker i assigned to task j
-// Objective: Minimize total time
-// Constraints: Each worker assigned to exactly one task, each task assigned to exactly one worker
-
-// Flatten assignment matrix to 1D vector for optimizer
-let numWorkers = workers.count
-let numTasks = tasks.count
-let numVars = numWorkers * numTasks
-
-// Create solver for assignment problem
-let assignmentSolver = BranchAndBoundSolver<VectorN<Double>>(
-    maxNodes: 10000,
-    timeLimit: 120.0
-)
-
-let assignmentSpec = IntegerProgramSpecification.allBinary(dimension: numVars)
-
-let assignmentObjective: (VectorN<Double>) -> Double = { assignments in
-    var totalTime = 0.0
-    for i in 0..<numWorkers {
-        for j in 0..<numTasks {
-            let index = i * numTasks + j
-            totalTime += assignments[index] * Double(timeMatrix[i][j])
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
         }
     }
-    return totalTime
-}
 
-// Constraint 1: Each worker assigned to exactly one task (equality: sum = 1)
-let workerConstraints = (0..<numWorkers).map { worker in
-    MultivariateConstraint<VectorN<Double>>.equality { assignments in
-        let sum = (0..<numTasks).map { task in
-            assignments[worker * numTasks + task]
-        }.reduce(0, +)
-        return sum - 1.0  // = 0 means sum = 1
-    }
-}
-
-// Constraint 2: Each task assigned to exactly one worker (equality: sum = 1)
-let taskConstraints = (0..<numTasks).map { task in
-    MultivariateConstraint<VectorN<Double>>.equality { assignments in
-        let sum = (0..<numWorkers).map { worker in
-            assignments[worker * numTasks + task]
-        }.reduce(0, +)
-        return sum - 1.0  // = 0 means sum = 1
-    }
-}
-
-// Binary bounds: 0 ≤ x[i] ≤ 1
-let assignmentBounds = (0..<numVars).flatMap { i in
-    [
-        MultivariateConstraint<VectorN<Double>>.inequality { x in -x[i] },
-        MultivariateConstraint<VectorN<Double>>.inequality { x in x[i] - 1.0 }
-    ]
-}
-
-// Solve
-let assignmentResult = try assignmentSolver.solve(
-    objective: assignmentObjective,
-    from: VectorN(repeating: 0.25, count: numVars),
-    subjectTo: workerConstraints + taskConstraints + assignmentBounds,
-    integerSpec: assignmentSpec,
-    minimize: true
-)
-
-print("Optimal Assignment:")
-print("Status: \(assignmentResult.status)")
-var totalTime = 0
-for i in 0..<numWorkers {
-    for j in 0..<numTasks {
-        let index = i * numTasks + j
-        if assignmentResult.solution[index] > 0.5 {
-            let time = timeMatrix[i][j]
-            print("  \(workers[i]) → \(tasks[j]) (\(time) hours)")
-            totalTime += time
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
         }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Integer Programming: Optimal Decisions with Whole Numbers" />
+    <meta name="twitter:title" content="Integer Programming: Optimal Decisions with Whole Numbers" />
+    <meta property="og:description" content="Part 30 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 30 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-09/02-tue-integer-programming" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
     }
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
 }
-
-print("\nTotal Time: \(totalTime) hours")
-print("Nodes Explored: \(assignmentResult.nodesExplored)")
-
-// Compare to greedy heuristic
-print("\nGreedy Heuristic (for comparison):")
-var greedyTime = 0
-var assignedWorkers = Set<Int>()
-var assignedTasks = Set<Int>()
-
-// Sort all (worker, task, time) pairs by time
-var allPairs: [(worker: Int, task: Int, time: Int)] = []
-for i in 0..<numWorkers {
-    for j in 0..<numTasks {
-        allPairs.append((worker: i, task: j, time: timeMatrix[i][j]))
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-09/02-tue-integer-programming",
+      "name" : "Integer Programming: Optimal Decisions with Whole Numbers",
+      "position" : 2
     }
+  ]
 }
-allPairs.sort { $0.time < $1.time }
-
-// Greedily assign shortest times first
-for pair in allPairs {
-    if !assignedWorkers.contains(pair.worker) && !assignedTasks.contains(pair.task) {
-        print("  \(workers[pair.worker]) → \(tasks[pair.task]) (\(pair.time) hours)")
-        greedyTime += pair.time
-        assignedWorkers.insert(pair.worker)
-        assignedTasks.insert(pair.task)
-    }
-
-    if assignedWorkers.count == numWorkers {
-        break
-    }
-}
-
-print("\nGreedy Total Time: \(greedyTime) hours")
-print("Optimal is \(greedyTime - totalTime) hours better (\((Double(greedyTime - totalTime) / Double(greedyTime) * 100).number(1))% improvement)")
-</code></pre><hr /><h2>How It Works</h2><h3>Branch-and-Bound Algorithm</h3><ol><li><strong>Relax</strong>: Solve continuous version (allows fractional values)</li><li><strong>Branch</strong>: If solution is fractional, split into two subproblems:<ul><li>Subproblem A: x[i] ≤ floor(fractional_value)</li><li>Subproblem B: x[i] ≥ ceil(fractional_value)</li></ul></li><li><strong>Bound</strong>: Track best integer solution found so far</li><li><strong>Prune</strong>: Discard subproblems that can’t improve on best solution</li><li><strong>Repeat</strong>: Continue until all subproblems explored or pruned</li></ol><h3>Performance Characteristics</h3><table><thead><th>Problem Size</th><th>Variables</th><th>Exact Solution Time</th><th>Heuristic Time</th></thead><tbody><tr><td>Small (10 vars)</td><td>10</td><td><1 second</td><td><0.1 second</td></tr><tr><td>Medium (50 vars)</td><td>50</td><td>5-30 seconds</td><td>0.5 seconds</td></tr><tr><td>Large (100 vars)</td><td>100</td><td>1-10 minutes</td><td>2 seconds</td></tr><tr><td>Very Large (500+)</td><td>500+</td><td>Hours or infeasible</td><td>10-30 seconds</td></tr></tbody></table><p><strong>Rule of Thumb</strong>: For problems with >100 integer variables, use heuristics (genetic algorithms, simulated annealing) for approximate solutions.</p><hr /><h2>Real-World Application</h2><h3>Logistics: Truck Routing and Loading</h3><p><strong>Company</strong>: Regional distributor with 8 warehouses, 40 delivery locations<strong>Challenge</strong>: Minimize delivery costs while meeting delivery windows</p><p><strong>Integer Variables</strong>:</p><ul><li>Number of trucks to deploy from each warehouse (integer)</li><li>Which customers each truck serves (binary assignment)</li></ul><p><strong>Before BusinessMath</strong>:</p><ul><li>Manual routing with spreadsheet</li><li>Rules of thumb (“send 3 trucks from Warehouse A”)</li><li>No optimization, high fuel costs</li></ul><p><strong>After BusinessMath</strong>:</p><pre><code class="language-swift">let routingOptimizer = TruckRoutingOptimizer(
-    warehouses: warehouseLocations,
-    customers: customerOrders,
-    trucks: truckFleet
-)
-
-let optimalRouting = try routingOptimizer.minimizeCost(
-    constraints: [
-        .deliveryWindows,
-        .truckCapacity,
-        .driverHours
-    ]
-)
-</code></pre><p><strong>Results</strong>:</p><ul><li>Fuel costs reduced: 18%</li><li>Trucks required: 12 (down from 15)</li><li>On-time deliveries: 97% (up from 89%)</li></ul><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-// Define projects
-struct Project {
-	let name: String
-	let cost: Double
-	let npv: Double
-	let requiredStaff: Int
-}
-
-let projects_knapsack = [
-	Project(name: "New Product Launch", cost: 200_000, npv: 350_000, requiredStaff: 5),
-	Project(name: "Factory Upgrade", cost: 180_000, npv: 280_000, requiredStaff: 3),
-	Project(name: "Marketing Campaign", cost: 100_000, npv: 150_000, requiredStaff: 2),
-	Project(name: "IT System", cost: 150_000, npv: 200_000, requiredStaff: 4),
-	Project(name: "R&D Initiative", cost: 120_000, npv: 180_000, requiredStaff: 6)
-]
-
-let budget_knapsack = 500_000.0
-let availableStaff_knapsack = 10
-
-// Binary decision variables: x[i] ∈ {0, 1} (fund project i or not)
-// Objective: Maximize total NPV
-// Constraints: Total cost ≤ budget, total staff ≤ available
-
-// Create solver with binary integer specification
-let solver_knapsack = BranchAndBoundSolver<VectorN<Double>>(
-	maxNodes: 1000,
-	timeLimit: 30.0
-)
-
-let integerSpec_knapsack = IntegerProgramSpecification.allBinary(dimension: projects_knapsack.count)
-
-// Objective: Maximize NPV (minimize negative NPV)
-let objective_knapsack: @Sendable (VectorN<Double>) -> Double = { decisions in
-	-zip(projects_knapsack, decisions.toArray()).map { project, decision in
-		project.npv * decision
-	}.reduce(0, +)
-}
-
-// Constraint 1: Budget (inequality: totalCost ≤ budget)
-let budgetConstraint_knapsack = MultivariateConstraint<VectorN<Double>>.inequality { decisions in
-	let totalCost = zip(projects_knapsack, decisions.toArray()).map { project, decision in
-		project.cost * decision
-	}.reduce(0, +)
-	return totalCost - budget_knapsack  // ≤ 0
-}
-
-// Constraint 2: Staff availability (inequality: totalStaff ≤ availableStaff)
-let staffConstraint_knapsack = MultivariateConstraint<VectorN<Double>>.inequality { decisions in
-	let totalStaff = zip(projects_knapsack, decisions.toArray()).map { project, decision in
-		project.requiredStaff * Int(decision.rounded())
-	}.reduce(0, +)
-	return Double(totalStaff) - Double(availableStaff_knapsack)  // ≤ 0
-}
-
-// Binary bounds: 0 ≤ x[i] ≤ 1 for each decision variable
-let binaryConstraints_knapsack = (0..<projects_knapsack.count).flatMap { i in
-	[
-		MultivariateConstraint<VectorN<Double>>.inequality { x in -x[i] },  // x[i] ≥ 0
-		MultivariateConstraint<VectorN<Double>>.inequality { x in x[i] - 1.0 }  // x[i] ≤ 1
-	]
-}
-
-// Solve using branch-and-bound
-let result_knapsack = try solver_knapsack.solve(
-	objective: objective_knapsack,
-	from: VectorN(repeating: 0.5, count: projects_knapsack.count),
-	subjectTo: [budgetConstraint_knapsack, staffConstraint_knapsack] + binaryConstraints_knapsack,
-	integerSpec: integerSpec_knapsack,
-	minimize: true
-)
-
-// Interpret results
-print("Optimal Project Portfolio:")
-print("Status: \(result_knapsack.status)")
-var totalCost_knapsack = 0.0
-var totalNPV_knapsack = 0.0
-var totalStaff_knapsack = 0
-
-for (project, decision) in zip(projects_knapsack, result_knapsack.solution.toArray()) {
-	if decision > 0.5 {  // Binary: 1 means funded
-		print("  ✓ \(project.name)")
-		print("    Cost: \(project.cost.currency(0)), NPV: \(project.npv.currency(0)), Staff: \(project.requiredStaff)")
-		totalCost_knapsack += project.cost
-		totalNPV_knapsack += project.npv
-		totalStaff_knapsack += project.requiredStaff
-	}
-}
-
-print("\nPortfolio Summary:")
-print("  Total Cost: \(totalCost_knapsack.currency(0)) / \(budget_knapsack.currency(0))")
-print("  Total NPV: \(totalNPV_knapsack.currency(0))")
-print("  Total Staff: \(totalStaff_knapsack) / \(availableStaff_knapsack)")
-print("  Budget Utilization: \((totalCost_knapsack / budget_knapsack).percent())")
-print("  Nodes Explored: \(result_knapsack.nodesExplored)")
-
-// MARK: - Production Scheduling with Lot Sizes
-
-// Products with setup costs and lot size requirements
-struct ProductionRun {
-	let product: String
-	let setupCost: Double
-	let variableCost: Double
-	let minimumLotSize: Int
-	let demand: Int
-}
-
-let productionRuns_prodSched = [
-	ProductionRun(product: "Widget A", setupCost: 5_000, variableCost: 10, minimumLotSize: 100, demand: 450),
-	ProductionRun(product: "Widget B", setupCost: 3_000, variableCost: 8, minimumLotSize: 50, demand: 280),
-	ProductionRun(product: "Widget C", setupCost: 4_000, variableCost: 12, minimumLotSize: 75, demand: 350)
-]
-
-let maxProductionCapacity_prodSched = 1000
-
-// Decision variables: number of lots to produce (integer)
-// Objective: Minimize total cost (setup + variable)
-// Constraints: Meet demand, don't exceed capacity, minimum lot sizes
-
-// Create solver for general integer variables (not just binary)
-let productionSolver_prodSched = BranchAndBoundSolver<VectorN<Double>>(
-	maxNodes: 5000,
-	timeLimit: 60.0
-)
-
-// Specify which variables are integers (all of them: lots for each product)
-let productionSpec_prodSched = IntegerProgramSpecification(integerVariables: Set(0..<productionRuns_prodSched.count))
-
-let costObjective_prodSched: @Sendable (VectorN<Double>) -> Double = { lots in
-	zip(productionRuns_prodSched, lots.toArray()).map { run, numLots in
-		if numLots > 0 {
-			return run.setupCost + (run.variableCost * numLots * Double(run.minimumLotSize))
-		} else {
-			return 0.0
-		}
-	}.reduce(0, +)
-}
-
-// Constraint 1: Meet demand for each product (inequality: production ≥ demand)
-let demandConstraints_prodSched = productionRuns_prodSched.enumerated().map { i, run in
-	MultivariateConstraint<VectorN<Double>>.inequality { lots in
-		let production = lots[i] * Double(run.minimumLotSize)
-		return Double(run.demand) - production  // ≤ 0 means production ≥ demand
-	}
-}
-
-// Constraint 2: Total production within capacity (inequality: total ≤ capacity)
-let capacityConstraint_prodSched = MultivariateConstraint<VectorN<Double>>.inequality { lots in
-	let totalProduction = zip(productionRuns_prodSched, lots.toArray()).map { run, numLots in
-		numLots * Double(run.minimumLotSize)
-	}.reduce(0, +)
-	return totalProduction - Double(maxProductionCapacity_prodSched)  // ≤ 0
-}
-
-// Bounds: 0 ≤ lots[i] ≤ 20 for each product
-let lotBoundsConstraints = (0..<productionRuns_prodSched.count).flatMap { i in
-	[
-		MultivariateConstraint<VectorN<Double>>.inequality { x in -x[i] },  // x[i] ≥ 0
-		MultivariateConstraint<VectorN<Double>>.inequality { x in x[i] - 20.0 }  // x[i] ≤ 20
-	]
-}
-
-// Solve
-let productionResult_prodSched = try productionSolver_prodSched.solve(
-	objective: costObjective_prodSched,
-	from: VectorN(repeating: 5.0, count: productionRuns_prodSched.count),
-	subjectTo: demandConstraints_prodSched + [capacityConstraint_prodSched] + lotBoundsConstraints,
-	integerSpec: productionSpec_prodSched,
-	minimize: true
-)
-
-print("Optimal Production Schedule:")
-print("Status: \(productionResult_prodSched.status)")
-for (run, numLots) in zip(productionRuns_prodSched, productionResult_prodSched.solution.toArray()) {
-	let lots = Int(numLots.rounded())
-	let totalUnits = lots * run.minimumLotSize
-	let cost = lots > 0 ? run.setupCost + (run.variableCost * Double(totalUnits)) : 0.0
-
-	print("  \(run.product): \(lots) lots × \(run.minimumLotSize) units = \(totalUnits) units")
-	print("    Demand: \(run.demand), Excess: \(totalUnits - run.demand)")
-	print("    Cost: \(cost.currency(0))")
-}
-
-let totalCost_prodSched = productionResult_prodSched.objectiveValue
-print("\nTotal Production Cost: \(totalCost_prodSched.currency(0))")
-print("Nodes Explored: \(productionResult_prodSched.nodesExplored)")
-
-
-// MARK: - Assignment Problem - Workers to Tasks
-
-// Workers and their time to complete each task (hours)
-let workers_assignment = ["Alice", "Bob", "Carol", "Dave"]
-let tasks_assignment = ["Task 1", "Task 2", "Task 3", "Task 4"]
-
-// Time matrix: timeMatrix[worker][task] = hours
-let timeMatrix_assignment = [
-	[8, 12, 6, 10],   // Alice's times
-	[10, 9, 7, 12],   // Bob's times
-	[7, 11, 9, 8],    // Carol's times
-	[11, 8, 10, 7]    // Dave's times
-]
-
-// Binary assignment matrix: x[i][j] = 1 if worker i assigned to task j
-// Objective: Minimize total time
-// Constraints: Each worker assigned to exactly one task, each task assigned to exactly one worker
-
-// Flatten assignment matrix to 1D vector for optimizer
-let numWorkers_assignment = workers_assignment.count
-let numTasks_assignment = tasks_assignment.count
-let numVars_assignment = numWorkers_assignment * numTasks_assignment
-
-// Create solver for assignment problem
-let assignmentSolver_assignment = BranchAndBoundSolver<VectorN<Double>>(
-	maxNodes: 10000,
-	timeLimit: 120.0
-)
-
-let assignmentSpec_assignment = IntegerProgramSpecification.allBinary(dimension: numVars_assignment)
-
-let assignmentObjective_assignment: @Sendable (VectorN<Double>) -> Double = { assignments in
-	var totalTime = 0.0
-	for i in 0..<numWorkers_assignment {
-		for j in 0..<numTasks_assignment {
-			let index = i * numTasks_assignment + j
-			totalTime += assignments[index] * Double(timeMatrix_assignment[i][j])
-		}
-	}
-	return totalTime
-}
-
-// Constraint 1: Each worker assigned to exactly one task (equality: sum = 1)
-let workerConstraints_assignment = (0..<numWorkers_assignment).map { worker in
-	MultivariateConstraint<VectorN<Double>>.equality { assignments in
-		let sum = (0..<numTasks_assignment).map { task in
-			assignments[worker * numTasks_assignment + task]
-		}.reduce(0, +)
-		return sum - 1.0  // = 0 means sum = 1
-	}
-}
-
-// Constraint 2: Each task assigned to exactly one worker (equality: sum = 1)
-let taskConstraints_assignment = (0..<numTasks_assignment).map { task in
-	MultivariateConstraint<VectorN<Double>>.equality { assignments in
-		let sum = (0..<numWorkers_assignment).map { worker in
-			assignments[worker * numTasks_assignment + task]
-		}.reduce(0, +)
-		return sum - 1.0  // = 0 means sum = 1
-	}
-}
-
-// Binary bounds: 0 ≤ x[i] ≤ 1
-let assignmentBounds_assignment = (0..<numVars_assignment).flatMap { i in
-	[
-		MultivariateConstraint<VectorN<Double>>.inequality { x in -x[i] },
-		MultivariateConstraint<VectorN<Double>>.inequality { x in x[i] - 1.0 }
-	]
-}
-
-// Solve
-let assignmentResult_assignment = try assignmentSolver_assignment.solve(
-	objective: assignmentObjective_assignment,
-	from: VectorN(repeating: 0.25, count: numVars_assignment),
-	subjectTo: workerConstraints_assignment + taskConstraints_assignment + assignmentBounds_assignment,
-	integerSpec: assignmentSpec_assignment,
-	minimize: true
-)
-
-print("Optimal Assignment:")
-print("Status: \(assignmentResult_assignment.status)")
-var totalTime_assignment = 0
-for i in 0..<numWorkers_assignment {
-	for j in 0..<numTasks_assignment {
-		let index = i * numTasks_assignment + j
-		if assignmentResult_assignment.solution[index] > 0.5 {
-			let time = timeMatrix_assignment[i][j]
-			print("  \(workers_assignment[i]) → \(tasks_assignment[j]) (\(time) hours)")
-			totalTime_assignment += time
-		}
-	}
-}
-
-print("\nTotal Time: \(totalTime_assignment) hours")
-print("Nodes Explored: \(assignmentResult_assignment.nodesExplored)")
-
-// Compare to greedy heuristic
-print("\nGreedy Heuristic (for comparison):")
-var greedyTime_assignment = 0
-var assignedWorkers_assignment = Set<Int>()
-var assignedTasks_assignment = Set<Int>()
-
-// Sort all (worker, task, time) pairs by time
-var allPairs_assignment: [(worker: Int, task: Int, time: Int)] = []
-for i in 0..<numWorkers_assignment {
-	for j in 0..<numTasks_assignment {
-		allPairs_assignment.append((worker: i, task: j, time: timeMatrix_assignment[i][j]))
-	}
-}
-allPairs_assignment.sort { $0.time < $1.time }
-
-// Greedily assign shortest times first
-for pair in allPairs_assignment {
-	if !assignedWorkers_assignment.contains(pair.worker) && !assignedTasks_assignment.contains(pair.task) {
-		print("  \(workers_assignment[pair.worker]) → \(tasks_assignment[pair.task]) (\(pair.time) hours)")
-		greedyTime_assignment += pair.time
-		assignedWorkers_assignment.insert(pair.worker)
-		assignedTasks_assignment.insert(pair.task)
-	}
-
-	if assignedWorkers_assignment.count == numWorkers_assignment {
-		break
-	}
-}
-
-print("\nGreedy Total Time: \(greedyTime_assignment) hours")
-print("Optimal is \(greedyTime_assignment - totalTime_assignment) hours better (\((Double(greedyTime_assignment - totalTime_assignment) / Double(greedyTime_assignment)).percent(1)) improvement)")
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.8-IntegerProgramming.md">BusinessMath Docs – Integer Programming Guide</a></p><h3>Modifications to Try</h3><ol><li><strong>Add Precedence Constraints</strong>: Some projects must be completed before others</li><li><strong>Multi-Period Scheduling</strong>: Extend production to quarterly planning</li><li><strong>Partial Assignments</strong>: Allow workers to split time across multiple tasks</li><li><strong>Penalty Costs</strong>: Add penalty for unmet demand vs. fixed constraint</li></ol><hr /><h2>Next Steps</h2><p><strong>Tomorrow</strong>: We’ll explore <strong>Adaptive Selection</strong> for automatically choosing the best optimization algorithm for your problem.</p><p><strong>Thursday</strong>: Week 9 concludes with <strong>Parallel Optimization</strong> for leveraging multiple CPU cores.</p><hr /><p><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Integer programming • Branch-and-bound • Binary decisions • Assignment problems • Production scheduling</p><p><strong>Playgrounds</strong>: [Week 1-9 available] • [Next: Adaptive selection]</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, integer-programming, branch-and-bound, discrete-optimization, scheduling</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="col-md-9223372036854775807">
+      <div class="ig-main-content">
+        <h1 class="mainTitle">Integer Programming: Optimal Decisions with Whole Numbers</h1>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
+        <div class="blurb" style="width: 70.0%; max-width: 800px">
+          <p><strong>Part 30 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Understanding when integer constraints are necessary</li>
+            <li>Implementing branch-and-bound for exact integer solutions</li>
+            <li>Using relaxation techniques for faster approximate solutions</li>
+            <li>Modeling binary (0/1) decision variables</li>
+            <li>Solving scheduling, assignment, and selection problems</li>
+            <li>Performance trade-offs: exact vs. heuristic methods</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>Many business decisions require whole numbers:
+          <ul>
+            <li><strong>Capital budgeting</strong>: How many machines to purchase? (Can’t buy 2.7 machines)</li>
+            <li><strong>Workforce planning</strong>: How many employees to hire? (Can’t hire 14.3 people)</li>
+            <li><strong>Project selection</strong>: Which projects to fund? (Binary yes/no)</li>
+            <li><strong>Production scheduling</strong>: How many batches to produce? (Integer batch sizes)</li>
+          </ul>
+          <strong>Continuous optimization solvers give you fractional answers—but you need integers.</strong>
+          <hr />
+          <h2>The Solution</h2>BusinessMath provides integer programming solvers that find optimal whole-number solutions. The core technique is 
+          <strong>branch-and-bound</strong>: solve relaxed continuous problems, then systematically explore integer solutions.
+          <h3>Pattern 1: Capital Budgeting (0/1 Knapsack)</h3>
+          <strong>Business Problem</strong>: You have $500K budget. Which projects should you fund?
+          <pre><code class="language-swift">import BusinessMath // Define projects struct Project { let name: String let cost: Double let npv: Double let requiredStaff: Int }<p></p><p>let projects = [ Project(name: “New Product Launch”, cost: 200_000, npv: 350_000, requiredStaff: 5), Project(name: “Factory Upgrade”, cost: 180_000, npv: 280_000, requiredStaff: 3), Project(name: “Marketing Campaign”, cost: 100_000, npv: 150_000, requiredStaff: 2), Project(name: “IT System”, cost: 150_000, npv: 200_000, requiredStaff: 4), Project(name: “R&amp;D Initiative”, cost: 120_000, npv: 180_000, requiredStaff: 6) ]</p><p>let budget = 500_000.0 let availableStaff = 10</p><p>// Binary decision variables: x[i] ∈ {0, 1} (fund project i or not) // Objective: Maximize total NPV // Constraints: Total cost ≤ budget, total staff ≤ available</p><p>// Create solver with binary integer specification let solver = BranchAndBoundSolver
+                <vectorn<double>
+                  &gt;( maxNodes: 1000, timeLimit: 30.0 )
+                </vectorn<double></p><p>let integerSpec = IntegerProgramSpecification.allBinary(dimension: projects.count)</p><p>// Objective: Maximize NPV (minimize negative NPV) let objective: @Sendable (VectorN
+                <double>
+                  ) -&gt; Double = { decisions in -zip(projects, decisions.toArray()).map { project, decision in project.npv * decision }.reduce(0, +) }
+                </double></p><p>// Constraint 1: Budget (inequality: totalCost ≤ budget) let budgetConstraint = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.inequality { decisions in let totalCost = zip(projects, decisions.toArray()).map { project, decision in project.cost * decision }.reduce(0, +) return totalCost - budget // ≤ 0 }
+                </vectorn<double></p><p>// Constraint 2: Staff availability (inequality: totalStaff ≤ availableStaff) let staffConstraint = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.inequality { decisions in let totalStaff = zip(projects, decisions.toArray()).map { project, decision in project.requiredStaff * Int(decision.rounded()) }.reduce(0, +) return Double(totalStaff) - Double(availableStaff) // ≤ 0 }
+                </vectorn<double></p><p>// Binary bounds: 0 ≤ x[i] ≤ 1 for each decision variable let binaryConstraints = (0..
+                <projects.count).flatmap { i in [ multivariateconstraint<vectorn<double>
+                  &gt;.inequality { x in -x[i] }, // x[i] ≥ 0 MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.inequality { x in x[i] - 1.0 } // x[i] ≤ 1 ] }
+                  </vectorn<double>
+                </projects.count).flatmap></p><p>// Solve using branch-and-bound let result = try solver.solve( objective: objective, from: VectorN(repeating: 0.5, count: projects.count), subjectTo: [budgetConstraint, staffConstraint] + binaryConstraints, integerSpec: integerSpec, minimize: true )</p><p>// Interpret results print(“Optimal Project Portfolio:”) print(“Status: (result.status)”) var totalCost = 0.0 var totalNPV = 0.0 var totalStaff = 0</p><p>for (project, decision) in zip(projects, result.solution.toArray()) { if decision &gt; 0.5 { // Binary: 1 means funded print(” ✓ (project.name)”) print(” Cost: (project.cost.currency(0)), NPV: (project.npv.currency(0)), Staff: (project.requiredStaff)”) totalCost += project.cost totalNPV += project.npv totalStaff += project.requiredStaff } }</p></code><p><code class="language-swift">print(”\nPortfolio Summary:”) print(” Total Cost: (totalCost.currency(0)) / (budget.currency(0))”) print(” Total NPV: (totalNPV.currency(0))”) print(” Total Staff: (totalStaff) / (availableStaff)”) print(” Budget Utilization: ((totalCost / budget).percent())”) print(” Nodes Explored: (result.nodesExplored)”) </code></p></pre>
+          <h3>Pattern 2: Production Scheduling with Lot Sizes</h3>
+          <strong>Business Problem</strong>: Minimize production costs. Each product has a fixed setup cost and must be produced in minimum lot sizes.
+          <pre><code class="language-swift">// Products with setup costs and lot size requirements struct ProductionRun { let product: String let setupCost: Double let variableCost: Double let minimumLotSize: Int let demand: Int }<p></p><p>let productionRuns = [ ProductionRun(product: “Widget A”, setupCost: 5_000, variableCost: 10, minimumLotSize: 100, demand: 450), ProductionRun(product: “Widget B”, setupCost: 3_000, variableCost: 8, minimumLotSize: 50, demand: 280), ProductionRun(product: “Widget C”, setupCost: 4_000, variableCost: 12, minimumLotSize: 75, demand: 350) ]</p><p>let maxProductionCapacity = 1000</p><p>// Decision variables: number of lots to produce (integer) // Objective: Minimize total cost (setup + variable) // Constraints: Meet demand, don’t exceed capacity, minimum lot sizes</p><p>// Create solver for general integer variables (not just binary) let productionSolver = BranchAndBoundSolver
+                <vectorn<double>
+                  &gt;( maxNodes: 5000, timeLimit: 60.0 )
+                </vectorn<double></p><p>// Specify which variables are integers (all of them: lots for each product) let productionSpec = IntegerProgramSpecification(integerIndices: Set(0..
+                <productionruns.count))< p></productionruns.count))<></p><p>let costObjective: (VectorN
+                <double>
+                  ) -&gt; Double = { lots in zip(productionRuns, lots.toArray()).map { run, numLots in if numLots &gt; 0 { return run.setupCost + (run.variableCost * numLots * Double(run.minimumLotSize)) } else { return 0.0 } }.reduce(0, +) }
+                </double></p><p>// Constraint 1: Meet demand for each product (inequality: production ≥ demand) let demandConstraints = productionRuns.enumerated().map { i, run in MultivariateConstraint
+                <vectorn<double>
+                  &gt;.inequality { lots in let production = lots[i] * Double(run.minimumLotSize) return Double(run.demand) - production // ≤ 0 means production ≥ demand } }
+                </vectorn<double></p><p>// Constraint 2: Total production within capacity (inequality: total ≤ capacity) let capacityConstraint = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.inequality { lots in let totalProduction = zip(productionRuns, lots.toArray()).map { run, numLots in numLots * Double(run.minimumLotSize) }.reduce(0, +) return totalProduction - Double(maxProductionCapacity) // ≤ 0 }
+                </vectorn<double></p><p>// Bounds: 0 ≤ lots[i] ≤ 20 for each product let lotBoundsConstraints = (0..
+                <productionruns.count).flatmap { i in [ multivariateconstraint<vectorn<double>
+                  &gt;.inequality { x in -x[i] }, // x[i] ≥ 0 MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.inequality { x in x[i] - 20.0 } // x[i] ≤ 20 ] }
+                  </vectorn<double>
+                </productionruns.count).flatmap></p><p>// Solve let productionResult = try productionSolver.solve( objective: costObjective, from: VectorN(repeating: 5.0, count: productionRuns.count), subjectTo: demandConstraints + [capacityConstraint] + lotBoundsConstraints, integerSpec: productionSpec, minimize: true )</p><p>print(“Optimal Production Schedule:”) print(“Status: (productionResult.status)”) for (run, numLots) in zip(productionRuns, productionResult.solution.toArray()) { let lots = Int(numLots.rounded()) let totalUnits = lots * run.minimumLotSize let cost = lots &gt; 0 ? run.setupCost + (run.variableCost * Double(totalUnits)) : 0.0</p><pre><code>print(”  (run.product): (lots) lots × (run.minimumLotSize) units = (totalUnits) units”) print(”    Demand: (run.demand), Excess: (totalUnits - run.demand)”) print(”    Cost: (cost.currency(0))”) </code></pre>}<p></p></code><p><code class="language-swift">let totalCost = productionResult.objectiveValue print(”\nTotal Production Cost: (totalCost.currency(0))”) print(“Nodes Explored: (productionResult.nodesExplored)”) </code></p></pre>
+          <h3>Pattern 3: Assignment Problem (Workers to Tasks)</h3>
+          <strong>Business Problem</strong>: Assign workers to tasks to minimize total time, where each worker has different efficiencies.
+          <pre><code class="language-swift">// Workers and their time to complete each task (hours) let workers = [“Alice”, “Bob”, “Carol”, “Dave”] let tasks = [“Task 1”, “Task 2”, “Task 3”, “Task 4”]<p></p><p>// Time matrix: timeMatrix[worker][task] = hours let timeMatrix = [ [8, 12, 6, 10], // Alice’s times [10, 9, 7, 12], // Bob’s times [7, 11, 9, 8], // Carol’s times [11, 8, 10, 7] // Dave’s times ]</p><p>// Binary assignment matrix: x[i][j] = 1 if worker i assigned to task j // Objective: Minimize total time // Constraints: Each worker assigned to exactly one task, each task assigned to exactly one worker</p><p>// Flatten assignment matrix to 1D vector for optimizer let numWorkers = workers.count let numTasks = tasks.count let numVars = numWorkers * numTasks</p><p>// Create solver for assignment problem let assignmentSolver = BranchAndBoundSolver
+                <vectorn<double>
+                  &gt;( maxNodes: 10000, timeLimit: 120.0 )
+                </vectorn<double></p><p>let assignmentSpec = IntegerProgramSpecification.allBinary(dimension: numVars)</p><p>let assignmentObjective: (VectorN
+                <double>
+                  ) -&gt; Double = { assignments in var totalTime = 0.0 for i in 0..
+                  <numworkers { for j in 0..<numtasks { let index="i" * numtasks + j totaltime +="assignments[index]" * double(timematrix[i][j]) } } return totaltime }< p></numworkers>
+                </double></p><p>// Constraint 1: Each worker assigned to exactly one task (equality: sum = 1) let workerConstraints = (0..
+                <numworkers).map { worker in multivariateconstraint<vectorn<double>
+                  &gt;.equality { assignments in let sum = (0..
+                  <numtasks).map { task in assignments[worker * numtasks + task] }.reduce(0, +) return sum - 1.0 = 0 means sum="1" } }< p></numtasks).map>
+                </numworkers).map></p><p>// Constraint 2: Each task assigned to exactly one worker (equality: sum = 1) let taskConstraints = (0..
+                <numtasks).map { task in multivariateconstraint<vectorn<double>
+                  &gt;.equality { assignments in let sum = (0..
+                  <numworkers).map { worker in assignments[worker * numtasks + task] }.reduce(0, +) return sum - 1.0 = 0 means sum="1" } }< p></numworkers).map>
+                </numtasks).map></p><p>// Binary bounds: 0 ≤ x[i] ≤ 1 let assignmentBounds = (0..
+                <numvars).flatmap { i in [ multivariateconstraint<vectorn<double>
+                  &gt;.inequality { x in -x[i] }, MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.inequality { x in x[i] - 1.0 } ] }
+                  </vectorn<double>
+                </numvars).flatmap></p><p>// Solve let assignmentResult = try assignmentSolver.solve( objective: assignmentObjective, from: VectorN(repeating: 0.25, count: numVars), subjectTo: workerConstraints + taskConstraints + assignmentBounds, integerSpec: assignmentSpec, minimize: true )</p><p>print(“Optimal Assignment:”) print(“Status: (assignmentResult.status)”) var totalTime = 0 for i in 0..
+                <numworkers { for j in 0..<numtasks { let index="i" * numtasks + j if assignmentresult.solution[index]>
+                   0.5 { let time = timeMatrix[i][j] print(” (workers[i]) → (tasks[j]) ((time) hours)”) totalTime += time } } }
+                </numworkers></p><p>print(”\nTotal Time: (totalTime) hours”) print(“Nodes Explored: (assignmentResult.nodesExplored)”)</p><p>// Compare to greedy heuristic print(”\nGreedy Heuristic (for comparison):”) var greedyTime = 0 var assignedWorkers = Set
+                <int>
+                  () var assignedTasks = Set
+                  <int>
+                    ()
+                  </int>
+                </int></p><p>// Sort all (worker, task, time) pairs by time var allPairs: [(worker: Int, task: Int, time: Int)] = [] for i in 0..
+                <numworkers { for j in 0..<numtasks { allpairs.append((worker: i, task: j, time: timematrix[i][j])) } } allpairs.sort { $0.time< $1.time }< p></numworkers></p><p>// Greedily assign shortest times first for pair in allPairs { if !assignedWorkers.contains(pair.worker) &amp;&amp; !assignedTasks.contains(pair.task) { print(” (workers[pair.worker]) → (tasks[pair.task]) ((pair.time) hours)”) greedyTime += pair.time assignedWorkers.insert(pair.worker) assignedTasks.insert(pair.task) }</p><pre><code>if assignedWorkers.count == numWorkers { break } </code></pre>}<p></p></code><p><code class="language-swift">print(”\nGreedy Total Time: (greedyTime) hours”) print(“Optimal is (greedyTime - totalTime) hours better (((Double(greedyTime - totalTime) / Double(greedyTime) * 100).number(1))% improvement)”) </code></p></pre>
+          <hr />
+          <h2>How It Works</h2>
+          <h3>Branch-and-Bound Algorithm</h3>
+          <ol>
+            <li><strong>Relax</strong>: Solve continuous version (allows fractional values)</li>
+            <li><strong>Branch</strong>: If solution is fractional, split into two subproblems:
+              <ul>
+                <li>Subproblem A: x[i] ≤ floor(fractional_value)</li>
+                <li>Subproblem B: x[i] ≥ ceil(fractional_value)</li>
+              </ul></li>
+            <li><strong>Bound</strong>: Track best integer solution found so far</li>
+            <li><strong>Prune</strong>: Discard subproblems that can’t improve on best solution</li>
+            <li><strong>Repeat</strong>: Continue until all subproblems explored or pruned</li>
+          </ol>
+          <h3>Performance Characteristics</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Problem Size</th>
+                <th scope="col">Variables</th>
+                <th scope="col">Exact Solution Time</th>
+                <th scope="col">Heuristic Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Small (10 vars)</td>
+                <td>10</td>
+                <td>&lt;1 second</td>
+                <td>&lt;0.1 second</td>
+              </tr>
+              <tr>
+                <td>Medium (50 vars)</td>
+                <td>50</td>
+                <td>5-30 seconds</td>
+                <td>0.5 seconds</td>
+              </tr>
+              <tr>
+                <td>Large (100 vars)</td>
+                <td>100</td>
+                <td>1-10 minutes</td>
+                <td>2 seconds</td>
+              </tr>
+              <tr>
+                <td>Very Large (500+)</td>
+                <td>500+</td>
+                <td>Hours or infeasible</td>
+                <td>10-30 seconds</td>
+              </tr>
+            </tbody>
+          </table>
+          <strong>Rule of Thumb</strong>: For problems with &gt;100 integer variables, use heuristics (genetic algorithms, simulated annealing) for approximate solutions.
+          <hr />
+          <h2>Real-World Application</h2>
+          <h3>Logistics: Truck Routing and Loading</h3>
+          <strong>Company</strong>: Regional distributor with 8 warehouses, 40 delivery locations 
+          <strong>Challenge</strong>: Minimize delivery costs while meeting delivery windows
+          <p></p>
+          <p><strong>Integer Variables</strong>:</p>
+          <ul>
+            <li>Number of trucks to deploy from each warehouse (integer)</li>
+            <li>Which customers each truck serves (binary assignment)</li>
+          </ul>
+          <strong>Before BusinessMath</strong>:
+          <ul>
+            <li>Manual routing with spreadsheet</li>
+            <li>Rules of thumb (“send 3 trucks from Warehouse A”)</li>
+            <li>No optimization, high fuel costs</li>
+          </ul>
+          <strong>After BusinessMath</strong>:
+          <pre><code class="language-swift">let routingOptimizer = TruckRoutingOptimizer( warehouses: warehouseLocations, customers: customerOrders, trucks: truckFleet )<p></p></code><p><code class="language-swift">let optimalRouting = try routingOptimizer.minimizeCost( constraints: [ .deliveryWindows, .truckCapacity, .driverHours ] ) </code></p></pre>
+          <strong>Results</strong>:
+          <ul>
+            <li>Fuel costs reduced: 18%</li>
+            <li>Trucks required: 12 (down from 15)</li>
+            <li>On-time deliveries: 97% (up from 89%)</li>
+          </ul>
+          <hr />
+          <h2>Try It Yourself</h2>
+          <details>
+            <summary>Click to expand full playground code</summary>
+            <pre><code class="language-swift">import BusinessMath
+// Define projects struct Project { let name: String let cost: Double let npv: Double let requiredStaff: Int }
+<p></p><p>let projects_knapsack = [ Project(name: “New Product Launch”, cost: 200_000, npv: 350_000, requiredStaff: 5), Project(name: “Factory Upgrade”, cost: 180_000, npv: 280_000, requiredStaff: 3), Project(name: “Marketing Campaign”, cost: 100_000, npv: 150_000, requiredStaff: 2), Project(name: “IT System”, cost: 150_000, npv: 200_000, requiredStaff: 4), Project(name: “R&amp;D Initiative”, cost: 120_000, npv: 180_000, requiredStaff: 6) ]</p><p>let budget_knapsack = 500_000.0 let availableStaff_knapsack = 10</p><p>// Binary decision variables: x[i] ∈ {0, 1} (fund project i or not) // Objective: Maximize total NPV // Constraints: Total cost ≤ budget, total staff ≤ available</p><p>// Create solver with binary integer specification let solver_knapsack = BranchAndBoundSolver
+                  <vectorn<double>
+                    &gt;( maxNodes: 1000, timeLimit: 30.0 )
+                  </vectorn<double></p><p>let integerSpec_knapsack = IntegerProgramSpecification.allBinary(dimension: projects_knapsack.count)</p><p>// Objective: Maximize NPV (minimize negative NPV) let objective_knapsack: @Sendable (VectorN
+                  <double>
+                    ) -&gt; Double = { decisions in -zip(projects_knapsack, decisions.toArray()).map { project, decision in project.npv * decision }.reduce(0, +) }
+                  </double></p><p>// Constraint 1: Budget (inequality: totalCost ≤ budget) let budgetConstraint_knapsack = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.inequality { decisions in let totalCost = zip(projects_knapsack, decisions.toArray()).map { project, decision in project.cost * decision }.reduce(0, +) return totalCost - budget_knapsack // ≤ 0 }
+                  </vectorn<double></p><p>// Constraint 2: Staff availability (inequality: totalStaff ≤ availableStaff) let staffConstraint_knapsack = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.inequality { decisions in let totalStaff = zip(projects_knapsack, decisions.toArray()).map { project, decision in project.requiredStaff * Int(decision.rounded()) }.reduce(0, +) return Double(totalStaff) - Double(availableStaff_knapsack) // ≤ 0 }
+                  </vectorn<double></p><p>// Binary bounds: 0 ≤ x[i] ≤ 1 for each decision variable let binaryConstraints_knapsack = (0..
+                  <projects_knapsack.count).flatmap { i in [ multivariateconstraint<vectorn<double>
+                    &gt;.inequality { x in -x[i] }, // x[i] ≥ 0 MultivariateConstraint
+                    <vectorn<double>
+                      &gt;.inequality { x in x[i] - 1.0 } // x[i] ≤ 1 ] }
+                    </vectorn<double>
+                  </projects_knapsack.count).flatmap></p><p>// Solve using branch-and-bound let result_knapsack = try solver_knapsack.solve( objective: objective_knapsack, from: VectorN(repeating: 0.5, count: projects_knapsack.count), subjectTo: [budgetConstraint_knapsack, staffConstraint_knapsack] + binaryConstraints_knapsack, integerSpec: integerSpec_knapsack, minimize: true )</p><p>// Interpret results print(“Optimal Project Portfolio:”) print(“Status: (result_knapsack.status)”) var totalCost_knapsack = 0.0 var totalNPV_knapsack = 0.0 var totalStaff_knapsack = 0</p><p>for (project, decision) in zip(projects_knapsack, result_knapsack.solution.toArray()) { if decision &gt; 0.5 { // Binary: 1 means funded print(” ✓ (project.name)”) print(” Cost: (project.cost.currency(0)), NPV: (project.npv.currency(0)), Staff: (project.requiredStaff)”) totalCost_knapsack += project.cost totalNPV_knapsack += project.npv totalStaff_knapsack += project.requiredStaff } }</p><p>print(”\nPortfolio Summary:”) print(” Total Cost: (totalCost_knapsack.currency(0)) / (budget_knapsack.currency(0))”) print(” Total NPV: (totalNPV_knapsack.currency(0))”) print(” Total Staff: (totalStaff_knapsack) / (availableStaff_knapsack)”) print(” Budget Utilization: ((totalCost_knapsack / budget_knapsack).percent())”) print(” Nodes Explored: (result_knapsack.nodesExplored)”)</p><p>// MARK: - Production Scheduling with Lot Sizes</p><p>// Products with setup costs and lot size requirements struct ProductionRun { let product: String let setupCost: Double let variableCost: Double let minimumLotSize: Int let demand: Int }</p><p>let productionRuns_prodSched = [ ProductionRun(product: “Widget A”, setupCost: 5_000, variableCost: 10, minimumLotSize: 100, demand: 450), ProductionRun(product: “Widget B”, setupCost: 3_000, variableCost: 8, minimumLotSize: 50, demand: 280), ProductionRun(product: “Widget C”, setupCost: 4_000, variableCost: 12, minimumLotSize: 75, demand: 350) ]</p><p>let maxProductionCapacity_prodSched = 1000</p><p>// Decision variables: number of lots to produce (integer) // Objective: Minimize total cost (setup + variable) // Constraints: Meet demand, don’t exceed capacity, minimum lot sizes</p><p>// Create solver for general integer variables (not just binary) let productionSolver_prodSched = BranchAndBoundSolver
+                  <vectorn<double>
+                    &gt;( maxNodes: 5000, timeLimit: 60.0 )
+                  </vectorn<double></p><p>// Specify which variables are integers (all of them: lots for each product) let productionSpec_prodSched = IntegerProgramSpecification(integerVariables: Set(0..
+                  <productionruns_prodsched.count))< p></productionruns_prodsched.count))<></p><p>let costObjective_prodSched: @Sendable (VectorN
+                  <double>
+                    ) -&gt; Double = { lots in zip(productionRuns_prodSched, lots.toArray()).map { run, numLots in if numLots &gt; 0 { return run.setupCost + (run.variableCost * numLots * Double(run.minimumLotSize)) } else { return 0.0 } }.reduce(0, +) }
+                  </double></p><p>// Constraint 1: Meet demand for each product (inequality: production ≥ demand) let demandConstraints_prodSched = productionRuns_prodSched.enumerated().map { i, run in MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.inequality { lots in let production = lots[i] * Double(run.minimumLotSize) return Double(run.demand) - production // ≤ 0 means production ≥ demand } }
+                  </vectorn<double></p><p>// Constraint 2: Total production within capacity (inequality: total ≤ capacity) let capacityConstraint_prodSched = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.inequality { lots in let totalProduction = zip(productionRuns_prodSched, lots.toArray()).map { run, numLots in numLots * Double(run.minimumLotSize) }.reduce(0, +) return totalProduction - Double(maxProductionCapacity_prodSched) // ≤ 0 }
+                  </vectorn<double></p><p>// Bounds: 0 ≤ lots[i] ≤ 20 for each product let lotBoundsConstraints = (0..
+                  <productionruns_prodsched.count).flatmap { i in [ multivariateconstraint<vectorn<double>
+                    &gt;.inequality { x in -x[i] }, // x[i] ≥ 0 MultivariateConstraint
+                    <vectorn<double>
+                      &gt;.inequality { x in x[i] - 20.0 } // x[i] ≤ 20 ] }
+                    </vectorn<double>
+                  </productionruns_prodsched.count).flatmap></p><p>// Solve let productionResult_prodSched = try productionSolver_prodSched.solve( objective: costObjective_prodSched, from: VectorN(repeating: 5.0, count: productionRuns_prodSched.count), subjectTo: demandConstraints_prodSched + [capacityConstraint_prodSched] + lotBoundsConstraints, integerSpec: productionSpec_prodSched, minimize: true )</p><p>print(“Optimal Production Schedule:”) print(“Status: (productionResult_prodSched.status)”) for (run, numLots) in zip(productionRuns_prodSched, productionResult_prodSched.solution.toArray()) { let lots = Int(numLots.rounded()) let totalUnits = lots * run.minimumLotSize let cost = lots &gt; 0 ? run.setupCost + (run.variableCost * Double(totalUnits)) : 0.0</p><pre><code>print(”  (run.product): (lots) lots × (run.minimumLotSize) units = (totalUnits) units”) print(”    Demand: (run.demand), Excess: (totalUnits - run.demand)”) print(”    Cost: (cost.currency(0))”) </code></pre>}<p></p><p>let totalCost_prodSched = productionResult_prodSched.objectiveValue print(”\nTotal Production Cost: (totalCost_prodSched.currency(0))”) print(“Nodes Explored: (productionResult_prodSched.nodesExplored)”)</p><p>// MARK: - Assignment Problem - Workers to Tasks</p><p>// Workers and their time to complete each task (hours) let workers_assignment = [“Alice”, “Bob”, “Carol”, “Dave”] let tasks_assignment = [“Task 1”, “Task 2”, “Task 3”, “Task 4”]</p><p>// Time matrix: timeMatrix[worker][task] = hours let timeMatrix_assignment = [ [8, 12, 6, 10], // Alice’s times [10, 9, 7, 12], // Bob’s times [7, 11, 9, 8], // Carol’s times [11, 8, 10, 7] // Dave’s times ]</p><p>// Binary assignment matrix: x[i][j] = 1 if worker i assigned to task j // Objective: Minimize total time // Constraints: Each worker assigned to exactly one task, each task assigned to exactly one worker</p><p>// Flatten assignment matrix to 1D vector for optimizer let numWorkers_assignment = workers_assignment.count let numTasks_assignment = tasks_assignment.count let numVars_assignment = numWorkers_assignment * numTasks_assignment</p><p>// Create solver for assignment problem let assignmentSolver_assignment = BranchAndBoundSolver
+                  <vectorn<double>
+                    &gt;( maxNodes: 10000, timeLimit: 120.0 )
+                  </vectorn<double></p><p>let assignmentSpec_assignment = IntegerProgramSpecification.allBinary(dimension: numVars_assignment)</p><p>let assignmentObjective_assignment: @Sendable (VectorN
+                  <double>
+                    ) -&gt; Double = { assignments in var totalTime = 0.0 for i in 0..
+                    <numworkers_assignment { for j in 0..<numtasks_assignment { let index="i" * numtasks_assignment + j totaltime +="assignments[index]" * double(timematrix_assignment[i][j]) } } return totaltime }< p></numworkers_assignment>
+                  </double></p><p>// Constraint 1: Each worker assigned to exactly one task (equality: sum = 1) let workerConstraints_assignment = (0..
+                  <numworkers_assignment).map { worker in multivariateconstraint<vectorn<double>
+                    &gt;.equality { assignments in let sum = (0..
+                    <numtasks_assignment).map { task in assignments[worker * numtasks_assignment + task] }.reduce(0, +) return sum - 1.0 = 0 means sum="1" } }< p></numtasks_assignment).map>
+                  </numworkers_assignment).map></p><p>// Constraint 2: Each task assigned to exactly one worker (equality: sum = 1) let taskConstraints_assignment = (0..
+                  <numtasks_assignment).map { task in multivariateconstraint<vectorn<double>
+                    &gt;.equality { assignments in let sum = (0..
+                    <numworkers_assignment).map { worker in assignments[worker * numtasks_assignment + task] }.reduce(0, +) return sum - 1.0 = 0 means sum="1" } }< p></numworkers_assignment).map>
+                  </numtasks_assignment).map></p><p>// Binary bounds: 0 ≤ x[i] ≤ 1 let assignmentBounds_assignment = (0..
+                  <numvars_assignment).flatmap { i in [ multivariateconstraint<vectorn<double>
+                    &gt;.inequality { x in -x[i] }, MultivariateConstraint
+                    <vectorn<double>
+                      &gt;.inequality { x in x[i] - 1.0 } ] }
+                    </vectorn<double>
+                  </numvars_assignment).flatmap></p><p>// Solve let assignmentResult_assignment = try assignmentSolver_assignment.solve( objective: assignmentObjective_assignment, from: VectorN(repeating: 0.25, count: numVars_assignment), subjectTo: workerConstraints_assignment + taskConstraints_assignment + assignmentBounds_assignment, integerSpec: assignmentSpec_assignment, minimize: true )</p><p>print(“Optimal Assignment:”) print(“Status: (assignmentResult_assignment.status)”) var totalTime_assignment = 0 for i in 0..
+                  <numworkers_assignment { for j in 0..<numtasks_assignment { let index="i" * numtasks_assignment + j if assignmentresult_assignment.solution[index]>
+                     0.5 { let time = timeMatrix_assignment[i][j] print(” (workers_assignment[i]) → (tasks_assignment[j]) ((time) hours)”) totalTime_assignment += time } } }
+                  </numworkers_assignment></p><p>print(”\nTotal Time: (totalTime_assignment) hours”) print(“Nodes Explored: (assignmentResult_assignment.nodesExplored)”)</p><p>// Compare to greedy heuristic print(”\nGreedy Heuristic (for comparison):”) var greedyTime_assignment = 0 var assignedWorkers_assignment = Set
+                  <int>
+                    () var assignedTasks_assignment = Set
+                    <int>
+                      ()
+                    </int>
+                  </int></p><p>// Sort all (worker, task, time) pairs by time var allPairs_assignment: [(worker: Int, task: Int, time: Int)] = [] for i in 0..
+                  <numworkers_assignment { for j in 0..<numtasks_assignment { allpairs_assignment.append((worker: i, task: j, time: timematrix_assignment[i][j])) } } allpairs_assignment.sort { $0.time< $1.time }< p></numworkers_assignment></p><p>// Greedily assign shortest times first for pair in allPairs_assignment { if !assignedWorkers_assignment.contains(pair.worker) &amp;&amp; !assignedTasks_assignment.contains(pair.task) { print(” (workers_assignment[pair.worker]) → (tasks_assignment[pair.task]) ((pair.time) hours)”) greedyTime_assignment += pair.time assignedWorkers_assignment.insert(pair.worker) assignedTasks_assignment.insert(pair.task) }</p><pre><code>if assignedWorkers_assignment.count == numWorkers_assignment { break } </code></pre>}<p></p><p>print(”\nGreedy Total Time: (greedyTime_assignment) hours”) print(“Optimal is (greedyTime_assignment - totalTime_assignment) hours better (((Double(greedyTime_assignment - totalTime_assignment) / Double(greedyTime_assignment)).percent(1)) improvement)”)</p></code><p><code class="language-swift"></code></p></pre>
+          </details>
+          <p></p>
+          <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.8-IntegerProgramming.md">BusinessMath Docs – Integer Programming Guide</a></p>
+          <h3>Modifications to Try</h3>
+          <ol>
+            <li><strong>Add Precedence Constraints</strong>: Some projects must be completed before others</li>
+            <li><strong>Multi-Period Scheduling</strong>: Extend production to quarterly planning</li>
+            <li><strong>Partial Assignments</strong>: Allow workers to split time across multiple tasks</li>
+            <li><strong>Penalty Costs</strong>: Add penalty for unmet demand vs. fixed constraint</li>
+          </ol>
+          <hr />
+          <h2>Next Steps</h2>
+          <strong>Tomorrow</strong>: We’ll explore 
+          <strong>Adaptive Selection</strong> for automatically choosing the best optimization algorithm for your problem.
+          <p></p>
+          <p><strong>Thursday</strong>: Week 9 concludes with <strong>Parallel Optimization</strong> for leveraging multiple CPU cores.
+            <hr /><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Case Studies</strong>: [4/6 Complete]</p>
+          <p><strong>Topics Covered</strong>: Integer programming • Branch-and-bound • Binary decisions • Assignment problems • Production scheduling</p>
+          <p><strong>Playgrounds</strong>: [Week 1-9 available] • [Next: Adaptive selection]</p>
+        </div>
+        <hr />
+        <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, integer-programming, branch-and-bound, discrete-optimization, scheduling</p>
+      </div>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

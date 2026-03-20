@@ -1,772 +1,562 @@
-<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 38 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Particle Swarm Optimization: Collective Intelligence for Global Search</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-11/02-wed-particle-swarm" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Particle Swarm Optimization: Collective Intelligence for Global Search"><meta property="twitter:title" content="Particle Swarm Optimization: Collective Intelligence for Global Search"><meta property="og:description" content="Particle Swarm Optimization: Collective Intelligence for Global Search"><meta name="twitter:description" content="Particle Swarm Optimization: Collective Intelligence for Global Search"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-11/02-wed-particle-swarm"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
-**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
-**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
-**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Particle Swarm Optimization: Collective Intelligence for Global Search</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">17 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 38 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding particle swarm optimization (PSO) and swarm intelligence</li><li>Velocity updates with personal best and global best</li><li>Inertia weight and acceleration coefficients tuning</li><li>When PSO outperforms other global optimization methods</li><li>Parallel evaluation for population-based search</li><li>Hybrid approaches: PSO for global search, local refinement with BFGS</li></ul><hr /><h2>The Problem</h2><p>Complex optimization landscapes have multiple peaks and valleys:</p><ul><li><strong>Portfolio optimization</strong>: Many local optima due to constraints</li><li><strong>Machine learning</strong>: Hyperparameter spaces with plateaus</li><li><strong>Engineering design</strong>: Multimodal objectives with discrete choices</li><li><strong>Scheduling</strong>: Combinatorial explosion of valid solutions</li></ul><p><strong>Need global search that explores broadly while converging to optimum.</strong></p><hr /><h2>The Solution</h2><p>Particle Swarm Optimization simulates social behavior: particles (candidate solutions) fly through search space, influenced by their own best position and the swarm’s best position. This balance of individual exploration and collective exploitation finds global optima effectively.</p><h3>Pattern 1: Multi-Modal Portfolio Optimization</h3><p><strong>Business Problem</strong>: Optimize portfolio with sector constraints (creates multiple local optima).</p><pre><code class="language-swift">import BusinessMath
-
-// Simpler problem: Optimize 10 assets with 3 sector constraints
-let numAssets = 10
-let sectors = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2]  // 3 Tech, 4 Finance, 3 Healthcare
-let sectorLimits = [0.40, 0.40, 0.30]  // Max 40% Tech, 40% Finance, 30% Healthcare
-
-// Generate covariance matrix with sector correlation structure
-let covariance = generateCovarianceMatrix(size: numAssets, avgCorrelation: 0.25)
-
-// Portfolio objective with constraints
-func portfolioObjective(_ rawWeights: VectorN<Double>) -> Double {
-	// Normalize weights to sum to 1.0 (simplex projection)
-	let sum = rawWeights.toArray().reduce(0, +)
-	guard sum > 0 else { return 1e10 }  // Avoid division by zero
-
-	let weights = VectorN(rawWeights.toArray().map { $0 / sum })
-
-	// Calculate portfolio variance
-	var variance = 0.0
-	for i in 0..<numAssets {
-		for j in 0..<numAssets {
-			variance += weights[i] * weights[j] * covariance[i][j]
-		}
-	}
-
-	// Penalty for sector limit violations
-	var sectorPenalty = 0.0
-	for sectorID in 0..<3 {
-		let sectorWeight = weights.toArray().enumerated()
-			.filter { sectors[$0.offset] == sectorID }
-			.map { $1 }
-			.reduce(0, +)
-
-		if sectorWeight > sectorLimits[sectorID] {
-			sectorPenalty += pow(sectorWeight - sectorLimits[sectorID], 2) * 100.0
-		}
-	}
-
-	return variance + sectorPenalty
-}
-
-// Particle Swarm Optimizer
-// Search space: [0, 1] for each asset (will be normalized to sum to 1)
-let pso = ParticleSwarmOptimization<VectorN<Double>>(
-	config: ParticleSwarmConfig(
-		swarmSize: 50,
-		maxIterations: 30,
-		inertiaWeight: 0.7,
-		cognitiveCoefficient: 1.5,
-		socialCoefficient: 1.5
-	),
-	searchSpace: Array(repeating: (0.0, 1.0), count: numAssets)  // 10 dimensions
-)
-
-print("Sector-Constrained Portfolio Optimization")
-print("═══════════════════════════════════════════════════════════")
-
-// Start from equal weights
-let initialGuess = VectorN(Array(repeating: 1.0 / Double(numAssets), count: numAssets))
-
-let result = try pso.minimize(
-	portfolioObjective,
-	from: initialGuess
-)
-
-// Normalize final solution
-let finalSum = result.solution.toArray().reduce(0, +)
-let finalWeights = VectorN(result.solution.toArray().map { $0 / finalSum })
-
-print("Optimization Results:")
-print("  Best Variance: \(result.value.number(6))")
-print("  Iterations: \(result.iterations)")
-print("  Swarm Size: 50")
-print("  Total Evaluations: \(result.iterations * 50)")
-
-// Verify constraints
-let totalWeight = finalWeights.toArray().reduce(0, +)
-print("\nPortfolio Weights (total: \(totalWeight.percent(1))):")
-for (i, weight) in finalWeights.toArray().enumerated() {
-	print("  Asset \(i) (Sector \(sectors[i])): \(weight.percent(1))")
-}
-
-print("\nSector Allocations:")
-for sectorID in 0..<3 {
-	let sectorWeight = finalWeights.toArray().enumerated()
-		.filter { sectors[$0.offset] == sectorID }
-		.map { $1 }
-		.reduce(0, +)
-
-	let limit = sectorLimits[sectorID]
-	let status = sectorWeight <= limit + 0.01 ? "✓" : "✗"  // Small tolerance
-
-	print("  Sector \(sectorID): \(sectorWeight.percent(1)) (limit: \(limit.percent(0))) \(status)")
-}
-</code></pre><h3>Pattern 2: Hyperparameter Tuning</h3><p><strong>Pattern</strong>: Optimize machine learning model parameters (discrete + continuous).</p><pre><code class="language-swift">// Rastrigin function (highly multimodal)
-func rastrigin(_ x: VectorN<Double>) -> Double {
-    let A = 10.0
-    let n = Double(5)  // 5 dimensions
-    return A * n + (0..<5).reduce(0.0) { sum, i in
-        sum + (x[i] * x[i] - A * cos(2 * .pi * x[i]))
-    }
-}
-
-let searchSpace2 = (0..<5).map { _ in (-5.12, 5.12) }
-
-let configs2: [(name: String, config: ParticleSwarmConfig)] = [
-    ("Small Swarm", ParticleSwarmConfig(
-        swarmSize: 20,
-        maxIterations: 100,
-        seed: 101
-    )),
-    ("Default", .default),
-    ("Large Swarm", ParticleSwarmConfig(
-        swarmSize: 100,
-        maxIterations: 200,
-        seed: 101
-    ))
-]
-
-print("\nComparing configurations on 5D Rastrigin function")
-print("Known minimum: [0,0,0,0,0] with value 0.0")
-print("\nConfig          Swarm  Iters  Final Value  Converged")
-print("────────────────────────────────────────────────────────")
-
-for (name, config) in configs2 {
-    let pso = ParticleSwarmOptimization<VectorN<Double>>(
-        config: config,
-        searchSpace: searchSpace2
-    )
-
-    let result = pso.optimizeDetailed(
-        objective: rastrigin
-    )
-
-    print("\(name.padding(toLength: 14, withPad: " ", startingAt: 0))  " +
-          "\(Double(config.swarmSize).number(0).paddingLeft(toLength: 5))   " +
-		  "\(Double(config.maxIterations).number(0).paddingLeft(toLength: 4))   " +
-          "\(result.fitness.number(6).paddingLeft(toLength: 10))   " +
-          "\(result.converged ? "✓" : "✗")")
-}
-
-print("\n💡 Observation: Larger swarms find better solutions but take longer")
-</code></pre><h3>Pattern 3: Hybrid PSO + Local Refinement</h3><p><strong>Pattern</strong>: Use PSO for global search, then refine with BFGS.</p><pre><code class="language-swift">print("\n\nPattern 3: Hybrid PSO + L-BFGS Refinement")
-print("═══════════════════════════════════════════════════════════")
-
-// Rosenbrock function (smooth but narrow valley)
-func rosenbrock2D(_ x: VectorN<Double>) -> Double {
-    let a = x[0], b = x[1]
-    return (1.0 - a) * (1.0 - a) + 100.0 * (b - a * a) * (b - a * a)
-}
-
-let searchSpace3 = [(-5.0, 5.0), (-5.0, 5.0)]
-
-print("\nPhase 1: Global search with PSO")
-let pso3 = ParticleSwarmOptimization<VectorN<Double>>(
-    config: ParticleSwarmConfig(
-        swarmSize: 50,
-        maxIterations: 100,
-        seed: 42
-    ),
-    searchSpace: searchSpace3
-)
-
-let psoResult = pso3.optimizeDetailed(objective: rosenbrock2D)
-
-print("  PSO Solution: [\(psoResult.solution[0].number(4)), \(psoResult.solution[1].number(4))]")
-print("  PSO Value: \(psoResult.fitness.number(6))")
-print("  Iterations: \(psoResult.iterations)")
-
-print("\nPhase 2: Local refinement with L-BFGS")
-let lbfgs = MultivariateLBFGS<VectorN<Double>>()
-let refinedResult = try lbfgs.minimizeLBFGS(
-    function: rosenbrock2D,
-    initialGuess: psoResult.solution
-)
-
-print("  Refined Solution: [\(refinedResult.solution[0].number(6)), \(refinedResult.solution[1].number(6))]")
-print("  Refined Value: \(refinedResult.value.number(10))")
-print("  L-BFGS Iterations: \(refinedResult.iterations)")
-
-let improvement = ((psoResult.fitness - refinedResult.value) / psoResult.fitness)
-print("\n  Improvement from refinement: \(improvement.percent(2))")
-</code></pre><hr /><h2>How It Works</h2><h3>Particle Swarm Algorithm</h3><p>Each particle has:</p><ul><li><strong>Position</strong> x_i: Current solution</li><li><strong>Velocity</strong> v_i: Direction and speed of movement</li><li><strong>Personal Best</strong> p_i: Best position this particle has found</li><li><strong>Global Best</strong> g: Best position any particle has found</li></ul><p><strong>Update Equations</strong>:</p><pre><code>v_i(t+1) = w·v_i(t) + c₁·r₁·(p_i - x_i(t)) + c₂·r₂·(g - x_i(t))
-x_i(t+1) = x_i(t) + v_i(t+1)
-</code></pre><p>Where:</p><ul><li>w = inertia weight (0.4-0.9)</li><li>c₁ = cognitive coefficient (1.5-2.0, “trust yourself”)</li><li>c₂ = social coefficient (1.5-2.0, “trust the swarm”)</li><li>r₁, r₂ = random values [0, 1]</li></ul><h3>Parameter Tuning Guidance</h3><table><thead><th>Parameter</th><th>Typical Value</th><th>Effect</th></thead><tbody><tr><td><strong>Swarm Size</strong></td><td>20-100</td><td>Larger = better exploration, slower</td></tr><tr><td><strong>Inertia (w)</strong></td><td>0.4-0.9</td><td>High = exploration, Low = exploitation</td></tr><tr><td><strong>Cognitive (c₁)</strong></td><td>1.5-2.0</td><td>Attraction to personal best</td></tr><tr><td><strong>Social (c₂)</strong></td><td>1.5-2.0</td><td>Attraction to global best</td></tr><tr><td><strong>Max Velocity</strong></td><td>10-20% of range</td><td>Prevents overshooting</td></tr></tbody></table><p><strong>Common Strategies</strong>:</p><ul><li><strong>Balanced</strong>: w=0.7, c₁=c₂=1.5 (equal exploration/exploitation)</li><li><strong>Exploration</strong>: w=0.9, c₁=2.0, c₂=1.0 (trust self more)</li><li><strong>Exploitation</strong>: w=0.4, c₁=1.0, c₂=2.0 (follow swarm)</li><li><strong>Adaptive</strong>: Decrease w from 0.9 to 0.4 over time</li></ul><h3>Performance Comparison</h3><p><strong>Problem: 50-variable portfolio optimization, 200 iterations</strong></p><table><thead><th>Method</th><th>Best Value</th><th>Evaluations</th><th>Time</th><th>Parallelizable</th></thead><tbody><tr><td>Gradient Descent</td><td>0.0245 (local)</td><td>2,500</td><td>8s</td><td>No</td></tr><tr><td>BFGS</td><td>0.0238 (local)</td><td>1,200</td><td>15s</td><td>No</td></tr><tr><td>Simulated Annealing</td><td>0.0232</td><td>40,000</td><td>120s</td><td>No</td></tr><tr><td><strong>Particle Swarm</strong></td><td><strong>0.0229</strong></td><td>10,000</td><td>35s</td><td><strong>Yes</strong></td></tr><tr><td>PSO (parallel, 8 cores)</td><td>0.0229</td><td>10,000</td><td>8s</td><td><strong>Yes</strong></td></tr></tbody></table><p><strong>PSO wins on</strong>: Global optimum quality, parallelizability</p><hr /><h2>Real-World Application</h2><h3>Energy Company: Wind Farm Layout Optimization</h3><p><strong>Company</strong>: Renewable energy developer optimizing turbine placement<strong>Challenge</strong>: Maximize power generation while minimizing wake interference</p><p><strong>Problem Characteristics</strong>:</p><ul><li><strong>100+ variables</strong>: X,Y coordinates for 50 turbines</li><li><strong>Non-convex</strong>: Wake effects create complex landscape</li><li><strong>Multiple constraints</strong>: Minimum spacing, terrain limits, environmental</li><li><strong>Expensive evaluation</strong>: Computational fluid dynamics (5 min per layout)</li></ul><p><strong>Why Particle Swarm</strong>:</p><ul><li>Handles high-dimensional non-convex problems well</li><li>Parallelizable (evaluate swarm in parallel)</li><li>No gradients needed (CFD simulation is black-box)</li><li>Good exploration of layout space</li></ul><p><strong>Implementation</strong>:</p><pre><code class="language-swift">let numTurbines = 10
-let farmWidth = 2000.0  // meters
-let farmHeight = 1500.0  // meters
-let minSpacing = 200.0  // meters (wake effect)
-
-func windFarmPower(_ positions: VectorN<Double>) -> Double {
-    // positions: [x1, y1, x2, y2, ..., x10, y10]
-    // Simplified model: maximize total power considering wake effects
-
-    var totalPower = 0.0
-
-    for i in 0..<numTurbines {
-        let x_i = positions[2 * i]
-        let y_i = positions[2 * i + 1]
-
-        // Base power for this turbine
-        var turbinePower = 1.0
-
-        // Reduce power based on wake effects from upwind turbines
-        for j in 0..<numTurbines where j != i {
-            let x_j = positions[2 * j]
-            let y_j = positions[2 * j + 1]
-
-            let distance = sqrt(pow(x_i - x_j, 2) + pow(y_i - y_j, 2))
-
-            // If downwind of another turbine, reduce power
-            if x_i > x_j {  // Assuming wind from west (left)
-                let lateralDistance = abs(y_i - y_j)
-                if lateralDistance < 300 {  // In wake zone
-                    let wakeEffect = max(0, 1.0 - distance / 1000.0)
-                    turbinePower *= (1.0 - 0.3 * wakeEffect)
-                }
-            }
-
-            // Penalty for being too close
-            if distance < minSpacing {
-                turbinePower *= 0.5
-            }
-        }
-
-        totalPower += turbinePower
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 38 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Particle Swarm Optimization: Collective Intelligence for Global Search | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-11/02-wed-particle-swarm" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
     }
 
-    return -totalPower  // Negative because minimizing
-}
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
 
-// Search space: x ∈ [0, farmWidth], y ∈ [0, farmHeight]
-let searchSpace4 = (0..<numTurbines).flatMap { _ in
-    [(0.0, farmWidth), (0.0, farmHeight)]
-}
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
 
-let pso4 = ParticleSwarmOptimization<VectorN<Double>>(
-    config: ParticleSwarmConfig(
-        swarmSize: 80,
-        maxIterations: 150,
-        seed: 42
-    ),
-    searchSpace: searchSpace4
-)
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
 
-print("\nOptimizing layout for \(numTurbines) turbines")
-print("Farm dimensions: \(farmWidth.number(0))m × \(farmHeight.number(0))m")
-print("Minimum spacing: \(minSpacing.number(0))m")
+        if (!syntaxTheme) return;
 
-let result4 = pso4.optimizeDetailed(
-    objective: windFarmPower
-)
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
 
-print("\nResults:")
-print("  Total Power: \((-result4.fitness).number(4)) MW (normalized)")
-print("  Iterations: \(result4.iterations)")
-print("  Converged: \(result4.converged)")
-
-print("\nTurbine Positions:")
-for i in 0..<numTurbines {
-    let x = result4.solution[2 * i]
-    let y = result4.solution[2 * i + 1]
-    print("  Turbine \(i + 1): (\(x.number(0))m, \(y.number(0))m)")
-}
-
-// Check spacing violations
-var violations = 0
-for i in 0..<numTurbines {
-    for j in (i + 1)..<numTurbines {
-        let x_i = result4.solution[2 * i]
-        let y_i = result4.solution[2 * i + 1]
-        let x_j = result4.solution[2 * j]
-        let y_j = result4.solution[2 * j + 1]
-        let distance = sqrt(pow(x_i - x_j, 2) + pow(y_i - y_j, 2))
-        if distance < minSpacing {
-            violations += 1
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
         }
     }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Particle Swarm Optimization: Collective Intelligence for Global Search" />
+    <meta name="twitter:title" content="Particle Swarm Optimization: Collective Intelligence for Global Search" />
+    <meta property="og:description" content="Part 38 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 38 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-11/02-wed-particle-swarm" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
+    }
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
 }
-</code></pre><p><strong>Results</strong>:</p><ul><li><strong>Power increase</strong>: +8.2% vs. grid layout</li><li><strong>Annual value</strong>: $2.8M additional revenue</li><li><strong>Optimization time</strong>: 42 hours (100 particles × 100 iterations × 5 min/eval ÷ 8 cores)</li><li><strong>ROI</strong>: Optimization cost $50K (engineering time), payback < 1 month</li></ul><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import Foundation
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-11/02-wed-particle-swarm",
+      "name" : "Particle Swarm Optimization: Collective Intelligence for Global Search",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="col-md-9223372036854775807">
+      <div class="ig-main-content">
+        <h1 class="mainTitle">Particle Swarm Optimization: Collective Intelligence for Global Search</h1>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">17 min read</p>
+        <div class="blurb" style="width: 70.0%; max-width: 800px">
+          <p><strong>Part 38 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Understanding particle swarm optimization (PSO) and swarm intelligence</li>
+            <li>Velocity updates with personal best and global best</li>
+            <li>Inertia weight and acceleration coefficients tuning</li>
+            <li>When PSO outperforms other global optimization methods</li>
+            <li>Parallel evaluation for population-based search</li>
+            <li>Hybrid approaches: PSO for global search, local refinement with BFGS</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>Complex optimization landscapes have multiple peaks and valleys:
+          <ul>
+            <li><strong>Portfolio optimization</strong>: Many local optima due to constraints</li>
+            <li><strong>Machine learning</strong>: Hyperparameter spaces with plateaus</li>
+            <li><strong>Engineering design</strong>: Multimodal objectives with discrete choices</li>
+            <li><strong>Scheduling</strong>: Combinatorial explosion of valid solutions</li>
+          </ul>
+          <strong>Need global search that explores broadly while converging to optimum.</strong>
+          <hr />
+          <h2>The Solution</h2>Particle Swarm Optimization simulates social behavior: particles (candidate solutions) fly through search space, influenced by their own best position and the swarm’s best position. This balance of individual exploration and collective exploitation finds global optima effectively.
+          <h3>Pattern 1: Multi-Modal Portfolio Optimization</h3>
+          <strong>Business Problem</strong>: Optimize portfolio with sector constraints (creates multiple local optima).
+          <pre><code class="language-swift">import BusinessMath // Simpler problem: Optimize 10 assets with 3 sector constraints let numAssets = 10 let sectors = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2]  // 3 Tech, 4 Finance, 3 Healthcare let sectorLimits = [0.40, 0.40, 0.30]  // Max 40% Tech, 40% Finance, 30% Healthcare<p></p><p>// Generate covariance matrix with sector correlation structure let covariance = generateCovarianceMatrix(size: numAssets, avgCorrelation: 0.25)</p></code>
+            <div>
+              <code class="language-swift"><p>// Portfolio objective with constraints func portfolioObjective(_ rawWeights: VectorN
+                  <double>
+                    ) -&gt; Double { // Normalize weights to sum to 1.0 (simplex projection) let sum = rawWeights.toArray().reduce(0, +) guard sum &gt; 0 else { return 1e10 } // Avoid division by zero
+                  </double></p><pre><code>let weights = VectorN(rawWeights.toArray().map { $0 / sum })<p></p><p>// Calculate portfolio variance var variance = 0.0 for i in 0..
+                      <numassets { for j in 0..<numassets { variance +="weights[i]" * weights[j] * covariance[i][j] } }< p></numassets></p><p>// Penalty for sector limit violations var sectorPenalty = 0.0 for sectorID in 0..&lt;3 { let sectorWeight = weights.toArray().enumerated() .filter { sectors[$0.offset] == sectorID } .map { $1 } .reduce(0, +)</p><pre><code>if sectorWeight &gt; sectorLimits[sectorID] { sectorPenalty += pow(sectorWeight - sectorLimits[sectorID], 2) * 100.0 } </code></pre>}<p></p></code><p><code>return variance + sectorPenalty </code></p></pre>}<p></p></code>
+            </div><p>// Particle Swarm Optimizer // Search space: [0, 1] for each asset (will be normalized to sum to 1) let pso = ParticleSwarmOptimization
+              <vectorn<double>
+                &gt;( config: ParticleSwarmConfig( swarmSize: 50, maxIterations: 30, inertiaWeight: 0.7, cognitiveCoefficient: 1.5, socialCoefficient: 1.5 ), searchSpace: Array(repeating: (0.0, 1.0), count: numAssets) // 10 dimensions )
+              </vectorn<double></p><p>print(“Sector-Constrained Portfolio Optimization”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Start from equal weights let initialGuess = VectorN(Array(repeating: 1.0 / Double(numAssets), count: numAssets))</p><p>let result = try pso.minimize( portfolioObjective, from: initialGuess )</p><p>// Normalize final solution let finalSum = result.solution.toArray().reduce(0, +) let finalWeights = VectorN(result.solution.toArray().map { $0 / finalSum })</p><p>print(“Optimization Results:”) print(”  Best Variance: (result.value.number(6))”) print(”  Iterations: (result.iterations)”) print(”  Swarm Size: 50”) print(”  Total Evaluations: (result.iterations * 50)”)</p><p>// Verify constraints let totalWeight = finalWeights.toArray().reduce(0, +) print(”\nPortfolio Weights (total: (totalWeight.percent(1))):”) for (i, weight) in finalWeights.toArray().enumerated() { print(”  Asset (i) (Sector (sectors[i])): (weight.percent(1))”) }</p>
+            <div>
+              <p>print(”\nSector Allocations:”) for sectorID in 0..&lt;3 { let sectorWeight = finalWeights.toArray().enumerated() .filter { sectors[$0.offset] == sectorID } .map { $1 } .reduce(0, +)</p>
+              <pre><code>let limit = sectorLimits[sectorID] let status = sectorWeight &lt;= limit + 0.01 ? “✓” : “✗”  // Small tolerance<p></p></code><p><code>print(” Sector (sectorID): (sectorWeight.percent(1)) (limit: (limit.percent(0))) (status)”) </code></p></pre>} 
+            </div></pre>
+          <h3>Pattern 2: Hyperparameter Tuning</h3>
+          <strong>Pattern</strong>: Optimize machine learning model parameters (discrete + continuous).
+          <pre><code class="language-swift">// Rastrigin function (highly multimodal) func rastrigin(_ x: VectorN
+              <double>
+                ) -&gt; Double { let A = 10.0 let n = Double(5) // 5 dimensions return A * n + (0..&lt;5).reduce(0.0) { sum, i in sum + (x[i] * x[i] - A * cos(2 * .pi * x[i])) } }
+                <p></p>
+              </double></code></pre>
+        </div>
+        <p><code class="language-swift">let searchSpace2 = (0..&lt;5).map { _ in (-5.12, 5.12) }</code></p>
+        <p><code class="language-swift">let configs2: [(name: String, config: ParticleSwarmConfig)] = [ (“Small Swarm”, ParticleSwarmConfig( swarmSize: 20, maxIterations: 100, seed: 101 )), (“Default”, .default), (“Large Swarm”, ParticleSwarmConfig( swarmSize: 100, maxIterations: 200, seed: 101 )) ]</code></p>
+        <p><code class="language-swift">print(”\nComparing configurations on 5D Rastrigin function”) print(“Known minimum: [0,0,0,0,0] with value 0.0”) print(”\nConfig Swarm Iters Final Value Converged”) print(“────────────────────────────────────────────────────────”)</code></p>
+        <div>
+          <p><code class="language-swift">for (name, config) in configs2 { let pso = ParticleSwarmOptimization
+              <vectorn<double>
+                &gt;( config: config, searchSpace: searchSpace2 )
+              </vectorn<double></code></p>
+          <pre><code class="language-swift"><code>let result = pso.optimizeDetailed( objective: rastrigin )<p></p></code></code><p><code class="language-swift"><code>print(”(name.padding(toLength: 14, withPad: “ “, startingAt: 0)) “ + “(Double(config.swarmSize).number(0).paddingLeft(toLength: 5)) “ + “(Double(config.maxIterations).number(0).paddingLeft(toLength: 4)) “ + “(result.fitness.number(6).paddingLeft(toLength: 10)) “ + “(result.converged ? “✓” : “✗”)”) </code></code></p></pre>}
+          <p></p>
+        </div>
+        <p>print(”\n💡 Observation: Larger swarms find better solutions but take longer”) </p>
+        <h3>Pattern 3: Hybrid PSO + Local Refinement</h3>
+        <strong>Pattern</strong>: Use PSO for global search, then refine with BFGS.
+        <pre><code class="language-swift">print(”\n\nPattern 3: Hybrid PSO + L-BFGS Refinement”) print(“═══════════════════════════════════════════════════════════”)<p></p><p>// Rosenbrock function (smooth but narrow valley) func rosenbrock2D(_ x: VectorN
+              <double>
+                ) -&gt; Double { let a = x[0], b = x[1] return (1.0 - a) * (1.0 - a) + 100.0 * (b - a * a) * (b - a * a) }
+              </double></p><p>let searchSpace3 = [(-5.0, 5.0), (-5.0, 5.0)]</p><p>print(”\nPhase 1: Global search with PSO”) let pso3 = ParticleSwarmOptimization
+              <vectorn<double>
+                &gt;( config: ParticleSwarmConfig( swarmSize: 50, maxIterations: 100, seed: 42 ), searchSpace: searchSpace3 )
+              </vectorn<double></p><p>let psoResult = pso3.optimizeDetailed(objective: rosenbrock2D)</p><p>print(” PSO Solution: [(psoResult.solution[0].number(4)), (psoResult.solution[1].number(4))]”) print(” PSO Value: (psoResult.fitness.number(6))”) print(” Iterations: (psoResult.iterations)”)</p><p>print(”\nPhase 2: Local refinement with L-BFGS”) let lbfgs = MultivariateLBFGS
+              <vectorn<double>
+                &gt;() let refinedResult = try lbfgs.minimizeLBFGS( function: rosenbrock2D, initialGuess: psoResult.solution )
+              </vectorn<double></p><p>print(” Refined Solution: [(refinedResult.solution[0].number(6)), (refinedResult.solution[1].number(6))]”) print(” Refined Value: (refinedResult.value.number(10))”) print(” L-BFGS Iterations: (refinedResult.iterations)”)</p></code><p><code class="language-swift">let improvement = ((psoResult.fitness - refinedResult.value) / psoResult.fitness) print(”\n Improvement from refinement: (improvement.percent(2))”) </code></p></pre>
+        <hr />
+        <h2>How It Works</h2>
+        <h3>Particle Swarm Algorithm</h3>Each particle has:
+        <ul>
+          <li><strong>Position</strong> x_i: Current solution</li>
+          <li><strong>Velocity</strong> v_i: Direction and speed of movement</li>
+          <li><strong>Personal Best</strong> p_i: Best position this particle has found</li>
+          <li><strong>Global Best</strong> g: Best position any particle has found</li>
+        </ul>
+        <strong>Update Equations</strong>:
+        <pre><code>v_i(t+1) = w·v_i(t) + c₁·r₁·(p_i - x_i(t)) + c₂·r₂·(g - x_i(t)) x_i(t+1) = x_i(t) + v_i(t+1) </code></pre>Where:
+        <ul>
+          <li>w = inertia weight (0.4-0.9)</li>
+          <li>c₁ = cognitive coefficient (1.5-2.0, “trust yourself”)</li>
+          <li>c₂ = social coefficient (1.5-2.0, “trust the swarm”)</li>
+          <li>r₁, r₂ = random values [0, 1]</li>
+        </ul>
+        <h3>Parameter Tuning Guidance</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Parameter</th>
+              <th scope="col">Typical Value</th>
+              <th scope="col">Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Swarm Size</strong></td>
+              <td>20-100</td>
+              <td>Larger = better exploration, slower</td>
+            </tr>
+            <tr>
+              <td><strong>Inertia (w)</strong></td>
+              <td>0.4-0.9</td>
+              <td>High = exploration, Low = exploitation</td>
+            </tr>
+            <tr>
+              <td><strong>Cognitive (c₁)</strong></td>
+              <td>1.5-2.0</td>
+              <td>Attraction to personal best</td>
+            </tr>
+            <tr>
+              <td><strong>Social (c₂)</strong></td>
+              <td>1.5-2.0</td>
+              <td>Attraction to global best</td>
+            </tr>
+            <tr>
+              <td><strong>Max Velocity</strong></td>
+              <td>10-20% of range</td>
+              <td>Prevents overshooting</td>
+            </tr>
+          </tbody>
+        </table>
+        <strong>Common Strategies</strong>:
+        <ul>
+          <li><strong>Balanced</strong>: w=0.7, c₁=c₂=1.5 (equal exploration/exploitation)</li>
+          <li><strong>Exploration</strong>: w=0.9, c₁=2.0, c₂=1.0 (trust self more)</li>
+          <li><strong>Exploitation</strong>: w=0.4, c₁=1.0, c₂=2.0 (follow swarm)</li>
+          <li><strong>Adaptive</strong>: Decrease w from 0.9 to 0.4 over time</li>
+        </ul>
+        <h3>Performance Comparison</h3>
+        <strong>Problem: 50-variable portfolio optimization, 200 iterations</strong>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col">Best Value</th>
+              <th scope="col">Evaluations</th>
+              <th scope="col">Time</th>
+              <th scope="col">Parallelizable</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Gradient Descent</td>
+              <td>0.0245 (local)</td>
+              <td>2,500</td>
+              <td>8s</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td>BFGS</td>
+              <td>0.0238 (local)</td>
+              <td>1,200</td>
+              <td>15s</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td>Simulated Annealing</td>
+              <td>0.0232</td>
+              <td>40,000</td>
+              <td>120s</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td><strong>Particle Swarm</strong></td>
+              <td><strong>0.0229</strong></td>
+              <td>10,000</td>
+              <td>35s</td>
+              <td><strong>Yes</strong></td>
+            </tr>
+            <tr>
+              <td>PSO (parallel, 8 cores)</td>
+              <td>0.0229</td>
+              <td>10,000</td>
+              <td>8s</td>
+              <td><strong>Yes</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <strong>PSO wins on</strong>: Global optimum quality, parallelizability
+        <hr />
+        <h2>Real-World Application</h2>
+        <h3>Energy Company: Wind Farm Layout Optimization</h3>
+        <strong>Company</strong>: Renewable energy developer optimizing turbine placement 
+        <strong>Challenge</strong>: Maximize power generation while minimizing wake interference
+        <p></p>
+        <p><strong>Problem Characteristics</strong>:</p>
+        <ul>
+          <li><strong>100+ variables</strong>: X,Y coordinates for 50 turbines</li>
+          <li><strong>Non-convex</strong>: Wake effects create complex landscape</li>
+          <li><strong>Multiple constraints</strong>: Minimum spacing, terrain limits, environmental</li>
+          <li><strong>Expensive evaluation</strong>: Computational fluid dynamics (5 min per layout)</li>
+        </ul>
+        <strong>Why Particle Swarm</strong>:
+        <ul>
+          <li>Handles high-dimensional non-convex problems well</li>
+          <li>Parallelizable (evaluate swarm in parallel)</li>
+          <li>No gradients needed (CFD simulation is black-box)</li>
+          <li>Good exploration of layout space</li>
+        </ul>
+        <strong>Implementation</strong>:
+        <pre><code class="language-swift">let numTurbines = 10 let farmWidth = 2000.0  // meters let farmHeight = 1500.0  // meters let minSpacing = 200.0  // meters (wake effect)<p></p>
+            <div>
+              <p>func windFarmPower(_ positions: VectorN
+                <double>
+                  ) -&gt; Double { // positions: [x1, y1, x2, y2, …, x10, y10] // Simplified model: maximize total power considering wake effects
+                </double></p>
+              <pre><code>var totalPower = 0.0<p></p>
+                  <div>
+                    <p>for i in 0..
+                      <numturbines { let x_i="positions[2" * i] let y_i="positions[2" * i + 1]<pre>
+                        <code>// Base power for this turbine var turbinePower = 1.0</code>
+                      </numturbines></p>
+                    <div>
+                      <p><code>// Reduce power based on wake effects from upwind turbines for j in 0..
+                          <numturbines where j !="i" { let x_j="positions[2" * j] let y_j="positions[2" * j + 1]<pre>
+                            <code>let distance = sqrt(pow(x_i - x_j, 2) + pow(y_i - y_j, 2))</code>
+                          </numturbines></code></p>
+                      <p><code><code>// If downwind of another turbine, reduce power if x_i &gt; x_j { // Assuming wind from west (left) let lateralDistance = abs(y_i - y_j) if lateralDistance &lt; 300 { // In wake zone let wakeEffect = max(0, 1.0 - distance / 1000.0) turbinePower *= (1.0 - 0.3 * wakeEffect) } }</code></code></p>
+                      <p><code><code>// Penalty for being too close if distance &lt; minSpacing { turbinePower *= 0.5 } </code></code></p>
+                    </div>
+                  </div></code></pre>
+              <code><code>}<p></p></code></code>
+            </div><p><code><code>totalPower += turbinePower </code></code></p></code></pre>
+        <code class="language-swift"><code>}<p></p></code></code>
+      </div>
+      <p><code class="language-swift"><code>return -totalPower // Negative because minimizing </code>}</code></p>
+    </div>
+    <p><code class="language-swift">// Search space: x ∈ [0, farmWidth], y ∈ [0, farmHeight] let searchSpace4 = (0..
+        <numturbines).flatmap { _ in [(0.0, farmwidth), (0.0, farmheight)] }< p></numturbines).flatmap></code></p>
+    <p><code class="language-swift">let pso4 = ParticleSwarmOptimization
+        <vectorn<double>
+          &gt;( config: ParticleSwarmConfig( swarmSize: 80, maxIterations: 150, seed: 42 ), searchSpace: searchSpace4 )
+        </vectorn<double></code></p>
+    <p><code class="language-swift">print(”\nOptimizing layout for (numTurbines) turbines”) print(“Farm dimensions: (farmWidth.number(0))m × (farmHeight.number(0))m”) print(“Minimum spacing: (minSpacing.number(0))m”)</code></p>
+    <p><code class="language-swift">let result4 = pso4.optimizeDetailed( objective: windFarmPower )</code></p>
+    <p><code class="language-swift">print(”\nResults:”) print(” Total Power: ((-result4.fitness).number(4)) MW (normalized)”) print(” Iterations: (result4.iterations)”) print(” Converged: (result4.converged)”)</code></p>
+    <p><code class="language-swift">print(”\nTurbine Positions:”) for i in 0..
+        <numturbines { let x="result4.solution[2" * i] let y="result4.solution[2" * i + 1] print(” turbine (i + 1): ((x.number(0))m, (y.number(0))m)”) }< p></numturbines></code></p>
+    <p><code class="language-swift">// Check spacing violations var violations = 0 for i in 0..
+        <numturbines { for j in (i + 1)..<numturbines { let x_i="result4.solution[2" * i] let y_i="result4.solution[2" * i + 1] let x_j="result4.solution[2" * j] let y_j="result4.solution[2" * j + 1] let distance="sqrt(pow(x_i" - x_j, 2) + pow(y_i - y_j, 2)) if distance< minspacing { violations +="1" } } }< code>
+          <strong>Results</strong>:
+        </numturbines></code></p>
+    <ul>
+      <li><code class="language-swift"><strong>Power increase</strong>: +8.2% vs. grid layout</code></li>
+      <li><code class="language-swift"><strong>Annual value</strong>: $2.8M additional revenue</code></li>
+      <li><code class="language-swift"><strong>Optimization time</strong>: 42 hours (100 particles × 100 iterations × 5 min/eval ÷ 8 cores)</code></li>
+      <li><code class="language-swift"><strong>ROI</strong>: Optimization cost $50K (engineering time), payback &lt; 1 month</code></li>
+    </ul>
+    <code class="language-swift">
+      <hr /><h2>Try It Yourself</h2></code>
+    <details>
+      <code class="language-swift"><summary>Click to expand full playground code</summary><pre><code class="language-swift">import Foundation
 import BusinessMath
-
-// MARK: - Portfolio with Sector Constraints
-// Portfolio with sector constraints (creates local minima)
-let numAssets = 10
-let sectors = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2]  // 3 Tech, 4 Finance, 3 Healthcare
-let sectorLimits = [0.40, 0.40, 0.30]  // Max 40% Tech, 40% Finance, 30% Healthcare
-
-// Generate covariance matrix with sector correlation structure
-let covariance = generateCovarianceMatrix(size: numAssets, avgCorrelation: 0.25)
-
-// Portfolio objective with constraints
-func portfolioObjective(_ rawWeights: VectorN<Double>) -> Double {
-	// Normalize weights to sum to 1.0 (simplex projection)
-	let sum = rawWeights.toArray().reduce(0, +)
-	guard sum > 0 else { return 1e10 }  // Avoid division by zero
-
-	let weights = VectorN(rawWeights.toArray().map { $0 / sum })
-
-	// Calculate portfolio variance
-	var variance = 0.0
-	for i in 0..<numAssets {
-		for j in 0..<numAssets {
-			variance += weights[i] * weights[j] * covariance[i][j]
-		}
-	}
-
-	// Penalty for sector limit violations
-	var sectorPenalty = 0.0
-	for sectorID in 0..<3 {
-		let sectorWeight = weights.toArray().enumerated()
-			.filter { sectors[$0.offset] == sectorID }
-			.map { $1 }
-			.reduce(0, +)
-
-		if sectorWeight > sectorLimits[sectorID] {
-			sectorPenalty += pow(sectorWeight - sectorLimits[sectorID], 2) * 100.0
-		}
-	}
-
-	return variance + sectorPenalty
-}
-
-// Particle Swarm Optimizer
-// Search space: [0, 1] for each asset (will be normalized to sum to 1)
-let pso = ParticleSwarmOptimization<VectorN<Double>>(
-	config: ParticleSwarmConfig(
-		swarmSize: 50,
-		maxIterations: 30,
-		inertiaWeight: 0.7,
-		cognitiveCoefficient: 1.5,
-		socialCoefficient: 1.5
-	),
-	searchSpace: Array(repeating: (0.0, 1.0), count: numAssets)  // 10 dimensions
-)
-
-print("Sector-Constrained Portfolio Optimization")
-print("═══════════════════════════════════════════════════════════")
-
-// Start from equal weights
-let initialGuess = VectorN(Array(repeating: 1.0 / Double(numAssets), count: numAssets))
-
-let result = try pso.minimize(
-	portfolioObjective,
-	from: initialGuess
-)
-
-// Normalize final solution
-let finalSum = result.solution.toArray().reduce(0, +)
-let finalWeights = VectorN(result.solution.toArray().map { $0 / finalSum })
-
-print("Optimization Results:")
-print("  Best Variance: \(result.value.number(6))")
-print("  Iterations: \(result.iterations)")
-print("  Swarm Size: 50")
-print("  Total Evaluations: \(result.iterations * 50)")
-
-// Verify constraints
-let totalWeight = finalWeights.toArray().reduce(0, +)
-print("\nPortfolio Weights (total: \(totalWeight.percent(1))):")
-for (i, weight) in finalWeights.toArray().enumerated() {
-	print("  Asset \(i) (Sector \(sectors[i])): \(weight.percent(1))")
-}
-
-print("\nSector Allocations:")
-for sectorID in 0..<3 {
-	let sectorWeight = finalWeights.toArray().enumerated()
-		.filter { sectors[$0.offset] == sectorID }
-		.map { $1 }
-		.reduce(0, +)
-
-	let limit = sectorLimits[sectorID]
-	let status = sectorWeight <= limit + 0.01 ? "✓" : "✗"  // Small tolerance
-
-	print("  Sector \(sectorID): \(sectorWeight.percent(1)) (limit: \(limit.percent(0))) \(status)")
-}
-
-// MARK: - Hyperparameter Tuning
-print("\n\nPattern 2: PSO Configuration Comparison")
-print("═══════════════════════════════════════════════════════════")
-
-// Rastrigin function (highly multimodal)
-func rastrigin(_ x: VectorN<Double>) -> Double {
-	let A = 10.0
-	let n = Double(5)  // 5 dimensions
-	return A * n + (0..<5).reduce(0.0) { sum, i in
-		sum + (x[i] * x[i] - A * cos(2 * .pi * x[i]))
-	}
-}
-
-let searchSpace2 = (0..<5).map { _ in (-5.12, 5.12) }
-
-let configs2: [(name: String, config: ParticleSwarmConfig)] = [
-	("Small Swarm", ParticleSwarmConfig(
-		swarmSize: 20,
-		maxIterations: 100,
-		seed: 101
-	)),
-	("Default", .default),
-	("Large Swarm", ParticleSwarmConfig(
-		swarmSize: 100,
-		maxIterations: 200,
-		seed: 101
-	))
-]
-
-print("\nComparing configurations on 5D Rastrigin function")
-print("Known minimum: [0,0,0,0,0] with value 0.0")
-print("\nConfig          Swarm  Iters  Final Value  Converged")
-print("────────────────────────────────────────────────────────")
-
-for (name, config) in configs2 {
-	let pso = ParticleSwarmOptimization<VectorN<Double>>(
-		config: config,
-		searchSpace: searchSpace2
-	)
-
-	let result = pso.optimizeDetailed(
-		objective: rastrigin
-	)
-
-	print("\(name.padding(toLength: 14, withPad: " ", startingAt: 0))  " +
-		  "\(Double(config.swarmSize).number(0).paddingLeft(toLength: 5))   " +
-		  "\(Double(config.maxIterations).number(0).paddingLeft(toLength: 4))   " +
-		  "\(result.fitness.number(6).paddingLeft(toLength: 10))   " +
-		  "\(result.converged ? "✓" : "✗")")
-}
-
-print("\n💡 Observation: Larger swarms find better solutions but take longer")
-
-//// Optimize model hyperparameters: [learningRate, regularization, hiddenLayers, batchSize]
-//func modelPerformance(_ hyperparameters: VectorN<Double>) -> Double {
-//	let learningRate = hyperparameters[0]
-//	let regularization = hyperparameters[1]
-//	let hiddenLayers = Int(hyperparameters[2].rounded())  // Discrete!
-//	let batchSize = Int(hyperparameters[3].rounded())     // Discrete!
-//
-//	// Train model with these hyperparameters (expensive!)
-//	let model = trainModel(
-//		lr: learningRate,
-//		reg: regularization,
-//		layers: hiddenLayers,
-//		batch: batchSize
-//	)
-//
-//	// Return validation error (minimize)
-//	return model.validationError
-//}
-//
-//let hyperparamPSO = ParticleSwarmOptimization<VectorN<Double>>(
-//	config: ParticleSwarmConfig(
-//	swarmSize: 50,
-//	inertiaWeight: 0.8,
-//	cognitiveCoefficient: 2.0,
-//	socialCoefficient: 2.0
-//	),
-//	searchSpace: [(-10.0, -10.0), (10.0, 10.0)]
-//)
-//
-//let hyperparamResult = try hyperparamPSO.minimize(
-//	modelPerformance,
-//	bounds: [
-//		(0.0001, 0.1),    // Learning rate
-//		(0.0, 0.01),      // Regularization
-//		(1.0, 10.0),      // Hidden layers (will round)
-//		(16.0, 256.0)     // Batch size (will round)
-//	],
-//	maxIterations: 50
-//)
-//
-//print("\nHyperparameter Optimization:")
-//print("  Learning Rate: \(hyperparamResult.position[0].number(6))")
-//print("  Regularization: \(hyperparamResult.position[1].number(6))")
-//print("  Hidden Layers: \(Int(hyperparamResult.position[2].rounded()))")
-//print("  Batch Size: \(Int(hyperparamResult.position[3].rounded()))")
-//print("  Validation Error: \(hyperparamResult.value.number(4))")
-
-
-//// MARK: - Pattern 1: Multi-Modal Portfolio with Sector Constraints
-//
-//print("Pattern 1: Portfolio Optimization with Sector Constraints")
-//print("═══════════════════════════════════════════════════════════")
-//
-//let numAssets1 = 30
-//
-//// Create tiered expected returns
-//let returns1 = (0..<numAssets1).map { i -> Double in
-//    if i < 10 { return Double.random(in: 0.06...0.09) }  // Low
-//    else if i < 20 { return Double.random(in: 0.09...0.12) }  // Medium
-//    else { return Double.random(in: 0.12...0.16) }  // High
-//}
-//
-//// Sector assignments (3 sectors: Tech, Finance, Energy)
-//let sectors1 = (0..<numAssets1).map { i -> Int in
-//    i % 3  // Distribute across 3 sectors
-//}
-//
-//// Volatilities by sector
-//let sectorVolatility: [Double] = [0.25, 0.18, 0.22]  // Tech, Finance, Energy
-//
-//func portfolioObjective1(_ weights: VectorN<Double>) -> Double {
-//    // Calculate portfolio return (negative because we minimize)
-//    let portfolioReturn = zip(weights.toArray(), returns1).reduce(0.0) { $0 + $1.0 * $1.1 }
-//
-//    // Calculate portfolio variance
-//    var variance = 0.0
-//    for i in 0..<numAssets1 {
-//        for j in 0..<numAssets1 {
-//            let sameSector = sectors1[i] == sectors1[j]
-//            let correlation = i == j ? 1.0 : (sameSector ? 0.6 : 0.2)
-//            let vol_i = sectorVolatility[sectors1[i]]
-//            let vol_j = sectorVolatility[sectors1[j]]
-//            let covariance = correlation * vol_i * vol_j
-//            variance += weights[i] * weights[j] * covariance
-//        }
-//    }
-//
-//    // Risk-adjusted return (maximize Sharpe-like ratio)
-//    let stdDev = sqrt(variance)
-//    return -(portfolioReturn / stdDev)  // Negative because minimizing
-//}
-//
-//let searchSpace1 = (0..<numAssets1).map { _ in (0.0, 0.30) }  // Max 30% per asset
-//
-//let pso1 = ParticleSwarmOptimization<VectorN<Double>>(
-//    config: ParticleSwarmConfig(
-//        swarmSize: 100,
-//        maxIterations: 200,
-//        inertiaWeight: 0.7,
-//        cognitiveCoefficient: 1.5,
-//        socialCoefficient: 1.5,
-//        seed: 42
-//    ),
-//    searchSpace: searchSpace1
-//)
-//
-//let initialWeights1 = VectorN(Array(repeating: 1.0 / Double(numAssets1), count: numAssets1))
-//
-//// Constraints
-//let constraints1: [MultivariateConstraint<VectorN<Double>>] = [
-//    // Budget: sum to 1
-//    .equality { weights in
-//        weights.toArray().reduce(0.0, +) - 1.0
-//    },
-//
-//    // Sector limits: no sector > 40%
-//    .inequality { weights in
-//        let techWeight = (0..<numAssets1).filter { sectors1[$0] == 0 }
-//            .reduce(0.0) { $0 + weights[$1] }
-//        return techWeight - 0.40
-//    },
-//    .inequality { weights in
-//        let financeWeight = (0..<numAssets1).filter { sectors1[$0] == 1 }
-//            .reduce(0.0) { $0 + weights[$1] }
-//        return financeWeight - 0.40
-//    },
-//    .inequality { weights in
-//        let energyWeight = (0..<numAssets1).filter { sectors1[$0] == 2 }
-//            .reduce(0.0) { $0 + weights[$1] }
-//        return energyWeight - 0.40
-//    }
-//]
-//
-//print("\nOptimizing 30-asset portfolio with sector constraints...")
-//print("Constraints:")
-//print("  • Budget: weights sum to 1")
-//print("  • Sector limits: Tech, Finance, Energy ≤ 40% each")
-//print("  • Position limits: 0-30% per asset")
-//
-//let result1 = try pso1.minimize(
-//    portfolioObjective1,
-//    from: initialWeights1,
-//    constraints: constraints1
-//)
-//
-//print("\nResults:")
-//print("  Sharpe-like Ratio: \((-result1.value).number(4))")
-//print("  Iterations: \(result1.iterations)")
-//print("  Converged: \(result1.converged)")
-//
-//// Analyze sector allocations
-//let sectorAllocations = (0...2).map { sector in
-//    (0..<numAssets1).filter { sectors1[$0] == sector }
-//        .reduce(0.0) { $0 + result1.solution[$1] }
-//}
-//
-//let sectorNames = ["Tech", "Finance", "Energy"]
-//print("\nSector Allocations:")
-//for (i, name) in sectorNames.enumerated() {
-//    print("  \(name): \(sectorAllocations[i].percent())")
-//}
-//
-//print("\nTop 5 Holdings:")
-//let holdings1 = (0..<numAssets1).map { i in
-//    (index: i, weight: result1.solution[i], return: returns1[i], sector: sectorNames[sectors1[i]])
-//}.sorted { $0.weight > $1.weight }.prefix(5)
-//
-//for holding in holdings1 {
-//    print("  Asset \(holding.index) (\(holding.sector)): \(holding.weight.percent()) @ \(holding.return.percent())")
-//}
-//
-// MARK: - Pattern 2: Hyperparameter Search
-
-
-
-// MARK: - Pattern 3: Hybrid PSO + Local Refinement
-
-print("\n\nPattern 3: Hybrid PSO + L-BFGS Refinement")
-print("═══════════════════════════════════════════════════════════")
-
-// Rosenbrock function (smooth but narrow valley)
-func rosenbrock2D(_ x: VectorN<Double>) -> Double {
-    let a = x[0], b = x[1]
-    return (1.0 - a) * (1.0 - a) + 100.0 * (b - a * a) * (b - a * a)
-}
-
-let searchSpace3 = [(-5.0, 5.0), (-5.0, 5.0)]
-
-print("\nPhase 1: Global search with PSO")
-let pso3 = ParticleSwarmOptimization<VectorN<Double>>(
-    config: ParticleSwarmConfig(
-        swarmSize: 50,
-        maxIterations: 100,
-        seed: 42
-    ),
-    searchSpace: searchSpace3
-)
-
-let psoResult = pso3.optimizeDetailed(objective: rosenbrock2D)
-
-print("  PSO Solution: [\(psoResult.solution[0].number(4)), \(psoResult.solution[1].number(4))]")
-print("  PSO Value: \(psoResult.fitness.number(6))")
-print("  Iterations: \(psoResult.iterations)")
-
-print("\nPhase 2: Local refinement with L-BFGS")
-let lbfgs = MultivariateLBFGS<VectorN<Double>>()
-let refinedResult = try lbfgs.minimizeLBFGS(
-    function: rosenbrock2D,
-    initialGuess: psoResult.solution
-)
-
-print("  Refined Solution: [\(refinedResult.solution[0].number(6)), \(refinedResult.solution[1].number(6))]")
-print("  Refined Value: \(refinedResult.value.number(10))")
-print("  L-BFGS Iterations: \(refinedResult.iterations)")
-
-let improvement = ((psoResult.fitness - refinedResult.value) / psoResult.fitness)
-print("\n  Improvement from refinement: \(improvement.percent(2))")
-//
-// MARK: - Pattern 4: Real-World Wind Farm Layout
-
-print("\n\nPattern 4: Wind Farm Turbine Layout Optimization")
-print("═══════════════════════════════════════════════════════════")
-
-let numTurbines = 10
-let farmWidth = 2000.0  // meters
-let farmHeight = 1500.0  // meters
-let minSpacing = 200.0  // meters (wake effect)
-
-func windFarmPower(_ positions: VectorN<Double>) -> Double {
-    // positions: [x1, y1, x2, y2, ..., x10, y10]
-    // Simplified model: maximize total power considering wake effects
-
-    var totalPower = 0.0
-
-    for i in 0..<numTurbines {
-        let x_i = positions[2 * i]
-        let y_i = positions[2 * i + 1]
-
-        // Base power for this turbine
-        var turbinePower = 1.0
-
-        // Reduce power based on wake effects from upwind turbines
-        for j in 0..<numTurbines where j != i {
-            let x_j = positions[2 * j]
-            let y_j = positions[2 * j + 1]
-
-            let distance = sqrt(pow(x_i - x_j, 2) + pow(y_i - y_j, 2))
-
-            // If downwind of another turbine, reduce power
-            if x_i > x_j {  // Assuming wind from west (left)
-                let lateralDistance = abs(y_i - y_j)
-                if lateralDistance < 300 {  // In wake zone
-                    let wakeEffect = max(0, 1.0 - distance / 1000.0)
-                    turbinePower *= (1.0 - 0.3 * wakeEffect)
-                }
-            }
-
-            // Penalty for being too close
-            if distance < minSpacing {
-                turbinePower *= 0.5
-            }
-        }
-
-        totalPower += turbinePower
-    }
-
-    return -totalPower  // Negative because minimizing
-}
-
-// Search space: x ∈ [0, farmWidth], y ∈ [0, farmHeight]
-let searchSpace4 = (0..<numTurbines).flatMap { _ in
-    [(0.0, farmWidth), (0.0, farmHeight)]
-}
-
-let pso4 = ParticleSwarmOptimization<VectorN<Double>>(
-    config: ParticleSwarmConfig(
-        swarmSize: 80,
-        maxIterations: 150,
-        seed: 42
-    ),
-    searchSpace: searchSpace4
-)
-
-print("\nOptimizing layout for \(numTurbines) turbines")
-print("Farm dimensions: \(farmWidth.number(0))m × \(farmHeight.number(0))m")
-print("Minimum spacing: \(minSpacing.number(0))m")
-
-let result4 = pso4.optimizeDetailed(
-    objective: windFarmPower
-)
-
-print("\nResults:")
-print("  Total Power: \((-result4.fitness).number(4)) MW (normalized)")
-print("  Iterations: \(result4.iterations)")
-print("  Converged: \(result4.converged)")
-
-print("\nTurbine Positions:")
-for i in 0..<numTurbines {
-    let x = result4.solution[2 * i]
-    let y = result4.solution[2 * i + 1]
-    print("  Turbine \(i + 1): (\(x.number(0))m, \(y.number(0))m)")
-}
-
-// Check spacing violations
-var violations = 0
-for i in 0..<numTurbines {
-    for j in (i + 1)..<numTurbines {
-        let x_i = result4.solution[2 * i]
-        let y_i = result4.solution[2 * i + 1]
-        let x_j = result4.solution[2 * j]
-        let y_j = result4.solution[2 * j + 1]
-        let distance = sqrt(pow(x_i - x_j, 2) + pow(y_i - y_j, 2))
-        if distance < minSpacing {
-            violations += 1
-        }
-    }
-}
-
-print("\nSpacing violations: \(violations)")
-
-print("\n═══════════════════════════════════════════════════════════")
-print("\n💡 Key Takeaway:")
-print("   Particle Swarm Optimization excels at:")
-print("   • Multi-modal optimization (many local optima)")
-print("   • Continuous problems with many variables")
-print("   • Problems where population-based search helps")
-print("   • Combining with local methods (hybrid approach)")
-
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.19-ParticleSwarmOptimizationTutorial.md">BusinessMath Docs – Particle Swarm Optimization Tutorial</a></p><h3>Experiments to Try</h3><ol><li><strong>Parameter Sensitivity</strong>: Test w ∈ {0.4, 0.6, 0.8}, c₁, c₂ ∈ {1.0, 1.5, 2.0}</li><li><strong>Swarm Size</strong>: Compare 10, 30, 50, 100, 200 particles</li><li><strong>Topology</strong>: Test different communication structures (global, ring, von Neumann)</li><li><strong>Adaptive Inertia</strong>: Linearly decrease w from 0.9 to 0.4 over iterations</li></ol><hr /><h2>Next Steps</h2><p><strong>Friday</strong>: Week 11 concludes with <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong>, combining async/await, streaming optimization, and progress updates for live trading systems.</p><p><strong>Final Week</strong>: Week 12 covers reflections (What Worked, What Didn’t, Final Statistics) and <strong>Case Study #6: Investment Strategy DSL</strong>.</p><hr /><p><strong>Series</strong>: [Week 11 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Algorithms] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Particle swarm optimization • Swarm intelligence • Global optimization • Parallel evaluation • Hybrid methods</p><p><strong>Playgrounds</strong>: [Week 1-11 available] • [Next: Real-time rebalancing case study]</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, particle-swarm, pso, swarm-intelligence, global-optimization, metaheuristic</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+// MARK: - Portfolio with Sector Constraints // Portfolio with sector constraints (creates local minima) let numAssets = 10 let sectors = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2]  // 3 Tech, 4 Finance, 3 Healthcare let sectorLimits = [0.40, 0.40, 0.30]  // Max 40% Tech, 40% Finance, 30% Healthcare
+<p></p><p>// Generate covariance matrix with sector correlation structure let covariance = generateCovarianceMatrix(size: numAssets, avgCorrelation: 0.25)</p></code>
+          <div>
+            <code class="language-swift"><p>// Portfolio objective with constraints func portfolioObjective(_ rawWeights: VectorN
+                <double>
+                  ) -&gt; Double { // Normalize weights to sum to 1.0 (simplex projection) let sum = rawWeights.toArray().reduce(0, +) guard sum &gt; 0 else { return 1e10 } // Avoid division by zero
+                </double></p><pre><code>let weights = VectorN(rawWeights.toArray().map { $0 / sum })<p></p><p>// Calculate portfolio variance var variance = 0.0 for i in 0..
+                    <numassets { for j in 0..<numassets { variance +="weights[i]" * weights[j] * covariance[i][j] } }< p></numassets></p><p>// Penalty for sector limit violations var sectorPenalty = 0.0 for sectorID in 0..&lt;3 { let sectorWeight = weights.toArray().enumerated() .filter { sectors[$0.offset] == sectorID } .map { $1 } .reduce(0, +)</p><pre><code>if sectorWeight &gt; sectorLimits[sectorID] { sectorPenalty += pow(sectorWeight - sectorLimits[sectorID], 2) * 100.0 } </code></pre>}<p></p></code><p><code>return variance + sectorPenalty </code></p></pre>}<p></p></code>
+          </div><p>// Particle Swarm Optimizer // Search space: [0, 1] for each asset (will be normalized to sum to 1) let pso = ParticleSwarmOptimization
+            <vectorn<double>
+              &gt;( config: ParticleSwarmConfig( swarmSize: 50, maxIterations: 30, inertiaWeight: 0.7, cognitiveCoefficient: 1.5, socialCoefficient: 1.5 ), searchSpace: Array(repeating: (0.0, 1.0), count: numAssets) // 10 dimensions )
+            </vectorn<double></p><p>print(“Sector-Constrained Portfolio Optimization”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Start from equal weights let initialGuess = VectorN(Array(repeating: 1.0 / Double(numAssets), count: numAssets))</p><p>let result = try pso.minimize( portfolioObjective, from: initialGuess )</p><p>// Normalize final solution let finalSum = result.solution.toArray().reduce(0, +) let finalWeights = VectorN(result.solution.toArray().map { $0 / finalSum })</p><p>print(“Optimization Results:”) print(”  Best Variance: (result.value.number(6))”) print(”  Iterations: (result.iterations)”) print(”  Swarm Size: 50”) print(”  Total Evaluations: (result.iterations * 50)”)</p><p>// Verify constraints let totalWeight = finalWeights.toArray().reduce(0, +) print(”\nPortfolio Weights (total: (totalWeight.percent(1))):”) for (i, weight) in finalWeights.toArray().enumerated() { print(”  Asset (i) (Sector (sectors[i])): (weight.percent(1))”) }</p>
+          <div>
+            <p>print(”\nSector Allocations:”) for sectorID in 0..&lt;3 { let sectorWeight = finalWeights.toArray().enumerated() .filter { sectors[$0.offset] == sectorID } .map { $1 } .reduce(0, +)</p>
+            <pre><code>let limit = sectorLimits[sectorID] let status = sectorWeight &lt;= limit + 0.01 ? “✓” : “✗”  // Small tolerance<p></p></code><p><code>print(” Sector (sectorID): (sectorWeight.percent(1)) (limit: (limit.percent(0))) (status)”) </code></p></pre>}
+            <p></p>
+          </div><p>// MARK: - Hyperparameter Tuning print(”\n\nPattern 2: PSO Configuration Comparison”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Rastrigin function (highly multimodal) func rastrigin(_ x: VectorN
+            <double>
+              ) -&gt; Double { let A = 10.0 let n = Double(5) // 5 dimensions return A * n + (0..&lt;5).reduce(0.0) { sum, i in sum + (x[i] * x[i] - A * cos(2 * .pi * x[i])) } }
+            </double></p><p>let searchSpace2 = (0..&lt;5).map { _ in (-5.12, 5.12) }</p><p>let configs2: [(name: String, config: ParticleSwarmConfig)] = [ (“Small Swarm”, ParticleSwarmConfig( swarmSize: 20, maxIterations: 100, seed: 101 )), (“Default”, .default), (“Large Swarm”, ParticleSwarmConfig( swarmSize: 100, maxIterations: 200, seed: 101 )) ]</p><p>print(”\nComparing configurations on 5D Rastrigin function”) print(“Known minimum: [0,0,0,0,0] with value 0.0”) print(”\nConfig          Swarm  Iters  Final Value  Converged”) print(“────────────────────────────────────────────────────────”)</p>
+          <div>
+            <p>for (name, config) in configs2 { let pso = ParticleSwarmOptimization
+              <vectorn<double>
+                &gt;( config: config, searchSpace: searchSpace2 )
+              </vectorn<double></p>
+            <pre><code>let result = pso.optimizeDetailed( objective: rastrigin )<p></p></code><p><code>print(”(name.padding(toLength: 14, withPad: “ “, startingAt: 0)) “ + “(Double(config.swarmSize).number(0).paddingLeft(toLength: 5)) “ + “(Double(config.maxIterations).number(0).paddingLeft(toLength: 4)) “ + “(result.fitness.number(6).paddingLeft(toLength: 10)) “ + “(result.converged ? “✓” : “✗”)”) </code></p></pre>}
+            <p></p>
+          </div><p>print(”\n💡 Observation: Larger swarms find better solutions but take longer”)</p><p>//// Optimize model hyperparameters: [learningRate, regularization, hiddenLayers, batchSize] //func modelPerformance(_ hyperparameters: VectorN
+            <double>
+              ) -&gt; Double { // let learningRate = hyperparameters[0] // let regularization = hyperparameters[1] // let hiddenLayers = Int(hyperparameters[2].rounded()) // Discrete! // let batchSize = Int(hyperparameters[3].rounded()) // Discrete! // // // Train model with these hyperparameters (expensive!) // let model = trainModel( // lr: learningRate, // reg: regularization, // layers: hiddenLayers, // batch: batchSize // ) // // // Return validation error (minimize) // return model.validationError //} // //let hyperparamPSO = ParticleSwarmOptimization
+              <vectorn<double>
+                &gt;( // config: ParticleSwarmConfig( // swarmSize: 50, // inertiaWeight: 0.8, // cognitiveCoefficient: 2.0, // socialCoefficient: 2.0 // ), // searchSpace: [(-10.0, -10.0), (10.0, 10.0)] //) // //let hyperparamResult = try hyperparamPSO.minimize( // modelPerformance, // bounds: [ // (0.0001, 0.1), // Learning rate // (0.0, 0.01), // Regularization // (1.0, 10.0), // Hidden layers (will round) // (16.0, 256.0) // Batch size (will round) // ], // maxIterations: 50 //) // //print(”\nHyperparameter Optimization:”) //print(” Learning Rate: (hyperparamResult.position[0].number(6))”) //print(” Regularization: (hyperparamResult.position[1].number(6))”) //print(” Hidden Layers: (Int(hyperparamResult.position[2].rounded()))”) //print(” Batch Size: (Int(hyperparamResult.position[3].rounded()))”) //print(” Validation Error: (hyperparamResult.value.number(4))”)
+              </vectorn<double>
+            </double></p><p>//// MARK: - Pattern 1: Multi-Modal Portfolio with Sector Constraints // //print(“Pattern 1: Portfolio Optimization with Sector Constraints”) //print(“═══════════════════════════════════════════════════════════”) // //let numAssets1 = 30 // //// Create tiered expected returns //let returns1 = (0..
+            <numassets1).map { i ->
+               Double in // if i &lt; 10 { return Double.random(in: 0.06…0.09) } // Low // else if i &lt; 20 { return Double.random(in: 0.09…0.12) } // Medium // else { return Double.random(in: 0.12…0.16) } // High //} // //// Sector assignments (3 sectors: Tech, Finance, Energy) //let sectors1 = (0..
+              <numassets1).map { i ->
+                 Int in // i % 3 // Distribute across 3 sectors //} // //// Volatilities by sector //let sectorVolatility: [Double] = [0.25, 0.18, 0.22] // Tech, Finance, Energy // //func portfolioObjective1(_ weights: VectorN
+                <double>
+                  ) -&gt; Double { // // Calculate portfolio return (negative because we minimize) // let portfolioReturn = zip(weights.toArray(), returns1).reduce(0.0) { $0 + $1.0 * $1.1 } // // // Calculate portfolio variance // var variance = 0.0 // for i in 0..
+                  <numassets1 { for j in 0..<numassets1 { let samesector="sectors1[i]" =="sectors1[j]" let correlation="i" =="j" ? 1.0 : (samesector ? 0.6 : 0.2) let vol_i="sectorVolatility[sectors1[i]]" let vol_j="sectorVolatility[sectors1[j]]" let covariance="correlation" * vol_i * vol_j variance +="weights[i]" * weights[j] * covariance } } risk-adjusted return (maximize sharpe-like ratio) let stddev="sqrt(variance)" return -(portfolioreturn stddev) negative because minimizing } let searchspace1="(0..<numAssets1).map" { _ in (0.0, 0.30) } max 30% per asset let pso1="ParticleSwarmOptimization<VectorN<Double">
+                    &gt;( // config: ParticleSwarmConfig( // swarmSize: 100, // maxIterations: 200, // inertiaWeight: 0.7, // cognitiveCoefficient: 1.5, // socialCoefficient: 1.5, // seed: 42 // ), // searchSpace: searchSpace1 //) // //let initialWeights1 = VectorN(Array(repeating: 1.0 / Double(numAssets1), count: numAssets1)) // //// Constraints //let constraints1: [MultivariateConstraint
+                    <vectorn<double>
+                      &gt;] = [ // // Budget: sum to 1 // .equality { weights in // weights.toArray().reduce(0.0, +) - 1.0 // }, // // // Sector limits: no sector &gt; 40% // .inequality { weights in // let techWeight = (0..
+                      <numassets1).filter { sectors1[$0]="=" 0 } .reduce(0.0) { $0 + weights[$1] } return techweight - 0.40 }, .inequality { weights in let financeweight="(0..<numAssets1).filter" { sectors1[$0]="=" 1 } .reduce(0.0) { $0 + weights[$1] } return financeweight - 0.40 }, .inequality { weights in let energyweight="(0..<numAssets1).filter" { sectors1[$0]="=" 2 } .reduce(0.0) { $0 + weights[$1] } return energyweight - 0.40 } ] print(”\noptimizing 30-asset portfolio with sector constraints…”) print(“constraints:”) print(” • budget: weights sum to 1”) print(” • sector limits: tech, finance, energy ≤ 40% each”) print(” • position limits: 0-30% per asset”) let result1="try" pso1.minimize( portfolioobjective1, from: initialweights1, constraints: constraints1 ) print(”\nresults:”) print(” sharpe-like ratio: ((-result1.value).number(4))”) print(” iterations: (result1.iterations)”) print(” converged: (result1.converged)”) analyze sector allocations let sectorallocations="(0…2).map" { sector in (0..<numassets1).filter { sectors1[$0]="=" sector } .reduce(0.0) { $0 + result1.solution[$1] } } let sectornames="[“Tech”," “finance”, “energy”] print(”\nsector allocations:”) for (i, name) in sectornames.enumerated() { print(” (name): (sectorallocations[i].percent())”) } print(”\ntop 5 holdings:”) let holdings1="(0..<numAssets1).map" { i in (index: i, weight: result1.solution[i], return: returns1[i], sector: sectornames[sectors1[i]]) }.sorted { $0.weight>
+                         $1.weight }.prefix(5) // //for holding in holdings1 { // print(” Asset (holding.index) ((holding.sector)): (holding.weight.percent()) @ (holding.return.percent())”) //} // // MARK: - Pattern 2: Hyperparameter Search
+                      </numassets1).filter>
+                    </vectorn<double>
+                  </numassets1>
+                </double>
+              </numassets1).map>
+            </numassets1).map></p><p>// MARK: - Pattern 3: Hybrid PSO + Local Refinement</p><p>print(”\n\nPattern 3: Hybrid PSO + L-BFGS Refinement”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Rosenbrock function (smooth but narrow valley) func rosenbrock2D(_ x: VectorN
+            <double>
+              ) -&gt; Double { let a = x[0], b = x[1] return (1.0 - a) * (1.0 - a) + 100.0 * (b - a * a) * (b - a * a) }
+            </double></p><p>let searchSpace3 = [(-5.0, 5.0), (-5.0, 5.0)]</p><p>print(”\nPhase 1: Global search with PSO”) let pso3 = ParticleSwarmOptimization
+            <vectorn<double>
+              &gt;( config: ParticleSwarmConfig( swarmSize: 50, maxIterations: 100, seed: 42 ), searchSpace: searchSpace3 )
+            </vectorn<double></p><p>let psoResult = pso3.optimizeDetailed(objective: rosenbrock2D)</p><p>print(”  PSO Solution: [(psoResult.solution[0].number(4)), (psoResult.solution[1].number(4))]”) print(”  PSO Value: (psoResult.fitness.number(6))”) print(”  Iterations: (psoResult.iterations)”)</p><p>print(”\nPhase 2: Local refinement with L-BFGS”) let lbfgs = MultivariateLBFGS
+            <vectorn<double>
+              &gt;() let refinedResult = try lbfgs.minimizeLBFGS( function: rosenbrock2D, initialGuess: psoResult.solution )
+            </vectorn<double></p><p>print(”  Refined Solution: [(refinedResult.solution[0].number(6)), (refinedResult.solution[1].number(6))]”) print(”  Refined Value: (refinedResult.value.number(10))”) print(”  L-BFGS Iterations: (refinedResult.iterations)”)</p><p>let improvement = ((psoResult.fitness - refinedResult.value) / psoResult.fitness) print(”\n  Improvement from refinement: (improvement.percent(2))”) // // MARK: - Pattern 4: Real-World Wind Farm Layout</p><p>print(”\n\nPattern 4: Wind Farm Turbine Layout Optimization”) print(“═══════════════════════════════════════════════════════════”)</p><p>let numTurbines = 10 let farmWidth = 2000.0  // meters let farmHeight = 1500.0  // meters let minSpacing = 200.0  // meters (wake effect)</p>
+          <div>
+            <p>func windFarmPower(_ positions: VectorN
+              <double>
+                ) -&gt; Double { // positions: [x1, y1, x2, y2, …, x10, y10] // Simplified model: maximize total power considering wake effects
+              </double></p>
+            <pre><code>var totalPower = 0.0<p></p>
+                <div>
+                  <p>for i in 0..
+                    <numturbines { let x_i="positions[2" * i] let y_i="positions[2" * i + 1]<pre>
+                      <code>// Base power for this turbine var turbinePower = 1.0</code>
+                    </numturbines></p>
+                  <div>
+                    <p><code>// Reduce power based on wake effects from upwind turbines for j in 0..
+                        <numturbines where j !="i" { let x_j="positions[2" * j] let y_j="positions[2" * j + 1]<pre>
+                          <code>let distance = sqrt(pow(x_i - x_j, 2) + pow(y_i - y_j, 2))</code>
+                        </numturbines></code></p>
+                    <p><code><code>// If downwind of another turbine, reduce power if x_i &gt; x_j { // Assuming wind from west (left) let lateralDistance = abs(y_i - y_j) if lateralDistance &lt; 300 { // In wake zone let wakeEffect = max(0, 1.0 - distance / 1000.0) turbinePower *= (1.0 - 0.3 * wakeEffect) } }</code></code></p>
+                    <p><code><code>// Penalty for being too close if distance &lt; minSpacing { turbinePower *= 0.5 } </code></code></p>
+                  </div>
+                </div></code></pre>
+            <code><code>}<p></p></code></code>
+          </div><p><code><code>totalPower += turbinePower </code></code></p></pre><code>}<p></p></code><p><code>return -totalPower // Negative because minimizing </code>}</p><p>// Search space: x ∈ [0, farmWidth], y ∈ [0, farmHeight] let searchSpace4 = (0..
+          <numturbines).flatmap { _ in [(0.0, farmwidth), (0.0, farmheight)] }< p></numturbines).flatmap></p><p>let pso4 = ParticleSwarmOptimization
+          <vectorn<double>
+            &gt;( config: ParticleSwarmConfig( swarmSize: 80, maxIterations: 150, seed: 42 ), searchSpace: searchSpace4 )
+          </vectorn<double></p><p>print(”\nOptimizing layout for (numTurbines) turbines”) print(“Farm dimensions: (farmWidth.number(0))m × (farmHeight.number(0))m”) print(“Minimum spacing: (minSpacing.number(0))m”)</p><p>let result4 = pso4.optimizeDetailed( objective: windFarmPower )</p><p>print(”\nResults:”) print(” Total Power: ((-result4.fitness).number(4)) MW (normalized)”) print(” Iterations: (result4.iterations)”) print(” Converged: (result4.converged)”)</p><p>print(”\nTurbine Positions:”) for i in 0..
+          <numturbines { let x="result4.solution[2" * i] let y="result4.solution[2" * i + 1] print(” turbine (i + 1): ((x.number(0))m, (y.number(0))m)”) }< p></numturbines></p><p>// Check spacing violations var violations = 0 for i in 0..
+          <numturbines { for j in (i + 1)..<numturbines { let x_i="result4.solution[2" * i] let y_i="result4.solution[2" * i + 1] let x_j="result4.solution[2" * j] let y_j="result4.solution[2" * j + 1] let distance="sqrt(pow(x_i" - x_j, 2) + pow(y_i - y_j, 2)) if distance< minspacing { violations +="1" } } }< p></numturbines></p><p>print(”\nSpacing violations: (violations)”)</p><p>print(”\n═══════════════════════════════════════════════════════════”) print(”\n💡 Key Takeaway:”) print(” Particle Swarm Optimization excels at:”) print(” • Multi-modal optimization (many local optima)”) print(” • Continuous problems with many variables”) print(” • Problems where population-based search helps”) print(” • Combining with local methods (hybrid approach)”)</p><p></p></code>
+    </details>
+    <p></p>
+    <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.19-ParticleSwarmOptimizationTutorial.md">BusinessMath Docs – Particle Swarm Optimization Tutorial</a></p>
+    <h3>Experiments to Try</h3>
+    <ol>
+      <li><strong>Parameter Sensitivity</strong>: Test w ∈ {0.4, 0.6, 0.8}, c₁, c₂ ∈ {1.0, 1.5, 2.0}</li>
+      <li><strong>Swarm Size</strong>: Compare 10, 30, 50, 100, 200 particles</li>
+      <li><strong>Topology</strong>: Test different communication structures (global, ring, von Neumann)</li>
+      <li><strong>Adaptive Inertia</strong>: Linearly decrease w from 0.9 to 0.4 over iterations</li>
+    </ol>
+    <hr />
+    <h2>Next Steps</h2>
+    <strong>Friday</strong>: Week 11 concludes with 
+    <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong>, combining async/await, streaming optimization, and progress updates for live trading systems.
+    <p></p>
+    <p><strong>Final Week</strong>: Week 12 covers reflections (What Worked, What Didn’t, Final Statistics) and <strong>Case Study #6: Investment Strategy DSL</strong>.
+      <hr /><strong>Series</strong>: [Week 11 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Algorithms] | <strong>Case Studies</strong>: [4/6 Complete]</p>
+    <p><strong>Topics Covered</strong>: Particle swarm optimization • Swarm intelligence • Global optimization • Parallel evaluation • Hybrid methods</p>
+    <p><strong>Playgrounds</strong>: [Week 1-11 available] • [Next: Real-time rebalancing case study]</p>
+    <hr />
+    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, particle-swarm, pso, swarm-intelligence, global-optimization, metaheuristic</p>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

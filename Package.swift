@@ -5,13 +5,22 @@ import PackageDescription
 
 let package = Package(
     name: "IgniteStarter",
-	platforms: [.macOS(.v13), .iOS(.v16)],
+    platforms: [.macOS(.v13), .iOS(.v16)],
     dependencies: [
-        .package(url: "https://github.com/twostraws/Ignite.git", revision: "c2a2268")
+        .package(url: "https://github.com/jpurnell/Ignite.git", branch: "feature/structured-data")
     ],
     targets: [
+        .target(
+            name: "PersonalSiteLib",
+            dependencies: ["Ignite"]
+        ),
         .executableTarget(
             name: "IgniteStarter",
-            dependencies: ["Ignite"]),
+            dependencies: ["PersonalSiteLib"]
+        ),
+        .testTarget(
+            name: "PersonalSiteTests",
+            dependencies: ["PersonalSiteLib"]
+        ),
     ]
 )

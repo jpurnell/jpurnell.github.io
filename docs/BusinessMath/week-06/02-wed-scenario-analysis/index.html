@@ -1,803 +1,544 @@
-<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 21 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Scenario and Sensitivity Analysis</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Scenario and Sensitivity Analysis"><meta property="twitter:title" content="Scenario and Sensitivity Analysis"><meta property="og:description" content="Scenario and Sensitivity Analysis"><meta name="twitter:description" content="Scenario and Sensitivity Analysis"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
-**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
-**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
-**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Scenario and Sensitivity Analysis</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">21 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 21 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Creating multiple financial scenarios (base, optimistic, and downside case)</li><li>Running one-way sensitivity analysis to test input variations</li><li>Building tornado diagrams to identify the most impactful drivers</li><li>Performing two-way sensitivity analysis for input interactions</li><li>Combining scenario planning with probabilistic Monte Carlo</li><li>Making data-driven decisions under uncertainty</li></ul><hr /><h2>The Problem</h2><p>Good decision-making is centered around identifying and understanding different states of the future. One of the best ways we have to think about this is to consider <strong>what if</strong>?</p><ul><li><em>Which assumptions matter most?</em> If revenue drops 10%, does the project still work?</li><li><em>What’s the range of outcomes?</em> Best case, base case, worst case—how different are they?</li><li><em>Which input should we focus on?</em> Would raising prices or cutting costs be more impactful?</li><li><em>How do inputs interact?</em> If revenue drops AND costs rise, what happens?</li></ul><p><strong>Single-point forecasts hide critical uncertainties</strong>. Scenario and sensitivity analysis reveal which assumptions drive your results and how robust your decisions are.</p><hr /><h2>The Solution</h2><p>BusinessMath provides comprehensive scenario and sensitivity analysis tools: <code>FinancialScenario</code> for discrete cases, sensitivity functions for input variations, and Monte Carlo integration for probabilistic analysis.</p><h3>Creating Your First Scenario</h3><p>Define base case drivers and build financial statements:</p><pre><code class="language-swift">import BusinessMath
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 21 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Scenario and Sensitivity Analysis | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
 
-let company = Entity(
-    id: "TECH001",
-    primaryType: .ticker,
-    name: "TechCo"
-)
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
 
-let q1 = Period.quarter(year: 2025, quarter: 1)
-let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
 
-// Base case: Define primitive drivers
-// These are the independent inputs that scenarios can override
-let baseRevenue = DeterministicDriver(name: "Revenue", value: 1_000_000)
-let baseCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.60)  // 60% of revenue
-let baseOpEx = DeterministicDriver(name: "OpEx", value: 200_000)
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
 
-var baseOverrides: [String: AnyDriver<Double>] = [:]
-baseOverrides["Revenue"] = AnyDriver(baseRevenue)
-baseOverrides["COGS Rate"] = AnyDriver(baseCOGSRate)
-baseOverrides["OpEx"] = AnyDriver(baseOpEx)
+        if (!syntaxTheme) return;
 
-let baseCase = FinancialScenario(
-    name: "Base Case",
-    description: "Expected performance",
-    driverOverrides: baseOverrides
-)
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
 
-// Builder function: Convert primitive drivers → financial statements
-// Key insight: COGS is calculated as Revenue × COGS Rate, creating a relationship
-let builder: ScenarioRunner.StatementBuilder = { drivers, periods in
-    let revenue = drivers["Revenue"]!.sample(for: periods[0])
-    let cogsRate = drivers["COGS Rate"]!.sample(for: periods[0])
-    let opex = drivers["OpEx"]!.sample(for: periods[0])
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
 
-    // Calculate COGS from the relationship: COGS = Revenue × COGS Rate
-    let cogs = revenue * cogsRate
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
 
-    // Build Income Statement
-    let revenueAccount = try Account(
-        entity: company,
-        name: "Revenue",
-        type: .revenue,
-        timeSeries: TimeSeries(periods: periods, values: Array(repeating: revenue, count: periods.count))
-    )
-
-    let cogsAccount = try Account(
-        entity: company,
-        name: "COGS",
-        type: .expense,
-        timeSeries: TimeSeries(periods: periods, values: Array(repeating: cogs, count: periods.count)),
-        expenseType: .costOfGoodsSold
-    )
-
-    let opexAccount = try Account(
-        entity: company,
-        name: "Operating Expenses",
-        type: .expense,
-        timeSeries: TimeSeries(periods: periods, values: Array(repeating: opex, count: periods.count)),
-        expenseType: .operatingExpense
-    )
-
-    let incomeStatement = try IncomeStatement(
-        entity: company,
-        periods: periods,
-        revenueAccounts: [revenueAccount],
-        expenseAccounts: [cogsAccount, opexAccount]
-    )
-
-    // Simple balance sheet and cash flow (required for complete projection)
-    let cashAccount = try Account(
-        entity: company,
-        name: "Cash",
-        type: .asset,
-        timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]),
-        assetType: .cashAndEquivalents
-    )
-
-    let equityAccount = try Account(
-        entity: company,
-        name: "Equity",
-        type: .equity,
-        timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000])
-    )
-
-    let balanceSheet = try BalanceSheet(
-        entity: company,
-        periods: periods,
-        assetAccounts: [cashAccount],
-        liabilityAccounts: [],
-        equityAccounts: [equityAccount]
-    )
-
-    let cfAccount = try Account(
-        entity: company,
-        name: "Operating Cash Flow",
-        type: .operating,
-        timeSeries: incomeStatement.netIncome,
-        metadata: AccountMetadata(category: "Operating Activities")
-    )
-
-    let cashFlowStatement = try CashFlowStatement(
-        entity: company,
-        periods: periods,
-        operatingAccounts: [cfAccount],
-        investingAccounts: [],
-        financingAccounts: []
-    )
-
-    return (incomeStatement, balanceSheet, cashFlowStatement)
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Scenario and Sensitivity Analysis" />
+    <meta name="twitter:title" content="Scenario and Sensitivity Analysis" />
+    <meta property="og:description" content="Part 21 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 21 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
+    }
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
 }
-
-// Run base case
-let runner = ScenarioRunner()
-let baseProjection = try runner.run(
-    scenario: baseCase,
-    entity: company,
-    periods: quarters,
-    builder: builder
-)
-
-print("Base Case Q1 Net Income: \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Base Case Q1 Net Income: $200,000
-</code></pre><p><strong>The structure</strong>: Scenarios encapsulate a complete set of driver assumptions. The builder converts drivers into financial statements. This separation allows easy scenario comparison.</p><hr /><h3>Creating Multiple Scenarios</h3><p>Build best and worst case scenarios by overriding primitive drivers:</p><pre><code class="language-swift">// Best Case: Higher revenue, better margins (lower COGS rate), lower OpEx
-let bestRevenue = DeterministicDriver(name: "Revenue", value: 1_200_000)  // +20%
-let bestCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.45)    // 45% (better margins!)
-let bestOpEx = DeterministicDriver(name: "OpEx", value: 180_000)          // -10%
-
-var bestOverrides: [String: AnyDriver<Double>] = [:]
-bestOverrides["Revenue"] = AnyDriver(bestRevenue)
-bestOverrides["COGS Rate"] = AnyDriver(bestCOGSRate)
-bestOverrides["OpEx"] = AnyDriver(bestOpEx)
-
-let bestCase = FinancialScenario(
-    name: "Best Case",
-    description: "Higher sales + better margins",
-    driverOverrides: bestOverrides
-)
-
-// Worst Case: Lower revenue, worse margins (higher COGS rate), higher OpEx
-let worstRevenue = DeterministicDriver(name: "Revenue", value: 800_000)   // -20%
-let worstCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.825)  // 82.5% (margin compression!)
-let worstOpEx = DeterministicDriver(name: "OpEx", value: 220_000)         // +10%
-
-var worstOverrides: [String: AnyDriver<Double>] = [:]
-worstOverrides["Revenue"] = AnyDriver(worstRevenue)
-worstOverrides["COGS Rate"] = AnyDriver(worstCOGSRate)
-worstOverrides["OpEx"] = AnyDriver(worstOpEx)
-
-let worstCase = FinancialScenario(
-    name: "Worst Case",
-    description: "Lower sales + margin compression",
-    driverOverrides: worstOverrides
-)
-
-// Run all scenarios
-let bestProjection = try runner.run(
-    scenario: bestCase,
-    entity: company,
-    periods: quarters,
-    builder: builder
-)
-
-let worstProjection = try runner.run(
-    scenario: worstCase,
-    entity: company,
-    periods: quarters,
-    builder: builder
-)
-
-// Compare results
-print("\n=== Q1 Net Income Comparison ===")
-print("Best Case:  \(bestProjection.incomeStatement.netIncome[q1]!.currency(0))")
-print("Base Case:  \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
-print("Worst Case: \(worstProjection.incomeStatement.netIncome[q1]!.currency(0))")
-
-let range = bestProjection.incomeStatement.netIncome[q1]! -
-            worstProjection.incomeStatement.netIncome[q1]!
-print("\nRange: \(range.currency(0))")
-</code></pre><p><strong>Output:</strong></p><pre><code>=== Q1 Net Income Comparison ===
-Best Case:  $480,000   (Revenue $1.2M × 45% COGS = $540k, OpEx $180k)
-Base Case:  $200,000   (Revenue $1.0M × 60% COGS = $600k, OpEx $200k)
-Worst Case: ($80,000)  (Revenue $800k × 82.5% COGS = $660k, OpEx $220k)
-
-Range: $560,000
-</code></pre><p><strong>The reality</strong>: Net income swings from <strong>+$480K to -$80K</strong> across scenarios. That’s a $560K range—highly uncertain! This is why scenario planning matters.</p><p><strong>The power of compositional drivers</strong>: Notice how <strong>COGS automatically adjusts</strong> based on the relationship <code>COGS = Revenue × COGS Rate</code>. You can override:</p><ul><li><strong>Just Revenue</strong> (testing volume scenarios with constant margins)</li><li><strong>Just COGS Rate</strong> (testing margin scenarios with constant volume)</li><li><strong>Both</strong> (testing combined scenarios like Best/Worst case above)</li></ul><hr /><h3>One-Way Sensitivity Analysis</h3><p>Analyze how one input affects the output:</p><pre><code class="language-swift">// How does Revenue affect Net Income?
-let revenueSensitivity = try runSensitivity(
-    baseCase: baseCase,
-    entity: company,
-    periods: quarters,
-    inputDriver: "Revenue",
-    inputRange: 800_000...1_200_000,  // ±20%
-    steps: 9,  // Test 9 evenly-spaced values
-    builder: builder
-) { projection in
-    // Extract Q1 Net Income as output metric
-    return projection.incomeStatement.netIncome[q1]!
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
 }
-
-print("\n=== Revenue Sensitivity Analysis ===")
-print("Revenue     →   Net Income")
-print("----------      -----------")
-
-for (revenue, netIncome) in zip(revenueSensitivity.inputValues, revenueSensitivity.outputValues) {
-	print("\(revenue.currency(0).paddingLeft(toLength: 10))  → \(netIncome.currency(0).paddingLeft(toLength: 10))")
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-06/02-wed-scenario-analysis",
+      "name" : "Scenario and Sensitivity Analysis",
+      "position" : 2
+    }
+  ]
 }
-
-// Calculate sensitivity (slope)
-let deltaRevenue = revenueSensitivity.inputValues.last! - revenueSensitivity.inputValues.first!
-let deltaIncome = revenueSensitivity.outputValues.last! - revenueSensitivity.outputValues.first!
-let sensitivity = deltaIncome / deltaRevenue
-
-print("\nSensitivity: \(sensitivity.number(2))")
-print("For every $1 increase in revenue, net income increases by \(sensitivity.currency(2))")
-</code></pre><p><strong>Output:</strong></p><pre><code>=== Revenue Sensitivity Analysis ===
-Revenue     →   Net Income
-----------      -----------
-  $800,000  →   $120,000
-  $850,000  →   $140,000
-  $900,000  →   $160,000
-  $950,000  →   $180,000
-$1,000,000  →   $200,000
-$1,050,000  →   $220,000
-$1,100,000  →   $240,000
-$1,150,000  →   $260,000
-$1,200,000  →   $280,000
-
-Sensitivity: 0.40
-For every $1 increase in revenue, net income increases by $0.40
-</code></pre><p><strong>The insight</strong>: Net income has a <strong>40% contribution margin</strong> from revenue. This is because:</p><ul><li><strong>60% of revenue</strong> goes to COGS (variable cost that scales with revenue)</li><li><strong>40% remains</strong> as contribution margin to cover OpEx and generate profit</li></ul><p>This is a fundamental concept: the <strong>contribution margin</strong> shows how much each additional dollar of revenue contributes to covering fixed costs and profit.</p><hr /><h3>Tornado Diagram Analysis</h3><p>Identify which drivers have the greatest impact:</p><pre><code class="language-swift">// Analyze all key drivers at once
-let tornado = try runTornadoAnalysis(
-	baseCase: baseCase,
-	entity: company,
-	periods: quarters,
-	inputDrivers: ["Revenue", "COGS Rate", "Operating Expenses"],
-	variationPercent: 0.20,  // Vary each by ±20%
-	steps: 2,  // Just test high and low
-	builder: builder
-) { projection in
-	return projection.incomeStatement.netIncome[q1]!
-}
-
-print("\n=== Tornado Diagram (Ranked by Impact) ===")
-print("Driver                  Low         High        Impact      % Impact")
-print("--------------------    ----------  ----------  ----------  --------")
-
-for input in tornado.inputs {
-	let impact = tornado.impacts[input]!
-	let low = tornado.lowValues[input]!
-	let high = tornado.highValues[input]!
-	let percentImpact = (impact / tornado.baseCaseOutput)
-
-	print("\(input.padding(toLength: 20, withPad: " ", startingAt: 0))\(low.currency(0).paddingLeft(toLength: 12))\(high.currency(0).paddingLeft(toLength: 12))\(impact.currency(0).paddingLeft(toLength: 12))\(percentImpact.percent(0).paddingLeft(toLength: 12))")
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>=== Tornado Diagram (Ranked by Impact) ===
-Driver                  Low         High        Impact      % Impact
---------------------    ----------  ----------  ----------  --------
-COGS Rate                $80,000    $320,000    $240,000        120%
-Revenue                 $120,000    $280,000    $160,000         80%
-Operating Expenses      $160,000    $240,000     $80,000         40%
-</code></pre><p><strong>The ranking</strong>:</p><ol><li><strong>COGS Rate</strong> (margins) has the biggest impact ($240K range)</li><li><strong>Revenue</strong> (volume) second ($160K range)</li><li><strong>Operating Expenses</strong> (fixed costs) third ($80K range)</li></ol><p><strong>The strategic insight</strong>: In this business model, <strong>margin improvement is more important than volume growth</strong>. A 20% improvement in COGS Rate (from 60% → 48%) has more impact than a 20% increase in revenue. This suggests focusing on:</p><ul><li><strong>First priority</strong>: Supplier negotiations, manufacturing efficiency, pricing power (all improve COGS Rate)</li><li><strong>Second priority</strong>: Sales growth and market expansion (improve Revenue)</li><li><strong>Third priority</strong>: Overhead reduction (reduce Operating Expenses)</li></ul><hr /><h3>Visualize the Tornado</h3><p>Create a text-based tornado diagram:</p><pre><code class="language-swift">let tornadoPlot = plotTornadoDiagram(tornado, baseCase: baseProjection.incomeStatement.netIncome[q1]!)
-
-print("\n" + tornadoPlot)
-</code></pre><p><strong>Output:</strong></p><pre><code>Tornado Diagram - Sensitivity Analysis
-Base Case: 200000
-
-COGS Rate          ◄█████████████████████████|█████████████████████████► Impact: 240000 120.0%
-                     80000                 200000                 320000)
-Revenue            ◄         ████████████████|█████████████████        ► Impact: 160000 80.0%
-                     120000                 200000                 280000)
-Operating Expenses ◄                 ████████|████████                 ► Impact: 80000 40.0%
-                     160000                 200000                 240000)
-</code></pre><p>The width of each bar shows impact range. <strong>COGS Rate’s bar is widest</strong>—margin management is the most impactful lever for this business.</p><hr /><h3>Two-Way Sensitivity Analysis</h3><p>Two-way sensitivity analysis allows us to analyze interactions between two inputs:</p><pre><code class="language-swift">// How do Revenue and COGS Rate interact?
-let twoWay = try runTwoWaySensitivity(
-    baseCase: baseCase,
-    entity: company,
-    periods: quarters,
-    inputDriver1: "Revenue",
-    inputRange1: 800_000...1_200_000,
-    steps1: 5,
-    inputDriver2: "COGS Rate",
-    inputRange2: 0.48...0.72,  // 48% to 72% COGS
-    steps2: 5,
-    builder: builder
-) { projection in
-    return projection.incomeStatement.netIncome[q1]!
-}
-
-// Print data table
-print("\n=== Two-Way Sensitivity: Revenue × COGS Rate ===")
-print("\nCOGS Rate →         48%         54%         60%         66%         72%")
-print("Revenue ↓")
-print("-----------    --------    --------    --------    --------    --------")
-
-for (i, revenue) in twoWay.inputValues1.enumerated() {
-	var row = "\(revenue.currency(0).paddingLeft(toLength: 11))"
-	for j in 0..<twoWay.inputValues2.count {
-		let netIncome = twoWay.results[i][j]
-		row += netIncome.currency(0).paddingLeft(toLength: 12)
-	}
-	print(row)
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>=== Two-Way Sensitivity: Revenue × COGS Rate ===
-
-COGS Rate →         48%         54%         60%         66%         72%
-Revenue ↓
------------    --------    --------    --------    --------    --------
-   $800,000    $216,000    $168,000    $120,000     $72,000     $24,000
-   $900,000    $268,000    $214,000    $160,000    $106,000     $52,000
- $1,000,000    $320,000    $260,000    $200,000    $140,000     $80,000
- $1,100,000    $372,000    $306,000    $240,000    $174,000    $108,000
- $1,200,000    $424,000    $352,000    $280,000    $208,000    $136,000
-</code></pre><p><strong>The interaction</strong>: This table shows the <strong>trade-off between volume and margins</strong>:</p><ul><li><strong>Lower-left corner</strong> ($1.2M revenue, 48% COGS) = <strong>$424K profit</strong> (best case: high volume + high margins)</li><li><strong>Upper-right corner</strong> ($800K revenue, 72% COGS) = <strong>$24K profit</strong> (worst case: low volume + low margins)</li><li><strong>Diagonal insight</strong>: A company at $800K revenue with 48% COGS ($216K profit) can achieve similar results as $1.2M revenue with 72% COGS ($136K profit). This shows <strong>margin quality matters more than scale</strong> in certain scenarios.</li></ul><hr /><h3>Monte Carlo Integration</h3><p>Combine scenarios with probabilistic analysis using uncertain drivers:</p><pre><code class="language-swift">// Create probabilistic scenario with uncertain Revenue and COGS Rate
-let uncertainRevenue = ProbabilisticDriver<Double>.normal(
-    name: "Revenue",
-    mean: 1_000_000.0,
-    stdDev: 100_000.0  // ±$100K uncertainty
-)
-
-let uncertainCOGSRate = ProbabilisticDriver<Double>.normal(
-    name: "COGS Rate",
-    mean: 0.60,
-    stdDev: 0.05  // ±5% margin uncertainty
-)
-
-var monteCarloOverrides: [String: AnyDriver<Double>] = [:]
-monteCarloOverrides["Revenue"] = AnyDriver(uncertainRevenue)
-monteCarloOverrides["COGS Rate"] = AnyDriver(uncertainCOGSRate)
-monteCarloOverrides["OpEx"] = AnyDriver(baseOpEx)
-
-let uncertainScenario = FinancialScenario(
-    name: "Monte Carlo",
-    description: "Probabilistic scenario",
-    driverOverrides: monteCarloOverrides
-)
-
-// Run 10,000 iterations
-let simulation = try runFinancialSimulation(
-    scenario: uncertainScenario,
-    entity: company,
-    periods: quarters,
-    iterations: 10_000,
-    builder: builder
-)
-
-// Analyze results
-let netIncomeMetric: (FinancialProjection) -> Double = { projection in
-    return projection.incomeStatement.netIncome[q1]!
-}
-
-print("\n=== Monte Carlo Results (10,000 iterations) ===")
-print("Mean: \(simulation.mean(metric: netIncomeMetric).currency(0))")
-
-print("\nPercentiles:")
-print("  P5:  \(simulation.percentile(0.05, metric: netIncomeMetric).currency(0))")
-print("  P25: \(simulation.percentile(0.25, metric: netIncomeMetric).currency(0))")
-print("  P50: \(simulation.percentile(0.50, metric: netIncomeMetric).currency(0))")
-print("  P75: \(simulation.percentile(0.75, metric: netIncomeMetric).currency(0))")
-print("  P95: \(simulation.percentile(0.95, metric: netIncomeMetric).currency(0))")
-
-let ci90 = simulation.confidenceInterval(0.90, metric: netIncomeMetric)
-print("\n90% CI: [\(ci90.lowerBound.currency(0)), \(ci90.upperBound.currency(0))]")
-
-let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric)
-print("\nProbability of loss: \(probLoss.percent(1))")
-</code></pre><p><strong>Output:</strong></p><pre><code>=== Monte Carlo Results (10,000 iterations) ===
-Mean: $200,352
-
-Percentiles:
-  P5:  $97,865
-  P25: $156,221
-  P50: $197,353
-  P75: $242,244
-  P95: $310,941
-
-90% CI: [$97,865, $310,941]
-
-Probability of loss: 0.0%
-</code></pre><p><strong>The integration</strong>: Monte Carlo gives you the <strong>full probability distribution</strong>, not just 3 scenarios. There’s 0.0% chance of loss—but that’s not a substitute for good risk management!</p><hr /><h3>GPU-Accelerated Monte Carlo with Expression Models</h3><p>For high-performance probabilistic analysis, use GPU-accelerated <code>MonteCarloExpressionModel</code> to run 10-100× faster with minimal memory:</p><pre><code class="language-swift">// Pre-compute constants
-let opexAmount = 200_000.0
-let taxRate = 0.21
-
-// Define profit model using expression builder
-let profitModel = MonteCarloExpressionModel { builder in
-    // Inputs: revenue, cogsRate
-    let revenue = builder[0]
-    let cogsRate = builder[1]
-
-    // Calculate P&L
-    let cogs = revenue * cogsRate
-    let grossProfit = revenue - cogs
-    let ebitda = grossProfit - opexAmount
-
-    // Conditional tax (only on profits)
-    let isProfitable = ebitda.greaterThan(0.0)
-    let tax = isProfitable.ifElse(
-        then: ebitda * taxRate,
-        else: 0.0
-    )
-
-    let netIncome = ebitda - tax
-    return netIncome
-}
-
-// Set up high-performance simulation
-var gpuSimulation = MonteCarloSimulation(
-    iterations: 100_000,  // 10× more iterations
-    enableGPU: true,
-    expressionModel: profitModel
-)
-
-// Add uncertain inputs
-gpuSimulation.addInput(SimulationInput(
-    name: "Revenue",
-    distribution: DistributionNormal(mean: 1_000_000, stdDev: 100_000)
-))
-
-gpuSimulation.addInput(SimulationInput(
-    name: "COGS Rate",
-    distribution: DistributionNormal(mean: 0.60, stdDev: 0.05)
-))
-
-// Run GPU-accelerated simulation
-let gpuResults = try gpuSimulation.run()
-
-print("\n=== GPU-Accelerated Monte Carlo (100,000 iterations) ===")
-print("Compute Time: \(gpuResults.computeTime.formatted(.number.precision(.fractionLength(1)))) ms")
-print("GPU Used: \(gpuResults.usedGPU ? "Yes" : "No")")
-print()
-print("Net Income After Tax:")
-print("  Mean:   \(gpuResults.statistics.mean.currency(0))")
-print("  Median: \(gpuResults.percentiles.p50.currency(0))")
-print("  Std Dev: \(gpuResults.statistics.stdDev.currency(0))")
-print()
-print("Risk Metrics:")
-print("  95% CI: [\(gpuResults.percentiles.p5.currency(0)), \(gpuResults.percentiles.p95.currency(0))]")
-print("  Value at Risk (5%): \(gpuResults.percentiles.p5.currency(0))")
-print("  Probability of Loss: \((gpuResults.valuesArray.filter { $0 < 0 }.count / gpuResults.iterations).percent(1))")
-</code></pre><p><strong>Output:</strong></p><pre><code>=== GPU-Accelerated Monte Carlo (100,000 iterations) ===
-Compute Time: 52.3 ms
-GPU Used: Yes
-
-Net Income After Tax:
-  Mean:   $158,294
-  Median: $158,186
-  Std Dev: $63,447
-
-Risk Metrics:
-  95% CI: [$54,072, $274,883]
-  Value at Risk (5%): $54,072
-  Probability of Loss: 0.7%
-</code></pre><p><strong>Performance Breakthrough:</strong></p><table><thead><th>Approach</th><th>Iterations</th><th>Time</th><th>Memory</th><th>Speedup</th></thead><tbody><tr><td>Traditional Monte Carlo</td><td>10,000</td><td>~2,100 ms</td><td>~25 MB</td><td>1× (baseline)</td></tr><tr><td>GPU Expression Model</td><td>100,000</td><td>~52 ms</td><td>~8 MB</td><td><strong>~400×</strong></td></tr></tbody></table><p><strong>When to use expression models:</strong></p><ul><li>✅ <strong>Single-period</strong> calculations (like quarterly profit)</li><li>✅ <strong>High iteration counts</strong> (50,000+)</li><li>✅ <strong>Compute-intensive</strong> formulas</li><li>✅ <strong>Memory-constrained</strong> environments</li></ul><p><strong>When to use traditional approach:</strong></p><ul><li>✅ <strong>Multi-period compounding</strong> (revenue growing over 4 quarters)</li><li>✅ <strong>Complex state</strong> (financial statements with interdependencies)</li><li>✅ <strong>Path-dependent</strong> calculations (option pricing with early exercise)</li></ul><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Expression Models: The Constants vs Variables Pattern</strong></p><p>GPU-accelerated expression models compile to bytecode that runs on Metal. This creates two distinct contexts:</p><p><strong>Swift context (outside builder):</strong></p><pre><code class="language-swift">let opex = 200_000.0  // Regular Swift Double
-let taxRate = pow(1.21, years)  // Use Swift's pow() for constants
-</code></pre><p><strong>DSL context (inside builder):</strong></p><pre><code class="language-swift">let revenue = builder[0]  // ExpressionProxy (depends on random input)
-let afterTax = revenue * 0.79  // Use pre-computed constant
-let scaled = revenue.exp()  // Use DSL methods on variables
-</code></pre><p><strong>Critical rule</strong>: Pre-compute all constants outside the builder. Only use DSL methods (<code>.exp()</code>, <code>.sqrt()</code>, <code>.power()</code>) on variables that depend on random inputs.</p><p><strong>Why?</strong> Constants should be baked into the GPU bytecode, not recomputed millions of times. This pattern gives you maximum performance.</p><p><code>─────────────────────────────────────────────────</code></p><p>For comprehensive GPU Monte Carlo coverage, see: <a href="doc:4.3-MonteCarloExpressionModelsGuide">doc:4.3-MonteCarloExpressionModelsGuide</a></p><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-let company = Entity(
-	id: "TECH001",
-	primaryType: .ticker,
-	name: "TechCo"
-)
-
-let q1 = Period.quarter(year: 2025, quarter: 1)
-let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]
-
-// Base case: Define primitive drivers
-// These are the independent inputs that scenarios can override
-let baseRevenue = DeterministicDriver(name: "Revenue", value: 1_000_000)
-let baseCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.60)  // 60% of revenue
-let baseOpEx = DeterministicDriver(name: "OpEx", value: 200_000)
-
-var baseOverrides: [String: AnyDriver<Double>] = [:]
-baseOverrides["Revenue"] = AnyDriver(baseRevenue)
-baseOverrides["COGS Rate"] = AnyDriver(baseCOGSRate)
-baseOverrides["Operating Expenses"] = AnyDriver(baseOpEx)
-
-let baseCase = FinancialScenario(
-	name: "Base Case",
-	description: "Expected performance",
-	driverOverrides: baseOverrides
-)
-
-// Builder function: Convert primitive drivers → financial statements
-// Key insight: COGS is calculated as Revenue × COGS Rate, creating a relationship
-let builder: ScenarioRunner.StatementBuilder = { drivers, periods in
-	let revenue = drivers["Revenue"]!.sample(for: periods[0])
-	let cogsRate = drivers["COGS Rate"]!.sample(for: periods[0])
-	let opex = drivers["Operating Expenses"]!.sample(for: periods[0])
-	
-	// Calculate COGS from the relationship: COGS = Revenue × COGS Rate
-	let cogs = revenue * cogsRate
-
-	// Build Income Statement
-	let revenueAccount = try Account(
-		entity: company,
-		name: "Revenue",
-		incomeStatementRole: .revenue,
-		timeSeries: TimeSeries(periods: periods, values: Array(repeating: revenue, count: periods.count))
-	)
-
-	let cogsAccount = try Account(
-		entity: company,
-		name: "COGS",
-		incomeStatementRole: .costOfGoodsSold,
-		timeSeries: TimeSeries(periods: periods, values: Array(repeating: cogs, count: periods.count))
-	)
-
-	let opexAccount = try Account(
-		entity: company,
-		name: "Operating Expenses",
-		incomeStatementRole: .operatingExpenseOther,
-		timeSeries: TimeSeries(periods: periods, values: Array(repeating: opex, count: periods.count))
-	)
-
-	let incomeStatement = try IncomeStatement(
-		entity: company,
-		periods: periods,
-		accounts: [revenueAccount, cogsAccount, opexAccount]
-	)
-
-	// Simple balance sheet and cash flow (required for complete projection)
-	let cashAccount = try Account(
-		entity: company,
-		name: "Cash",
-		balanceSheetRole: .cashAndEquivalents,
-		timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]),
-	)
-
-	let equityAccount = try Account(
-		entity: company,
-		name: "Equity",
-		balanceSheetRole: .commonStock,
-		timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000])
-	)
-
-	let balanceSheet = try BalanceSheet(
-		entity: company,
-		periods: periods,
-		accounts: [cashAccount, equityAccount]
-	)
-
-	let cfAccount = try Account(
-		entity: company,
-		name: "Operating Cash Flow",
-		cashFlowRole: .netIncome,
-		timeSeries: incomeStatement.netIncome,
-		metadata: AccountMetadata(category: "Operating Activities")
-	)
-
-	let cashFlowStatement = try CashFlowStatement(
-		entity: company,
-		periods: periods,
-		accounts: [cfAccount]
-	)
-
-	return (incomeStatement, balanceSheet, cashFlowStatement)
-}
-
-// Run base case
-let runner = ScenarioRunner()
-let baseProjection = try runner.run(
-	scenario: baseCase,
-	entity: company,
-	periods: quarters,
-	builder: builder
-)
-
-print("Base Case Q1 Net Income: \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
-
-// MARK: - Create Multiple Scenarios
-
-	// Best Case: Higher revenue, lower costs
-	let bestRevenue = DeterministicDriver(name: "Revenue", value: 1_200_000)  // +20%
-	let bestCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.45)        // -10%
-	let bestOpEx = DeterministicDriver(name: "Operating Expenses", value: 180_000)          // -10%
-
-	var bestOverrides: [String: AnyDriver<Double>] = [:]
-	bestOverrides["Revenue"] = AnyDriver(bestRevenue)
-	bestOverrides["COGS Rate"] = AnyDriver(bestCOGSRate)
-	bestOverrides["Operating Expenses"] = AnyDriver(bestOpEx)
-
-	let bestCase = FinancialScenario(
-		name: "Best Case",
-		description: "Optimistic performance",
-		driverOverrides: bestOverrides
-	)
-
-	// Worst Case: Lower revenue, higher costs
-	let worstRevenue = DeterministicDriver(name: "Revenue", value: 800_000)   // -20%
-	let worstCOGSRate = DeterministicDriver(name: "COGS Rate", value: 0.825)       // +10%
-	let worstOpEx = DeterministicDriver(name: "Operating Expenses", value: 220_000)         // +10%
-
-	var worstOverrides: [String: AnyDriver<Double>] = [:]
-	worstOverrides["Revenue"] = AnyDriver(worstRevenue)
-	worstOverrides["COGS Rate"] = AnyDriver(worstCOGSRate)
-	worstOverrides["Operating Expenses"] = AnyDriver(worstOpEx)
-
-	let worstCase = FinancialScenario(
-		name: "Worst Case",
-		description: "Lower sales + margin compression",
-		driverOverrides: worstOverrides
-	)
-
-	// Run all scenarios
-	let bestProjection = try runner.run(
-		scenario: bestCase,
-		entity: company,
-		periods: quarters,
-		builder: builder
-	)
-
-	let worstProjection = try runner.run(
-		scenario: worstCase,
-		entity: company,
-		periods: quarters,
-		builder: builder
-	)
-
-	// Compare results
-	print("\n=== Q1 Net Income Comparison ===")
-	print("Best Case:  \(bestProjection.incomeStatement.netIncome[q1]!.currency(0))")
-	print("Base Case:  \(baseProjection.incomeStatement.netIncome[q1]!.currency(0))")
-	print("Worst Case: \(worstProjection.incomeStatement.netIncome[q1]!.currency(0))")
-
-	let range = bestProjection.incomeStatement.netIncome[q1]! -
-				worstProjection.incomeStatement.netIncome[q1]!
-	print("\nRange: \(range.currency(0))")
-
-// MARK: - One-Way Sensitivity Analysis
-
-// How does Revenue affect Net Income?
-let revenueSensitivity = try runSensitivity(
-	baseCase: baseCase,
-	entity: company,
-	periods: quarters,
-	inputDriver: "Revenue",
-	inputRange: 800_000...1_200_000,  // ±20%
-	steps: 9,  // Test 9 evenly-spaced values
-	builder: builder
-) { projection in
-	// Extract Q1 Net Income as output metric
-	let q1 = Period.quarter(year: 2025, quarter: 1)
-	return projection.incomeStatement.netIncome[q1]!
-}
-
-print("\n=== Revenue Sensitivity Analysis ===")
-print("Revenue     →   Net Income")
-print("----------      -----------")
-
-for (revenue, netIncome) in zip(revenueSensitivity.inputValues, revenueSensitivity.outputValues) {
-	print("\(revenue.currency(0).paddingLeft(toLength: 10))  → \(netIncome.currency(0).paddingLeft(toLength: 10))")
-}
-
-// Calculate sensitivity (slope)
-let deltaRevenue = revenueSensitivity.inputValues.last! - revenueSensitivity.inputValues.first!
-let deltaIncome = revenueSensitivity.outputValues.last! - revenueSensitivity.outputValues.first!
-let sensitivity = deltaIncome / deltaRevenue
-
-print("\nSensitivity: \(sensitivity.number(2))")
-print("For every $1 increase in revenue, net income increases by \(sensitivity.currency(2))")
-
-
-// MARK: -  Tornado Diagram Analysis
-
-	// Analyze all key drivers at once
-	let tornado = try runTornadoAnalysis(
-		baseCase: baseCase,
-		entity: company,
-		periods: quarters,
-		inputDrivers: ["Revenue", "COGS Rate", "Operating Expenses"],
-		variationPercent: 0.20,  // Vary each by ±20%
-		steps: 2,  // Just test high and low
-		builder: builder
-	) { projection in
-		return projection.incomeStatement.netIncome[q1]!
-	}
-
-	print("\n=== Tornado Diagram (Ranked by Impact) ===")
-	print("Driver                  Low         High        Impact      % Impact")
-	print("--------------------    ----------  ----------  ----------  --------")
-
-	for input in tornado.inputs {
-		let impact = tornado.impacts[input]!
-		let low = tornado.lowValues[input]!
-		let high = tornado.highValues[input]!
-		let percentImpact = (impact / tornado.baseCaseOutput)
-
-		print("\(input.padding(toLength: 20, withPad: " ", startingAt: 0))\(low.currency(0).paddingLeft(toLength: 12))\(high.currency(0).paddingLeft(toLength: 12))\(impact.currency(0).paddingLeft(toLength: 12))\(percentImpact.percent(0).paddingLeft(toLength: 12))")
-	}
-
-// MARK: - Visualize the Tornado
-
-let tornadoPlot = plotTornadoDiagram(tornado)
-
-print("\n" + tornadoPlot)
-
-// MARK: - Two-Way Sensitivity Analysis
-
-	// How do Revenue and COGS Rate interact?
-	let twoWay = try runTwoWaySensitivity(
-		baseCase: baseCase,
-		entity: company,
-		periods: quarters,
-		inputDriver1: "Revenue",
-		inputRange1: 800_000...1_200_000,
-		steps1: 5,
-		inputDriver2: "COGS Rate",
-		inputRange2: 0.48...0.72,  // 48% to 72% COGS
-		steps2: 5,
-		builder: builder
-	) { projection in
-		return projection.incomeStatement.netIncome[q1]!
-	}
-
-	// Print data table
-	print("\n=== Two-Way Sensitivity: Revenue × COGS Rate ===")
-	print("\nCOGS Rate →         48%         54%         60%         66%         72%")
-	print("Revenue ↓")
-	print("-----------    --------    --------    --------    --------    --------")
-
-	for (i, revenue) in twoWay.inputValues1.enumerated() {
-		var row = "\(revenue.currency(0).paddingLeft(toLength: 11))"
-		for j in 0..<twoWay.inputValues2.count {
-			let netIncome = twoWay.results[i][j]
-			row += netIncome.currency(0).paddingLeft(toLength: 12)
-		}
-		print(row)
-	}
-
-
-// MARK: - Monte Carlo Integration
-
-	// Create probabilistic scenario with uncertain Revenue and COGS Rate
-	let uncertainRevenue = ProbabilisticDriver<Double>.normal(
-		name: "Revenue",
-		mean: 1_000_000.0,
-		stdDev: 100_000.0  // ±$100K uncertainty
-	)
-
-	let uncertainCOGSRate = ProbabilisticDriver<Double>.normal(
-		name: "COGS Rate",
-		mean: 0.60,
-		stdDev: 0.05  // ±5% margin uncertainty
-	)
-
-	var monteCarloOverrides: [String: AnyDriver<Double>] = [:]
-	monteCarloOverrides["Revenue"] = AnyDriver(uncertainRevenue)
-	monteCarloOverrides["COGS Rate"] = AnyDriver(uncertainCOGSRate)
-	monteCarloOverrides["Operating Expenses"] = AnyDriver(baseOpEx)
-
-	let uncertainScenario = FinancialScenario(
-		name: "Monte Carlo",
-		description: "Probabilistic scenario",
-		driverOverrides: monteCarloOverrides
-	)
-
-	// Run 10,000 iterations
-	let simulation = try runFinancialSimulation(
-		scenario: uncertainScenario,
-		entity: company,
-		periods: quarters,
-		iterations: 10_000,
-		builder: builder
-	)
-
-	// Analyze results
-	let netIncomeMetric: (FinancialProjection) -> Double = { projection in
-		return projection.incomeStatement.netIncome[q1]!
-	}
-
-	print("\n=== Monte Carlo Results (10,000 iterations) ===")
-	print("Mean: \(simulation.mean(metric: netIncomeMetric).currency(0))")
-
-	print("\nPercentiles:")
-	print("  P5:  \(simulation.percentile(0.05, metric: netIncomeMetric).currency(0))")
-	print("  P25: \(simulation.percentile(0.25, metric: netIncomeMetric).currency(0))")
-	print("  P50: \(simulation.percentile(0.50, metric: netIncomeMetric).currency(0))")
-	print("  P75: \(simulation.percentile(0.75, metric: netIncomeMetric).currency(0))")
-	print("  P95: \(simulation.percentile(0.95, metric: netIncomeMetric).currency(0))")
-
-	let ci90 = simulation.confidenceInterval(0.90, metric: netIncomeMetric)
-	print("\n90% CI: [\(ci90.lowerBound.currency(0)), \(ci90.upperBound.currency(0))]")
-
-	let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric)
-	print("\nProbability of loss: \(probLoss.percent(1))")
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.2-ScenarioAnalysisGuide.md">BusinessMath Docs – 4.2 Scenario Analysis</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add more scenarios (recession, expansion, new competitor)</li><li>Build three-way sensitivity analysis (revenue × costs × pricing)</li><li>Model correlated uncertainties (when revenue drops, costs often do too)</li><li>Create scenario probability weights (70% base, 20% best, 10% worst)</li></ol><hr /><h2>Real-World Application</h2><p>Every strategic decision requires scenario and sensitivity analysis:</p><ul><li><strong>M&A due diligence</strong>: “Under which scenarios does this acquisition create value?”</li><li><strong>Product launches</strong>: “Which assumption matters most—adoption rate or pricing?”</li><li><strong>Capital projects</strong>: “What’s the IRR in best/base/worst scenarios?”</li><li><strong>Strategic planning</strong>: “How resilient is our strategy to economic downturns?”</li></ul><p><strong>Corporate development use case</strong>: “We’re considering acquiring a competitor for $500M. Run tornado analysis on synergy assumptions (revenue, cost savings, integration costs). Show me the NPV range across scenarios.”</p><p>BusinessMath makes scenario and sensitivity analysis systematic, reproducible, and decision-ready.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Tornado Diagrams: Visual Risk Prioritization</strong></p><p>A tornado diagram ranks inputs by impact on the output. It’s called a “tornado” because the widest bar (biggest impact) is at the top, narrowing down like a tornado shape.</p><p><strong>Why this matters</strong>:</p><ul><li><strong>Focus scarce resources</strong>: Improve the top 2-3 drivers, ignore the rest</li><li><strong>Set research priorities</strong>: Spend more effort refining high-impact assumptions</li><li><strong>Negotiate effectively</strong>: In M&A, focus diligence on tornado-top items</li></ul><p><strong>Example</strong>: If Revenue has 10× the impact of OpEx, spend time perfecting your revenue forecast, not optimizing office supply costs.</p><p><strong>The rule</strong>: <strong>80/20 applies to uncertainty</strong>—20% of inputs drive 80% of outcome variance.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Compositional Drivers: Primitives vs. Formulas</strong></p><p>This example demonstrates a critical pattern for ergonomic scenario analysis: <strong>distinguish primitive inputs from calculated formulas</strong>.</p><p><strong>Primitive drivers</strong> are independent inputs you control:</p><ul><li><code>Revenue</code> - how much you sell</li><li><code>COGS Rate</code> - what percentage of revenue goes to production costs</li><li><code>OpEx</code> - fixed operating expenses</li></ul><p><strong>Formula drivers</strong> are relationships calculated in the builder:</p><ul><li><code>COGS = Revenue × COGS Rate</code> - computed from primitives</li></ul><p><strong>Why this matters</strong>:</p><ol><li><strong>Flexibility</strong>: Override any primitive independently (test revenue scenarios, margin scenarios, or both)</li><li><strong>Natural sensitivity</strong>: When you vary <code>Revenue</code>, <code>COGS</code> automatically scales, capturing the 40% contribution margin</li><li><strong>Probabilistic modeling</strong>: Uncertain <code>Revenue</code> + uncertain <code>COGS Rate</code> → compound uncertainty in <code>COGS</code> propagates naturally</li><li><strong>Realistic scenarios</strong>: Best case combines high revenue AND better margins; worst case combines low revenue AND margin compression</li></ol><p><strong>Alternative (anti-pattern)</strong>: Treating the <em>dollar amount</em> of <code>COGS</code> as an independent primitive will give 100% revenue passthrough—unrealistic for businesses with variable costs!</p><p><strong>The principle</strong>: <strong>Model your business economics</strong>, not just your accounting equations.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The biggest design challenge was <strong>handling driver overrides</strong>. We needed a system where:</p><ol><li>Base case defines default drivers</li><li>Scenarios override specific drivers</li><li>Unoverridden drivers fall back to defaults</li><li>Type safety is maintained</li></ol><p>We chose a dictionary-based approach with <code>AnyDriver</code> type erasure:</p><pre><code class="language-swift">var overrides: [String: AnyDriver<Double>] = [:]
-overrides["Revenue"] = AnyDriver(customRevenueDriver)
-</code></pre><p><strong>Trade-off</strong>: Loses compile-time type checking (runtime <code>String</code> keys), but gains flexibility for dynamic scenario construction.</p><p><strong>Alternative considered</strong>: Strongly-typed scenario builder with keypaths—rejected as too rigid for exploratory analysis.</p><p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - We designed the API by writing tutorial examples first to ensure usability.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Friday</strong>: Case Study #3 - Option Pricing with Monte Carlo, combining simulation with derivatives valuation.</p><p><strong>Next week</strong>: Week 7 explores optimization—finding the <em>best</em> strategy, not just analyzing given scenarios.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 6/12</li><li>Posts Published: 21/~48</li><li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + Simulation (in progress)</li><li>Playgrounds: 20 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, scenarios, sensitivity-analysis, tornado-diagrams, what-if-analysis</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="col-md-9223372036854775807">
+      <div class="ig-main-content">
+        <h1 class="mainTitle">Scenario and Sensitivity Analysis</h1>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">21 min read</p>
+        <div class="blurb" style="width: 70.0%; max-width: 800px">
+          <p><strong>Part 21 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Creating multiple financial scenarios (base, optimistic, and downside case)</li>
+            <li>Running one-way sensitivity analysis to test input variations</li>
+            <li>Building tornado diagrams to identify the most impactful drivers</li>
+            <li>Performing two-way sensitivity analysis for input interactions</li>
+            <li>Combining scenario planning with probabilistic Monte Carlo</li>
+            <li>Making data-driven decisions under uncertainty</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>Good decision-making is centered around identifying and understanding different states of the future. One of the best ways we have to think about this is to consider 
+          <strong>what if</strong>?
+          <ul>
+            <li><em>Which assumptions matter most?</em> If revenue drops 10%, does the project still work?</li>
+            <li><em>What’s the range of outcomes?</em> Best case, base case, worst case—how different are they?</li>
+            <li><em>Which input should we focus on?</em> Would raising prices or cutting costs be more impactful?</li>
+            <li><em>How do inputs interact?</em> If revenue drops AND costs rise, what happens?</li>
+          </ul>
+          <strong>Single-point forecasts hide critical uncertainties</strong>. Scenario and sensitivity analysis reveal which assumptions drive your results and how robust your decisions are.
+          <hr />
+          <h2>The Solution</h2>BusinessMath provides comprehensive scenario and sensitivity analysis tools: 
+          <code>FinancialScenario</code> for discrete cases, sensitivity functions for input variations, and Monte Carlo integration for probabilistic analysis.
+          <h3>Creating Your First Scenario</h3>Define base case drivers and build financial statements:
+          <pre><code class="language-swift">import BusinessMath let company = Entity( id: “TECH001”, primaryType: .ticker, name: “TechCo” )<p></p><p>let q1 = Period.quarter(year: 2025, quarter: 1) let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]</p><p>// Base case: Define primitive drivers // These are the independent inputs that scenarios can override let baseRevenue = DeterministicDriver(name: “Revenue”, value: 1_000_000) let baseCOGSRate = DeterministicDriver(name: “COGS Rate”, value: 0.60) // 60% of revenue let baseOpEx = DeterministicDriver(name: “OpEx”, value: 200_000)</p><p>var baseOverrides: [String: AnyDriver
+                <double>
+                  ] = [:] baseOverrides[“Revenue”] = AnyDriver(baseRevenue) baseOverrides[“COGS Rate”] = AnyDriver(baseCOGSRate) baseOverrides[“OpEx”] = AnyDriver(baseOpEx)
+                </double></p><p>let baseCase = FinancialScenario( name: “Base Case”, description: “Expected performance”, driverOverrides: baseOverrides )</p></code>
+            <div>
+              <code class="language-swift"><p>// Builder function: Convert primitive drivers → financial statements // Key insight: COGS is calculated as Revenue × COGS Rate, creating a relationship let builder: ScenarioRunner.StatementBuilder = { drivers, periods in let revenue = drivers[“Revenue”]!.sample(for: periods[0]) let cogsRate = drivers[“COGS Rate”]!.sample(for: periods[0]) let opex = drivers[“OpEx”]!.sample(for: periods[0])</p><pre><code>// Calculate COGS from the relationship: COGS = Revenue × COGS Rate let cogs = revenue * cogsRate<p></p><p>// Build Income Statement let revenueAccount = try Account( entity: company, name: “Revenue”, type: .revenue, timeSeries: TimeSeries(periods: periods, values: Array(repeating: revenue, count: periods.count)) )</p><p>let cogsAccount = try Account( entity: company, name: “COGS”, type: .expense, timeSeries: TimeSeries(periods: periods, values: Array(repeating: cogs, count: periods.count)), expenseType: .costOfGoodsSold )</p><p>let opexAccount = try Account( entity: company, name: “Operating Expenses”, type: .expense, timeSeries: TimeSeries(periods: periods, values: Array(repeating: opex, count: periods.count)), expenseType: .operatingExpense )</p><p>let incomeStatement = try IncomeStatement( entity: company, periods: periods, revenueAccounts: [revenueAccount], expenseAccounts: [cogsAccount, opexAccount] )</p><p>// Simple balance sheet and cash flow (required for complete projection) let cashAccount = try Account( entity: company, name: “Cash”, type: .asset, timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]), assetType: .cashAndEquivalents )</p><p>let equityAccount = try Account( entity: company, name: “Equity”, type: .equity, timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]) )</p><p>let balanceSheet = try BalanceSheet( entity: company, periods: periods, assetAccounts: [cashAccount], liabilityAccounts: [], equityAccounts: [equityAccount] )</p><p>let cfAccount = try Account( entity: company, name: “Operating Cash Flow”, type: .operating, timeSeries: incomeStatement.netIncome, metadata: AccountMetadata(category: “Operating Activities”) )</p><p>let cashFlowStatement = try CashFlowStatement( entity: company, periods: periods, operatingAccounts: [cfAccount], investingAccounts: [], financingAccounts: [] )</p></code><p><code>return (incomeStatement, balanceSheet, cashFlowStatement) </code></p></pre>}<p></p></code>
+            </div><p>// Run base case let runner = ScenarioRunner() let baseProjection = try runner.run( scenario: baseCase, entity: company, periods: quarters, builder: builder )</p><p>print(“Base Case Q1 Net Income: (baseProjection.incomeStatement.netIncome[q1]!.currency(0))”) </p></pre>
+          <strong>Output:</strong>
+          <pre><code>Base Case Q1 Net Income: $200,000 </code></pre>
+          <strong>The structure</strong>: Scenarios encapsulate a complete set of driver assumptions. The builder converts drivers into financial statements. This separation allows easy scenario comparison.
+          <hr />
+          <h3>Creating Multiple Scenarios</h3>Build best and worst case scenarios by overriding primitive drivers:
+          <pre><code class="language-swift">// Best Case: Higher revenue, better margins (lower COGS rate), lower OpEx let bestRevenue = DeterministicDriver(name: “Revenue”, value: 1_200_000)  // +20% let bestCOGSRate = DeterministicDriver(name: “COGS Rate”, value: 0.45)    // 45% (better margins!) let bestOpEx = DeterministicDriver(name: “OpEx”, value: 180_000)          // -10%<p></p><p>var bestOverrides: [String: AnyDriver
+                <double>
+                  ] = [:] bestOverrides[“Revenue”] = AnyDriver(bestRevenue) bestOverrides[“COGS Rate”] = AnyDriver(bestCOGSRate) bestOverrides[“OpEx”] = AnyDriver(bestOpEx)
+                </double></p><p>let bestCase = FinancialScenario( name: “Best Case”, description: “Higher sales + better margins”, driverOverrides: bestOverrides )</p><p>// Worst Case: Lower revenue, worse margins (higher COGS rate), higher OpEx let worstRevenue = DeterministicDriver(name: “Revenue”, value: 800_000) // -20% let worstCOGSRate = DeterministicDriver(name: “COGS Rate”, value: 0.825) // 82.5% (margin compression!) let worstOpEx = DeterministicDriver(name: “OpEx”, value: 220_000) // +10%</p><p>var worstOverrides: [String: AnyDriver
+                <double>
+                  ] = [:] worstOverrides[“Revenue”] = AnyDriver(worstRevenue) worstOverrides[“COGS Rate”] = AnyDriver(worstCOGSRate) worstOverrides[“OpEx”] = AnyDriver(worstOpEx)
+                </double></p><p>let worstCase = FinancialScenario( name: “Worst Case”, description: “Lower sales + margin compression”, driverOverrides: worstOverrides )</p><p>// Run all scenarios let bestProjection = try runner.run( scenario: bestCase, entity: company, periods: quarters, builder: builder )</p><p>let worstProjection = try runner.run( scenario: worstCase, entity: company, periods: quarters, builder: builder )</p><p>// Compare results print(”\n=== Q1 Net Income Comparison ===”) print(“Best Case: (bestProjection.incomeStatement.netIncome[q1]!.currency(0))”) print(“Base Case: (baseProjection.incomeStatement.netIncome[q1]!.currency(0))”) print(“Worst Case: (worstProjection.incomeStatement.netIncome[q1]!.currency(0))”)</p></code><p><code class="language-swift">let range = bestProjection.incomeStatement.netIncome[q1]! - worstProjection.incomeStatement.netIncome[q1]! print(”\nRange: (range.currency(0))”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>=== Q1 Net Income Comparison === Best Case:  $480,000   (Revenue $1.2M × 45% COGS = $540k, OpEx $180k) Base Case:  $200,000   (Revenue $1.0M × 60% COGS = $600k, OpEx $200k) Worst Case: ($80,000)  (Revenue $800k × 82.5% COGS = $660k, OpEx $220k)<p></p></code><p><code>Range: $560,000 </code></p></pre>
+          <strong>The reality</strong>: Net income swings from 
+          <strong>+$480K to -$80K</strong> across scenarios. That’s a $560K range—highly uncertain! This is why scenario planning matters.
+          <p></p>
+          <p><strong>The power of compositional drivers</strong>: Notice how <strong>COGS automatically adjusts</strong> based on the relationship <code>COGS = Revenue × COGS Rate</code>. You can override:</p>
+          <ul>
+            <li><strong>Just Revenue</strong> (testing volume scenarios with constant margins)</li>
+            <li><strong>Just COGS Rate</strong> (testing margin scenarios with constant volume)</li>
+            <li><strong>Both</strong> (testing combined scenarios like Best/Worst case above)</li>
+          </ul>
+          <hr />
+          <h3>One-Way Sensitivity Analysis</h3>Analyze how one input affects the output:
+          <pre><code class="language-swift">// How does Revenue affect Net Income? let revenueSensitivity = try runSensitivity( baseCase: baseCase, entity: company, periods: quarters, inputDriver: “Revenue”, inputRange: 800_000…1_200_000,  // ±20% steps: 9,  // Test 9 evenly-spaced values builder: builder ) { projection in // Extract Q1 Net Income as output metric return projection.incomeStatement.netIncome[q1]! }<p></p><p>print(”\n=== Revenue Sensitivity Analysis ===”) print(“Revenue → Net Income”) print(”––––– ———–”)</p><p>for (revenue, netIncome) in zip(revenueSensitivity.inputValues, revenueSensitivity.outputValues) { print(”(revenue.currency(0).paddingLeft(toLength: 10)) → (netIncome.currency(0).paddingLeft(toLength: 10))”) }</p><p>// Calculate sensitivity (slope) let deltaRevenue = revenueSensitivity.inputValues.last! - revenueSensitivity.inputValues.first! let deltaIncome = revenueSensitivity.outputValues.last! - revenueSensitivity.outputValues.first! let sensitivity = deltaIncome / deltaRevenue</p></code><p><code class="language-swift">print(”\nSensitivity: (sensitivity.number(2))”) print(“For every $1 increase in revenue, net income increases by (sensitivity.currency(2))”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>=== Revenue Sensitivity Analysis === Revenue     →   Net Income
+              <hr />$800,000  →   $120,000 $850,000  →   $140,000 $900,000  →   $160,000 $950,000  →   $180,000 $1,000,000  →   $200,000 $1,050,000  →   $220,000 $1,100,000  →   $240,000 $1,150,000  →   $260,000 $1,200,000  →   $280,000<p></p></code><p><code>Sensitivity: 0.40 For every $1 increase in revenue, net income increases by $0.40 </code></p></pre>
+          <strong>The insight</strong>: Net income has a 
+          <strong>40% contribution margin</strong> from revenue. This is because:
+          <ul>
+            <li><strong>60% of revenue</strong> goes to COGS (variable cost that scales with revenue)</li>
+            <li><strong>40% remains</strong> as contribution margin to cover OpEx and generate profit</li>
+          </ul>This is a fundamental concept: the 
+          <strong>contribution margin</strong> shows how much each additional dollar of revenue contributes to covering fixed costs and profit.
+          <hr />
+          <h3>Tornado Diagram Analysis</h3>Identify which drivers have the greatest impact:
+          <pre><code class="language-swift">// Analyze all key drivers at once let tornado = try runTornadoAnalysis( baseCase: baseCase, entity: company, periods: quarters, inputDrivers: [“Revenue”, “COGS Rate”, “Operating Expenses”], variationPercent: 0.20,  // Vary each by ±20% steps: 2,  // Just test high and low builder: builder ) { projection in return projection.incomeStatement.netIncome[q1]! }<p></p><p>print(”\n=== Tornado Diagram (Ranked by Impact) ===”) print(“Driver Low High Impact % Impact”) print(”–––––––––– ––––– ––––– ––––– ––––”)</p><p>for input in tornado.inputs { let impact = tornado.impacts[input]! let low = tornado.lowValues[input]! let high = tornado.highValues[input]! let percentImpact = (impact / tornado.baseCaseOutput)</p><pre><code>print(”(input.padding(toLength: 20, withPad: “ “, startingAt: 0))(low.currency(0).paddingLeft(toLength: 12))(high.currency(0).paddingLeft(toLength: 12))(impact.currency(0).paddingLeft(toLength: 12))(percentImpact.percent(0).paddingLeft(toLength: 12))”) </code></pre>} </code></pre>
+          <strong>Output:</strong>
+          <pre><code>=== Tornado Diagram (Ranked by Impact) === Driver                  Low         High        Impact      % Impact
+              <hr />COGS Rate                $80,000    $320,000    $240,000        120% Revenue                 $120,000    $280,000    $160,000         80% Operating Expenses      $160,000    $240,000     $80,000         40% </code></pre>
+          <strong>The ranking</strong>:
+          <ol>
+            <li><strong>COGS Rate</strong> (margins) has the biggest impact ($240K range)</li>
+            <li><strong>Revenue</strong> (volume) second ($160K range)</li>
+            <li><strong>Operating Expenses</strong> (fixed costs) third ($80K range)</li>
+          </ol>
+          <strong>The strategic insight</strong>: In this business model, 
+          <strong>margin improvement is more important than volume growth</strong>. A 20% improvement in COGS Rate (from 60% → 48%) has more impact than a 20% increase in revenue. This suggests focusing on:
+          <ul>
+            <li><strong>First priority</strong>: Supplier negotiations, manufacturing efficiency, pricing power (all improve COGS Rate)</li>
+            <li><strong>Second priority</strong>: Sales growth and market expansion (improve Revenue)</li>
+            <li><strong>Third priority</strong>: Overhead reduction (reduce Operating Expenses)</li>
+          </ul>
+          <hr />
+          <h3>Visualize the Tornado</h3>Create a text-based tornado diagram:
+          <pre><code class="language-swift">let tornadoPlot = plotTornadoDiagram(tornado, baseCase: baseProjection.incomeStatement.netIncome[q1]!)<p></p></code><p><code class="language-swift">print(”\n” + tornadoPlot) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Tornado Diagram - Sensitivity Analysis Base Case: 200000<p></p></code><p><code>COGS Rate ◄█████████████████████████|█████████████████████████► Impact: 240000 120.0% 80000 200000 320000) Revenue ◄ ████████████████|█████████████████ ► Impact: 160000 80.0% 120000 200000 280000) Operating Expenses ◄ ████████|████████ ► Impact: 80000 40.0% 160000 200000 240000) </code></p></pre>The width of each bar shows impact range. 
+          <strong>COGS Rate’s bar is widest</strong>—margin management is the most impactful lever for this business.
+          <hr />
+          <h3>Two-Way Sensitivity Analysis</h3>Two-way sensitivity analysis allows us to analyze interactions between two inputs:
+          <pre><code class="language-swift">// How do Revenue and COGS Rate interact? let twoWay = try runTwoWaySensitivity( baseCase: baseCase, entity: company, periods: quarters, inputDriver1: “Revenue”, inputRange1: 800_000…1_200_000, steps1: 5, inputDriver2: “COGS Rate”, inputRange2: 0.48…0.72,  // 48% to 72% COGS steps2: 5, builder: builder ) { projection in return projection.incomeStatement.netIncome[q1]! }<p></p><p>// Print data table print(”\n=== Two-Way Sensitivity: Revenue × COGS Rate ===”) print(”\nCOGS Rate → 48% 54% 60% 66% 72%”) print(“Revenue ↓”) print(”———– –––– –––– –––– –––– ––––”)</p><p>for (i, revenue) in twoWay.inputValues1.enumerated() { var row = “(revenue.currency(0).paddingLeft(toLength: 11))” for j in 0..
+                <twoway.inputvalues2.count { let netincome="twoWay.results[i][j]" row +="netIncome.currency(0).paddingLeft(toLength:" 12) } print(row) }< code></twoway.inputvalues2.count></p></code></pre>
+          <code class="language-swift"><strong>Output:</strong></code>
+          <pre><code class="language-swift"><code>=== Two-Way Sensitivity: Revenue × COGS Rate ===<p></p></code><p><code>COGS Rate → 48% 54% 60% 66% 72% Revenue ↓
+                  <hr />$800,000 $216,000 $168,000 $120,000 $72,000 $24,000 $900,000 $268,000 $214,000 $160,000 $106,000 $52,000 $1,000,000 $320,000 $260,000 $200,000 $140,000 $80,000 $1,100,000 $372,000 $306,000 $240,000 $174,000 $108,000 $1,200,000 $424,000 $352,000 $280,000 $208,000 $136,000 </code></p></code></pre>
+          <strong>The interaction</strong>: This table shows the 
+          <strong>trade-off between volume and margins</strong>:
+          <ul>
+            <li><strong>Lower-left corner</strong> ($1.2M revenue, 48% COGS) = <strong>$424K profit</strong> (best case: high volume + high margins)</li>
+            <li><strong>Upper-right corner</strong> ($800K revenue, 72% COGS) = <strong>$24K profit</strong> (worst case: low volume + low margins)</li>
+            <li><strong>Diagonal insight</strong>: A company at $800K revenue with 48% COGS ($216K profit) can achieve similar results as $1.2M revenue with 72% COGS ($136K profit). This shows <strong>margin quality matters more than scale</strong> in certain scenarios.</li>
+          </ul>
+          <hr />
+          <h3>Monte Carlo Integration</h3>Combine scenarios with probabilistic analysis using uncertain drivers:
+          <pre><code class="language-swift">// Create probabilistic scenario with uncertain Revenue and COGS Rate let uncertainRevenue = ProbabilisticDriver
+              <double>
+                .normal( name: “Revenue”, mean: 1_000_000.0, stdDev: 100_000.0 // ±$100K uncertainty )
+                <p></p>
+                <p>let uncertainCOGSRate = ProbabilisticDriver
+                  <double>
+                    .normal( name: “COGS Rate”, mean: 0.60, stdDev: 0.05 // ±5% margin uncertainty )
+                  </double></p>
+                <p>var monteCarloOverrides: [String: AnyDriver
+                  <double>
+                    ] = [:] monteCarloOverrides[“Revenue”] = AnyDriver(uncertainRevenue) monteCarloOverrides[“COGS Rate”] = AnyDriver(uncertainCOGSRate) monteCarloOverrides[“OpEx”] = AnyDriver(baseOpEx)
+                  </double></p>
+                <p>let uncertainScenario = FinancialScenario( name: “Monte Carlo”, description: “Probabilistic scenario”, driverOverrides: monteCarloOverrides )</p>
+                <p>// Run 10,000 iterations let simulation = try runFinancialSimulation( scenario: uncertainScenario, entity: company, periods: quarters, iterations: 10_000, builder: builder )</p>
+                <p>// Analyze results let netIncomeMetric: (FinancialProjection) -&gt; Double = { projection in return projection.incomeStatement.netIncome[q1]! }</p>
+                <p>print(”\n=== Monte Carlo Results (10,000 iterations) ===”) print(“Mean: (simulation.mean(metric: netIncomeMetric).currency(0))”)</p>
+                <p>print(”\nPercentiles:”) print(” P5: (simulation.percentile(0.05, metric: netIncomeMetric).currency(0))”) print(” P25: (simulation.percentile(0.25, metric: netIncomeMetric).currency(0))”) print(” P50: (simulation.percentile(0.50, metric: netIncomeMetric).currency(0))”) print(” P75: (simulation.percentile(0.75, metric: netIncomeMetric).currency(0))”) print(” P95: (simulation.percentile(0.95, metric: netIncomeMetric).currency(0))”)</p>
+                <p>let ci90 = simulation.confidenceInterval(0.90, metric: netIncomeMetric) print(”\n90% CI: [(ci90.lowerBound.currency(0)), (ci90.upperBound.currency(0))]”)</p>
+              </double></code><p><code class="language-swift">let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric) print(”\nProbability of loss: (probLoss.percent(1))”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>=== Monte Carlo Results (10,000 iterations) === Mean: $200,352<p></p><p>Percentiles: P5: $97,865 P25: $156,221 P50: $197,353 P75: $242,244 P95: $310,941</p><p>90% CI: [$97,865, $310,941]</p></code><p><code>Probability of loss: 0.0% </code></p></pre>
+          <strong>The integration</strong>: Monte Carlo gives you the 
+          <strong>full probability distribution</strong>, not just 3 scenarios. There’s 0.0% chance of loss—but that’s not a substitute for good risk management!
+          <hr />
+          <h3>GPU-Accelerated Monte Carlo with Expression Models</h3>For high-performance probabilistic analysis, use GPU-accelerated 
+          <code>MonteCarloExpressionModel</code> to run 10-100× faster with minimal memory:
+          <pre><code class="language-swift">// Pre-compute constants let opexAmount = 200_000.0 let taxRate = 0.21<p></p></code>
+            <div>
+              <code class="language-swift"><p>// Define profit model using expression builder let profitModel = MonteCarloExpressionModel { builder in // Inputs: revenue, cogsRate let revenue = builder[0] let cogsRate = builder[1]</p><pre><code>// Calculate P&amp;L let cogs = revenue * cogsRate let grossProfit = revenue - cogs let ebitda = grossProfit - opexAmount<p></p><p>// Conditional tax (only on profits) let isProfitable = ebitda.greaterThan(0.0) let tax = isProfitable.ifElse( then: ebitda * taxRate, else: 0.0 )</p></code><p><code>let netIncome = ebitda - tax return netIncome </code></p></pre>}<p></p></code>
+            </div><p>// Set up high-performance simulation var gpuSimulation = MonteCarloSimulation( iterations: 100_000,  // 10× more iterations enableGPU: true, expressionModel: profitModel )</p><p>// Add uncertain inputs gpuSimulation.addInput(SimulationInput( name: “Revenue”, distribution: DistributionNormal(mean: 1_000_000, stdDev: 100_000) ))</p><p>gpuSimulation.addInput(SimulationInput( name: “COGS Rate”, distribution: DistributionNormal(mean: 0.60, stdDev: 0.05) ))</p><p>// Run GPU-accelerated simulation let gpuResults = try gpuSimulation.run()</p><p>print(”\n=== GPU-Accelerated Monte Carlo (100,000 iterations) ===”) print(“Compute Time: (gpuResults.computeTime.formatted(.number.precision(.fractionLength(1)))) ms”) print(“GPU Used: (gpuResults.usedGPU ? “Yes” : “No”)”) print() print(“Net Income After Tax:”) print(”  Mean:   (gpuResults.statistics.mean.currency(0))”) print(”  Median: (gpuResults.percentiles.p50.currency(0))”) print(”  Std Dev: (gpuResults.statistics.stdDev.currency(0))”) print() print(“Risk Metrics:”) print(”  95% CI: [(gpuResults.percentiles.p5.currency(0)), (gpuResults.percentiles.p95.currency(0))]”) print(”  Value at Risk (5%): (gpuResults.percentiles.p5.currency(0))”) print(”  Probability of Loss: ((gpuResults.valuesArray.filter { $0 &lt; 0 }.count / gpuResults.iterations).percent(1))”) </p></pre>
+          <strong>Output:</strong>
+          <pre><code>=== GPU-Accelerated Monte Carlo (100,000 iterations) === Compute Time: 52.3 ms GPU Used: Yes<p></p><p>Net Income After Tax: Mean: $158,294 Median: $158,186 Std Dev: $63,447</p></code><p><code>Risk Metrics: 95% CI: [$54,072, $274,883] Value at Risk (5%): $54,072 Probability of Loss: 0.7% </code></p></pre>
+          <strong>Performance Breakthrough:</strong>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Approach</th>
+                <th scope="col">Iterations</th>
+                <th scope="col">Time</th>
+                <th scope="col">Memory</th>
+                <th scope="col">Speedup</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Traditional Monte Carlo</td>
+                <td>10,000</td>
+                <td>~2,100 ms</td>
+                <td>~25 MB</td>
+                <td>1× (baseline)</td>
+              </tr>
+              <tr>
+                <td>GPU Expression Model</td>
+                <td>100,000</td>
+                <td>~52 ms</td>
+                <td>~8 MB</td>
+                <td><strong>~400×</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          <strong>When to use expression models:</strong>
+          <ul>
+            <li>✅ <strong>Single-period</strong> calculations (like quarterly profit)</li>
+            <li>✅ <strong>High iteration counts</strong> (50,000+)</li>
+            <li>✅ <strong>Compute-intensive</strong> formulas</li>
+            <li>✅ <strong>Memory-constrained</strong> environments</li>
+          </ul>
+          <strong>When to use traditional approach:</strong>
+          <ul>
+            <li>✅ <strong>Multi-period compounding</strong> (revenue growing over 4 quarters)</li>
+            <li>✅ <strong>Complex state</strong> (financial statements with interdependencies)</li>
+            <li>✅ <strong>Path-dependent</strong> calculations (option pricing with early exercise)</li>
+          </ul>
+          <code>★ Insight ─────────────────────────────────────</code>
+          <p></p>
+          <p><strong>Expression Models: The Constants vs Variables Pattern</strong></p>
+          <p>GPU-accelerated expression models compile to bytecode that runs on Metal. This creates two distinct contexts:</p>
+          <p><strong>Swift context (outside builder):</strong></p>
+          <pre><code class="language-swift">let opex = 200_000.0  // Regular Swift Double let taxRate = pow(1.21, years)  // Use Swift’s pow() for constants </code></pre>
+          <strong>DSL context (inside builder):</strong>
+          <pre><code class="language-swift">let revenue = builder[0]  // ExpressionProxy (depends on random input) let afterTax = revenue * 0.79  // Use pre-computed constant let scaled = revenue.exp()  // Use DSL methods on variables </code></pre>
+          <strong>Critical rule</strong>: Pre-compute all constants outside the builder. Only use DSL methods (
+          <code>.exp()</code>, 
+          <code>.sqrt()</code>, 
+          <code>.power()</code>) on variables that depend on random inputs.
+          <p></p>
+          <p><strong>Why?</strong> Constants should be baked into the GPU bytecode, not recomputed millions of times. This pattern gives you maximum performance.</p>
+          <p><code>─────────────────────────────────────────────────</code></p>
+          <p>For comprehensive GPU Monte Carlo coverage, see: <a href="doc:4.3-MonteCarloExpressionModelsGuide">doc:4.3-MonteCarloExpressionModelsGuide</a>
+            <hr /></p>
+          <h2>Try It Yourself</h2>
+          <details>
+            <summary>Click to expand full playground code</summary>
+            <pre><code class="language-swift">import BusinessMath
+let company = Entity( id: “TECH001”, primaryType: .ticker, name: “TechCo” )
+<p></p><p>let q1 = Period.quarter(year: 2025, quarter: 1) let quarters = [q1, q1 + 1, q1 + 2, q1 + 3]</p><p>// Base case: Define primitive drivers // These are the independent inputs that scenarios can override let baseRevenue = DeterministicDriver(name: “Revenue”, value: 1_000_000) let baseCOGSRate = DeterministicDriver(name: “COGS Rate”, value: 0.60) // 60% of revenue let baseOpEx = DeterministicDriver(name: “OpEx”, value: 200_000)</p><p>var baseOverrides: [String: AnyDriver
+                  <double>
+                    ] = [:] baseOverrides[“Revenue”] = AnyDriver(baseRevenue) baseOverrides[“COGS Rate”] = AnyDriver(baseCOGSRate) baseOverrides[“Operating Expenses”] = AnyDriver(baseOpEx)
+                  </double></p><p>let baseCase = FinancialScenario( name: “Base Case”, description: “Expected performance”, driverOverrides: baseOverrides )</p></code>
+              <div>
+                <code class="language-swift"><p>// Builder function: Convert primitive drivers → financial statements // Key insight: COGS is calculated as Revenue × COGS Rate, creating a relationship let builder: ScenarioRunner.StatementBuilder = { drivers, periods in let revenue = drivers[“Revenue”]!.sample(for: periods[0]) let cogsRate = drivers[“COGS Rate”]!.sample(for: periods[0]) let opex = drivers[“Operating Expenses”]!.sample(for: periods[0])</p><pre><code>// Calculate COGS from the relationship: COGS = Revenue × COGS Rate let cogs = revenue * cogsRate<p></p><p>// Build Income Statement let revenueAccount = try Account( entity: company, name: “Revenue”, incomeStatementRole: .revenue, timeSeries: TimeSeries(periods: periods, values: Array(repeating: revenue, count: periods.count)) )</p><p>let cogsAccount = try Account( entity: company, name: “COGS”, incomeStatementRole: .costOfGoodsSold, timeSeries: TimeSeries(periods: periods, values: Array(repeating: cogs, count: periods.count)) )</p><p>let opexAccount = try Account( entity: company, name: “Operating Expenses”, incomeStatementRole: .operatingExpenseOther, timeSeries: TimeSeries(periods: periods, values: Array(repeating: opex, count: periods.count)) )</p><p>let incomeStatement = try IncomeStatement( entity: company, periods: periods, accounts: [revenueAccount, cogsAccount, opexAccount] )</p><p>// Simple balance sheet and cash flow (required for complete projection) let cashAccount = try Account( entity: company, name: “Cash”, balanceSheetRole: .cashAndEquivalents, timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]), )</p><p>let equityAccount = try Account( entity: company, name: “Equity”, balanceSheetRole: .commonStock, timeSeries: TimeSeries(periods: periods, values: [500_000, 550_000, 600_000, 650_000]) )</p><p>let balanceSheet = try BalanceSheet( entity: company, periods: periods, accounts: [cashAccount, equityAccount] )</p><p>let cfAccount = try Account( entity: company, name: “Operating Cash Flow”, cashFlowRole: .netIncome, timeSeries: incomeStatement.netIncome, metadata: AccountMetadata(category: “Operating Activities”) )</p><p>let cashFlowStatement = try CashFlowStatement( entity: company, periods: periods, accounts: [cfAccount] )</p></code><p><code>return (incomeStatement, balanceSheet, cashFlowStatement) </code></p></pre>}<p></p></code>
+              </div><p>// Run base case let runner = ScenarioRunner() let baseProjection = try runner.run( scenario: baseCase, entity: company, periods: quarters, builder: builder )</p><p>print(“Base Case Q1 Net Income: (baseProjection.incomeStatement.netIncome[q1]!.currency(0))”)</p>
+              <div>
+                <p>// MARK: - Create Multiple Scenarios</p>
+                <pre><code>// Best Case: Higher revenue, lower costs let bestRevenue = DeterministicDriver(name: “Revenue”, value: 1_200_000)  // +20% let bestCOGSRate = DeterministicDriver(name: “COGS Rate”, value: 0.45)        // -10% let bestOpEx = DeterministicDriver(name: “Operating Expenses”, value: 180_000)          // -10%<p></p><p>var bestOverrides: [String: AnyDriver
+                      <double>
+                        ] = [:] bestOverrides[“Revenue”] = AnyDriver(bestRevenue) bestOverrides[“COGS Rate”] = AnyDriver(bestCOGSRate) bestOverrides[“Operating Expenses”] = AnyDriver(bestOpEx)
+                      </double></p><p>let bestCase = FinancialScenario( name: “Best Case”, description: “Optimistic performance”, driverOverrides: bestOverrides )</p><p>// Worst Case: Lower revenue, higher costs let worstRevenue = DeterministicDriver(name: “Revenue”, value: 800_000) // -20% let worstCOGSRate = DeterministicDriver(name: “COGS Rate”, value: 0.825) // +10% let worstOpEx = DeterministicDriver(name: “Operating Expenses”, value: 220_000) // +10%</p><p>var worstOverrides: [String: AnyDriver
+                      <double>
+                        ] = [:] worstOverrides[“Revenue”] = AnyDriver(worstRevenue) worstOverrides[“COGS Rate”] = AnyDriver(worstCOGSRate) worstOverrides[“Operating Expenses”] = AnyDriver(worstOpEx)
+                      </double></p><p>let worstCase = FinancialScenario( name: “Worst Case”, description: “Lower sales + margin compression”, driverOverrides: worstOverrides )</p><p>// Run all scenarios let bestProjection = try runner.run( scenario: bestCase, entity: company, periods: quarters, builder: builder )</p><p>let worstProjection = try runner.run( scenario: worstCase, entity: company, periods: quarters, builder: builder )</p><p>// Compare results print(”\n=== Q1 Net Income Comparison ===”) print(“Best Case: (bestProjection.incomeStatement.netIncome[q1]!.currency(0))”) print(“Base Case: (baseProjection.incomeStatement.netIncome[q1]!.currency(0))”) print(“Worst Case: (worstProjection.incomeStatement.netIncome[q1]!.currency(0))”)</p></code><p><code>let range = bestProjection.incomeStatement.netIncome[q1]! - worstProjection.incomeStatement.netIncome[q1]! print(”\nRange: (range.currency(0))”) </code></p></pre>// MARK: - One-Way Sensitivity Analysis
+                <p></p>
+              </div><p>// How does Revenue affect Net Income? let revenueSensitivity = try runSensitivity( baseCase: baseCase, entity: company, periods: quarters, inputDriver: “Revenue”, inputRange: 800_000…1_200_000,  // ±20% steps: 9,  // Test 9 evenly-spaced values builder: builder ) { projection in // Extract Q1 Net Income as output metric let q1 = Period.quarter(year: 2025, quarter: 1) return projection.incomeStatement.netIncome[q1]! }</p><p>print(”\n=== Revenue Sensitivity Analysis ===”) print(“Revenue     →   Net Income”) print(”–––––      ———–”)</p><p>for (revenue, netIncome) in zip(revenueSensitivity.inputValues, revenueSensitivity.outputValues) { print(”(revenue.currency(0).paddingLeft(toLength: 10))  → (netIncome.currency(0).paddingLeft(toLength: 10))”) }</p><p>// Calculate sensitivity (slope) let deltaRevenue = revenueSensitivity.inputValues.last! - revenueSensitivity.inputValues.first! let deltaIncome = revenueSensitivity.outputValues.last! - revenueSensitivity.outputValues.first! let sensitivity = deltaIncome / deltaRevenue</p><p>print(”\nSensitivity: (sensitivity.number(2))”) print(“For every $1 increase in revenue, net income increases by (sensitivity.currency(2))”)</p>
+              <div>
+                <p>// MARK: - Tornado Diagram Analysis</p>
+                <pre><code>// Analyze all key drivers at once let tornado = try runTornadoAnalysis( baseCase: baseCase, entity: company, periods: quarters, inputDrivers: [“Revenue”, “COGS Rate”, “Operating Expenses”], variationPercent: 0.20,  // Vary each by ±20% steps: 2,  // Just test high and low builder: builder ) { projection in return projection.incomeStatement.netIncome[q1]! }<p></p><p>print(”\n=== Tornado Diagram (Ranked by Impact) ===”) print(“Driver Low High Impact % Impact”) print(”–––––––––– ––––– ––––– ––––– ––––”)</p><p>for input in tornado.inputs { let impact = tornado.impacts[input]! let low = tornado.lowValues[input]! let high = tornado.highValues[input]! let percentImpact = (impact / tornado.baseCaseOutput)</p><pre><code>print(”(input.padding(toLength: 20, withPad: “ “, startingAt: 0))(low.currency(0).paddingLeft(toLength: 12))(high.currency(0).paddingLeft(toLength: 12))(impact.currency(0).paddingLeft(toLength: 12))(percentImpact.percent(0).paddingLeft(toLength: 12))”) </code></pre>} </code></pre>// MARK: - Visualize the Tornado
+                <p></p>
+              </div><p>let tornadoPlot = plotTornadoDiagram(tornado)</p><p>print(”\n” + tornadoPlot)</p>
+              <div>
+                <p>// MARK: - Two-Way Sensitivity Analysis</p>
+                <pre><code>// How do Revenue and COGS Rate interact? let twoWay = try runTwoWaySensitivity( baseCase: baseCase, entity: company, periods: quarters, inputDriver1: “Revenue”, inputRange1: 800_000…1_200_000, steps1: 5, inputDriver2: “COGS Rate”, inputRange2: 0.48…0.72,  // 48% to 72% COGS steps2: 5, builder: builder ) { projection in return projection.incomeStatement.netIncome[q1]! }<p></p><p>// Print data table print(”\n=== Two-Way Sensitivity: Revenue × COGS Rate ===”) print(”\nCOGS Rate → 48% 54% 60% 66% 72%”) print(“Revenue ↓”) print(”———– –––– –––– –––– –––– ––––”)</p><p>for (i, revenue) in twoWay.inputValues1.enumerated() { var row = “(revenue.currency(0).paddingLeft(toLength: 11))” for j in 0..
+                      <twoway.inputvalues2.count { let netincome="twoWay.results[i][j]" row +="netIncome.currency(0).paddingLeft(toLength:" 12) } print(row) }< code></twoway.inputvalues2.count></p></code></pre>
+                <code>// MARK: - Monte Carlo Integration</code>
+                <pre><code><code>// Create probabilistic scenario with uncertain Revenue and COGS Rate let uncertainRevenue = ProbabilisticDriver
+                      <double>
+                        .normal( name: “Revenue”, mean: 1_000_000.0, stdDev: 100_000.0 // ±$100K uncertainty )
+                        <p></p>
+                        <p>let uncertainCOGSRate = ProbabilisticDriver
+                          <double>
+                            .normal( name: “COGS Rate”, mean: 0.60, stdDev: 0.05 // ±5% margin uncertainty )
+                          </double></p>
+                        <p>var monteCarloOverrides: [String: AnyDriver
+                          <double>
+                            ] = [:] monteCarloOverrides[“Revenue”] = AnyDriver(uncertainRevenue) monteCarloOverrides[“COGS Rate”] = AnyDriver(uncertainCOGSRate) monteCarloOverrides[“Operating Expenses”] = AnyDriver(baseOpEx)
+                          </double></p>
+                        <p>let uncertainScenario = FinancialScenario( name: “Monte Carlo”, description: “Probabilistic scenario”, driverOverrides: monteCarloOverrides )</p>
+                        <p>// Run 10,000 iterations let simulation = try runFinancialSimulation( scenario: uncertainScenario, entity: company, periods: quarters, iterations: 10_000, builder: builder )</p>
+                        <p>// Analyze results let netIncomeMetric: (FinancialProjection) -&gt; Double = { projection in return projection.incomeStatement.netIncome[q1]! }</p>
+                        <p>print(”\n=== Monte Carlo Results (10,000 iterations) ===”) print(“Mean: (simulation.mean(metric: netIncomeMetric).currency(0))”)</p>
+                        <p>print(”\nPercentiles:”) print(” P5: (simulation.percentile(0.05, metric: netIncomeMetric).currency(0))”) print(” P25: (simulation.percentile(0.25, metric: netIncomeMetric).currency(0))”) print(” P50: (simulation.percentile(0.50, metric: netIncomeMetric).currency(0))”) print(” P75: (simulation.percentile(0.75, metric: netIncomeMetric).currency(0))”) print(” P95: (simulation.percentile(0.95, metric: netIncomeMetric).currency(0))”)</p>
+                        <p>let ci90 = simulation.confidenceInterval(0.90, metric: netIncomeMetric) print(”\n90% CI: [(ci90.lowerBound.currency(0)), (ci90.upperBound.currency(0))]”)</p>
+                      </double></code><p><code>let probLoss = simulation.probabilityOfLoss(metric: netIncomeMetric) print(”\nProbability of loss: (probLoss.percent(1))”) </code></p></code></pre>
+              </div></pre>
+          </details>
+          <p></p>
+        </div>
+        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/4.2-ScenarioAnalysisGuide.md">BusinessMath Docs – 4.2 Scenario Analysis</a></p>
+        <p><strong>Modifications to try</strong>:</p>
+        <ol>
+          <li>Add more scenarios (recession, expansion, new competitor)</li>
+          <li>Build three-way sensitivity analysis (revenue × costs × pricing)</li>
+          <li>Model correlated uncertainties (when revenue drops, costs often do too)</li>
+          <li>Create scenario probability weights (70% base, 20% best, 10% worst)</li>
+        </ol>
+        <hr />
+        <h2>Real-World Application</h2>Every strategic decision requires scenario and sensitivity analysis:
+        <ul>
+          <li><strong>M&amp;A due diligence</strong>: “Under which scenarios does this acquisition create value?”</li>
+          <li><strong>Product launches</strong>: “Which assumption matters most—adoption rate or pricing?”</li>
+          <li><strong>Capital projects</strong>: “What’s the IRR in best/base/worst scenarios?”</li>
+          <li><strong>Strategic planning</strong>: “How resilient is our strategy to economic downturns?”</li>
+        </ul>
+        <strong>Corporate development use case</strong>: “We’re considering acquiring a competitor for $500M. Run tornado analysis on synergy assumptions (revenue, cost savings, integration costs). Show me the NPV range across scenarios.”
+        <p></p>
+        <p>BusinessMath makes scenario and sensitivity analysis systematic, reproducible, and decision-ready.
+          <hr /><code>★ Insight ─────────────────────────────────────</code></p>
+        <p><strong>Tornado Diagrams: Visual Risk Prioritization</strong></p>
+        <p>A tornado diagram ranks inputs by impact on the output. It’s called a “tornado” because the widest bar (biggest impact) is at the top, narrowing down like a tornado shape.</p>
+        <p><strong>Why this matters</strong>:</p>
+        <ul>
+          <li><strong>Focus scarce resources</strong>: Improve the top 2-3 drivers, ignore the rest</li>
+          <li><strong>Set research priorities</strong>: Spend more effort refining high-impact assumptions</li>
+          <li><strong>Negotiate effectively</strong>: In M&amp;A, focus diligence on tornado-top items</li>
+        </ul>
+        <strong>Example</strong>: If Revenue has 10× the impact of OpEx, spend time perfecting your revenue forecast, not optimizing office supply costs.
+        <p></p>
+        <p><strong>The rule</strong>: <strong>80/20 applies to uncertainty</strong>—20% of inputs drive 80% of outcome variance.</p>
+        <p><code>─────────────────────────────────────────────────</code>
+          <hr /><code>★ Insight ─────────────────────────────────────</code></p>
+        <p><strong>Compositional Drivers: Primitives vs. Formulas</strong></p>
+        <p>This example demonstrates a critical pattern for ergonomic scenario analysis: <strong>distinguish primitive inputs from calculated formulas</strong>.</p>
+        <p><strong>Primitive drivers</strong> are independent inputs you control:</p>
+        <ul>
+          <li><code>Revenue</code> - how much you sell</li>
+          <li><code>COGS Rate</code> - what percentage of revenue goes to production costs</li>
+          <li><code>OpEx</code> - fixed operating expenses</li>
+        </ul>
+        <strong>Formula drivers</strong> are relationships calculated in the builder:
+        <ul>
+          <li><code>COGS = Revenue × COGS Rate</code> - computed from primitives</li>
+        </ul>
+        <strong>Why this matters</strong>:
+        <ol>
+          <li><strong>Flexibility</strong>: Override any primitive independently (test revenue scenarios, margin scenarios, or both)</li>
+          <li><strong>Natural sensitivity</strong>: When you vary <code>Revenue</code>, <code>COGS</code> automatically scales, capturing the 40% contribution margin</li>
+          <li><strong>Probabilistic modeling</strong>: Uncertain <code>Revenue</code> + uncertain <code>COGS Rate</code> → compound uncertainty in <code>COGS</code> propagates naturally</li>
+          <li><strong>Realistic scenarios</strong>: Best case combines high revenue AND better margins; worst case combines low revenue AND margin compression</li>
+        </ol>
+        <strong>Alternative (anti-pattern)</strong>: Treating the 
+        <em>dollar amount</em> of 
+        <code>COGS</code> as an independent primitive will give 100% revenue passthrough—unrealistic for businesses with variable costs!
+        <p></p>
+        <p><strong>The principle</strong>: <strong>Model your business economics</strong>, not just your accounting equations.</p>
+        <p><code>─────────────────────────────────────────────────</code>
+          <hr /></p>
+        <h3>📝 Development Note</h3>The biggest design challenge was 
+        <strong>handling driver overrides</strong>. We needed a system where:
+        <ol>
+          <li>Base case defines default drivers</li>
+          <li>Scenarios override specific drivers</li>
+          <li>Unoverridden drivers fall back to defaults</li>
+          <li>Type safety is maintained</li>
+        </ol>We chose a dictionary-based approach with 
+        <code>AnyDriver</code> type erasure:
+        <pre><code class="language-swift">var overrides: [String: AnyDriver
+            <double>
+              ] = [:] overrides[“Revenue”] = AnyDriver(customRevenueDriver) 
+            </double></code></pre>
+        <strong>Trade-off</strong>: Loses compile-time type checking (runtime 
+        <code>String</code> keys), but gains flexibility for dynamic scenario construction.
+        <p></p>
+        <p><strong>Alternative considered</strong>: Strongly-typed scenario builder with keypaths—rejected as too rigid for exploratory analysis.</p>
+        <p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - We designed the API by writing tutorial examples first to ensure usability.
+          <hr /></p>
+        <h2>Next Steps</h2>
+        <strong>Coming up Friday</strong>: Case Study #3 - Option Pricing with Monte Carlo, combining simulation with derivatives valuation.
+        <p></p>
+        <p><strong>Next week</strong>: Week 7 explores optimization—finding the <em>best</em> strategy, not just analyzing given scenarios.
+          <hr /><strong>Series Progress</strong>:</p>
+        <ul>
+          <li>Week: 6/12</li>
+          <li>Posts Published: 21/~48</li>
+          <li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Advanced Modeling + Simulation (in progress)</li>
+          <li>Playgrounds: 20 available</li>
+        </ul>
+        <p></p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, scenarios, sensitivity-analysis, tornado-diagrams, what-if-analysis</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

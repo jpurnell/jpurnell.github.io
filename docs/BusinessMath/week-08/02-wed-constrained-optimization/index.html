@@ -1,508 +1,485 @@
-<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 27 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Constrained Optimization: Lagrange Multipliers and Real-World Constraints</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-08/02-wed-constrained-optimization" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Constrained Optimization: Lagrange Multipliers and Real-World Constraints"><meta property="twitter:title" content="Constrained Optimization: Lagrange Multipliers and Real-World Constraints"><meta property="og:description" content="Constrained Optimization: Lagrange Multipliers and Real-World Constraints"><meta name="twitter:description" content="Constrained Optimization: Lagrange Multipliers and Real-World Constraints"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-08/02-wed-constrained-optimization"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
-**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
-**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
-**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Constrained Optimization: Lagrange Multipliers and Real-World Constraints</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">13 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 27 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building type-safe constraints with MultivariateConstraint</li><li>Solving equality-constrained problems with augmented Lagrangian</li><li>Handling inequality constraints (non-negativity, position limits, capacity)</li><li>Interpreting shadow prices (Lagrange multipliers) for sensitivity analysis</li><li>Using pre-built constraints for portfolios (budget, non-negativity, box constraints)</li><li>Optimizing real-world problems with multiple conflicting constraints</li></ul><hr /><h2>The Problem</h2><p>Real-world optimization has constraints:</p><ul><li><strong>Portfolio optimization</strong>: Weights must sum to 100%, no short-selling (wᵢ ≥ 0), position limits</li><li><strong>Production planning</strong>: Limited capacity, minimum production requirements, resource constraints</li><li><strong>Resource allocation</strong>: Budget constraints, personnel limits, quality requirements</li></ul><p><strong>Unconstrained optimization finds solutions that violate real-world constraints. Post-hoc normalization (e.g., dividing by sum) doesn’t minimize the original objective.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides constrained optimization via augmented Lagrangian methods. Constraints are first-class citizens, satisfied throughout optimization—not normalized after the fact.</p><h3>Type-Safe Constraint Infrastructure</h3><p>The <code>MultivariateConstraint</code> enum provides type-safe constraint specification:</p><pre><code class="language-swift">import BusinessMath
-
-// Equality constraint: x + y = 1
-let equality: MultivariateConstraint<VectorN<Double>> = .equality { v in
-    v[0] + v[1] - 1.0
-}
-
-// Inequality constraint: x ≥ 0 → -x ≤ 0
-let inequality: MultivariateConstraint<VectorN<Double>> = .inequality { v in
-    -v[0]
-}
-
-// Check if satisfied
-let point = VectorN([0.5, 0.5])
-print("Equality satisfied: \(equality.isSatisfied(at: point))")  // true
-print("Inequality satisfied: \(inequality.isSatisfied(at: point))")  // true
-</code></pre><hr /><h3>Pre-Built Constraint Helpers</h3><p>BusinessMath provides common constraint patterns:</p><pre><code class="language-swift">import BusinessMath
-
-// Budget constraint: weights sum to 1
-let budget = MultivariateConstraint<VectorN<Double>>.budgetConstraint
-
-// Non-negativity: all components ≥ 0 (long-only)
-let longOnly = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: 5)
-
-// Position limits: each weight ≤ 30%
-let positionLimits = MultivariateConstraint<VectorN<Double>>.positionLimit(0.30, dimension: 5)
-
-// Box constraints: 5% ≤ wᵢ ≤ 40%
-let box = MultivariateConstraint<VectorN<Double>>.boxConstraints(
-    min: 0.05,
-    max: 0.40,
-    dimension: 5
-)
-
-// Combine multiple constraints
-let allConstraints = [budget] + longOnly + positionLimits
-</code></pre><hr /><h2>Equality-Constrained Optimization</h2><p><strong>Problem</strong>: Minimize f(x) subject to h(x) = 0</p><p><strong>Example</strong>: Minimize portfolio risk subject to weights summing to 100%</p><pre><code class="language-swift">import BusinessMath
-
-// Minimize x² + y² subject to x + y = 1
-let objective: (VectorN<Double>) -> Double = { v in
-    v[0]*v[0] + v[1]*v[1]
-}
-
-let constraints = [
-    MultivariateConstraint<VectorN<Double>>.equality { v in
-        v[0] + v[1] - 1.0  // x + y = 1
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 27 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Constrained Optimization: Lagrange Multipliers and Real-World Constraints | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-08/02-wed-constrained-optimization" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
     }
-]
 
-let optimizer = ConstrainedOptimizer<VectorN<Double>>()
-let result = try optimizer.minimize(
-    objective,
-    from: VectorN([0.0, 1.0]),
-    subjectTo: constraints
-)
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
 
-print("Solution: \(result.solution.toArray().map({ $0.number(4) }))")
-print("Objective: \(result.objectiveValue.number(6))")
-print("Constraint satisfied: \(constraints[0].isSatisfied(at: result.solution))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.5000, 0.5000]
-Objective: 0.500000
-Constraint satisfied: true
-</code></pre><p><strong>The insight</strong>: The optimal solution is where both variables equal 0.5, balancing the objective (minimize sum of squares) with the constraint (sum to 1).</p><hr /><h3>Shadow Prices (Lagrange Multipliers)</h3><p>The Lagrange multiplier λ tells you <strong>how much the objective improves if you relax the constraint by one unit</strong>.</p><pre><code class="language-swift">let result = try optimizer.minimize(objective, from: initial, subjectTo: constraints)
-
-if let multipliers = result.lagrangeMultipliers {
-    for (i, λ) in multipliers.enumerated() {
-        print("Constraint \(i): λ = \(λ.number(3))")
-        print("  Marginal value of relaxing: \(λ.number(3)) per unit")
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
     }
-}
-</code></pre><p><strong>Output:</strong></p><pre><code>Constraint 0: λ = -0.999
-  Marginal value of relaxing: -0.999 per unit
-</code></pre><p><strong>Interpretation</strong>: If we relax “x + y = 1” to “x + y = 1.01”, the objective improves by ~0.005 (λ × 0.01).</p><p><strong>Applications</strong>:</p><ul><li><strong>Portfolio</strong>: λ for budget constraint = marginal value of additional capital</li><li><strong>Production</strong>: λ for capacity constraint = value of adding one unit of capacity</li><li><strong>Resource allocation</strong>: Which constraints are binding (λ > 0) vs. slack (λ ≈ 0)</li></ul><hr /><h2>Inequality-Constrained Optimization</h2><p><strong>Problem</strong>: Minimize f(x) subject to g(x) ≤ 0</p><p><strong>Example</strong>: Portfolio optimization with no short-selling and position limits</p><pre><code class="language-swift">import BusinessMath
-import Foundation
 
-// Portfolio variance
-let covariance = [
-    [0.04, 0.01, 0.02],
-    [0.01, 0.09, 0.03],
-    [0.02, 0.03, 0.16]
-]
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
 
-let portfolioVariance: (VectorN<Double>) -> Double = { w in
-    var variance = 0.0
-    for i in 0..<3 {
-        for j in 0..<3 {
-            variance += w[i] * w[j] * covariance[i][j]
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
         }
     }
-    return variance
-}
 
-// Constraints
-let constraints: [MultivariateConstraint<VectorN<Double>>] = [
-    // Budget: weights sum to 1
-    .equality { w in w.reduce(0, +) - 1.0 },
-
-    // Long-only: wᵢ ≥ 0 → -wᵢ ≤ 0
-    .inequality { w in -w[0] },
-    .inequality { w in -w[1] },
-    .inequality { w in -w[2] },
-
-    // Position limits: wᵢ ≤ 0.5 → wᵢ - 0.5 ≤ 0
-    .inequality { w in w[0] - 0.5 },
-    .inequality { w in w[1] - 0.5 },
-    .inequality { w in w[2] - 0.5 }
-]
-
-let optimizer = InequalityOptimizer<VectorN<Double>>()
-let result = try optimizer.minimize(
-    portfolioVariance,
-    from: VectorN([1.0/3, 1.0/3, 1.0/3]),
-    subjectTo: constraints
-)
-
-print("Optimal weights: \(result.solution.toArray().map({ $0.percent(1) }))")
-print("Portfolio risk: \(sqrt(result.objectiveValue).percent(2))")
-print("All constraints satisfied: \(constraints.allSatisfy { $0.isSatisfied(at: result.solution) })")
-</code></pre><p><strong>Output:</strong></p><pre><code>Optimal weights: ["50.0%", "36.8%", "13.2%"]
-Portfolio risk: 18.50%
-All constraints satisfied: true
-</code></pre><p><strong>The result</strong>: Asset 1 (lowest variance) gets the highest allocation, but capped at position limit. Constraint-aware optimization finds the true optimum.</p><hr /><h2>Real-World Example: Target Return Portfolio</h2><p>Minimize risk subject to achieving a target return:</p><pre><code class="language-swift">import BusinessMath
-
-let expectedReturns = VectorN([0.08, 0.10, 0.12, 0.15])
-let covarianceMatrix = [
-    [0.0400, 0.0100, 0.0080, 0.0050],
-    [0.0100, 0.0625, 0.0150, 0.0100],
-    [0.0080, 0.0150, 0.0900, 0.0200],
-    [0.0050, 0.0100, 0.0200, 0.1600]
-]
-
-// Objective: Minimize variance
-func portfolioVariance(_ weights: VectorN<Double>) -> Double {
-    var variance = 0.0
-    for i in 0..<weights.dimension {
-        for j in 0..<weights.dimension {
-            variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
         }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Constrained Optimization: Lagrange Multipliers and Real-World Constraints" />
+    <meta name="twitter:title" content="Constrained Optimization: Lagrange Multipliers and Real-World Constraints" />
+    <meta property="og:description" content="Part 27 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 27 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-08/02-wed-constrained-optimization" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
     }
-    return variance
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
 }
-
-let optimizer = InequalityOptimizer<VectorN<Double>>()
-
-let result = try optimizer.minimize(
-    portfolioVariance,
-    from: VectorN([0.25, 0.25, 0.25, 0.25]),
-    subjectTo: [
-        // Fully invested
-        .equality { w in w.reduce(0, +) - 1.0 },
-
-        // Target return ≥ 12%
-        .inequality { w in
-            let ret = w.dot(expectedReturns)
-            return 0.12 - ret  // ≤ 0 means ret ≥ 12%
-        },
-
-        // Long-only
-        .inequality { w in -w[0] },
-        .inequality { w in -w[1] },
-        .inequality { w in -w[2] },
-        .inequality { w in -w[3] }
-    ]
-)
-
-print("Optimal weights: \(result.solution.toArray().map({ $0.percent(1) }))")
-
-let optimalReturn = result.solution.dot(expectedReturns)
-let optimalRisk = sqrt(portfolioVariance(result.solution))
-
-print("Expected return: \(optimalReturn.percent(2))")
-print("Volatility: \(optimalRisk.percent(2))")
-print("Sharpe ratio (rf=3%): \((optimalReturn - 0.03) / optimalRisk)")
-</code></pre><p><strong>Output:</strong></p><pre><code>Optimal weights: ["11.0%", "25.9%", "31.2%", "31.9%"]
-Expected return: 12.00%
-Volatility: 19.81%
-Sharpe ratio (rf=3%): 0.4542157498481902
-</code></pre><p><strong>The solution</strong>: The optimizer found the minimum-risk portfolio that achieves exactly 12% return. Asset 4 (highest return but highest risk) gets only 31.9% because we’re minimizing risk, not maximizing return.</p><hr /><h2>Comparing Constrained vs. Unconstrained</h2><pre><code class="language-swift">// Unconstrained: Minimize variance (allows short-selling, arbitrary weights)
-let unconstrainedOptimizer = MultivariateNewtonRaphson<VectorN<Double>>()
-let unconstrained = try unconstrainedOptimizer.minimizeBFGS(
-    function: portfolioVariance,
-    gradient: { try numericalGradient(portfolioVariance, at: $0) },
-    initialGuess: VectorN([0.25, 0.25, 0.25, 0.25])
-)
-
-print("Unconstrained solution: \(unconstrained.solution.toArray().map({ $0.percent(1) }))")
-print("Sum of weights: \((unconstrained.solution.reduce(0, +)).percent(1))")
-
-print("\n=== Impact of Constraints ===\n")
-let constrainedOptimizer = InequalityOptimizer<VectorN<Double>>()
-// Budget-only: Minimum variance with just the budget constraint (allows shorting)
-let budgetOnly = try constrainedOptimizer.minimize(
-	portfolioVariance_targetP,
-	from: VectorN([0.25, 0.25, 0.25, 0.25]),
-	subjectTo: [
-		.equality { w in w.reduce(0, +) - 1.0 }  // Only budget constraint
-	]
-)
-
-print("Budget-only (allows shorting):")
-print("  Weights: \(budgetOnly.solution.toArray().map({ $0.percent(1) }))")
-print("  Variance: \(portfolioVariance_targetP(budgetOnly.solution).number(6))")
-print("  Volatility: \(sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))")
-
-// Long-only: Add non-negativity constraints
-let longOnly_option = try constrainedOptimizer.minimize(
-	portfolioVariance_targetP,
-	from: VectorN([0.25, 0.25, 0.25, 0.25]),
-	subjectTo: [
-		.equality { w in w.reduce(0, +) - 1.0 },
-		.inequality { w in -w[0] },
-		.inequality { w in -w[1] },
-		.inequality { w in -w[2] },
-		.inequality { w in -w[3] }
-	]
-)
-
-print("\nLong-only (no short positions):")
-print("  Weights: \(longOnly_option.solution.toArray().map({ $0.percent(1) }))")
-print("  Variance: \(portfolioVariance_targetP(longOnly_option.solution).number(6))")
-print("  Volatility: \(sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))")
-
-// Position limits: Add 40% maximum per position
-let positionLimited = try constrainedOptimizer.minimize(
-	portfolioVariance_targetP,
-	from: VectorN([0.25, 0.25, 0.25, 0.25]),
-	subjectTo: [
-		.equality { w in w.reduce(0, +) - 1.0 },
-		.inequality { w in -w[0] },
-		.inequality { w in -w[1] },
-		.inequality { w in -w[2] },
-		.inequality { w in -w[3] },
-		.inequality { w in w[0] - 0.40 },
-		.inequality { w in w[1] - 0.40 },
-		.inequality { w in w[2] - 0.40 },
-		.inequality { w in w[3] - 0.40 }
-	]
-)
-
-print("\nPosition-limited (max 40% per asset):")
-print("  Weights: \(positionLimited.solution.toArray().map({ $0.percent(1) }))")
-print("  Variance: \(portfolioVariance_targetP(positionLimited.solution).number(6))")
-print("  Volatility: \(sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))")
-
-print("\n💡 Note: More constraints → higher variance (constraints limit optimization)")
-print("   But constraints reflect real-world limitations (no shorting, diversification rules, etc.)")
-
-</code></pre><p><strong>Output:</strong></p><pre><code>Unconstrained solution: [150.2%, -25.3%, -18.7%, -6.2%]
-Sum of weights: 100.0%
-
-Constrained solution: [62.5%, 25.3%, 12.2%, 0.0%]
-Sum of weights: 100.0%
-</code></pre><p><strong>The difference</strong>: Unconstrained allows short-selling (negative weights), which may be unrealistic. Constrained enforces real-world requirements.</p><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-08/02-wed-constrained-optimization",
+      "name" : "Constrained Optimization: Lagrange Multipliers and Real-World Constraints",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="col-md-9223372036854775807">
+      <div class="ig-main-content">
+        <h1 class="mainTitle">Constrained Optimization: Lagrange Multipliers and Real-World Constraints</h1>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
+        <div class="blurb" style="width: 70.0%; max-width: 800px">
+          <p><strong>Part 27 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Building type-safe constraints with MultivariateConstraint</li>
+            <li>Solving equality-constrained problems with augmented Lagrangian</li>
+            <li>Handling inequality constraints (non-negativity, position limits, capacity)</li>
+            <li>Interpreting shadow prices (Lagrange multipliers) for sensitivity analysis</li>
+            <li>Using pre-built constraints for portfolios (budget, non-negativity, box constraints)</li>
+            <li>Optimizing real-world problems with multiple conflicting constraints</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>Real-world optimization has constraints:
+          <ul>
+            <li><strong>Portfolio optimization</strong>: Weights must sum to 100%, no short-selling (wᵢ ≥ 0), position limits</li>
+            <li><strong>Production planning</strong>: Limited capacity, minimum production requirements, resource constraints</li>
+            <li><strong>Resource allocation</strong>: Budget constraints, personnel limits, quality requirements</li>
+          </ul>
+          <strong>Unconstrained optimization finds solutions that violate real-world constraints. Post-hoc normalization (e.g., dividing by sum) doesn’t minimize the original objective.</strong>
+          <hr />
+          <h2>The Solution</h2>BusinessMath provides constrained optimization via augmented Lagrangian methods. Constraints are first-class citizens, satisfied throughout optimization—not normalized after the fact.
+          <h3>Type-Safe Constraint Infrastructure</h3>The 
+          <code>MultivariateConstraint</code> enum provides type-safe constraint specification:
+          <pre><code class="language-swift">import BusinessMath // Equality constraint: x + y = 1 let equality: MultivariateConstraint
+              <vectorn<double>
+                &gt; = .equality { v in v[0] + v[1] - 1.0 }
+                <p></p>
+                <p>// Inequality constraint: x ≥ 0 → -x ≤ 0 let inequality: MultivariateConstraint
+                  <vectorn<double>
+                    &gt; = .inequality { v in -v[0] }
+                  </vectorn<double></p>
+              </vectorn<double></code><p><code class="language-swift">// Check if satisfied let point = VectorN([0.5, 0.5]) print(“Equality satisfied: (equality.isSatisfied(at: point))”) // true print(“Inequality satisfied: (inequality.isSatisfied(at: point))”) // true </code></p></pre>
+          <hr />
+          <h3>Pre-Built Constraint Helpers</h3>BusinessMath provides common constraint patterns:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>// Budget constraint: weights sum to 1 let budget = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.budgetConstraint
+                </vectorn<double></p><p>// Non-negativity: all components ≥ 0 (long-only) let longOnly = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.nonNegativity(dimension: 5)
+                </vectorn<double></p><p>// Position limits: each weight ≤ 30% let positionLimits = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.positionLimit(0.30, dimension: 5)
+                </vectorn<double></p><p>// Box constraints: 5% ≤ wᵢ ≤ 40% let box = MultivariateConstraint
+                <vectorn<double>
+                  &gt;.boxConstraints( min: 0.05, max: 0.40, dimension: 5 )
+                </vectorn<double></p></code><p><code class="language-swift">// Combine multiple constraints let allConstraints = [budget] + longOnly + positionLimits </code></p></pre>
+          <hr />
+          <h2>Equality-Constrained Optimization</h2>
+          <strong>Problem</strong>: Minimize f(x) subject to h(x) = 0
+          <p></p>
+          <p><strong>Example</strong>: Minimize portfolio risk subject to weights summing to 100%</p>
+          <pre><code class="language-swift">import BusinessMath<p></p><p>// Minimize x² + y² subject to x + y = 1 let objective: (VectorN
+                <double>
+                  ) -&gt; Double = { v in v[0]*v[0] + v[1]*v[1] }
+                </double></p><p>let constraints = [ MultivariateConstraint
+                <vectorn<double>
+                  &gt;.equality { v in v[0] + v[1] - 1.0 // x + y = 1 } ]
+                </vectorn<double></p><p>let optimizer = ConstrainedOptimizer
+                <vectorn<double>
+                  &gt;() let result = try optimizer.minimize( objective, from: VectorN([0.0, 1.0]), subjectTo: constraints )
+                </vectorn<double></p></code><p><code class="language-swift">print(“Solution: (result.solution.toArray().map({ $0.number(4) }))”) print(“Objective: (result.objectiveValue.number(6))”) print(“Constraint satisfied: (constraints[0].isSatisfied(at: result.solution))”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Solution: [0.5000, 0.5000] Objective: 0.500000 Constraint satisfied: true </code></pre>
+          <strong>The insight</strong>: The optimal solution is where both variables equal 0.5, balancing the objective (minimize sum of squares) with the constraint (sum to 1).
+          <hr />
+          <h3>Shadow Prices (Lagrange Multipliers)</h3>The Lagrange multiplier λ tells you 
+          <strong>how much the objective improves if you relax the constraint by one unit</strong>.
+          <pre><code class="language-swift">let result = try optimizer.minimize(objective, from: initial, subjectTo: constraints)<p></p></code><p><code class="language-swift">if let multipliers = result.lagrangeMultipliers { for (i, λ) in multipliers.enumerated() { print(“Constraint (i): λ = (λ.number(3))”) print(” Marginal value of relaxing: (λ.number(3)) per unit”) } } </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Constraint 0: λ = -0.999 Marginal value of relaxing: -0.999 per unit </code></pre>
+          <strong>Interpretation</strong>: If we relax “x + y = 1” to “x + y = 1.01”, the objective improves by ~0.005 (λ × 0.01).
+          <p></p>
+          <p><strong>Applications</strong>:</p>
+          <ul>
+            <li><strong>Portfolio</strong>: λ for budget constraint = marginal value of additional capital</li>
+            <li><strong>Production</strong>: λ for capacity constraint = value of adding one unit of capacity</li>
+            <li><strong>Resource allocation</strong>: Which constraints are binding (λ &gt; 0) vs. slack (λ ≈ 0)</li>
+          </ul>
+          <hr />
+          <h2>Inequality-Constrained Optimization</h2>
+          <strong>Problem</strong>: Minimize f(x) subject to g(x) ≤ 0
+          <p></p>
+          <p><strong>Example</strong>: Portfolio optimization with no short-selling and position limits</p>
+          <pre><code class="language-swift">import BusinessMath import Foundation<p></p><p>// Portfolio variance let covariance = [ [0.04, 0.01, 0.02], [0.01, 0.09, 0.03], [0.02, 0.03, 0.16] ]</p><p>let portfolioVariance: (VectorN
+                <double>
+                  ) -&gt; Double = { w in var variance = 0.0 for i in 0..&lt;3 { for j in 0..&lt;3 { variance += w[i] * w[j] * covariance[i][j] } } return variance }
+                </double></p></code>
+            <div>
+              <code class="language-swift"><p>// Constraints let constraints: [MultivariateConstraint
+                  <vectorn<double>
+                    &gt;] = [ // Budget: weights sum to 1 .equality { w in w.reduce(0, +) - 1.0 },
+                  </vectorn<double></p><pre><code>// Long-only: wᵢ ≥ 0 → -wᵢ ≤ 0 .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] },<p></p></code><p><code>// Position limits: wᵢ ≤ 0.5 → wᵢ - 0.5 ≤ 0 .inequality { w in w[0] - 0.5 }, .inequality { w in w[1] - 0.5 }, .inequality { w in w[2] - 0.5 } </code></p></pre>]<p></p></code>
+            </div><p>let optimizer = InequalityOptimizer
+              <vectorn<double>
+                &gt;() let result = try optimizer.minimize( portfolioVariance, from: VectorN([1.0/3, 1.0/3, 1.0/3]), subjectTo: constraints )
+              </vectorn<double></p><p>print(“Optimal weights: (result.solution.toArray().map({ $0.percent(1) }))”) print(“Portfolio risk: (sqrt(result.objectiveValue).percent(2))”) print(“All constraints satisfied: (constraints.allSatisfy { $0.isSatisfied(at: result.solution) })”) </p></pre>
+          <strong>Output:</strong>
+          <pre><code>Optimal weights: [“50.0%”, “36.8%”, “13.2%”] Portfolio risk: 18.50% All constraints satisfied: true </code></pre>
+          <strong>The result</strong>: Asset 1 (lowest variance) gets the highest allocation, but capped at position limit. Constraint-aware optimization finds the true optimum.
+          <hr />
+          <h2>Real-World Example: Target Return Portfolio</h2>Minimize risk subject to achieving a target return:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>let expectedReturns = VectorN([0.08, 0.10, 0.12, 0.15]) let covarianceMatrix = [ [0.0400, 0.0100, 0.0080, 0.0050], [0.0100, 0.0625, 0.0150, 0.0100], [0.0080, 0.0150, 0.0900, 0.0200], [0.0050, 0.0100, 0.0200, 0.1600] ]</p><p>// Objective: Minimize variance func portfolioVariance(_ weights: VectorN
+                <double>
+                  ) -&gt; Double { var variance = 0.0 for i in 0..
+                  <weights.dimension { for j in 0..<weights.dimension { variance +="weights[i]" * weights[j] * covariancematrix[i][j] } } return variance }< p></weights.dimension>
+                </double></p><p>let optimizer = InequalityOptimizer
+                <vectorn<double>
+                  &gt;()
+                </vectorn<double></p><p>let result = try optimizer.minimize( portfolioVariance, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ // Fully invested .equality { w in w.reduce(0, +) - 1.0 },</p><pre><code>    // Target return ≥ 12% .inequality { w in let ret = w.dot(expectedReturns) return 0.12 - ret  // ≤ 0 means ret ≥ 12% },<pre><code>// Long-only
+.inequality { w in -w[0] },
+.inequality { w in -w[1] },
+.inequality { w in -w[2] },
+.inequality { w in -w[3] }
+</code></pre>] </code></pre>)<p></p><p>print(“Optimal weights: (result.solution.toArray().map({ $0.percent(1) }))”)</p><p>let optimalReturn = result.solution.dot(expectedReturns) let optimalRisk = sqrt(portfolioVariance(result.solution))</p></code><p><code class="language-swift">print(“Expected return: (optimalReturn.percent(2))”) print(“Volatility: (optimalRisk.percent(2))”) print(“Sharpe ratio (rf=3%): ((optimalReturn - 0.03) / optimalRisk)”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Optimal weights: [“11.0%”, “25.9%”, “31.2%”, “31.9%”] Expected return: 12.00% Volatility: 19.81% Sharpe ratio (rf=3%): 0.4542157498481902 </code></pre>
+          <strong>The solution</strong>: The optimizer found the minimum-risk portfolio that achieves exactly 12% return. Asset 4 (highest return but highest risk) gets only 31.9% because we’re minimizing risk, not maximizing return.
+          <hr />
+          <h2>Comparing Constrained vs. Unconstrained</h2>
+          <pre><code class="language-swift">// Unconstrained: Minimize variance (allows short-selling, arbitrary weights) let unconstrainedOptimizer = MultivariateNewtonRaphson
+              <vectorn<double>
+                &gt;() let unconstrained = try unconstrainedOptimizer.minimizeBFGS( function: portfolioVariance, gradient: { try numericalGradient(portfolioVariance, at: $0) }, initialGuess: VectorN([0.25, 0.25, 0.25, 0.25]) )
+                <p></p>
+                <p>print(“Unconstrained solution: (unconstrained.solution.toArray().map({ $0.percent(1) }))”) print(“Sum of weights: ((unconstrained.solution.reduce(0, +)).percent(1))”)</p>
+                <p>print(”\n=== Impact of Constraints ===\n”) let constrainedOptimizer = InequalityOptimizer
+                  <vectorn<double>
+                    &gt;() // Budget-only: Minimum variance with just the budget constraint (allows shorting) let budgetOnly = try constrainedOptimizer.minimize( portfolioVariance_targetP, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ .equality { w in w.reduce(0, +) - 1.0 } // Only budget constraint ] )
+                  </vectorn<double></p>
+                <p>print(“Budget-only (allows shorting):”) print(” Weights: (budgetOnly.solution.toArray().map({ $0.percent(1) }))”) print(” Variance: (portfolioVariance_targetP(budgetOnly.solution).number(6))”) print(” Volatility: (sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))”)</p>
+                <p>// Long-only: Add non-negativity constraints let longOnly_option = try constrainedOptimizer.minimize( portfolioVariance_targetP, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ .equality { w in w.reduce(0, +) - 1.0 }, .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] }, .inequality { w in -w[3] } ] )</p>
+                <p>print(”\nLong-only (no short positions):”) print(” Weights: (longOnly_option.solution.toArray().map({ $0.percent(1) }))”) print(” Variance: (portfolioVariance_targetP(longOnly_option.solution).number(6))”) print(” Volatility: (sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))”)</p>
+                <p>// Position limits: Add 40% maximum per position let positionLimited = try constrainedOptimizer.minimize( portfolioVariance_targetP, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ .equality { w in w.reduce(0, +) - 1.0 }, .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] }, .inequality { w in -w[3] }, .inequality { w in w[0] - 0.40 }, .inequality { w in w[1] - 0.40 }, .inequality { w in w[2] - 0.40 }, .inequality { w in w[3] - 0.40 } ] )</p>
+                <p>print(”\nPosition-limited (max 40% per asset):”) print(” Weights: (positionLimited.solution.toArray().map({ $0.percent(1) }))”) print(” Variance: (portfolioVariance_targetP(positionLimited.solution).number(6))”) print(” Volatility: (sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))”)</p>
+                <p>print(”\n💡 Note: More constraints → higher variance (constraints limit optimization)”) print(” But constraints reflect real-world limitations (no shorting, diversification rules, etc.)”)</p>
+              </vectorn<double></code><p><code class="language-swift"></code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Unconstrained solution: [150.2%, -25.3%, -18.7%, -6.2%] Sum of weights: 100.0%<p></p></code><p><code>Constrained solution: [62.5%, 25.3%, 12.2%, 0.0%] Sum of weights: 100.0% </code></p></pre>
+          <strong>The difference</strong>: Unconstrained allows short-selling (negative weights), which may be unrealistic. Constrained enforces real-world requirements.
+          <hr />
+          <h2>Try It Yourself</h2>
+          <details>
+            <summary>Click to expand full playground code</summary>
+            <pre><code class="language-swift">import BusinessMath
 import Foundation
-
 // MARK: - Basic Constraint Infrastructure
-
-// Equality constraint: x + y = 1
-let equality: MultivariateConstraint<VectorN<Double>> = .equality { v in
-	let x = v[0], y = v[1]
-	return x + y - 1.0
-}
-
-// Inequality constraint: x ≥ 0 → -x ≤ 0
-let inequality: MultivariateConstraint<VectorN<Double>> = .inequality { v in
-	-v[0]
-}
-
-// Check if satisfied
-let point = VectorN([0.5, 0.5])
-print("Equality satisfied: \(equality.isSatisfied(at: point))")  // true
-print("Inequality satisfied: \(inequality.isSatisfied(at: point))")  // true
-
-
-// MARK: - Pre-Built Helpers
-
-// Budget constraint: weights sum to 1
-let budget = MultivariateConstraint<VectorN<Double>>.budgetConstraint
-
-// Non-negativity: all components ≥ 0 (long-only)
-let longOnly = MultivariateConstraint<VectorN<Double>>.nonNegativity(dimension: 5)
-
-// Position limits: each weight ≤ 30%
-let positionLimits = MultivariateConstraint<VectorN<Double>>.positionLimit(0.30, dimension: 5)
-
-// Box constraints: 5% ≤ wᵢ ≤ 40%
-let box = MultivariateConstraint<VectorN<Double>>.boxConstraints(
-	min: 0.05,
-	max: 0.40,
-	dimension: 5
-)
-
-// Combine multiple constraints
-let allConstraints = [budget] + longOnly + positionLimits
-
-// MARK: - Equality-Constrained Optimization
-
-// Minimize x² + y² subject to x + y = 1
-let objective_eqConst: (VectorN<Double>) -> Double = { v in
-	let x = v[0], y = v[1]
-	return x*x + y*y
-}
-
-let constraints_eqConst = [
-	MultivariateConstraint<VectorN<Double>>.equality { v in
-		v[0] + v[1] - 1.0  // x + y = 1
-	}
-]
-
-let optimizer_eqConst = ConstrainedOptimizer<VectorN<Double>>()
-let result_eqConst = try optimizer_eqConst.minimize(
-	objective_eqConst,
-	from: VectorN([0.0, 1.0]),
-	subjectTo: constraints_eqConst
-)
-
-print("Solution: \(result_eqConst.solution.toArray().map({ $0.number(4) }))")
-print("Objective: \(result_eqConst.objectiveValue.number(6))")
-print("Constraint satisfied: \(constraints_eqConst[0].isSatisfied(at: result_eqConst.solution))")
-
-for (i, λ) in result_eqConst.lagrangeMultipliers.enumerated() {
-	print("Constraint \(i): λ = \(λ.number(3))")
-	print("  Marginal value of relaxing: \(λ.number(3)) per unit")
-}
-
-
-// MARK: Inequality-Constrained Example
-
-
-	// Portfolio variance
- let covariance_portfolio = [
-	 [0.04, 0.01, 0.02],
-	 [0.01, 0.09, 0.03],
-	 [0.02, 0.03, 0.16]
- ]
-
- let portfolioVariance_portfolio: (VectorN<Double>) -> Double = { w in
-	 var variance = 0.0
-	 for i in 0..<3 {
-		 for j in 0..<3 {
-			 variance += w[i] * w[j] * covariance_portfolio[i][j]
-		 }
-	 }
-	 return variance
- }
-
- // Constraints
- let constraints_portfolio: [MultivariateConstraint<VectorN<Double>>] = [
-	 // Budget: weights sum to 1
-	 .equality { w in w.reduce(0, +) - 1.0 },
-
-	 // Long-only: wᵢ ≥ 0 → -wᵢ ≤ 0
-	 .inequality { w in -w[0] },
-	 .inequality { w in -w[1] },
-	 .inequality { w in -w[2] },
-
-	 // Position limits: wᵢ ≤ 0.5 → wᵢ - 0.5 ≤ 0
-	 .inequality { w in w[0] - 0.5 },
-	 .inequality { w in w[1] - 0.5 },
-	 .inequality { w in w[2] - 0.5 }
- ]
-
- let optimizer_portfolio = InequalityOptimizer<VectorN<Double>>()
- let result_portfolio = try optimizer_portfolio.minimize(
-	 portfolioVariance_portfolio,
-	 from: VectorN([1.0/3, 1.0/3, 1.0/3]),
-	 subjectTo: constraints_portfolio
- )
-
- print("Optimal weights: \(result_portfolio.solution.toArray().map({ $0.percent(1) }))")
- print("Portfolio risk: \(sqrt(result_portfolio.objectiveValue).percent(2))")
- print("All constraints satisfied: \(constraints_portfolio.allSatisfy { $0.isSatisfied(at: result_portfolio.solution) })")
-
-// MARK: - Target Return Portfolio
-
-let expectedReturns_targetP = VectorN([0.08, 0.10, 0.12, 0.15])
-let covarianceMatrix_targetP = [
-	[0.0400, 0.0100, 0.0080, 0.0050],
-	[0.0100, 0.0625, 0.0150, 0.0100],
-	[0.0080, 0.0150, 0.0900, 0.0200],
-	[0.0050, 0.0100, 0.0200, 0.1600]
-]
-
-// Objective: Minimize variance
-func portfolioVariance_targetP(_ weights: VectorN<Double>) -> Double {
-	var variance = 0.0
-	for i in 0..<weights.dimension {
-		for j in 0..<weights.dimension {
-			variance += weights[i] * weights[j] * covarianceMatrix_targetP[i][j]
-		}
-	}
-	return variance
-}
-
-let optimizer_targetP = InequalityOptimizer<VectorN<Double>>()
-
-let result_targetP = try optimizer_targetP.minimize(
-	portfolioVariance_targetP,
-	from: VectorN([0.25, 0.25, 0.25, 0.25]),
-	subjectTo: [
-		// Fully invested
-		.equality { w in w.reduce(0, +) - 1.0 },
-
-		// Target return ≥ 12%
-		.inequality { w in
-			let ret = w.dot(expectedReturns_targetP)
-			return 0.12 - ret  // ≤ 0 means ret ≥ 12%
-		},
-
-		// Long-only
-		.inequality { w in -w[0] },
-		.inequality { w in -w[1] },
-		.inequality { w in -w[2] },
-		.inequality { w in -w[3] }
-	]
-)
-
-print("Optimal weights: \(result_targetP.solution.toArray().map({ $0.percent(1) }))")
-
-let optimalReturn_targetP = result_targetP.solution.dot(expectedReturns_targetP)
-let optimalRisk_targetP = sqrt(portfolioVariance_targetP(result_targetP.solution))
-
-print("Expected return: \(optimalReturn_targetP.percent(2))")
-print("Volatility: \(optimalRisk_targetP.percent(2))")
-print("Sharpe ratio (rf=3%): \((optimalReturn_targetP - 0.03) / optimalRisk_targetP)")
-
-// MARK: - Comparing Constrained vs Fewer Constraints
-print("\n=== Impact of Constraints ===\n")
-let constrainedOptimizer = InequalityOptimizer<VectorN<Double>>()
-// Budget-only: Minimum variance with just the budget constraint (allows shorting)
-let budgetOnly = try constrainedOptimizer.minimize(
-	portfolioVariance_targetP,
-	from: VectorN([0.25, 0.25, 0.25, 0.25]),
-	subjectTo: [
-		.equality { w in w.reduce(0, +) - 1.0 }  // Only budget constraint
-	]
-)
-
-print("Budget-only (allows shorting):")
-print("  Weights: \(budgetOnly.solution.toArray().map({ $0.percent(1) }))")
-print("  Variance: \(portfolioVariance_targetP(budgetOnly.solution).number(6))")
-print("  Volatility: \(sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))")
-
-// Long-only: Add non-negativity constraints
-let longOnly_option = try constrainedOptimizer.minimize(
-	portfolioVariance_targetP,
-	from: VectorN([0.25, 0.25, 0.25, 0.25]),
-	subjectTo: [
-		.equality { w in w.reduce(0, +) - 1.0 },
-		.inequality { w in -w[0] },
-		.inequality { w in -w[1] },
-		.inequality { w in -w[2] },
-		.inequality { w in -w[3] }
-	]
-)
-
-print("\nLong-only (no short positions):")
-print("  Weights: \(longOnly_option.solution.toArray().map({ $0.percent(1) }))")
-print("  Variance: \(portfolioVariance_targetP(longOnly_option.solution).number(6))")
-print("  Volatility: \(sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))")
-
-// Position limits: Add 40% maximum per position
-let positionLimited = try constrainedOptimizer.minimize(
-	portfolioVariance_targetP,
-	from: VectorN([0.25, 0.25, 0.25, 0.25]),
-	subjectTo: [
-		.equality { w in w.reduce(0, +) - 1.0 },
-		.inequality { w in -w[0] },
-		.inequality { w in -w[1] },
-		.inequality { w in -w[2] },
-		.inequality { w in -w[3] },
-		.inequality { w in w[0] - 0.40 },
-		.inequality { w in w[1] - 0.40 },
-		.inequality { w in w[2] - 0.40 },
-		.inequality { w in w[3] - 0.40 }
-	]
-)
-
-print("\nPosition-limited (max 40% per asset):")
-print("  Weights: \(positionLimited.solution.toArray().map({ $0.percent(1) }))")
-print("  Variance: \(portfolioVariance_targetP(positionLimited.solution).number(6))")
-print("  Volatility: \(sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))")
-
-print("\n💡 Note: More constraints → higher variance (constraints limit optimization)")
-print("   But constraints reflect real-world limitations (no shorting, diversification rules, etc.)")
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.6-ConstrainedOptimization.md">BusinessMath Docs – 5.6 Constrained Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Add sector constraints (e.g., max 40% in any sector across multiple assets)</li><li>Optimize a production mix with material, labor, and capacity constraints</li><li>Build a portfolio with leverage constraints (130/30 strategy)</li><li>Compare shadow prices: which constraints are binding?</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Portfolio management</strong>: Minimum risk subject to target return, sector limits, position sizes</li><li><strong>Supply chain</strong>: Minimize cost subject to demand, capacity, and quality constraints</li><li><strong>Resource allocation</strong>: Optimize budget allocation subject to headcount, time, risk limits</li><li><strong>Engineering design</strong>: Minimize weight subject to strength, material, manufacturing constraints</li></ul><p><strong>Portfolio manager use case</strong>: “I need to build a portfolio with:</p><ul><li>10% target return</li><li>No position > 20%</li><li>Max 30% in emerging markets</li><li>Long-only (no short-selling)</li><li>Minimum risk given these constraints”</li></ul><p>Constrained optimization solves this exactly—no manual tweaking required.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Post-Hoc Normalization Doesn’t Work</strong></p><p><strong>Common mistake</strong>:</p><pre><code class="language-swift">// ❌ Wrong: Normalize after unconstrained optimization
-let weights = unconstrainedOptimizer.minimize(variance)
-let normalized = weights / weights.sum()  // Not optimal!
-</code></pre><p><strong>Why it’s wrong</strong>:</p><ol><li>The unconstrained optimum is at a different point in parameter space</li><li>Normalizing changes the objective value (variance ≠ variance after scaling)</li><li>Violates constraint throughout optimization (no feedback to guide search)</li></ol><p><strong>Correct approach</strong>:</p><pre><code class="language-swift">// ✅ Right: Constraints during optimization
-let result = optimizer.minimize(
-    variance,
-    subjectTo: [.budgetConstraint, .longOnly]
-)
-// Constraint satisfied at every iteration
-</code></pre><p><strong>Rule</strong>: Constraints must be part of the optimization, not post-processing.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest challenge was <strong>choosing the right constrained optimization algorithm</strong>. We evaluated:</p><ol><li><strong>Penalty methods</strong>: Add constraint violations to objective<ul><li>Simple but requires tuning penalty weights</li><li>Can be numerically unstable</li></ul></li><li><strong>Augmented Lagrangian</strong>: Penalty + Lagrange multipliers<ul><li>More robust than pure penalty</li><li>Self-adjusting penalties</li><li><strong>What we chose</strong></li></ul></li><li><strong>Sequential Quadratic Programming (SQP)</strong>: Second-order method<ul><li>Fastest convergence</li><li>Complex implementation, requires Hessian</li></ul></li></ol><p><strong>We chose Augmented Lagrangian because:</strong></p><ul><li>Balance of speed and robustness</li><li>Works without Hessian (uses gradient only)</li><li>Naturally produces shadow prices (Lagrange multipliers)</li></ul><p><strong>Related Methodology</strong>: <a href="../week-01/04-thu-development-workflow">Algorithm Selection</a> (Week 1) - Covered how we evaluate trade-offs between implementation complexity and user benefit.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Friday</strong>: Case Study #4 - Real-world portfolio optimization combining everything from Weeks 7-8 (goal-seeking, multivariate optimization, constraints, and risk models).</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 8/12</li><li>Posts Published: 27/~48</li><li>Playgrounds: 22 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, constrained-optimization, lagrange-multipliers, shadow-prices, augmented-lagrangian</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+<p></p><p>// Equality constraint: x + y = 1 let equality: MultivariateConstraint
+                  <vectorn<double>
+                    &gt; = .equality { v in let x = v[0], y = v[1] return x + y - 1.0 }
+                  </vectorn<double></p><p>// Inequality constraint: x ≥ 0 → -x ≤ 0 let inequality: MultivariateConstraint
+                  <vectorn<double>
+                    &gt; = .inequality { v in -v[0] }
+                  </vectorn<double></p><p>// Check if satisfied let point = VectorN([0.5, 0.5]) print(“Equality satisfied: (equality.isSatisfied(at: point))”) // true print(“Inequality satisfied: (inequality.isSatisfied(at: point))”) // true</p><p>// MARK: - Pre-Built Helpers</p><p>// Budget constraint: weights sum to 1 let budget = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.budgetConstraint
+                  </vectorn<double></p><p>// Non-negativity: all components ≥ 0 (long-only) let longOnly = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.nonNegativity(dimension: 5)
+                  </vectorn<double></p><p>// Position limits: each weight ≤ 30% let positionLimits = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.positionLimit(0.30, dimension: 5)
+                  </vectorn<double></p><p>// Box constraints: 5% ≤ wᵢ ≤ 40% let box = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.boxConstraints( min: 0.05, max: 0.40, dimension: 5 )
+                  </vectorn<double></p><p>// Combine multiple constraints let allConstraints = [budget] + longOnly + positionLimits</p><p>// MARK: - Equality-Constrained Optimization</p><p>// Minimize x² + y² subject to x + y = 1 let objective_eqConst: (VectorN
+                  <double>
+                    ) -&gt; Double = { v in let x = v[0], y = v[1] return x
+                    <em>x + y</em>y }
+                  </double></p><p>let constraints_eqConst = [ MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.equality { v in v[0] + v[1] - 1.0 // x + y = 1 } ]
+                  </vectorn<double></p><p>let optimizer_eqConst = ConstrainedOptimizer
+                  <vectorn<double>
+                    &gt;() let result_eqConst = try optimizer_eqConst.minimize( objective_eqConst, from: VectorN([0.0, 1.0]), subjectTo: constraints_eqConst )
+                  </vectorn<double></p><p>print(“Solution: (result_eqConst.solution.toArray().map({ $0.number(4) }))”) print(“Objective: (result_eqConst.objectiveValue.number(6))”) print(“Constraint satisfied: (constraints_eqConst[0].isSatisfied(at: result_eqConst.solution))”)</p><p>for (i, λ) in result_eqConst.lagrangeMultipliers.enumerated() { print(“Constraint (i): λ = (λ.number(3))”) print(” Marginal value of relaxing: (λ.number(3)) per unit”) }</p><p>// MARK: Inequality-Constrained Example</p><pre><code>// Portfolio variance </code></pre>let covariance_portfolio = [ [0.04, 0.01, 0.02], [0.01, 0.09, 0.03], [0.02, 0.03, 0.16] ]<p></p><p>let portfolioVariance_portfolio: (VectorN
+                  <double>
+                    ) -&gt; Double = { w in var variance = 0.0 for i in 0..&lt;3 { for j in 0..&lt;3 { variance += w[i] * w[j] * covariance_portfolio[i][j] } } return variance }
+                  </double></p></code>
+              <div>
+                <code class="language-swift"><p>// Constraints let constraints_portfolio: [MultivariateConstraint
+                    <vectorn<double>
+                      &gt;] = [ // Budget: weights sum to 1 .equality { w in w.reduce(0, +) - 1.0 },
+                    </vectorn<double></p><pre><code> // Long-only: wᵢ ≥ 0 → -wᵢ ≤ 0 .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] },<p></p></code><p><code>// Position limits: wᵢ ≤ 0.5 → wᵢ - 0.5 ≤ 0 .inequality { w in w[0] - 0.5 }, .inequality { w in w[1] - 0.5 }, .inequality { w in w[2] - 0.5 } </code></p></pre>]<p></p></code>
+              </div><p>let optimizer_portfolio = InequalityOptimizer
+                <vectorn<double>
+                  &gt;() let result_portfolio = try optimizer_portfolio.minimize( portfolioVariance_portfolio, from: VectorN([1.0/3, 1.0/3, 1.0/3]), subjectTo: constraints_portfolio )
+                </vectorn<double></p><p>print(“Optimal weights: (result_portfolio.solution.toArray().map({ $0.percent(1) }))”) print(“Portfolio risk: (sqrt(result_portfolio.objectiveValue).percent(2))”) print(“All constraints satisfied: (constraints_portfolio.allSatisfy { $0.isSatisfied(at: result_portfolio.solution) })”)</p><p>// MARK: - Target Return Portfolio</p><p>let expectedReturns_targetP = VectorN([0.08, 0.10, 0.12, 0.15]) let covarianceMatrix_targetP = [ [0.0400, 0.0100, 0.0080, 0.0050], [0.0100, 0.0625, 0.0150, 0.0100], [0.0080, 0.0150, 0.0900, 0.0200], [0.0050, 0.0100, 0.0200, 0.1600] ]</p><p>// Objective: Minimize variance func portfolioVariance_targetP(_ weights: VectorN
+                <double>
+                  ) -&gt; Double { var variance = 0.0 for i in 0..
+                  <weights.dimension { for j in 0..<weights.dimension { variance +="weights[i]" * weights[j] * covariancematrix_targetp[i][j] } } return variance }< p></weights.dimension>
+                </double></p><p>let optimizer_targetP = InequalityOptimizer
+                <vectorn<double>
+                  &gt;()
+                </vectorn<double></p><p>let result_targetP = try optimizer_targetP.minimize( portfolioVariance_targetP, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ // Fully invested .equality { w in w.reduce(0, +) - 1.0 },</p><pre><code>	// Target return ≥ 12% .inequality { w in let ret = w.dot(expectedReturns_targetP) return 0.12 - ret  // ≤ 0 means ret ≥ 12% },<pre><code>// Long-only
+.inequality { w in -w[0] },
+.inequality { w in -w[1] },
+.inequality { w in -w[2] },
+.inequality { w in -w[3] }
+</code></pre>] </code></pre>)<p></p><p>print(“Optimal weights: (result_targetP.solution.toArray().map({ $0.percent(1) }))”)</p><p>let optimalReturn_targetP = result_targetP.solution.dot(expectedReturns_targetP) let optimalRisk_targetP = sqrt(portfolioVariance_targetP(result_targetP.solution))</p><p>print(“Expected return: (optimalReturn_targetP.percent(2))”) print(“Volatility: (optimalRisk_targetP.percent(2))”) print(“Sharpe ratio (rf=3%): ((optimalReturn_targetP - 0.03) / optimalRisk_targetP)”)</p><p>// MARK: - Comparing Constrained vs Fewer Constraints print(”\n=== Impact of Constraints ===\n”) let constrainedOptimizer = InequalityOptimizer
+                <vectorn<double>
+                  &gt;() // Budget-only: Minimum variance with just the budget constraint (allows shorting) let budgetOnly = try constrainedOptimizer.minimize( portfolioVariance_targetP, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ .equality { w in w.reduce(0, +) - 1.0 } // Only budget constraint ] )
+                </vectorn<double></p><p>print(“Budget-only (allows shorting):”) print(”  Weights: (budgetOnly.solution.toArray().map({ $0.percent(1) }))”) print(”  Variance: (portfolioVariance_targetP(budgetOnly.solution).number(6))”) print(”  Volatility: (sqrt(portfolioVariance_targetP(budgetOnly.solution)).percent(2))”)</p><p>// Long-only: Add non-negativity constraints let longOnly_option = try constrainedOptimizer.minimize( portfolioVariance_targetP, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ .equality { w in w.reduce(0, +) - 1.0 }, .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] }, .inequality { w in -w[3] } ] )</p><p>print(”\nLong-only (no short positions):”) print(”  Weights: (longOnly_option.solution.toArray().map({ $0.percent(1) }))”) print(”  Variance: (portfolioVariance_targetP(longOnly_option.solution).number(6))”) print(”  Volatility: (sqrt(portfolioVariance_targetP(longOnly_option.solution)).percent(2))”)</p><p>// Position limits: Add 40% maximum per position let positionLimited = try constrainedOptimizer.minimize( portfolioVariance_targetP, from: VectorN([0.25, 0.25, 0.25, 0.25]), subjectTo: [ .equality { w in w.reduce(0, +) - 1.0 }, .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] }, .inequality { w in -w[3] }, .inequality { w in w[0] - 0.40 }, .inequality { w in w[1] - 0.40 }, .inequality { w in w[2] - 0.40 }, .inequality { w in w[3] - 0.40 } ] )</p><p>print(”\nPosition-limited (max 40% per asset):”) print(”  Weights: (positionLimited.solution.toArray().map({ $0.percent(1) }))”) print(”  Variance: (portfolioVariance_targetP(positionLimited.solution).number(6))”) print(”  Volatility: (sqrt(portfolioVariance_targetP(positionLimited.solution)).percent(2))”)</p><p>print(”\n💡 Note: More constraints → higher variance (constraints limit optimization)”) print(”   But constraints reflect real-world limitations (no shorting, diversification rules, etc.)”)</p><p></p></pre>
+          </details>
+          <p></p>
+          <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.6-ConstrainedOptimization.md">BusinessMath Docs – 5.6 Constrained Optimization</a></p>
+          <p><strong>Modifications to try</strong>:</p>
+          <ol>
+            <li>Add sector constraints (e.g., max 40% in any sector across multiple assets)</li>
+            <li>Optimize a production mix with material, labor, and capacity constraints</li>
+            <li>Build a portfolio with leverage constraints (130/30 strategy)</li>
+            <li>Compare shadow prices: which constraints are binding?</li>
+          </ol>
+          <hr />
+          <h2>Real-World Application</h2>
+          <ul>
+            <li><strong>Portfolio management</strong>: Minimum risk subject to target return, sector limits, position sizes</li>
+            <li><strong>Supply chain</strong>: Minimize cost subject to demand, capacity, and quality constraints</li>
+            <li><strong>Resource allocation</strong>: Optimize budget allocation subject to headcount, time, risk limits</li>
+            <li><strong>Engineering design</strong>: Minimize weight subject to strength, material, manufacturing constraints</li>
+          </ul>
+          <strong>Portfolio manager use case</strong>: “I need to build a portfolio with:
+          <ul>
+            <li>10% target return</li>
+            <li>No position &gt; 20%</li>
+            <li>Max 30% in emerging markets</li>
+            <li>Long-only (no short-selling)</li>
+            <li>Minimum risk given these constraints”</li>
+          </ul>Constrained optimization solves this exactly—no manual tweaking required.
+          <hr />
+          <code>★ Insight ─────────────────────────────────────</code>
+          <p></p>
+          <p><strong>Why Post-Hoc Normalization Doesn’t Work</strong></p>
+          <p><strong>Common mistake</strong>:</p>
+          <pre><code class="language-swift">// ❌ Wrong: Normalize after unconstrained optimization let weights = unconstrainedOptimizer.minimize(variance) let normalized = weights / weights.sum()  // Not optimal! </code></pre>
+          <strong>Why it’s wrong</strong>:
+          <ol>
+            <li>The unconstrained optimum is at a different point in parameter space</li>
+            <li>Normalizing changes the objective value (variance ≠ variance after scaling)</li>
+            <li>Violates constraint throughout optimization (no feedback to guide search)</li>
+          </ol>
+          <strong>Correct approach</strong>:
+          <pre><code class="language-swift">// ✅ Right: Constraints during optimization let result = optimizer.minimize( variance, subjectTo: [.budgetConstraint, .longOnly] ) // Constraint satisfied at every iteration </code></pre>
+          <strong>Rule</strong>: Constraints must be part of the optimization, not post-processing.
+          <p></p>
+          <p><code>─────────────────────────────────────────────────</code>
+            <hr /></p>
+          <h3>📝 Development Note</h3>The hardest challenge was 
+          <strong>choosing the right constrained optimization algorithm</strong>. We evaluated:
+          <ol>
+            <li><strong>Penalty methods</strong>: Add constraint violations to objective
+              <ul>
+                <li>Simple but requires tuning penalty weights</li>
+                <li>Can be numerically unstable</li>
+              </ul></li>
+            <li><strong>Augmented Lagrangian</strong>: Penalty + Lagrange multipliers
+              <ul>
+                <li>More robust than pure penalty</li>
+                <li>Self-adjusting penalties</li>
+                <li><strong>What we chose</strong></li>
+              </ul></li>
+            <li><strong>Sequential Quadratic Programming (SQP)</strong>: Second-order method
+              <ul>
+                <li>Fastest convergence</li>
+                <li>Complex implementation, requires Hessian</li>
+              </ul></li>
+          </ol>
+          <strong>We chose Augmented Lagrangian because:</strong>
+          <ul>
+            <li>Balance of speed and robustness</li>
+            <li>Works without Hessian (uses gradient only)</li>
+            <li>Naturally produces shadow prices (Lagrange multipliers)</li>
+          </ul>
+          <strong>Related Methodology</strong>: 
+          <a href="../week-01/04-thu-development-workflow">Algorithm Selection</a> (Week 1) - Covered how we evaluate trade-offs between implementation complexity and user benefit.
+          <hr />
+          <h2>Next Steps</h2>
+          <strong>Coming up Friday</strong>: Case Study #4 - Real-world portfolio optimization combining everything from Weeks 7-8 (goal-seeking, multivariate optimization, constraints, and risk models).
+          <hr />
+          <strong>Series Progress</strong>:
+          <ul>
+            <li>Week: 8/12</li>
+            <li>Posts Published: 27/~48</li>
+            <li>Playgrounds: 22 available</li>
+          </ul>
+          <p></p>
+        </div>
+        <hr />
+        <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, constrained-optimization, lagrange-multipliers, shadow-prices, augmented-lagrangian</p>
+      </div>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

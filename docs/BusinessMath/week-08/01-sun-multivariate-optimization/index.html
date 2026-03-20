@@ -1,386 +1,542 @@
-<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 26 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Multivariate Optimization: Gradient Descent to Newton-Raphson</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Multivariate Optimization: Gradient Descent to Newton-Raphson"><meta property="twitter:title" content="Multivariate Optimization: Gradient Descent to Newton-Raphson"><meta property="og:description" content="Multivariate Optimization: Gradient Descent to Newton-Raphson"><meta name="twitter:description" content="Multivariate Optimization: Gradient Descent to Newton-Raphson"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
-**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
-**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
-**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Multivariate Optimization: Gradient Descent to Newton-Raphson</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">12 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 26 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding numerical differentiation for gradients and Hessians</li><li>Using gradient descent with momentum and Nesterov acceleration</li><li>Applying Newton-Raphson and BFGS quasi-Newton methods</li><li>Choosing the right optimization algorithm for your problem</li><li>Using AdaptiveOptimizer for automatic algorithm selection</li><li>Understanding convergence rates and algorithm trade-offs</li></ul><hr /><h2>The Problem</h2><p>Real-world optimization problems have multiple variables:</p><ul><li><strong>Parameter fitting</strong>: Minimize error across 10+ parameters</li><li><strong>Cost minimization</strong>: Optimize production mix across multiple products/facilities</li><li><strong>Portfolio construction</strong>: Find optimal weights for N assets</li><li><strong>Machine learning</strong>: Fit models with thousands of parameters</li></ul><p><strong>Single-variable methods (like goal-seeking) don’t extend to multivariate problems—you need algorithms designed for N dimensions.</strong></p><hr /><h2>The Solution</h2><p>BusinessMath provides a progression of multivariate optimizers, from simple gradient descent to sophisticated second-order methods. All work generically with any <code>VectorSpace</code> type.</p><h3>Numerical Differentiation</h3><p>When you can’t compute derivatives analytically, BusinessMath computes them numerically:</p><pre><code class="language-swift">import BusinessMath
-
-// Define f(x,y) = x² + 2y²
-let function: (VectorN<Double>) -> Double = { v in
-    let x = v[0]
-    let y = v[1]
-    return x*x + 2*y*y
-}
-
-// Compute gradient at (1, 2)
-let point = VectorN([1.0, 2.0])
-let gradient = try numericalGradient(function, at: point)
-print("Gradient: \(gradient.toArray())")  // ≈ [2.0, 8.0]
-// Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓
-
-// Compute Hessian (curvature matrix)
-let hessian = try numericalHessian(function, at: point)
-print("Hessian:")
-for row in hessian {
-    print(row.map { $0.number(1) })
-}
-// [[2.0, 0.0], [0.0, 4.0]]
-</code></pre><p><strong>Output:</strong></p><pre><code>Gradient: [2.0, 8.0]
-Hessian:
-[2.0, 0.0]
-[0.0, 4.0]
-</code></pre><p><strong>How it works</strong>:</p><ul><li><strong>Gradient</strong>: Central finite differences <code>(f(x+h) - f(x-h)) / 2h</code></li><li><strong>Hessian</strong>: Second-order finite differences (N² function evaluations)</li></ul><hr /><h3>Gradient Descent: The Workhorse</h3><p>Gradient descent iteratively moves in the direction of steepest descent:</p><pre><code class="language-swift">import BusinessMath
-
-// Minimize f(x,y) = x² + 4y²
-let function: (VectorN<Double>) -> Double = { v in
-    v[0]*v[0] + 4*v[1]*v[1]
-}
-
-// Basic gradient descent
-let optimizer = MultivariateGradientDescent<VectorN<Double>>(
-    learningRate: 0.01,
-    maxIterations: 1000,
-    tolerance: 1e-6
-)
-
-let result = try optimizer.minimize(
-    function: function,
-    gradient: { x in try numericalGradient(function, at: x) },
-    initialGuess: VectorN([5.0, 5.0])
-)
-
-print("Minimum at: \(result.solution.toArray().map({ $0.number(3) }))")
-print("Value: \(result.objectiveValue.number(6))")
-print("Iterations: \(result.iterations)")
-print("Converged: \(result.converged)")
-</code></pre><p><strong>Output:</strong></p><pre><code>Minimum at: [0.0, 0.0]
-Value: 0.000000
-Iterations: 247
-Converged: true
-</code></pre><hr /><h3>Gradient Descent with Momentum</h3><p>Momentum accelerates convergence and reduces oscillations:</p><pre><code class="language-swift">import BusinessMath
-
-// Rosenbrock function: classic test problem
-let rosenbrock: (VectorN<Double>) -> Double = { v in
-    let x = v[0], y = v[1]
-    let a = 1 - x
-    let b = y - x*x
-    return a*a + 100*b*b  // Minimum at (1, 1)
-}
-
-// Gradient descent with momentum (default 0.9)
-let optimizerWithMomentum = GradientDescentOptimizer<Double>(
-	learningRate: 0.01,
-	maxIterations: 5000,
-	momentum: 0.9,
-	useNesterov: false
-)
-
-// Note: Using scalar optimizer for demonstration
-// For VectorN, use MultivariateGradientDescent
-
-let result = optimizerWithMomentum.optimize(
-    objective: { x in (x - 5) * (x - 5) },
-    constraints: [],
-    initialGuess: 0.0,
-    bounds: nil
-)
-
-print("Converged to: \(result.optimalValue.number(4))")
-print("Iterations: \(result.iterations)")
-</code></pre><p><strong>Nesterov Acceleration</strong> (look-ahead gradient) often converges even faster:</p><pre><code class="language-swift">let nesterovOptimizer = GradientDescentOptimizer<Double>(
-    learningRate: 0.01,
-    momentum: 0.9,
-    useNesterov: true  // Nesterov acceleration
-)
-</code></pre><hr /><h3>Newton-Raphson: Quadratic Convergence</h3><p>Newton-Raphson uses second-order information (Hessian) for much faster convergence:</p><pre><code class="language-swift">import BusinessMath
-
-// Quadratic function: f(x,y) = x² + 4y² + 2xy
-let quadratic: (VectorN<Double>) -> Double = { v in
-    let x = v[0], y = v[1]
-    return x*x + 4*y*y + 2*x*y
-}
-
-// Full Newton-Raphson (uses exact Hessian)
-let newtonOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
-    maxIterations: 100,
-    tolerance: 1e-8,
-    useLineSearch: true
-)
-
-let result = try newtonOptimizer.minimize(
-    function: quadratic,
-    gradient: { try numericalGradient(quadratic, at: $0) },
-    hessian: { try numericalHessian(quadratic, at: $0) },
-    initialGuess: VectorN([10.0, 10.0])
-)
-
-print("Solution: \(result.solution.toArray().map({ $0.number(6) }))")
-print("Converged in: \(result.iterations) iterations")
-</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [0.000000, 0.000000]
-Converged in: 3 iterations
-</code></pre><p><strong>The power</strong>: Newton-Raphson found the minimum in 3 iterations vs. 247 for gradient descent!</p><hr /><h3>BFGS: Quasi-Newton Sweet Spot</h3><p>BFGS approximates the Hessian, giving Newton-like speed without expensive Hessian computation:</p><pre><code class="language-swift">import BusinessMath
-
-let rosenbrock: (VectorN<Double>) -> Double = { v in
-    let x = v[0], y = v[1]
-    let a = 1 - x
-    let b = y - x*x
-    return a*a + 100*b*b
-}
-
-// BFGS quasi-Newton
-let bfgsOptimizer = MultivariateNewtonRaphson<VectorN<Double>>()
-
-let result = try bfgsOptimizer.minimizeBFGS(
-    function: rosenbrock,
-    gradient: { try numericalGradient(rosenbrock, at: $0) },
-    initialGuess: VectorN([0.0, 0.0])
-)
-
-print("Solution: \(result.solution.toArray().map({ $0.rounded(toPlaces: 4) }))")
-print("Iterations: \(result.iterations)")
-print("Final value: \(result.objectiveValue.rounded(toPlaces: 8))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [1.0000, 1.0000]
-Iterations: 24
-Final value: 0.00000001
-</code></pre><p><strong>Comparison</strong>:</p><table><thead><th>Method</th><th>Iterations</th><th>Function Evals</th><th>Speed</th></thead><tbody><tr><td>Gradient Descent</td><td>4,782</td><td>~10,000</td><td>Slow</td></tr><tr><td>Momentum/Nesterov</td><td>1,200</td><td>~2,500</td><td>Medium</td></tr><tr><td>Full Newton</td><td>12</td><td>~150</td><td>Very Fast</td></tr><tr><td>BFGS</td><td>24</td><td>~50</td><td>Fast</td></tr></tbody></table><p><strong>The trade-off</strong>: BFGS balances speed and computational cost—best for most practical problems.</p><hr /><h3>AdaptiveOptimizer: Automatic Algorithm Selection</h3><p>Don’t know which algorithm to use? Let AdaptiveOptimizer decide:</p><pre><code class="language-swift">import BusinessMath
-
-// AdaptiveOptimizer chooses the best algorithm automatically
-let optimizer = AdaptiveOptimizer<VectorN<Double>>()
-
-let rosenbrock: (VectorN<Double>) -> Double = { v in
-    let x = v[0], y = v[1]
-    return (1-x)*(1-x) + 100*(y-x*x)*(y-x*x)
-}
-
-let result = try optimizer.optimize(
-    objective: rosenbrock,
-    initialGuess: VectorN([0.0, 0.0]),
-    constraints: []
-)
-
-print("Solution: \(result.solution.toArray().map({ $0.rounded(toPlaces: 4) }))")
-print("Algorithm used: \(result.algorithmUsed ?? "N/A")")
-print("Reason: \(result.selectionReason ?? "N/A")")
-</code></pre><p><strong>Output:</strong></p><pre><code>Solution: [1.0000, 1.0000]
-Algorithm used: Newton-Raphson
-Reason: Small problem (2 variables) - using Newton-Raphson for fast convergence
-</code></pre><p><strong>How it works</strong>:</p><ul><li>Analyzes problem size, constraints, gradient availability</li><li>Selects: Gradient Descent, Newton-Raphson, BFGS, or Constrained optimizer</li><li>Reports which algorithm was chosen and why</li></ul><hr /><h2>Choosing the Right Algorithm</h2><table><thead><th>Algorithm</th><th>Speed</th><th>Stability</th><th>Memory</th><th>Best For</th></thead><tbody><tr><td>Gradient Descent</td><td>Slow</td><td>High</td><td>Low</td><td>Noisy functions, large-scale (10K+ vars)</td></tr><tr><td>Momentum</td><td>Medium</td><td>Medium</td><td>Low</td><td>Smooth landscapes, valleys</td></tr><tr><td>Nesterov</td><td>Fast</td><td>Medium</td><td>Low</td><td>Convex problems</td></tr><tr><td>Full Newton</td><td>Very Fast</td><td>Low</td><td>High</td><td>Small, smooth quadratic problems</td></tr><tr><td>BFGS</td><td>Fast</td><td>High</td><td>Medium</td><td><strong>Most practical problems (recommended)</strong></td></tr><tr><td>AdaptiveOptimizer</td><td>Varies</td><td>High</td><td>Medium</td><td>Unknown problem characteristics</td></tr></tbody></table><p><strong>Rule of thumb</strong>:</p><ul><li><strong>< 100 variables + smooth</strong>: Use BFGS</li><li><strong>100-10,000 variables</strong>: Use Momentum/Nesterov</li><li><strong>> 10,000 variables</strong>: Use basic Gradient Descent</li><li><strong>Constraints</strong>: Use ConstrainedOptimizer or InequalityOptimizer (Week 8 Wednesday)</li></ul><hr /><h2>Real-World Example: Parameter Fitting</h2><p>Fit a curve to noisy data:</p><pre><code class="language-swift">import BusinessMath
-
-// Data: y = a*x² + b*x + c + noise
-let xData = VectorN.linearSpace(from: 0.0, to: 10.0, count: 50)
-let yData = xData.map { x in
-    2.0 * x * x + 3.0 * x + 5.0 + Double.random(in: -5...5)
-}
-
-// Objective: Minimize sum of squared errors
-let objective: (VectorN<Double>) -> Double = { params in
-    let a = params[0], b = params[1], c = params[2]
-    var sse = 0.0
-    for i in 0..<xData.dimension {
-        let x = xData[i]
-        let predicted = a * x * x + b * x + c
-        let error = yData[i] - predicted
-        sse += error * error
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 26 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Multivariate Optimization: Gradient Descent to Newton-Raphson | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
     }
-    return sse
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Multivariate Optimization: Gradient Descent to Newton-Raphson" />
+    <meta name="twitter:title" content="Multivariate Optimization: Gradient Descent to Newton-Raphson" />
+    <meta property="og:description" content="Part 26 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 26 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
+    }
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
 }
-
-// BFGS for fast convergence
-let optimizer = MultivariateNewtonRaphson<VectorN<Double>>()
-let result = try optimizer.minimizeBFGS(
-    function: objective,
-    gradient: { try numericalGradient(objective, at: $0) },
-	initialGuess: VectorN([1.0, 2.0, 3.0])
-)
-
-print("Fitted parameters:")
-print("  a = \(result_params.solution[0].number(2)) (true: 2.0)")
-print("  b = \(result_params.solution[1].number(2)) (true: 3.0)")
-print("  c = \(result_params.solution[2].number(2)) (true: 5.0)")
-print("SSE: \(result_params.objectiveValue.number(1))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Fitted parameters:
-  a = 1.98 (true: 2.0)
-  b = 3.17 (true: 3.0)
-  c = 4.82 (true: 5.0)
-SSE: 311.7
-</code></pre><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-08/01-sun-multivariate-optimization",
+      "name" : "Multivariate Optimization: Gradient Descent to Newton-Raphson",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="col-md-9223372036854775807">
+      <div class="ig-main-content">
+        <h1 class="mainTitle">Multivariate Optimization: Gradient Descent to Newton-Raphson</h1>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">12 min read</p>
+        <div class="blurb" style="width: 70.0%; max-width: 800px">
+          <p><strong>Part 26 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Understanding numerical differentiation for gradients and Hessians</li>
+            <li>Using gradient descent with momentum and Nesterov acceleration</li>
+            <li>Applying Newton-Raphson and BFGS quasi-Newton methods</li>
+            <li>Choosing the right optimization algorithm for your problem</li>
+            <li>Using AdaptiveOptimizer for automatic algorithm selection</li>
+            <li>Understanding convergence rates and algorithm trade-offs</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>Real-world optimization problems have multiple variables:
+          <ul>
+            <li><strong>Parameter fitting</strong>: Minimize error across 10+ parameters</li>
+            <li><strong>Cost minimization</strong>: Optimize production mix across multiple products/facilities</li>
+            <li><strong>Portfolio construction</strong>: Find optimal weights for N assets</li>
+            <li><strong>Machine learning</strong>: Fit models with thousands of parameters</li>
+          </ul>
+          <strong>Single-variable methods (like goal-seeking) don’t extend to multivariate problems—you need algorithms designed for N dimensions.</strong>
+          <hr />
+          <h2>The Solution</h2>BusinessMath provides a progression of multivariate optimizers, from simple gradient descent to sophisticated second-order methods. All work generically with any 
+          <code>VectorSpace</code> type.
+          <h3>Numerical Differentiation</h3>When you can’t compute derivatives analytically, BusinessMath computes them numerically:
+          <pre><code class="language-swift">import BusinessMath // Define f(x,y) = x² + 2y² let function: (VectorN
+              <double>
+                ) -&gt; Double = { v in let x = v[0] let y = v[1] return x
+                <em>x + 2</em>y*y }
+                <p></p>
+                <p>// Compute gradient at (1, 2) let point = VectorN([1.0, 2.0]) let gradient = try numericalGradient(function, at: point) print(“Gradient: (gradient.toArray())”) // ≈ [2.0, 8.0] // Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓</p>
+              </double></code><p><code class="language-swift">// Compute Hessian (curvature matrix) let hessian = try numericalHessian(function, at: point) print(“Hessian:”) for row in hessian { print(row.map { $0.number(1) }) } // [[2.0, 0.0], [0.0, 4.0]] </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Gradient: [2.0, 8.0] Hessian: [2.0, 0.0] [0.0, 4.0] </code></pre>
+          <strong>How it works</strong>:
+          <ul>
+            <li><strong>Gradient</strong>: Central finite differences <code>(f(x+h) - f(x-h)) / 2h</code></li>
+            <li><strong>Hessian</strong>: Second-order finite differences (N² function evaluations)</li>
+          </ul>
+          <hr />
+          <h3>Gradient Descent: The Workhorse</h3>Gradient descent iteratively moves in the direction of steepest descent:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>// Minimize f(x,y) = x² + 4y² let function: (VectorN
+                <double>
+                  ) -&gt; Double = { v in v[0]
+                  <em>v[0] + 4</em>v[1]*v[1] }
+                </double></p><p>// Basic gradient descent let optimizer = MultivariateGradientDescent
+                <vectorn<double>
+                  &gt;( learningRate: 0.01, maxIterations: 1000, tolerance: 1e-6 )
+                </vectorn<double></p><p>let result = try optimizer.minimize( function: function, gradient: { x in try numericalGradient(function, at: x) }, initialGuess: VectorN([5.0, 5.0]) )</p></code><p><code class="language-swift">print(“Minimum at: (result.solution.toArray().map({ $0.number(3) }))”) print(“Value: (result.objectiveValue.number(6))”) print(“Iterations: (result.iterations)”) print(“Converged: (result.converged)”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Minimum at: [0.0, 0.0] Value: 0.000000 Iterations: 247 Converged: true </code></pre>
+          <hr />
+          <h3>Gradient Descent with Momentum</h3>Momentum accelerates convergence and reduces oscillations:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>// Rosenbrock function: classic test problem let rosenbrock: (VectorN
+                <double>
+                  ) -&gt; Double = { v in let x = v[0], y = v[1] let a = 1 - x let b = y - x
+                  <em>x return a</em>a + 100
+                  <em>b</em>b // Minimum at (1, 1) }
+                </double></p><p>// Gradient descent with momentum (default 0.9) let optimizerWithMomentum = GradientDescentOptimizer
+                <double>
+                  ( learningRate: 0.01, maxIterations: 5000, momentum: 0.9, useNesterov: false )
+                </double></p><p>// Note: Using scalar optimizer for demonstration // For VectorN, use MultivariateGradientDescent</p><p>let result = optimizerWithMomentum.optimize( objective: { x in (x - 5) * (x - 5) }, constraints: [], initialGuess: 0.0, bounds: nil )</p></code><p><code class="language-swift">print(“Converged to: (result.optimalValue.number(4))”) print(“Iterations: (result.iterations)”) </code></p></pre>
+          <strong>Nesterov Acceleration</strong> (look-ahead gradient) often converges even faster:
+          <pre><code class="language-swift">let nesterovOptimizer = GradientDescentOptimizer
+              <double>
+                ( learningRate: 0.01, momentum: 0.9, useNesterov: true // Nesterov acceleration ) 
+              </double></code></pre>
+          <hr />
+          <h3>Newton-Raphson: Quadratic Convergence</h3>Newton-Raphson uses second-order information (Hessian) for much faster convergence:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>// Quadratic function: f(x,y) = x² + 4y² + 2xy let quadratic: (VectorN
+                <double>
+                  ) -&gt; Double = { v in let x = v[0], y = v[1] return x
+                  <em>x + 4</em>y
+                  <em>y + 2</em>x*y }
+                </double></p><p>// Full Newton-Raphson (uses exact Hessian) let newtonOptimizer = MultivariateNewtonRaphson
+                <vectorn<double>
+                  &gt;( maxIterations: 100, tolerance: 1e-8, useLineSearch: true )
+                </vectorn<double></p><p>let result = try newtonOptimizer.minimize( function: quadratic, gradient: { try numericalGradient(quadratic, at: $0) }, hessian: { try numericalHessian(quadratic, at: $0) }, initialGuess: VectorN([10.0, 10.0]) )</p></code><p><code class="language-swift">print(“Solution: (result.solution.toArray().map({ $0.number(6) }))”) print(“Converged in: (result.iterations) iterations”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Solution: [0.000000, 0.000000] Converged in: 3 iterations </code></pre>
+          <strong>The power</strong>: Newton-Raphson found the minimum in 3 iterations vs. 247 for gradient descent!
+          <hr />
+          <h3>BFGS: Quasi-Newton Sweet Spot</h3>BFGS approximates the Hessian, giving Newton-like speed without expensive Hessian computation:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>let rosenbrock: (VectorN
+                <double>
+                  ) -&gt; Double = { v in let x = v[0], y = v[1] let a = 1 - x let b = y - x
+                  <em>x return a</em>a + 100
+                  <em>b</em>b }
+                </double></p><p>// BFGS quasi-Newton let bfgsOptimizer = MultivariateNewtonRaphson
+                <vectorn<double>
+                  &gt;()
+                </vectorn<double></p><p>let result = try bfgsOptimizer.minimizeBFGS( function: rosenbrock, gradient: { try numericalGradient(rosenbrock, at: $0) }, initialGuess: VectorN([0.0, 0.0]) )</p></code><p><code class="language-swift">print(“Solution: (result.solution.toArray().map({ $0.rounded(toPlaces: 4) }))”) print(“Iterations: (result.iterations)”) print(“Final value: (result.objectiveValue.rounded(toPlaces: 8))”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Solution: [1.0000, 1.0000] Iterations: 24 Final value: 0.00000001 </code></pre>
+          <strong>Comparison</strong>:
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Method</th>
+                <th scope="col">Iterations</th>
+                <th scope="col">Function Evals</th>
+                <th scope="col">Speed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Gradient Descent</td>
+                <td>4,782</td>
+                <td>~10,000</td>
+                <td>Slow</td>
+              </tr>
+              <tr>
+                <td>Momentum/Nesterov</td>
+                <td>1,200</td>
+                <td>~2,500</td>
+                <td>Medium</td>
+              </tr>
+              <tr>
+                <td>Full Newton</td>
+                <td>12</td>
+                <td>~150</td>
+                <td>Very Fast</td>
+              </tr>
+              <tr>
+                <td>BFGS</td>
+                <td>24</td>
+                <td>~50</td>
+                <td>Fast</td>
+              </tr>
+            </tbody>
+          </table>
+          <strong>The trade-off</strong>: BFGS balances speed and computational cost—best for most practical problems.
+          <hr />
+          <h3>AdaptiveOptimizer: Automatic Algorithm Selection</h3>Don’t know which algorithm to use? Let AdaptiveOptimizer decide:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>// AdaptiveOptimizer chooses the best algorithm automatically let optimizer = AdaptiveOptimizer
+                <vectorn<double>
+                  &gt;()
+                </vectorn<double></p><p>let rosenbrock: (VectorN
+                <double>
+                  ) -&gt; Double = { v in let x = v[0], y = v[1] return (1-x)
+                  <em>(1-x) + 100</em>(y-x
+                  <em>x)</em>(y-x*x) }
+                </double></p><p>let result = try optimizer.optimize( objective: rosenbrock, initialGuess: VectorN([0.0, 0.0]), constraints: [] )</p></code><p><code class="language-swift">print(“Solution: (result.solution.toArray().map({ $0.rounded(toPlaces: 4) }))”) print(“Algorithm used: (result.algorithmUsed ?? “N/A”)”) print(“Reason: (result.selectionReason ?? “N/A”)”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Solution: [1.0000, 1.0000] Algorithm used: Newton-Raphson Reason: Small problem (2 variables) - using Newton-Raphson for fast convergence </code></pre>
+          <strong>How it works</strong>:
+          <ul>
+            <li>Analyzes problem size, constraints, gradient availability</li>
+            <li>Selects: Gradient Descent, Newton-Raphson, BFGS, or Constrained optimizer</li>
+            <li>Reports which algorithm was chosen and why</li>
+          </ul>
+          <hr />
+          <h2>Choosing the Right Algorithm</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Algorithm</th>
+                <th scope="col">Speed</th>
+                <th scope="col">Stability</th>
+                <th scope="col">Memory</th>
+                <th scope="col">Best For</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Gradient Descent</td>
+                <td>Slow</td>
+                <td>High</td>
+                <td>Low</td>
+                <td>Noisy functions, large-scale (10K+ vars)</td>
+              </tr>
+              <tr>
+                <td>Momentum</td>
+                <td>Medium</td>
+                <td>Medium</td>
+                <td>Low</td>
+                <td>Smooth landscapes, valleys</td>
+              </tr>
+              <tr>
+                <td>Nesterov</td>
+                <td>Fast</td>
+                <td>Medium</td>
+                <td>Low</td>
+                <td>Convex problems</td>
+              </tr>
+              <tr>
+                <td>Full Newton</td>
+                <td>Very Fast</td>
+                <td>Low</td>
+                <td>High</td>
+                <td>Small, smooth quadratic problems</td>
+              </tr>
+              <tr>
+                <td>BFGS</td>
+                <td>Fast</td>
+                <td>High</td>
+                <td>Medium</td>
+                <td><strong>Most practical problems (recommended)</strong></td>
+              </tr>
+              <tr>
+                <td>AdaptiveOptimizer</td>
+                <td>Varies</td>
+                <td>High</td>
+                <td>Medium</td>
+                <td>Unknown problem characteristics</td>
+              </tr>
+            </tbody>
+          </table>
+          <strong>Rule of thumb</strong>:
+          <ul>
+            <li><strong>&lt; 100 variables + smooth</strong>: Use BFGS</li>
+            <li><strong>100-10,000 variables</strong>: Use Momentum/Nesterov</li>
+            <li><strong>&gt; 10,000 variables</strong>: Use basic Gradient Descent</li>
+            <li><strong>Constraints</strong>: Use ConstrainedOptimizer or InequalityOptimizer (Week 8 Wednesday)</li>
+          </ul>
+          <hr />
+          <h2>Real-World Example: Parameter Fitting</h2>Fit a curve to noisy data:
+          <pre><code class="language-swift">import BusinessMath<p></p><p>// Data: y = a<em>x² + b</em>x + c + noise let xData = VectorN.linearSpace(from: 0.0, to: 10.0, count: 50) let yData = xData.map { x in 2.0 * x * x + 3.0 * x + 5.0 + Double.random(in: -5…5) }</p><p>// Objective: Minimize sum of squared errors let objective: (VectorN
+                <double>
+                  ) -&gt; Double = { params in let a = params[0], b = params[1], c = params[2] var sse = 0.0 for i in 0..
+                  <xdata.dimension { let x="xData[i]" let predicted="a" * x * x + b * x + c let error="yData[i]" - predicted sse +="error" * error } return sse }< p></xdata.dimension>
+                </double></p><p>// BFGS for fast convergence let optimizer = MultivariateNewtonRaphson
+                <vectorn<double>
+                  &gt;() let result = try optimizer.minimizeBFGS( function: objective, gradient: { try numericalGradient(objective, at: $0) }, initialGuess: VectorN([1.0, 2.0, 3.0]) )
+                </vectorn<double></p></code><p><code class="language-swift">print(“Fitted parameters:”) print(” a = (result_params.solution[0].number(2)) (true: 2.0)”) print(” b = (result_params.solution[1].number(2)) (true: 3.0)”) print(” c = (result_params.solution[2].number(2)) (true: 5.0)”) print(“SSE: (result_params.objectiveValue.number(1))”) </code></p></pre>
+          <strong>Output:</strong>
+          <pre><code>Fitted parameters: a = 1.98 (true: 2.0) b = 3.17 (true: 3.0) c = 4.82 (true: 5.0) SSE: 311.7 </code></pre>
+          <hr />
+          <h2>Try It Yourself</h2>
+          <details>
+            <summary>Click to expand full playground code</summary>
+            <pre><code class="language-swift">import BusinessMath
 // MARK: - Numerical Differentiation
-
-// Define f(x,y) = x² + 2y²
-let function_nd: (VectorN<Double>) -> Double = { v in
-	let x = v[0]
-	let y = v[1]
-	return x*x + 2*y*y
-}
-
-// Compute gradient at (1, 2)
-let point_nd = VectorN([1.0, 2.0])
-let gradient_nd = try numericalGradient(function_nd, at: point_nd)
-print("Gradient: \(gradient_nd.toArray())")  // ≈ [2.0, 8.0]
-// Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓
-
-// Compute Hessian (curvature matrix)
-let hessian = try numericalHessian(function_nd, at: point_nd)
-print("Hessian:")
-for row in hessian {
-	print(row.map { $0.number(1) })
-}
-// [[2.0, 0.0], [0.0, 4.0]]
-
-// MARK: - Gradient Descent
-
-// Minimize f(x,y) = x² + 4y²
-let function_gd: (VectorN<Double>) -> Double = { v in
-	v[0]*v[0] + 4*v[1]*v[1]
-}
-
-// Basic gradient descent
-let optimizer_gd = MultivariateGradientDescent<VectorN<Double>>(
-	learningRate: 0.01,
-	maxIterations: 1000,
-	tolerance: 1e-6
-)
-
-let result_gd = try optimizer_gd.minimize(
-	function: function_gd,
-	gradient: { x in try numericalGradient(function_gd, at: x) },
-	initialGuess: VectorN([5.0, 5.0])
-)
-
-print("Minimum at: \(result_gd.solution.toArray().map({ $0.number(3)  }))")
-print("Value: \(result_gd.objectiveValue.number(6))")
-print("Iterations: \(result_gd.iterations)")
-print("Converged: \(result_gd.converged)")
-
-// MARK: Gradient Descent with Momentum
-
-// Rosenbrock function: classic test problem
-let rosenbrock: (VectorN<Double>) -> Double = { v in
-	let x = v[0], y = v[1]
-	let a = 1 - x
-	let b = y - x*x
-	return a*a + 100*b*b  // Minimum at (1, 1)
-}
-
-// Gradient descent with momentum (default 0.9)
-let optimizerWithMomentum = GradientDescentOptimizer<Double>(
-	learningRate: 0.01,
-	maxIterations: 5000,
-	momentum: 0.9,
-	useNesterov: false
-)
-
-// Note: Using scalar optimizer for demonstration
-// For VectorN, use MultivariateGradientDescent
-
-let result_gdm = optimizerWithMomentum.optimize(
-	objective: { x in (x - 5) * (x - 5) },
-	constraints: [],
-	initialGuess: 0.0,
-	bounds: nil
-)
-
-print("Converged to: \(result_gdm.optimalValue.number(1))")
-print("Iterations: \(result_gdm.iterations)")
-
-// MARK: - Newton-Raphson: Quadratic Convergence
-
-	// Quadratic function: f(x,y) = x² + 4y² + 2xy
-	let quadratic: (VectorN<Double>) -> Double = { v in
-		let x = v[0], y = v[1]
-		return x*x + 4*y*y + 2*x*y
-	}
-
-	// Full Newton-Raphson (uses exact Hessian)
-	let newtonOptimizer = MultivariateNewtonRaphson<VectorN<Double>>(
-		maxIterations: 100,
-		tolerance: 1e-8,
-		useLineSearch: true
-	)
-
-	let result_newton = try newtonOptimizer.minimize(
-		function: quadratic,
-		gradient: { try numericalGradient(quadratic, at: $0) },
-		hessian: { try numericalHessian(quadratic, at: $0) },
-		initialGuess: VectorN([10.0, 10.0])
-	)
-
-	print("Solution: \(result_newton.solution.toArray().map({ $0.number(6) }))")
-	print("Converged in: \(result_newton.iterations) iterations")
-
-// MARK: - BFGS: Quasi-Newton Sweet Spot
-
-// BFGS quasi-Newton
-let bfgsOptimizer = MultivariateNewtonRaphson<VectorN<Double>>()
-
-let result_bfgs = try bfgsOptimizer.minimizeBFGS(
-	function: rosenbrock,
-	gradient: { try numericalGradient(rosenbrock, at: $0) },
-	initialGuess: VectorN([0.0, 0.0])
-)
-
-print("Solution: \(result_bfgs.solution.toArray().map({ $0.number(4) }))")
-print("Iterations: \(result_bfgs.iterations)")
-print("Final value: \(result_bfgs.objectiveValue.number(8))")
-
-// MARK: - Adaptive Optimizer
-
-// AdaptiveOptimizer chooses the best algorithm automatically
-let optimizer_adaptive = AdaptiveOptimizer<VectorN<Double>>()
-
-let result_adaptive = try optimizer_adaptive.optimize(
-	objective: rosenbrock,
-	initialGuess: VectorN([0.0, 0.0]),
-	constraints: []
-)
-
-print("Solution: \(result_adaptive.solution.toArray().map({ $0.number(4) }))")
-print("Algorithm used: \(result_adaptive.algorithmUsed)")
-print("Reason: \(result_adaptive.selectionReason)")
-
-
-// MARK: - Parameter Fitting Example
-
-// Data: y = a*x² + b*x + c + noise
-let xData = VectorN.linearSpace(from: 0.0, to: 10.0, count: 50)
-let yData = xData.map { x in
-	2.0 * x * x + 3.0 * x + 5.0 + Double.random(in: -5...5)
-}
-
-// Objective: Minimize sum of squared errors
-let objective_params: (VectorN<Double>) -> Double = { params in
-	let a = params[0], b = params[1], c = params[2]
-	var sse = 0.0
-	for i in 0..<xData.dimension {
-		let x = xData[i]
-		let predicted = a * x * x + b * x + c
-		let error = yData[i] - predicted
-		sse += error * error
-	}
-	return sse
-}
-
-// BFGS for fast convergence
-let optimizer_params = MultivariateNewtonRaphson<VectorN<Double>>()
-let result_params = try optimizer_params.minimizeBFGS(
-	function: objective_params,
-	gradient: { try numericalGradient(objective_params, at: $0) },
-	initialGuess: VectorN([1.0, 2.0, 3.0])
-)
-
-print("Fitted parameters:")
-print("  a = \(result_params.solution[0].number(2)) (true: 2.0)")
-print("  b = \(result_params.solution[1].number(2)) (true: 3.0)")
-print("  c = \(result_params.solution[2].number(2)) (true: 5.0)")
-print("SSE: \(result_params.objectiveValue.number(1))")
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.5-MultivariateOptimization.md">BusinessMath Docs – 5.5 Multivariate Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Compare convergence rates: plot iteration vs. objective value for each algorithm</li><li>Fit a 10-parameter model (polynomial, exponential, custom function)</li><li>Optimize a high-dimensional problem (100+ variables) with Momentum</li><li>Test robustness: start from different initial guesses and compare results</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Machine learning</strong>: Train models by minimizing loss functions</li><li><strong>Engineering</strong>: Optimize design parameters (aerodynamics, materials, structures)</li><li><strong>Finance</strong>: Calibrate option pricing models to market data</li><li><strong>Operations</strong>: Optimize production schedules, routing, inventory</li></ul><p><strong>Data scientist use case</strong>: “I need to fit a pricing model with 15 parameters to historical transaction data. Manual tuning is infeasible—I need automated optimization.”</p><p>BFGS converges in seconds, not hours of manual tweaking.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why BFGS Beats Full Newton for Most Problems</strong></p><p>Full Newton requires computing the Hessian (N² second derivatives). For a 100-variable problem:</p><ul><li><strong>Full Newton</strong>: 10,000 Hessian elements per iteration</li><li><strong>BFGS</strong>: 0 Hessian evaluations (approximated from gradients)</li></ul><p><strong>BFGS maintains a Hessian approximation</strong> updated using gradient changes:</p><pre><code>H_{k+1} = H_k + correction terms based on (∇f_{k+1} - ∇f_k)
-</code></pre><p><strong>Result</strong>: BFGS gets ~90% of Newton’s convergence speed with ~10% of the cost.</p><p><strong>When Full Newton wins</strong>: Very small problems (< 10 variables) where Hessian computation is cheap and you need extreme precision.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest challenge was <strong>making numerical differentiation robust across all Real types</strong> (Float, Double, Decimal).</p><p><strong>Problem</strong>: The step size <code>h</code> for <code>(f(x+h) - f(x-h)) / 2h</code> must be:</p><ul><li>Small enough to approximate the true derivative</li><li>Large enough to avoid catastrophic cancellation (subtracting nearly equal floating-point numbers)</li></ul><p><strong>Solution</strong>: Adaptive step size <code>h = √ε × max(|x|, 1)</code> where ε is machine epsilon:</p><ul><li>Float (ε ≈ 10⁻⁷): h ≈ 10⁻³</li><li>Double (ε ≈ 10⁻¹⁶): h ≈ 10⁻⁸</li><li>Decimal (ε ≈ 10⁻²⁸): h ≈ 10⁻¹⁴</li></ul><p>This automatically adjusts to the numeric type’s precision.</p><p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered machine epsilon and catastrophic cancellation.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: Constrained Optimization - Lagrange multipliers, augmented Lagrangian methods, and handling equality/inequality constraints.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 8/12</li><li>Posts Published: 26/~48</li><li>Playgrounds: 22 available</li></ul></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, gradient-descent, bfgs, newton-raphson, numerical-methods</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+<p></p><p>// Define f(x,y) = x² + 2y² let function_nd: (VectorN
+                  <double>
+                    ) -&gt; Double = { v in let x = v[0] let y = v[1] return x
+                    <em>x + 2</em>y*y }
+                  </double></p><p>// Compute gradient at (1, 2) let point_nd = VectorN([1.0, 2.0]) let gradient_nd = try numericalGradient(function_nd, at: point_nd) print(“Gradient: (gradient_nd.toArray())”) // ≈ [2.0, 8.0] // Analytical: ∂f/∂x = 2x = 2, ∂f/∂y = 4y = 8 ✓</p><p>// Compute Hessian (curvature matrix) let hessian = try numericalHessian(function_nd, at: point_nd) print(“Hessian:”) for row in hessian { print(row.map { $0.number(1) }) } // [[2.0, 0.0], [0.0, 4.0]]</p><p>// MARK: - Gradient Descent</p><p>// Minimize f(x,y) = x² + 4y² let function_gd: (VectorN
+                  <double>
+                    ) -&gt; Double = { v in v[0]
+                    <em>v[0] + 4</em>v[1]*v[1] }
+                  </double></p><p>// Basic gradient descent let optimizer_gd = MultivariateGradientDescent
+                  <vectorn<double>
+                    &gt;( learningRate: 0.01, maxIterations: 1000, tolerance: 1e-6 )
+                  </vectorn<double></p><p>let result_gd = try optimizer_gd.minimize( function: function_gd, gradient: { x in try numericalGradient(function_gd, at: x) }, initialGuess: VectorN([5.0, 5.0]) )</p><p>print(“Minimum at: (result_gd.solution.toArray().map({ $0.number(3) }))”) print(“Value: (result_gd.objectiveValue.number(6))”) print(“Iterations: (result_gd.iterations)”) print(“Converged: (result_gd.converged)”)</p><p>// MARK: Gradient Descent with Momentum</p><p>// Rosenbrock function: classic test problem let rosenbrock: (VectorN
+                  <double>
+                    ) -&gt; Double = { v in let x = v[0], y = v[1] let a = 1 - x let b = y - x
+                    <em>x return a</em>a + 100
+                    <em>b</em>b // Minimum at (1, 1) }
+                  </double></p><p>// Gradient descent with momentum (default 0.9) let optimizerWithMomentum = GradientDescentOptimizer
+                  <double>
+                    ( learningRate: 0.01, maxIterations: 5000, momentum: 0.9, useNesterov: false )
+                  </double></p><p>// Note: Using scalar optimizer for demonstration // For VectorN, use MultivariateGradientDescent</p><p>let result_gdm = optimizerWithMomentum.optimize( objective: { x in (x - 5) * (x - 5) }, constraints: [], initialGuess: 0.0, bounds: nil )</p><p>print(“Converged to: (result_gdm.optimalValue.number(1))”) print(“Iterations: (result_gdm.iterations)”)</p></code>
+              <div>
+                <code class="language-swift"><p>// MARK: - Newton-Raphson: Quadratic Convergence</p><pre><code>// Quadratic function: f(x,y) = x² + 4y² + 2xy let quadratic: (VectorN
+                      <double>
+                        ) -&gt; Double = { v in let x = v[0], y = v[1] return x
+                        <em>x + 4</em>y
+                        <em>y + 2</em>x*y }
+                        <p></p>
+                        <p>// Full Newton-Raphson (uses exact Hessian) let newtonOptimizer = MultivariateNewtonRaphson
+                          <vectorn<double>
+                            &gt;( maxIterations: 100, tolerance: 1e-8, useLineSearch: true )
+                          </vectorn<double></p>
+                        <p>let result_newton = try newtonOptimizer.minimize( function: quadratic, gradient: { try numericalGradient(quadratic, at: $0) }, hessian: { try numericalHessian(quadratic, at: $0) }, initialGuess: VectorN([10.0, 10.0]) )</p>
+                      </double></code><p><code>print(“Solution: (result_newton.solution.toArray().map({ $0.number(6) }))”) print(“Converged in: (result_newton.iterations) iterations”) </code></p></pre>// MARK: - BFGS: Quasi-Newton Sweet Spot<p></p></code>
+              </div><p>// BFGS quasi-Newton let bfgsOptimizer = MultivariateNewtonRaphson
+                <vectorn<double>
+                  &gt;()
+                </vectorn<double></p><p>let result_bfgs = try bfgsOptimizer.minimizeBFGS( function: rosenbrock, gradient: { try numericalGradient(rosenbrock, at: $0) }, initialGuess: VectorN([0.0, 0.0]) )</p><p>print(“Solution: (result_bfgs.solution.toArray().map({ $0.number(4) }))”) print(“Iterations: (result_bfgs.iterations)”) print(“Final value: (result_bfgs.objectiveValue.number(8))”)</p><p>// MARK: - Adaptive Optimizer</p><p>// AdaptiveOptimizer chooses the best algorithm automatically let optimizer_adaptive = AdaptiveOptimizer
+                <vectorn<double>
+                  &gt;()
+                </vectorn<double></p><p>let result_adaptive = try optimizer_adaptive.optimize( objective: rosenbrock, initialGuess: VectorN([0.0, 0.0]), constraints: [] )</p><p>print(“Solution: (result_adaptive.solution.toArray().map({ $0.number(4) }))”) print(“Algorithm used: (result_adaptive.algorithmUsed)”) print(“Reason: (result_adaptive.selectionReason)”)</p><p>// MARK: - Parameter Fitting Example</p><p>// Data: y = a<em>x² + b</em>x + c + noise let xData = VectorN.linearSpace(from: 0.0, to: 10.0, count: 50) let yData = xData.map { x in 2.0 * x * x + 3.0 * x + 5.0 + Double.random(in: -5…5) }</p><p>// Objective: Minimize sum of squared errors let objective_params: (VectorN
+                <double>
+                  ) -&gt; Double = { params in let a = params[0], b = params[1], c = params[2] var sse = 0.0 for i in 0..
+                  <xdata.dimension { let x="xData[i]" let predicted="a" * x * x + b * x + c let error="yData[i]" - predicted sse +="error" * error } return sse }< p></xdata.dimension>
+                </double></p><p>// BFGS for fast convergence let optimizer_params = MultivariateNewtonRaphson
+                <vectorn<double>
+                  &gt;() let result_params = try optimizer_params.minimizeBFGS( function: objective_params, gradient: { try numericalGradient(objective_params, at: $0) }, initialGuess: VectorN([1.0, 2.0, 3.0]) )
+                </vectorn<double></p><p>print(“Fitted parameters:”) print(”  a = (result_params.solution[0].number(2)) (true: 2.0)”) print(”  b = (result_params.solution[1].number(2)) (true: 3.0)”) print(”  c = (result_params.solution[2].number(2)) (true: 5.0)”) print(“SSE: (result_params.objectiveValue.number(1))”)</p><p></p></pre>
+          </details>
+          <p></p>
+          <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.5-MultivariateOptimization.md">BusinessMath Docs – 5.5 Multivariate Optimization</a></p>
+          <p><strong>Modifications to try</strong>:</p>
+          <ol>
+            <li>Compare convergence rates: plot iteration vs. objective value for each algorithm</li>
+            <li>Fit a 10-parameter model (polynomial, exponential, custom function)</li>
+            <li>Optimize a high-dimensional problem (100+ variables) with Momentum</li>
+            <li>Test robustness: start from different initial guesses and compare results</li>
+          </ol>
+          <hr />
+          <h2>Real-World Application</h2>
+          <ul>
+            <li><strong>Machine learning</strong>: Train models by minimizing loss functions</li>
+            <li><strong>Engineering</strong>: Optimize design parameters (aerodynamics, materials, structures)</li>
+            <li><strong>Finance</strong>: Calibrate option pricing models to market data</li>
+            <li><strong>Operations</strong>: Optimize production schedules, routing, inventory</li>
+          </ul>
+          <strong>Data scientist use case</strong>: “I need to fit a pricing model with 15 parameters to historical transaction data. Manual tuning is infeasible—I need automated optimization.”
+          <p></p>
+          <p>BFGS converges in seconds, not hours of manual tweaking.
+            <hr /><code>★ Insight ─────────────────────────────────────</code></p>
+          <p><strong>Why BFGS Beats Full Newton for Most Problems</strong></p>
+          <p>Full Newton requires computing the Hessian (N² second derivatives). For a 100-variable problem:</p>
+          <ul>
+            <li><strong>Full Newton</strong>: 10,000 Hessian elements per iteration</li>
+            <li><strong>BFGS</strong>: 0 Hessian evaluations (approximated from gradients)</li>
+          </ul>
+          <strong>BFGS maintains a Hessian approximation</strong> updated using gradient changes:
+          <pre><code>H_{k+1} = H_k + correction terms based on (∇f_{k+1} - ∇f_k) </code></pre>
+          <strong>Result</strong>: BFGS gets ~90% of Newton’s convergence speed with ~10% of the cost.
+          <p></p>
+          <p><strong>When Full Newton wins</strong>: Very small problems (&lt; 10 variables) where Hessian computation is cheap and you need extreme precision.</p>
+          <p><code>─────────────────────────────────────────────────</code>
+            <hr /></p>
+          <h3>📝 Development Note</h3>The hardest challenge was 
+          <strong>making numerical differentiation robust across all Real types</strong> (Float, Double, Decimal).
+          <p></p>
+          <p><strong>Problem</strong>: The step size <code>h</code> for <code>(f(x+h) - f(x-h)) / 2h</code> must be:</p>
+          <ul>
+            <li>Small enough to approximate the true derivative</li>
+            <li>Large enough to avoid catastrophic cancellation (subtracting nearly equal floating-point numbers)</li>
+          </ul>
+          <strong>Solution</strong>: Adaptive step size 
+          <code>h = √ε × max(|x|, 1)</code> where ε is machine epsilon:
+          <ul>
+            <li>Float (ε ≈ 10⁻⁷): h ≈ 10⁻³</li>
+            <li>Double (ε ≈ 10⁻¹⁶): h ≈ 10⁻⁸</li>
+            <li>Decimal (ε ≈ 10⁻²⁸): h ≈ 10⁻¹⁴</li>
+          </ul>This automatically adjusts to the numeric type’s precision.
+          <p></p>
+          <p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered machine epsilon and catastrophic cancellation.
+            <hr /></p>
+          <h2>Next Steps</h2>
+          <strong>Coming up Wednesday</strong>: Constrained Optimization - Lagrange multipliers, augmented Lagrangian methods, and handling equality/inequality constraints.
+          <hr />
+          <strong>Series Progress</strong>:
+          <ul>
+            <li>Week: 8/12</li>
+            <li>Posts Published: 26/~48</li>
+            <li>Playgrounds: 22 available</li>
+          </ul>
+          <p></p>
+        </div>
+        <hr />
+        <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, gradient-descent, bfgs, newton-raphson, numerical-methods</p>
+      </div>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

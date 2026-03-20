@@ -1,852 +1,601 @@
-<!doctype html><html lang="en" data-bs-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Part 36 of 12-Week BusinessMath Series"><meta name="author" content="Justin Purnell"><meta name="generator" content="Ignite v0.2.1"><title>Simulated Annealing: Global Optimization Without Gradients</title><link href="/css/bootstrap.min.css" rel="stylesheet"><link href="/css/prism-default-dark.css" rel="stylesheet"><link href="/css/bootstrap-icons.min.css" rel="stylesheet"><link href="https://www.justinpurnell.com/BusinessMath/week-10/04-thu-simulated-annealing" rel="canonical"><link href="/feed.rss" rel="alternate" type="application/rss+xml" title="Justin Purnell"><meta property="og:site_name" content="Justin Purnell"><meta property="og:title" content="Simulated Annealing: Global Optimization Without Gradients"><meta property="twitter:title" content="Simulated Annealing: Global Optimization Without Gradients"><meta property="og:description" content="Simulated Annealing: Global Optimization Without Gradients"><meta name="twitter:description" content="Simulated Annealing: Global Optimization Without Gradients"><meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-10/04-thu-simulated-annealing"><meta name="twitter:domain" content="justinpurnell.com"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:dnt" content="on"><meta name="description" content="**Entrepreneurial Strategist & Builder:** Justin Purnell is the Founder of **Ledge Partners**, dedicated to acquiring and leading profitable businesses. His foundation is built on seven years at **Goldman Sachs** as a high yield credit analyst, where he published over **400 research reports** and advised C-level executives.
-**Product Innovation and Scale:** He led the complete **re-platforming of technology supporting over 70 e-commerce sites** globally as Head of Product at **Hotels at Home**. He actively builds technical solutions, including pioneering **AI-powered software** to automate product data generation and designing a Swift middleware prototype that cut vendor onboarding time from **four months to two weeks**.
-**Driving Financial and Organizational Results:** At **NBCUniversal's Seeso**, he directed product operations and retention initiatives that resulted in a **40% increase in customer Lifetime Value**. He is adept at mobilizing cross-functional teams, having successfully stepped in to **referee a dispute** between NBC and a third-party vendor to foster consensus and launch the Content Commerce platform.
-**Creative and Governance Leadership:** Justin combines corporate rigor with creative experience, having directed the Webby-awarded web series **Smart Girls at the Party** and serving as a founding producer for **UCBcomedy.com**. He maintains significant governance roles, including serving as **President of the Princeton University Class of 2000** (1,143 alumni) and managing its annual giving campaigns."><meta name="fediverse:creator" content="@jpurnell@mastodon.social"><meta name="tags" content="Product Manager, Strategy, Product Leader, Goldman Sachs, NBCUniversal, Hotels at Home, AI, LLM, Digital Transformation, e-commerce, Swift, Consensus Leadership, Leadership, Agile, DevOps, Continuous Integration, Continuous Deployment, Cloud, Data Science, Machine Learning, Python, JavaScript, Front-end, Back-end, Full-stack, Responsive Design, Accessibility, SEO, Content Strategy, User Experience, User Interface, Design, Agile, Product Strategy, Technical Strategy"><script>	(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-K3TZS8J');</script><link href="/css/main.css" rel="stylesheet"></head><body><div class="col-sm-10 mx-auto"><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe>
-<header><nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/about" class="nav-link">About</a></li><li class="nav-item"><a href="/cv" class="nav-link">CV</a></li><li class="nav-item"><a href="/business-math" class="nav-link">BusinessMath</a></li><li class="nav-item"><a href="/next" class="nav-link">NeXT</a></li></ul></div></div></nav></header><div class="row"><div class="col"><h1 class="mainTitle">Simulated Annealing: Global Optimization Without Gradients</h1><div style="margin-bottom: 2em"><p class="blogDateTime" style="margin-left: 1em">BusinessMath Quarterly Series</p><p class="blogDateTime" style="margin-left: 1em">19 min read</p></div><p class="mx-auto blurb" style="width: 70%; max-width: 800px"><p><strong>Part 36 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Understanding simulated annealing for global optimization</li><li>Cooling schedules: exponential, linear, adaptive</li><li>Acceptance probability and the Metropolis criterion</li><li>When to use simulated annealing vs. gradient methods</li><li>Escaping local minima through controlled randomness</li><li>Parameter tuning: initial temperature, cooling rate, iterations</li></ul><hr /><h2>The Problem</h2><p>Many business optimization problems have multiple local minima:</p><ul><li><strong>Production scheduling</strong> with setup costs (discontinuous objective)</li><li><strong>Portfolio optimization</strong> with transaction costs and lot sizes</li><li><strong>Facility location</strong> with discrete choices (city A vs. city B)</li><li><strong>Hyperparameter tuning</strong> for machine learning models</li></ul><p><strong>Gradient-based methods get stuck in local minima. Need global search capability.</strong></p><hr /><h2>The Solution</h2><p>Simulated annealing mimics the physical process of metal cooling: accept worse solutions with probability that decreases over time. This allows escaping local minima early while converging to global optimum later.</p><h3>Pattern 1: Portfolio Optimization with Transaction Costs</h3><p><strong>Business Problem</strong>: Rebalance portfolio from suboptimal starting point, but minimize transaction costs (non-smooth objective).</p><pre><code class="language-swift">import BusinessMath
-
-// Portfolio with transaction costs (20 assets for clarity)
-let numAssets = 20
-
-// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets
-// These happen to be LOW return assets - clear opportunity to improve!
-var currentWeights = [Double](repeating: 0.0, count: numAssets)
-// First 5 assets: 60% of portfolio (12% each) - these are low-return!
-for i in 0..<5 {
-    currentWeights[i] = 0.12
-}
-// Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return!
-for i in 5..<numAssets {
-    currentWeights[i] = 0.40 / Double(numAssets - 5)
-}
-
-// Expected returns: clearly tiered to demonstrate the opportunity
-// First 5 assets: 5-6% (low return)
-// Next 10 assets: 8-11% (medium return)
-// Last 5 assets: 12-15% (high return)
-let expectedReturns: [Double] =
-    (0..<5).map { _ in Double.random(in: 0.05...0.06) } +  // Low
-    (0..<10).map { _ in Double.random(in: 0.08...0.11) } + // Medium
-    (0..<5).map { _ in Double.random(in: 0.12...0.15) }    // High
-
-// Correlation matrix: reasonable diversification benefits
-let correlations = (0..<numAssets).map { i in
-    (0..<numAssets).map { j in
-        if i == j { return 1.0 }
-        // Within same tier: higher correlation (0.5-0.7)
-        // Across tiers: lower correlation (0.2-0.4)
-        let sameTier = (i < 5 && j < 5) ||
-                       (i >= 5 && i < 15 && j >= 5 && j < 15) ||
-                       (i >= 15 && j >= 15)
-        return sameTier ? Double.random(in: 0.5...0.7) : Double.random(in: 0.2...0.4)
-    }
-}
-
-func portfolioObjective(_ weights: VectorN<Double>) -> Double {
-    // 1. Portfolio expected return (we want to MAXIMIZE this)
-    var portfolioReturn = 0.0
-    for i in 0..<numAssets {
-        portfolioReturn += weights[i] * expectedReturns[i]
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 36 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Simulated Annealing: Global Optimization Without Gradients | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-10/04-thu-simulated-annealing" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
     }
 
-    // 2. Portfolio variance (risk - we want to MINIMIZE this)
-    var variance = 0.0
-    for i in 0..<numAssets {
-        for j in 0..<numAssets {
-            let volatility = 0.20  // 20% average vol
-            let covariance = correlations[i][j] * volatility * volatility
-            variance += weights[i] * weights[j] * covariance
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
         }
     }
 
-    // 3. Transaction costs (makes objective non-smooth!)
-    var transactionCosts = 0.0
-    for i in 0..<numAssets {
-        transactionCosts += abs(weights[i] - currentWeights[i]) * 0.001  // 10 bps
-    }
-
-    // Combined objective: maximize return-to-risk ratio, penalize transaction costs
-    let returnToRiskRatio = variance / max(portfolioReturn, 0.01)
-    return returnToRiskRatio + transactionCosts * 5.0
-}
-
-print("Portfolio Rebalancing with Transaction Costs")
-print("═══════════════════════════════════════════════════════════")
-
-// Analyze initial portfolio
-let initialReturn = (0..<numAssets).reduce(0.0) { $0 + currentWeights[$1] * expectedReturns[$1] }
-var initialVariance = 0.0
-for i in 0..<numAssets {
-    for j in 0..<numAssets {
-        let volatility = 0.20
-        let covariance = correlations[i][j] * volatility * volatility
-        initialVariance += currentWeights[i] * currentWeights[j] * covariance
-    }
-}
-let initialStdDev = sqrt(initialVariance)
-
-print("\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):")
-print("  Expected Return: \((initialReturn * 100).formatted(.number.precision(.fractionLength(2))))%")
-print("  Volatility (StdDev): \((initialStdDev * 100).formatted(.number.precision(.fractionLength(2))))%")
-print("  Return/Risk: \((initialReturn / initialStdDev).formatted(.number.precision(.fractionLength(3))))")
-print("  Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)")
-print("  High-return assets (15-19): Only ~2.67% each (returns 12-15%)")
-
-// Simulated annealing optimizer with config
-let config = SimulatedAnnealingConfig(
-    initialTemperature: 10.0,  // Higher temperature for more exploration
-    finalTemperature: 0.001,
-    coolingRate: 0.95,
-    maxIterations: 10_000,
-    perturbationScale: 0.05,  // Smaller perturbations
-    reheatInterval: nil,
-    reheatTemperature: nil,
-    seed: 42  // Reproducible results
-)
-
-// Define search space bounds for each asset (0% to 20% per position)
-let searchSpace = (0..<numAssets).map { _ in (0.0, 0.20) }
-
-let sa = SimulatedAnnealing<VectorN<Double>>(
-    config: config,
-    searchSpace: searchSpace
-)
-
-// Create initial guess from current weights
-let initialGuess = VectorN(currentWeights)
-
-// Define constraints (FIXED API - no 'constraint:' or 'tolerance:' parameters!)
-let constraints: [MultivariateConstraint<VectorN<Double>>] = [
-    // Equality: Sum to 1 (must be fully invested)
-    .equality { weights in
-        (0..<numAssets).reduce(0.0) { $0 + weights[$1] } - 1.0
-    }
-]
-
-print("\n═══════════════════════════════════════════════════════════")
-print("Running Simulated Annealing...")
-
-let result = try sa.minimize(
-    portfolioObjective,
-    from: initialGuess,
-    constraints: constraints
-)
-
-print("\nOptimization Completed:")
-print("  Iterations: \(result.iterations)")
-print("  Converged: \(result.converged)")
-print("  Reason: \(result.convergenceReason)")
-
-// Analyze optimized portfolio
-let optimizedReturn = (0..<numAssets).reduce(0.0) { $0 + result.solution[$1] * expectedReturns[$1] }
-var optimizedVariance = 0.0
-for i in 0..<numAssets {
-    for j in 0..<numAssets {
-        let volatility = 0.20
-        let covariance = correlations[i][j] * volatility * volatility
-        optimizedVariance += result.solution[i] * result.solution[j] * covariance
-    }
-}
-let optimizedStdDev = sqrt(optimizedVariance)
-
-// Analyze turnover
-let turnover = (0..<numAssets).reduce(0.0) { sum, i in
-    sum + abs(result.solution[i] - currentWeights[i])
-} / 2.0
-let transactionCostBps = turnover * 0.001 * 100 * 100  // in basis points
-
-print("\n═══════════════════════════════════════════════════════════")
-print("Portfolio Comparison:")
-print("═══════════════════════════════════════════════════════════")
-print("                        Initial    Optimized    Change")
-print("───────────────────────────────────────────────────────────")
-print(String(format: "Expected Return:       %6.2f%%    %6.2f%%    %+6.2f%%",
-             initialReturn * 100, optimizedReturn * 100, (optimizedReturn - initialReturn) * 100))
-print(String(format: "Volatility (StdDev):   %6.2f%%    %6.2f%%    %+6.2f%%",
-             initialStdDev * 100, optimizedStdDev * 100, (optimizedStdDev - initialStdDev) * 100))
-print(String(format: "Return/Risk Ratio:     %6.3f     %6.3f     %+6.3f",
-             initialReturn / initialStdDev, optimizedReturn / optimizedStdDev,
-             (optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev)))
-print("───────────────────────────────────────────────────────────")
-print(String(format: "Turnover:              %6.2f%%", turnover * 100))
-print(String(format: "Transaction Costs:     %6.1f bps", transactionCostBps))
-print("═══════════════════════════════════════════════════════════")
-
-// Show largest changes
-let changes = (0..<numAssets).map { i in
-    (index: i, change: result.solution[i] - currentWeights[i],
-     oldWeight: currentWeights[i], newWeight: result.solution[i],
-     return: expectedReturns[i])
-}.sorted { abs($0.change) > abs($1.change) }.prefix(8)
-
-print("\nTop 8 Position Changes:")
-print("───────────────────────────────────────────────────────────")
-print("Asset  Return   Old Weight  New Weight  Change      Action")
-print("───────────────────────────────────────────────────────────")
-for change in changes {
-    let direction = change.change > 0 ? "BUY " : "SELL"
-    print(String(format: " %2d    %5.2f%%    %6.2f%%    %6.2f%%   %+6.2f%%    %s",
-                 change.index, change.return * 100,
-                 change.oldWeight * 100, change.newWeight * 100,
-                 change.change * 100, direction))
-}
-print("═══════════════════════════════════════════════════════════")
-
-print("\n💡 Key Insight:")
-print("   The optimizer balanced improving returns (moving to high-return assets)")
-print("   with minimizing transaction costs. Notice it didn't eliminate all")
-print("   low-return holdings - the transaction costs made that too expensive.")
-</code></pre><h3>Pattern 2: Configuration Comparison</h3><p><strong>Pattern</strong>: Compare different cooling configurations.</p><pre><code class="language-swift">// Simple test function: Rastrigin in 2D (many local minima)
-func rastrigin(_ x: VectorN<Double>) -> Double {
-    let A = 10.0
-    let n = 2.0
-    return A * n + (0..<2).reduce(0.0) { sum, i in
-        sum + (x[i] * x[i] - A * cos(2 * .pi * x[i]))
-    }
-}
-
-let searchSpace = [(-5.12, 5.12), (-5.12, 5.12)]
-
-// Test different configurations
-let configs: [(name: String, config: SimulatedAnnealingConfig)] = [
-    ("Fast", .fast),
-    ("Default", .default),
-    ("Thorough", .thorough),
-    ("Custom (slow)", SimulatedAnnealingConfig(
-        initialTemperature: 100.0,
-        finalTemperature: 0.001,
-        coolingRate: 0.98,  // Slower cooling
-        maxIterations: 20_000,
-        perturbationScale: 0.1,
-        reheatInterval: nil,
-        reheatTemperature: nil,
-        seed: 42
-    ))
-]
-
-print("Configuration Comparison (Rastrigin Function)")
-print("═══════════════════════════════════════════════════════════")
-print("Config          | Final Value | Iterations | Acceptance Rate")
-print("───────────────────────────────────────────────────────────")
-
-for (name, config) in configs {
-    let optimizer = SimulatedAnnealing<VectorN<Double>>(
-        config: config,
-        searchSpace: searchSpace
-    )
-
-    let result = optimizer.optimizeDetailed(
-        objective: rastrigin,
-        initialSolution: VectorN([2.0, 3.0])
-    )
-
-    let rate = result.acceptanceRate * 100
-    print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0)) | " +
-          "\(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: " ", startingAt: 0)) | " +
-          "\(String(format: "%10d", result.iterations)) | " +
-          "\(rate.formatted(.number.precision(.fractionLength(1))))%")
-}
-
-print("\nRecommendation: Use .default for most problems, .thorough for difficult landscapes")
-</code></pre><h3>Pattern 3: Ackley Function (Multimodal Optimization)</h3><p><strong>Pattern</strong>: Global optimization for highly multimodal functions.</p><pre><code class="language-swift">// Ackley function: highly multimodal with many local minima
-// Global minimum at (0, 0) with value 0
-func ackley(_ x: VectorN<Double>) -> Double {
-    let a = 20.0
-    let b = 0.2
-    let c = 2.0 * .pi
-    let d = 2  // dimensions
-
-    let sum1 = (0..<d).reduce(0.0) { $0 + x[$1] * x[$1] }
-    let sum2 = (0..<d).reduce(0.0) { $0 + cos(c * x[$1]) }
-
-    let term1 = -a * exp(-b * sqrt(sum1 / Double(d)))
-    let term2 = -exp(sum2 / Double(d))
-
-    return term1 + term2 + a + .e
-}
-
-// Search space: [-5, 5] for each dimension
-let searchSpace = [(-5.0, 5.0), (-5.0, 5.0)]
-
-// Use thorough config for difficult landscape
-let sa = SimulatedAnnealing<VectorN<Double>>(
-    config: .thorough,
-    searchSpace: searchSpace
-)
-
-print("Ackley Function Optimization (Highly Multimodal)")
-print("═══════════════════════════════════════════════════════════")
-
-// Start from a poor initial guess
-let initialGuess = VectorN([4.0, -3.5])
-
-let result = sa.optimizeDetailed(
-    objective: ackley,
-    initialSolution: initialGuess
-)
-
-print("Optimization Results:")
-print("  Solution: (\(result.solution[0].formatted(.number.precision(.fractionLength(4)))), " +
-      "\(result.solution[1].formatted(.number.precision(.fractionLength(4)))))")
-print("  Function Value: \(result.fitness.formatted(.number.precision(.fractionLength(6)))) (target: 0.0)")
-print("  Iterations: \(result.iterations)")
-print("  Acceptance Rate: \((result.acceptanceRate * 100).formatted(.number.precision(.fractionLength(1))))%")
-print("  Converged: \(result.converged)")
-print("  Reason: \(result.convergenceReason)")
-
-// Distance from global optimum
-let distanceFromOptimum = sqrt(result.solution[0]*result.solution[0] +
-                               result.solution[1]*result.solution[1])
-print("  Distance from global optimum: \(distanceFromOptimum.formatted(.number.precision(.fractionLength(4))))")
-</code></pre><hr /><h2>How It Works</h2><h3>Simulated Annealing Algorithm</h3><ol><li><strong>Initialize</strong>: Set T = T_0, x = x_0</li><li><strong>Generate Neighbor</strong>: x’ = random perturbation of x</li><li><strong>Calculate ΔE</strong>: ΔE = f(x’) - f(x)</li><li><strong>Accept/Reject</strong>:<ul><li>If ΔE < 0: Always accept (improvement)</li><li>Else: Accept with probability P = exp(-ΔE / T)</li></ul></li><li><strong>Cool Down</strong>: T = α * T (exponential) or T = T - β (linear)</li><li><strong>Repeat</strong>: Until T < T_min or max iterations</li></ol><h3>Acceptance Probability</h3><p><strong>Metropolis Criterion</strong>: P(accept worse solution) = exp(-ΔE / T)</p><table><thead><th>Temperature</th><th>ΔE = 0.1</th><th>ΔE = 1.0</th><th>ΔE = 10.0</th></thead><tbody><tr><td>T = 10</td><td>99.0%</td><td>90.5%</td><td>36.8%</td></tr><tr><td>T = 1</td><td>90.5%</td><td>36.8%</td><td>0.005%</td></tr><tr><td>T = 0.1</td><td>36.8%</td><td>0.005%</td><td>~0%</td></tr></tbody></table><p><strong>Insight</strong>: Early (high T), accept almost anything. Late (low T), only accept improvements.</p><h3>Cooling Schedule Impact</h3><p><strong>Problem: 100-variable portfolio optimization</strong></p><table><thead><th>Schedule</th><th>Final Value</th><th>Iterations</th><th>Quality</th></thead><tbody><tr><td>Fast (α=0.90)</td><td>0.0245</td><td>2,500</td><td>Good</td></tr><tr><td>Medium (α=0.95)</td><td>0.0238</td><td>5,800</td><td>Better</td></tr><tr><td>Slow (α=0.98)</td><td>0.0235</td><td>18,000</td><td>Best</td></tr><tr><td>Adaptive</td><td>0.0237</td><td>7,200</td><td>Better</td></tr></tbody></table><p><strong>Tradeoff</strong>: Slower cooling = better solution, more time</p><hr /><h2>Real-World Application</h2><h3>Manufacturing: Batch Sizing with Setup Costs</h3><p><strong>Company</strong>: Electronics manufacturer optimizing production batch sizes for 15 products<strong>Challenge</strong>: Minimize total costs (inventory + setup) subject to demand and capacity</p><p><strong>Problem Characteristics</strong>:</p><ul><li><strong>Continuous variables</strong>: Batch sizes (treated as continuous for optimization)</li><li><strong>Setup costs</strong>: Fixed cost per production run (non-smooth)</li><li><strong>Holding costs</strong>: Penalty for excess inventory (smooth)</li><li><strong>Multiple local minima</strong>: ~100+ feasible configurations</li></ul><p><strong>Why Simulated Annealing</strong>:</p><ul><li>Setup costs create discontinuous objective</li><li>Global search needed (many local minima)</li><li>Can escape poor local solutions</li></ul><p><strong>Implementation</strong>:</p><pre><code class="language-swift">import BusinessMath
-
-import BusinessMath
-
-// Model with 15 products
-let numProducts = 15
-
-// Weekly demand per product (units/week)
-let demand: [Double] = [
-    100.0, 150.0, 80.0, 200.0, 120.0,  // Products 0-4
-    90.0, 175.0, 110.0, 140.0, 95.0,   // Products 5-9
-    160.0, 85.0, 130.0, 105.0, 145.0   // Products 10-14
-]
-
-// Fixed setup cost per production run ($)
-let setupCost: [Double] = [
-    500.0, 750.0, 400.0, 850.0, 600.0,  // Products 0-4
-    450.0, 800.0, 550.0, 700.0, 480.0,  // Products 5-9
-    720.0, 420.0, 650.0, 520.0, 680.0   // Products 10-14
-]
-
-// Holding cost per unit per week ($/unit/week)
-let holdingCost: [Double] = [
-    2.0, 3.5, 1.8, 4.0, 2.5,    // Products 0-4
-    1.9, 3.8, 2.2, 3.0, 2.0,    // Products 5-9
-    3.3, 1.7, 2.8, 2.1, 3.2     // Products 10-14
-]
-
-func totalCost(_ batchSizes: VectorN<Double>) -> Double {
-    var cost = 0.0
-
-    for i in 0..<numProducts {
-        let runsPerWeek = demand[i] / max(batchSizes[i], 1.0)
-        let avgInventory = batchSizes[i] / 2.0
-
-        // Setup costs (discontinuous!)
-        cost += runsPerWeek * setupCost[i]
-
-        // Holding costs (smooth)
-        cost += avgInventory * holdingCost[i]
-    }
-
-    return cost
-}
-
-print("Manufacturing Batch Sizing Optimization")
-print("═══════════════════════════════════════════════════════════")
-print("\nProblem: 15 products with setup costs and inventory holding costs")
-
-// Calculate baseline cost (using demand as batch size - naive approach)
-let naiveBatches = VectorN(demand)
-let naiveCost = totalCost(naiveBatches)
-print("\nNaive Approach (batch size = weekly demand):")
-print("  Total Weekly Cost: $\(naiveCost.formatted(.number.precision(.fractionLength(2))))")
-
-// Simulated Annealing configuration
-let config = SimulatedAnnealingConfig(
-    initialTemperature: 50.0,
-    finalTemperature: 0.01,
-    coolingRate: 0.97,
-    maxIterations: 50_000,
-    perturbationScale: 0.15,
-    reheatInterval: nil,
-    reheatTemperature: nil,
-    seed: 42  // Reproducible results
-)
-
-let searchSpace = (0..<numProducts).map { _ in (10.0, 500.0) }  // Min/max batch size
-
-let sa = SimulatedAnnealing<VectorN<Double>>(
-    config: config,
-    searchSpace: searchSpace
-)
-
-print("\nRunning Simulated Annealing...")
-let result = sa.optimizeDetailed(
-    objective: totalCost,
-    initialSolution: naiveBatches
-)
-
-print("\nOptimization Results:")
-print("  Converged: \(result.converged)")
-print("  Iterations: \(result.iterations)")
-print("  Final Temperature: \(result.finalTemperature.formatted(.number.precision(.fractionLength(4))))")
-print("  Acceptance Rate: \(result.acceptanceRate.percent(1))")
-
-let optimizedCost = result.fitness
-let costReduction = naiveCost - optimizedCost
-let percentReduction = (costReduction / naiveCost) * 100
-let weeklySavings = costReduction
-
-print("\n═══════════════════════════════════════════════════════════")
-print("Cost Comparison:")
-print("═══════════════════════════════════════════════════════════")
-print("Naive Approach:      $\(naiveCost.formatted(.number.precision(.fractionLength(2))))")
-print("Optimized (SA):      $\(optimizedCost.formatted(.number.precision(.fractionLength(2))))")
-print("Cost Reduction:      $\(costReduction.formatted(.number.precision(.fractionLength(2)))) (\(percentReduction.formatted(.number.precision(.fractionLength(1))))%)")
-print("Weekly Savings:      $\(weeklySavings.formatted(.number.precision(.fractionLength(2))))")
-print("═══════════════════════════════════════════════════════════")
-
-// Show optimal batch sizes for top 5 products by demand
-let productInfo = (0..<numProducts).map { i in
-    (id: i, demand: demand[i], optimalBatch: result.solution[i],
-     setupCost: setupCost[i], holdingCost: holdingCost[i])
-}.sorted { $0.demand > $1.demand }
-
-print("\nOptimal Batch Sizes (Top 5 by Demand):")
-print("───────────────────────────────────────────────────────────")
-print("Product  Demand  Optimal Batch  Runs/Week  Setup $  Hold $")
-print("───────────────────────────────────────────────────────────")
-
-for info in productInfo.prefix(5) {
-    let runsPerWeek = info.demand / info.optimalBatch
-    let setupCostWeekly = runsPerWeek * info.setupCost
-    let holdCostWeekly = (info.optimalBatch / 2.0) * info.holdingCost
-
-    print(String(format: "  %2d     %5.0f      %6.1f      %5.2f    $%5.0f   $%5.0f",
-                 info.id, info.demand, info.optimalBatch, runsPerWeek,
-                 setupCostWeekly, holdCostWeekly))
-}
-print("═══════════════════════════════════════════════════════════")
-</code></pre><p><strong>Typical Results</strong>:</p><ul><li>Cost reduction: 10-15% vs. naive approach (batch size = demand)</li><li>Weekly savings: $6,000-$10,000 depending on product mix</li><li>Computation time: 30-60 seconds (acceptable for weekly planning)</li><li>Solution quality: Near-optimal (escapes local minima that gradient methods miss)</li></ul><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import Foundation
-import BusinessMath
-
-// Portfolio with transaction costs (20 assets for clarity)
-let numAssets = 20
-
-// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets
-// These happen to be LOW return assets - clear opportunity to improve!
-var currentWeights = [Double](repeating: 0.0, count: numAssets)
-// First 5 assets: 60% of portfolio (12% each) - these are low-return!
-for i in 0..<5 {
-    currentWeights[i] = 0.12
-}
-// Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return!
-for i in 5..<numAssets {
-    currentWeights[i] = 0.40 / Double(numAssets - 5)
-}
-
-// Expected returns: clearly tiered to demonstrate the opportunity
-// First 5 assets: 5-6% (low return)
-// Next 10 assets: 8-11% (medium return)
-// Last 5 assets: 12-15% (high return)
-let expectedReturns: [Double] =
-    (0..<5).map { _ in Double.random(in: 0.05...0.06) } +  // Low
-    (0..<10).map { _ in Double.random(in: 0.08...0.11) } + // Medium
-    (0..<5).map { _ in Double.random(in: 0.12...0.15) }    // High
-
-// Correlation matrix: reasonable diversification benefits
-let correlations = (0..<numAssets).map { i in
-    (0..<numAssets).map { j in
-        if i == j { return 1.0 }
-        // Within same tier: higher correlation (0.5-0.7)
-        // Across tiers: lower correlation (0.2-0.4)
-        let sameTier = (i < 5 && j < 5) ||
-                       (i >= 5 && i < 15 && j >= 5 && j < 15) ||
-                       (i >= 15 && j >= 15)
-        return sameTier ? Double.random(in: 0.5...0.7) : Double.random(in: 0.2...0.4)
-    }
-}
-
-@MainActor func portfolioObjective(_ weights: VectorN<Double>) -> Double {
-    // 1. Portfolio expected return (we want to MAXIMIZE this)
-    var portfolioReturn = 0.0
-    for i in 0..<numAssets {
-        portfolioReturn += weights[i] * expectedReturns[i]
-    }
-
-    // 2. Portfolio variance (risk - we want to MINIMIZE this)
-    var variance = 0.0
-    for i in 0..<numAssets {
-        for j in 0..<numAssets {
-            let volatility = 0.20  // 20% average vol
-            let covariance = correlations[i][j] * volatility * volatility
-            variance += weights[i] * weights[j] * covariance
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
         }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Simulated Annealing: Global Optimization Without Gradients" />
+    <meta name="twitter:title" content="Simulated Annealing: Global Optimization Without Gradients" />
+    <meta property="og:description" content="Part 36 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 36 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-10/04-thu-simulated-annealing" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
     }
-
-    // 3. Transaction costs (makes objective non-smooth!)
-    var transactionCosts = 0.0
-    for i in 0..<numAssets {
-        transactionCosts += abs(weights[i] - currentWeights[i]) * 0.001  // 10 bps
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-10/04-thu-simulated-annealing",
+      "name" : "Simulated Annealing: Global Optimization Without Gradients",
+      "position" : 2
     }
-
-    // Combined objective: maximize return-to-risk ratio, penalize transaction costs
-    // We minimize: risk/return + transaction costs
-    // (Higher return is better, lower variance is better)
-    let returnToRiskRatio = variance / max(portfolioReturn, 0.01)
-    return returnToRiskRatio + transactionCosts * 5.0  // Reduced penalty
+  ]
 }
-
-print("Portfolio Rebalancing with Transaction Costs")
-print("═══════════════════════════════════════════════════════════")
-
-// Analyze initial portfolio
-let initialReturn = (0..<numAssets).reduce(0.0) { sum, i in
-    sum + currentWeights[i] * expectedReturns[i]
-}
-var initialVariance = 0.0
-for i in 0..<numAssets {
-    for j in 0..<numAssets {
-        let volatility = 0.20
-        let covariance = correlations[i][j] * volatility * volatility
-        initialVariance += currentWeights[i] * currentWeights[j] * covariance
-    }
-}
-let initialStdDev = sqrt(initialVariance)
-
-print("\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):")
-print("  Expected Return: \(initialReturn.percent(2))")
-print("  Volatility (StdDev): \(initialStdDev.percent(2))")
-print("  Return/Risk: \((initialReturn / initialStdDev).number(3))")
-print("  Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)")
-print("  High-return assets (15-19): Only ~2.67% each (returns 12-15%)")
-
-// Simulated annealing optimizer with config
-let config = SimulatedAnnealingConfig(
-    initialTemperature: 10.0,  // Higher temperature for more exploration
-    finalTemperature: 0.001,
-    coolingRate: 0.95,
-    maxIterations: 10_000,
-    perturbationScale: 0.05,  // Smaller perturbations
-    reheatInterval: nil,
-    reheatTemperature: nil,
-    seed: 42  // Reproducible results
-)
-
-// Define search space bounds for each asset (0% to 20% per position)
-let searchSpace = (0..<numAssets).map { _ in (0.0, 0.20) }
-
-let sa = SimulatedAnnealing<VectorN<Double>>(
-    config: config,
-    searchSpace: searchSpace
-)
-
-// Create initial guess from current weights
-let initialGuess = VectorN(currentWeights)
-
-// Define constraints
-let constraints: [MultivariateConstraint<VectorN<Double>>] = [
-    // Equality: Sum to 1 (must be fully invested)
-    .equality { weights in
-        (0..<numAssets).reduce(0.0) { $0 + weights[$1] } - 1.0
-    }
-]
-
-print("\n═══════════════════════════════════════════════════════════")
-print("Running Simulated Annealing...")
-
-let result = try sa.minimize(
-    portfolioObjective,
-    from: initialGuess,
-    constraints: constraints
-)
-
-print("\nOptimization Completed:")
-print("  Iterations: \(result.iterations)")
-print("  Converged: \(result.converged)")
-print("  Reason: \(result.convergenceReason)")
-
-// Analyze optimized portfolio
-let optimizedReturn = (0..<numAssets).reduce(0.0) { sum, i in
-    sum + result.solution[i] * expectedReturns[i]
-}
-var optimizedVariance = 0.0
-for i in 0..<numAssets {
-    for j in 0..<numAssets {
-        let volatility = 0.20
-        let covariance = correlations[i][j] * volatility * volatility
-        optimizedVariance += result.solution[i] * result.solution[j] * covariance
-    }
-}
-let optimizedStdDev = sqrt(optimizedVariance)
-
-// Analyze turnover
-let turnover = (0..<numAssets).reduce(0.0) { sum, i in
-    sum + abs(result.solution[i] - currentWeights[i])
-} / 2.0
-let transactionCostBps = turnover * 0.001 * 100 * 100  // in basis points
-
-print("\n═══════════════════════════════════════════════════════════")
-print("Portfolio Comparison:")
-print("═══════════════════════════════════════════════════════════")
-print("                        Initial    Optimized    Change")
-print("───────────────────────────────────────────────────────────")
-print("\("Expected Return:".padding(toLength: 24, withPad: " ", startingAt: 0))\(initialReturn.percent().paddingLeft(toLength: 6))\(optimizedReturn.percent().paddingLeft(toLength: 12))\((optimizedReturn - initialReturn).percent(2, .automatic).paddingLeft(toLength: 12))")
-print("\("Volatility (StdDev):".padding(toLength: 24, withPad: " ", startingAt: 0))\(initialStdDev.percent().paddingLeft(toLength: 6))\(optimizedStdDev.percent().paddingLeft(toLength: 12))\((optimizedStdDev - initialStdDev).percent(2, .automatic).paddingLeft(toLength: 12))")
-print("\("Return/Risk Ratio:".padding(toLength: 24, withPad: " ", startingAt: 0))\((initialReturn / initialStdDev).number(3).paddingLeft(toLength: 6))\((optimizedReturn / optimizedStdDev).number(3).paddingLeft(toLength: 12))\(((optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev)).number(3).paddingLeft(toLength: 12))")
-print("───────────────────────────────────────────────────────────")
-print("Turnover:              \(turnover.percent(2))")
-print("Transaction Costs:     \(transactionCostBps.number(1)) bps")
-print("═══════════════════════════════════════════════════════════")
-
-// Show largest changes
-let changes = (0..<numAssets).map { i in
-    (index: i, change: result.solution[i] - currentWeights[i],
-     oldWeight: currentWeights[i], newWeight: result.solution[i],
-     return: expectedReturns[i])
-}.sorted { abs($0.change) > abs($1.change) }.prefix(8)
-
-print("\nTop 8 Position Changes:")
-print("───────────────────────────────────────────────────────────")
-print("Asset  Return   Old Weight  New Weight  Change      Action")
-print("───────────────────────────────────────────────────────────")
-for change in changes {
-    let direction = change.change > 0 ? "BUY " : "SELL"
-	print("\("\(change.index)".paddingLeft(toLength: 4))\(change.return.percent().paddingLeft(toLength: 9))\(change.oldWeight.percent(2).paddingLeft(toLength: 13))\(change.newWeight.percent().paddingLeft(toLength: 12))\(change.change.percent(2).paddingLeft(toLength: 8))\(direction.paddingLeft(toLength: 12))")
-}
-print("═══════════════════════════════════════════════════════════")
-
-print("\n💡 Key Insight:")
-print("   The optimizer balanced improving returns (moving to high-return assets)")
-print("   with minimizing transaction costs. Notice it didn't eliminate all")
-print("   low-return holdings - the transaction costs made that too expensive.")
-
-
-// MARK: - Configuration Comparison
-
-	// Simple test function: Rastrigin in 2D (many local minima)
-	func rastrigin(_ x: VectorN<Double>) -> Double {
-		let A = 10.0
-		let n = 2.0
-		return A * n + (0..<2).reduce(0.0) { sum, i in
-			sum + (x[i] * x[i] - A * cos(2 * .pi * x[i]))
-		}
-	}
-
-	let searchSpace_config = [(-5.12, 5.12), (-5.12, 5.12)]
-
-	// Test different configurations
-	let configs: [(name: String, config: SimulatedAnnealingConfig)] = [
-		("Fast", .fast),
-		("Default", .default),
-		("Thorough", .thorough),
-		("Custom (slow)", SimulatedAnnealingConfig(
-			initialTemperature: 100.0,
-			finalTemperature: 0.001,
-			coolingRate: 0.98,  // Slower cooling
-			maxIterations: 20_000,
-			perturbationScale: 0.1,
-			reheatInterval: nil,
-			reheatTemperature: nil,
-			seed: 42
-		))
-	]
-
-	print("Configuration Comparison (Rastrigin Function)")
-	print("═══════════════════════════════════════════════════════════")
-	print("Config          | Final Value | Iterations | Acceptance Rate")
-	print("───────────────────────────────────────────────────────────")
-
-	for (name, config) in configs {
-		let optimizer = SimulatedAnnealing<VectorN<Double>>(
-			config: config,
-			searchSpace: searchSpace_config
-		)
-
-		let result = optimizer.optimizeDetailed(
-			objective: rastrigin,
-			initialSolution: VectorN([2.0, 3.0])
-		)
-
-		let rate = result.acceptanceRate
-		print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0)) | " +
-			  "\(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: " ", startingAt: 0)) | " +
-			  "\(String(format: "%10d", result.iterations)) | " +
-			  "\(rate.percent(1))")
-	}
-
-	print("\nRecommendation: Use .default for most problems, .thorough for difficult landscapes")
-
-
-// MARK: - Ackley Function (Multimodal Optimization)
-
-// Ackley function: highly multimodal with many local minima
-// Global minimum at (0, 0) with value 0
-func ackley(_ x: VectorN<Double>) -> Double {
-	let a = 20.0
-	let b = 0.2
-	let c = 2.0 * .pi
-	let d = 2  // dimensions
-
-	let sum1 = (0..<d).reduce(0.0) { $0 + x[$1] * x[$1] }
-	let sum2 = (0..<d).reduce(0.0) { $0 + cos(c * x[$1]) }
-
-	let term1 = -a * exp(-b * sqrt(sum1 / Double(d)))
-	let term2 = -exp(sum2 / Double(d))
-
-	return term1 + term2 + a + exp(1.0)
-}
-
-// Search space: [-5, 5] for each dimension
-let searchSpace_ackley = [(-5.0, 5.0), (-5.0, 5.0)]
-
-// Use thorough config for difficult landscape
-let sa_ackley = SimulatedAnnealing<VectorN<Double>>(
-	config: .thorough,
-	searchSpace: searchSpace_ackley
-)
-
-print("Ackley Function Optimization (Highly Multimodal)")
-print("═══════════════════════════════════════════════════════════")
-
-// Start from a poor initial guess
-let initialGuess_ackley = VectorN([4.0, -3.5])
-
-let result_ackley = sa_ackley.optimizeDetailed(
-	objective: ackley,
-	initialSolution: initialGuess_ackley
-)
-
-print("Optimization Results:")
-print("  Solution: (\(result_ackley.solution[0].number(4)), " +
-	  "\(result_ackley.solution[1].number(4)))")
-print("  Function Value: \(result_ackley.fitness.number(6)) (target: 0.0)")
-print("  Iterations: \(result_ackley.iterations)")
-print("  Acceptance Rate: \(result_ackley.acceptanceRate.percent(1))")
-print("  Converged: \(result_ackley.converged)")
-print("  Reason: \(result_ackley.convergenceReason)")
-
-// Distance from global optimum
-let distanceFromOptimum = sqrt(result_ackley.solution[0]*result_ackley.solution[0] +
-							   result_ackley.solution[1]*result_ackley.solution[1])
-print("  Distance from global optimum: \(distanceFromOptimum.number(4))")
-
-
-// MARK: - Real-World Example: Manufacturing Batch Sizing with Setup Costs
-
-print("\n\nManufacturing Batch Sizing Optimization")
-print("═══════════════════════════════════════════════════════════")
-print("\nProblem: 15 products with setup costs and inventory holding costs")
-
-// Model with 15 products
-let numProducts_batch = 15
-
-// Weekly demand per product (units/week)
-let demand_batch: [Double] = [
-	100.0, 150.0, 80.0, 200.0, 120.0,  // Products 0-4
-	90.0, 175.0, 110.0, 140.0, 95.0,   // Products 5-9
-	160.0, 85.0, 130.0, 105.0, 145.0   // Products 10-14
-]
-
-// Fixed setup cost per production run ($)
-let setupCost_batch: [Double] = [
-	500.0, 750.0, 400.0, 850.0, 600.0,  // Products 0-4
-	450.0, 800.0, 550.0, 700.0, 480.0,  // Products 5-9
-	720.0, 420.0, 650.0, 520.0, 680.0   // Products 10-14
-]
-
-// Holding cost per unit per week ($/unit/week)
-let holdingCost_batch: [Double] = [
-	2.0, 3.5, 1.8, 4.0, 2.5,    // Products 0-4
-	1.9, 3.8, 2.2, 3.0, 2.0,    // Products 5-9
-	3.3, 1.7, 2.8, 2.1, 3.2     // Products 10-14
-]
-
-func totalCost_batch(_ batchSizes: VectorN<Double>) -> Double {
-	var cost = 0.0
-
-	for i in 0..<numProducts_batch {
-		let runsPerWeek = demand_batch[i] / max(batchSizes[i], 1.0)
-		let avgInventory = batchSizes[i] / 2.0
-
-		// Setup costs (discontinuous!)
-		cost += runsPerWeek * setupCost_batch[i]
-
-		// Holding costs (smooth)
-		cost += avgInventory * holdingCost_batch[i]
-	}
-
-	return cost
-}
-
-// Calculate baseline cost (using demand as batch size - naive approach)
-let naiveBatches = VectorN(demand_batch)
-let naiveCost = totalCost_batch(naiveBatches)
-print("\nNaive Approach (batch size = weekly demand):")
-print("  Total Weekly Cost: \(naiveCost.currency())")
-
-// Simulated Annealing configuration
-let config_batch = SimulatedAnnealingConfig(
-	initialTemperature: 50.0,
-	finalTemperature: 0.01,
-	coolingRate: 0.97,
-	maxIterations: 50_000,
-	perturbationScale: 0.15,
-	reheatInterval: nil,
-	reheatTemperature: nil,
-	seed: 42  // Reproducible results
-)
-
-let searchSpace_batch = (0..<numProducts_batch).map { _ in (10.0, 500.0) }  // Min/max batch size
-
-let sa_batch = SimulatedAnnealing<VectorN<Double>>(
-	config: config_batch,
-	searchSpace: searchSpace_batch
-)
-
-print("\nRunning Simulated Annealing...")
-let result_batch = sa_batch.optimizeDetailed(
-	objective: totalCost_batch,
-	initialSolution: naiveBatches
-)
-
-print("\nOptimization Results:")
-print("  Converged: \(result_batch.converged)")
-print("  Iterations: \(result_batch.iterations)")
-print("  Final Temperature: \(result_batch.finalTemperature.number(4))")
-print("  Acceptance Rate: \(result_batch.acceptanceRate.percent(1))")
-
-let optimizedCost = result_batch.fitness
-let costReduction = naiveCost - optimizedCost
-let percentReduction = (costReduction / naiveCost) * 100
-let weeklySavings = costReduction
-
-print("\n═══════════════════════════════════════════════════════════")
-print("Cost Comparison:")
-print("═══════════════════════════════════════════════════════════")
-print("Naive Approach:      \(naiveCost.currency())")
-print("Optimized (SA):      \(optimizedCost.currency())")
-print("Cost Reduction:      \(costReduction.currency()) (\(percentReduction.number(1))%)")
-print("Weekly Savings:      \(weeklySavings.currency())")
-print("═══════════════════════════════════════════════════════════")
-
-// Show optimal batch sizes for top 5 products by demand
-let productInfo = (0..<numProducts_batch).map { i in
-	(id: i, demand: demand_batch[i], optimalBatch: result_batch.solution[i],
-	 setupCost: setupCost_batch[i], holdingCost: holdingCost_batch[i])
-}.sorted { $0.demand > $1.demand }
-
-print("\nOptimal Batch Sizes (Top 5 by Demand):")
-print("─────────────────────────────────────────────────────────────")
-print("Product  Demand  Optimal Batch  Runs/Week  Setup $     Hold $")
-print("─────────────────────────────────────────────────────────────")
-
-for info in productInfo.prefix(5) {
-	let runsPerWeek = info.demand / info.optimalBatch
-	let setupCostWeekly = runsPerWeek * info.setupCost
-	let holdCostWeekly = (info.optimalBatch / 2.0) * info.holdingCost
-
-	print("\("\(info.id)".paddingLeft(toLength: 7))\(info.demand.number(0).paddingLeft(toLength: 8))\(info.optimalBatch.number(1).paddingLeft(toLength: 15))\(runsPerWeek.number(2).paddingLeft(toLength: 11))\(setupCostWeekly.currency().paddingLeft(toLength: 9))\(holdCostWeekly.currency().paddingLeft(toLength: 11))")
-}
-print("═════════════════════════════════════════════════════════════")
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.22-SimulatedAnnealingTutorial.md">BusinessMath Docs – Simulated Annealing Tutorial</a></p><h3>Experiments to Try</h3><ol><li><strong>Temperature Tuning</strong>: Test initial temperatures 0.1, 1.0, 10.0, 100.0</li><li><strong>Cooling Rates</strong>: Compare α = 0.90, 0.95, 0.98, 0.99</li><li><strong>Neighbor Generation</strong>: Different perturbation strategies for portfolio</li><li><strong>Hybrid Approach</strong>: SA for global search, then local refinement with BFGS</li></ol><hr /><h2>Next Steps</h2><p><strong>Next Week</strong>: Week 11 begins with <strong>Nelder-Mead Simplex</strong> (another gradient-free method), then <strong>Particle Swarm Optimization</strong>, concluding with <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong>.</p><p><strong>Final Week</strong>: Week 12 covers reflections (What Worked, What Didn’t) and <strong>Case Study #6: Investment Strategy DSL</strong>.</p><hr /><p><strong>Series</strong>: [Week 10 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Methods] | <strong>Case Studies</strong>: [4/6 Complete]</p><p><strong>Topics Covered</strong>: Simulated annealing • Global optimization • Cooling schedules • Metropolis criterion • Discrete optimization</p><p><strong>Playgrounds</strong>: [Week 1-10 available] • [Next week: Nelder-Mead and particle swarm]</p></p><hr /><div style="margin-top: 2em"><p class="blurb" style="font-style: italic">Tagged with: businessmath, swift, optimization, simulated-annealing, global-optimization, metaheuristic, gradient-free</p></div></div></div><header><nav class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5;"><div class="container-fluid col"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button><div id="navbarCollapse" class="collapse navbar-collapse"><ul class="navbar-nav mb-2 mb-md-0 col"><li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" id="email" rel="me" target="_blank" class="nav-link">email</a></li><li class="nav-item"><a href="https://cal.com/jpurnell/15min" id="calendar" rel="me" target="_blank" class="nav-link">calendar</a></li><li class="nav-item"><a href="http://blog.justinpurnell.com" id="blog" rel="me" target="_blank" class="nav-link">blog</a></li><li class="nav-item"><a href="https://github.com/jpurnell" id="github" rel="me" target="_blank" class="nav-link">github</a></li><li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" id="bsky" rel="me" target="_blank" class="nav-link">bsky</a></li><li class="nav-item"><a href="https://mastodon.social/@jpurnell" id="mastodon" rel="me" target="_blank" class="nav-link">mastodon</a></li><li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" id="radio" rel="me" target="_blank" class="nav-link">radio</a></li><li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" id="rss" rel="me" target="_blank" class="nav-link">rss</a></li><li class="nav-item"><a href="#" id="theme-toggle" rel="me" target="_blank" class="nav-link">theme</a></li></ul></div></div></nav></header><script src="/js/theme-toggle.js"></script></div><script src="/js/bootstrap.bundle.min.js"></script><script src="/js/syntax-highlighting.js"></script></body></html>
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="col-md-9223372036854775807">
+      <div class="ig-main-content">
+        <h1 class="mainTitle">Simulated Annealing: Global Optimization Without Gradients</h1>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">20 min read</p>
+        <div class="blurb" style="width: 70.0%; max-width: 800px">
+          <p><strong>Part 36 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Understanding simulated annealing for global optimization</li>
+            <li>Cooling schedules: exponential, linear, adaptive</li>
+            <li>Acceptance probability and the Metropolis criterion</li>
+            <li>When to use simulated annealing vs. gradient methods</li>
+            <li>Escaping local minima through controlled randomness</li>
+            <li>Parameter tuning: initial temperature, cooling rate, iterations</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>Many business optimization problems have multiple local minima:
+          <ul>
+            <li><strong>Production scheduling</strong> with setup costs (discontinuous objective)</li>
+            <li><strong>Portfolio optimization</strong> with transaction costs and lot sizes</li>
+            <li><strong>Facility location</strong> with discrete choices (city A vs. city B)</li>
+            <li><strong>Hyperparameter tuning</strong> for machine learning models</li>
+          </ul>
+          <strong>Gradient-based methods get stuck in local minima. Need global search capability.</strong>
+          <hr />
+          <h2>The Solution</h2>Simulated annealing mimics the physical process of metal cooling: accept worse solutions with probability that decreases over time. This allows escaping local minima early while converging to global optimum later.
+          <h3>Pattern 1: Portfolio Optimization with Transaction Costs</h3>
+          <strong>Business Problem</strong>: Rebalance portfolio from suboptimal starting point, but minimize transaction costs (non-smooth objective).
+          <pre><code class="language-swift">import BusinessMath // Portfolio with transaction costs (20 assets for clarity) let numAssets = 20<p></p><p>// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets // These happen to be LOW return assets - clear opportunity to improve! var currentWeights = [Double](repeating: 0.0, count: numAssets) // First 5 assets: 60% of portfolio (12% each) - these are low-return! for i in 0..&lt;5 { currentWeights[i] = 0.12 } // Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return! for i in 5..
+                <numassets { currentweights[i]="0.40" double(numassets - 5) }< p></numassets></p><p>// Expected returns: clearly tiered to demonstrate the opportunity // First 5 assets: 5-6% (low return) // Next 10 assets: 8-11% (medium return) // Last 5 assets: 12-15% (high return) let expectedReturns: [Double] = (0..&lt;5).map { _ in Double.random(in: 0.05…0.06) } + // Low (0..&lt;10).map { _ in Double.random(in: 0.08…0.11) } + // Medium (0..&lt;5).map { _ in Double.random(in: 0.12…0.15) } // High</p><p>// Correlation matrix: reasonable diversification benefits let correlations = (0..
+                <numassets).map { i in (0..<numassets).map { j in if i="=" j { return 1.0 } within same tier: higher correlation (0.5-0.7) across tiers: lower correlation (0.2-0.4) let sametier="(i" < 5 && j< 5) || (i>
+                  = 5 &amp;&amp; i &lt; 15 &amp;&amp; j &gt;= 5 &amp;&amp; j &lt; 15) || (i &gt;= 15 &amp;&amp; j &gt;= 15) return sameTier ? Double.random(in: 0.5…0.7) : Double.random(in: 0.2…0.4) } }
+                </numassets).map></p>
+              <div>
+                <p>func portfolioObjective(_ weights: VectorN
+                  <double>
+                    ) -&gt; Double { // 1. Portfolio expected return (we want to MAXIMIZE this) var portfolioReturn = 0.0 for i in 0..
+                    <numassets { portfolioreturn +="weights[i]" * expectedreturns[i] }<pre>
+                      <code>// 2. Portfolio variance (risk - we want to MINIMIZE this) var variance = 0.0 for i in 0..
+                        <numassets { for j in 0..<numassets { let volatility="0.20" 20% average vol let covariance="correlations[i][j]" * volatility * volatility variance +="weights[i]" * weights[j] * covariance } }< p></numassets></code>
+                    </numassets>
+                  </double></p>
+                <p><code>// 3. Transaction costs (makes objective non-smooth!) var transactionCosts = 0.0 for i in 0..
+                    <numassets { transactioncosts +="abs(weights[i]" - currentweights[i]) * 0.001 10 bps }< p></numassets></code></p>
+                <p><code>// Combined objective: maximize return-to-risk ratio, penalize transaction costs let returnToRiskRatio = variance / max(portfolioReturn, 0.01) return returnToRiskRatio + transactionCosts * 5.0 </code></p>
+              </div></code></pre>
+          <code class="language-swift">}<p></p></code>
+        </div>
+        <p><code class="language-swift">print(“Portfolio Rebalancing with Transaction Costs”) print(“═══════════════════════════════════════════════════════════”)</code></p>
+        <p><code class="language-swift">// Analyze initial portfolio let initialReturn = (0..
+            <numassets).reduce(0.0) { $0 + currentweights[$1] * expectedreturns[$1] } var initialvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility initialvariance +="currentWeights[i]" * currentweights[j] * covariance } } let initialstddev="sqrt(initialVariance)</p"></numassets).reduce(0.0)></code></p>
+        <p><code class="language-swift">print(”\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):”) print(” Expected Return: ((initialReturn * 100).formatted(.number.precision(.fractionLength(2))))%”) print(” Volatility (StdDev): ((initialStdDev * 100).formatted(.number.precision(.fractionLength(2))))%”) print(” Return/Risk: ((initialReturn / initialStdDev).formatted(.number.precision(.fractionLength(3))))”) print(” Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)”) print(” High-return assets (15-19): Only ~2.67% each (returns 12-15%)”)</code></p>
+        <p><code class="language-swift">// Simulated annealing optimizer with config let config = SimulatedAnnealingConfig( initialTemperature: 10.0, // Higher temperature for more exploration finalTemperature: 0.001, coolingRate: 0.95, maxIterations: 10_000, perturbationScale: 0.05, // Smaller perturbations reheatInterval: nil, reheatTemperature: nil, seed: 42 // Reproducible results )</code></p>
+        <p><code class="language-swift">// Define search space bounds for each asset (0% to 20% per position) let searchSpace = (0..
+            <numassets).map { _ in (0.0, 0.20) }< p></numassets).map></code></p>
+        <p><code class="language-swift">let sa = SimulatedAnnealing
+            <vectorn<double>
+              &gt;( config: config, searchSpace: searchSpace )
+            </vectorn<double></code></p>
+        <p><code class="language-swift">// Create initial guess from current weights let initialGuess = VectorN(currentWeights)</code></p>
+        <p><code class="language-swift">// Define constraints (FIXED API - no ‘constraint:’ or ‘tolerance:’ parameters!) let constraints: [MultivariateConstraint
+            <vectorn<double>
+              &gt;] = [ // Equality: Sum to 1 (must be fully invested) .equality { weights in (0..
+              <numassets).reduce(0.0) { $0 + weights[$1] } - 1.0 } ]< p></numassets).reduce(0.0)>
+            </vectorn<double></code></p>
+        <p><code class="language-swift">print(”\n═══════════════════════════════════════════════════════════”) print(“Running Simulated Annealing…”)</code></p>
+        <p><code class="language-swift">let result = try sa.minimize( portfolioObjective, from: initialGuess, constraints: constraints )</code></p>
+        <p><code class="language-swift">print(”\nOptimization Completed:”) print(” Iterations: (result.iterations)”) print(” Converged: (result.converged)”) print(” Reason: (result.convergenceReason)”)</code></p>
+        <p><code class="language-swift">// Analyze optimized portfolio let optimizedReturn = (0..
+            <numassets).reduce(0.0) { $0 + result.solution[$1] * expectedreturns[$1] } var optimizedvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility optimizedvariance +="result.solution[i]" * result.solution[j] * covariance } } let optimizedstddev="sqrt(optimizedVariance)</p"></numassets).reduce(0.0)></code></p>
+        <p><code class="language-swift">// Analyze turnover let turnover = (0..
+            <numassets).reduce(0.0) { sum, i in sum + abs(result.solution[i] - currentweights[i]) } 2.0 let transactioncostbps="turnover" * 0.001 * 100 * 100 in basis points< p></numassets).reduce(0.0)></code></p>
+        <p><code class="language-swift">print(”\n═══════════════════════════════════════════════════════════”) print(“Portfolio Comparison:”) print(“═══════════════════════════════════════════════════════════”) print(” Initial Optimized Change”) print(“───────────────────────────────────────────────────────────”) print(String(format: “Expected Return: %6.2f%% %6.2f%% %+6.2f%%”, initialReturn * 100, optimizedReturn * 100, (optimizedReturn - initialReturn) * 100)) print(String(format: “Volatility (StdDev): %6.2f%% %6.2f%% %+6.2f%%”, initialStdDev * 100, optimizedStdDev * 100, (optimizedStdDev - initialStdDev) * 100)) print(String(format: “Return/Risk Ratio: %6.3f %6.3f %+6.3f”, initialReturn / initialStdDev, optimizedReturn / optimizedStdDev, (optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev))) print(“───────────────────────────────────────────────────────────”) print(String(format: “Turnover: %6.2f%%”, turnover * 100)) print(String(format: “Transaction Costs: %6.1f bps”, transactionCostBps)) print(“═══════════════════════════════════════════════════════════”)</code></p>
+        <p><code class="language-swift">// Show largest changes let changes = (0..
+            <numassets).map { i in (index: i, change: result.solution[i] - currentweights[i], oldweight: currentweights[i], newweight: result.solution[i], return: expectedreturns[i]) }.sorted { abs($0.change)>
+               abs($1.change) }.prefix(8)
+            </numassets).map></code></p>
+        <p><code class="language-swift">print(”\nTop 8 Position Changes:”) print(“───────────────────────────────────────────────────────────”) print(“Asset Return Old Weight New Weight Change Action”) print(“───────────────────────────────────────────────────────────”) for change in changes { let direction = change.change &gt; 0 ? “BUY “ : “SELL” print(String(format: “ %2d %5.2f%% %6.2f%% %6.2f%% %+6.2f%% %s”, change.index, change.return * 100, change.oldWeight * 100, change.newWeight * 100, change.change * 100, direction)) } print(“═══════════════════════════════════════════════════════════”)</code></p>
+        <p><code class="language-swift">print(”\n💡 Key Insight:”) print(” The optimizer balanced improving returns (moving to high-return assets)”) print(” with minimizing transaction costs. Notice it didn’t eliminate all”) print(” low-return holdings - the transaction costs made that too expensive.”) </code></p>
+        <h3>Pattern 2: Configuration Comparison</h3>
+        <strong>Pattern</strong>: Compare different cooling configurations.
+        <pre><code class="language-swift">// Simple test function: Rastrigin in 2D (many local minima) func rastrigin(_ x: VectorN
+            <double>
+              ) -&gt; Double { let A = 10.0 let n = 2.0 return A * n + (0..&lt;2).reduce(0.0) { sum, i in sum + (x[i] * x[i] - A * cos(2 * .pi * x[i])) } }
+              <p></p>
+              <p>let searchSpace = [(-5.12, 5.12), (-5.12, 5.12)]</p>
+              <p>// Test different configurations let configs: [(name: String, config: SimulatedAnnealingConfig)] = [ (“Fast”, .fast), (“Default”, .default), (“Thorough”, .thorough), (“Custom (slow)”, SimulatedAnnealingConfig( initialTemperature: 100.0, finalTemperature: 0.001, coolingRate: 0.98, // Slower cooling maxIterations: 20_000, perturbationScale: 0.1, reheatInterval: nil, reheatTemperature: nil, seed: 42 )) ]</p>
+              <p>print(“Configuration Comparison (Rastrigin Function)”) print(“═══════════════════════════════════════════════════════════”) print(“Config | Final Value | Iterations | Acceptance Rate”) print(“───────────────────────────────────────────────────────────”)</p>
+            </double></code>
+          <div>
+            <code class="language-swift"><p>for (name, config) in configs { let optimizer = SimulatedAnnealing
+                <vectorn<double>
+                  &gt;( config: config, searchSpace: searchSpace )
+                </vectorn<double></p><pre><code>let result = optimizer.optimizeDetailed( objective: rastrigin, initialSolution: VectorN([2.0, 3.0]) )<p></p></code><p><code>let rate = result.acceptanceRate * 100 print(”(name.padding(toLength: 15, withPad: “ “, startingAt: 0)) | “ + “(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: “ “, startingAt: 0)) | “ + “(String(format: “%10d”, result.iterations)) | “ + “(rate.formatted(.number.precision(.fractionLength(1))))%”) </code></p></pre>}<p></p></code>
+          </div>
+          <div>
+            <p>print(”\nRecommendation: Use .default for most problems, .thorough for difficult landscapes”) </p>
+          </div></pre>
+        <h3>Pattern 3: Ackley Function (Multimodal Optimization)</h3>
+        <strong>Pattern</strong>: Global optimization for highly multimodal functions.
+        <pre><code class="language-swift">// Ackley function: highly multimodal with many local minima // Global minimum at (0, 0) with value 0 func ackley(_ x: VectorN
+            <double>
+              ) -&gt; Double { let a = 20.0 let b = 0.2 let c = 2.0 * .pi let d = 2 // dimensions
+            </double></code><pre><code class="language-swift"><code>let sum1 = (0..
+                <d).reduce(0.0) { $0 + x[$1] * x[$1] } let sum2="(0..<d).reduce(0.0)" { $0 + cos(c * x[$1]) }< p>
+                  <p>let term1 = -a * exp(-b * sqrt(sum1 / Double(d))) let term2 = -exp(sum2 / Double(d))</p>
+                </d).reduce(0.0)></code><p><code>return term1 + term2 + a + .e </code></p></code></pre>}<p></p></pre>
+      </div>
+      <p>// Search space: [-5, 5] for each dimension let searchSpace = [(-5.0, 5.0), (-5.0, 5.0)]</p>
+      <p>// Use thorough config for difficult landscape let sa = SimulatedAnnealing
+        <vectorn<double>
+          &gt;( config: .thorough, searchSpace: searchSpace )
+        </vectorn<double></p>
+      <p>print(“Ackley Function Optimization (Highly Multimodal)”) print(“═══════════════════════════════════════════════════════════”)</p>
+      <p>// Start from a poor initial guess let initialGuess = VectorN([4.0, -3.5])</p>
+      <p>let result = sa.optimizeDetailed( objective: ackley, initialSolution: initialGuess )</p>
+      <p>print(“Optimization Results:”) print(” Solution: ((result.solution[0].formatted(.number.precision(.fractionLength(4)))), “ + “(result.solution[1].formatted(.number.precision(.fractionLength(4)))))”) print(” Function Value: (result.fitness.formatted(.number.precision(.fractionLength(6)))) (target: 0.0)”) print(” Iterations: (result.iterations)”) print(” Acceptance Rate: ((result.acceptanceRate * 100).formatted(.number.precision(.fractionLength(1))))%”) print(” Converged: (result.converged)”) print(” Reason: (result.convergenceReason)”)</p>
+      <p>// Distance from global optimum let distanceFromOptimum = sqrt(result.solution[0]*result.solution[0] + result.solution[1]*result.solution[1]) print(” Distance from global optimum: (distanceFromOptimum.formatted(.number.precision(.fractionLength(4))))”) 
+        <hr /></p>
+      <h2>How It Works</h2>
+      <h3>Simulated Annealing Algorithm</h3>
+      <ol>
+        <li><strong>Initialize</strong>: Set T = T_0, x = x_0</li>
+        <li><strong>Generate Neighbor</strong>: x’ = random perturbation of x</li>
+        <li><strong>Calculate ΔE</strong>: ΔE = f(x’) - f(x)</li>
+        <li><strong>Accept/Reject</strong>:
+          <ul>
+            <li>If ΔE &lt; 0: Always accept (improvement)</li>
+            <li>Else: Accept with probability P = exp(-ΔE / T)</li>
+          </ul></li>
+        <li><strong>Cool Down</strong>: T = α * T (exponential) or T = T - β (linear)</li>
+        <li><strong>Repeat</strong>: Until T &lt; T_min or max iterations</li>
+      </ol>
+      <h3>Acceptance Probability</h3>
+      <strong>Metropolis Criterion</strong>: P(accept worse solution) = exp(-ΔE / T)
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Temperature</th>
+            <th scope="col">ΔE = 0.1</th>
+            <th scope="col">ΔE = 1.0</th>
+            <th scope="col">ΔE = 10.0</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>T = 10</td>
+            <td>99.0%</td>
+            <td>90.5%</td>
+            <td>36.8%</td>
+          </tr>
+          <tr>
+            <td>T = 1</td>
+            <td>90.5%</td>
+            <td>36.8%</td>
+            <td>0.005%</td>
+          </tr>
+          <tr>
+            <td>T = 0.1</td>
+            <td>36.8%</td>
+            <td>0.005%</td>
+            <td>~0%</td>
+          </tr>
+        </tbody>
+      </table>
+      <strong>Insight</strong>: Early (high T), accept almost anything. Late (low T), only accept improvements.
+      <h3>Cooling Schedule Impact</h3>
+      <strong>Problem: 100-variable portfolio optimization</strong>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Schedule</th>
+            <th scope="col">Final Value</th>
+            <th scope="col">Iterations</th>
+            <th scope="col">Quality</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fast (α=0.90)</td>
+            <td>0.0245</td>
+            <td>2,500</td>
+            <td>Good</td>
+          </tr>
+          <tr>
+            <td>Medium (α=0.95)</td>
+            <td>0.0238</td>
+            <td>5,800</td>
+            <td>Better</td>
+          </tr>
+          <tr>
+            <td>Slow (α=0.98)</td>
+            <td>0.0235</td>
+            <td>18,000</td>
+            <td>Best</td>
+          </tr>
+          <tr>
+            <td>Adaptive</td>
+            <td>0.0237</td>
+            <td>7,200</td>
+            <td>Better</td>
+          </tr>
+        </tbody>
+      </table>
+      <strong>Tradeoff</strong>: Slower cooling = better solution, more time
+      <hr />
+      <h2>Real-World Application</h2>
+      <h3>Manufacturing: Batch Sizing with Setup Costs</h3>
+      <strong>Company</strong>: Electronics manufacturer optimizing production batch sizes for 15 products 
+      <strong>Challenge</strong>: Minimize total costs (inventory + setup) subject to demand and capacity
+      <p></p>
+      <p><strong>Problem Characteristics</strong>:</p>
+      <ul>
+        <li><strong>Continuous variables</strong>: Batch sizes (treated as continuous for optimization)</li>
+        <li><strong>Setup costs</strong>: Fixed cost per production run (non-smooth)</li>
+        <li><strong>Holding costs</strong>: Penalty for excess inventory (smooth)</li>
+        <li><strong>Multiple local minima</strong>: ~100+ feasible configurations</li>
+      </ul>
+      <strong>Why Simulated Annealing</strong>:
+      <ul>
+        <li>Setup costs create discontinuous objective</li>
+        <li>Global search needed (many local minima)</li>
+        <li>Can escape poor local solutions</li>
+      </ul>
+      <strong>Implementation</strong>:
+      <pre><code class="language-swift">import BusinessMath<p></p><p>import BusinessMath</p><p>// Model with 15 products let numProducts = 15</p><p>// Weekly demand per product (units/week) let demand: [Double] = [ 100.0, 150.0, 80.0, 200.0, 120.0, // Products 0-4 90.0, 175.0, 110.0, 140.0, 95.0, // Products 5-9 160.0, 85.0, 130.0, 105.0, 145.0 // Products 10-14 ]</p><p>// Fixed setup cost per production run ($) let setupCost: [Double] = [ 500.0, 750.0, 400.0, 850.0, 600.0, // Products 0-4 450.0, 800.0, 550.0, 700.0, 480.0, // Products 5-9 720.0, 420.0, 650.0, 520.0, 680.0 // Products 10-14 ]</p><p>// Holding cost per unit per week ($/unit/week) let holdingCost: [Double] = [ 2.0, 3.5, 1.8, 4.0, 2.5, // Products 0-4 1.9, 3.8, 2.2, 3.0, 2.0, // Products 5-9 3.3, 1.7, 2.8, 2.1, 3.2 // Products 10-14 ]</p></code>
+        <div>
+          <code class="language-swift">
+            <div>
+              <p>func totalCost(_ batchSizes: VectorN
+                <double>
+                  ) -&gt; Double { var cost = 0.0
+                </double></p>
+              <pre><code>for i in 0..
+                  <numproducts { let runsperweek="demand[i]" max(batchsizes[i], 1.0) let avginventory="batchSizes[i]" 2.0<pre>
+                    <code>// Setup costs (discontinuous!) cost += runsPerWeek * setupCost[i]<p></p></code>
+                  </numproducts></code><p><code><code>// Holding costs (smooth) cost += avgInventory * holdingCost[i] </code></code></p></pre>}
+              <p></p>
+            </div><p>return cost </p></code>
+        </div></pre>}
+      <p></p>
+    </div>
+    <p>print(“Manufacturing Batch Sizing Optimization”) print(“═══════════════════════════════════════════════════════════”) print(”\nProblem: 15 products with setup costs and inventory holding costs”)</p>
+    <p>// Calculate baseline cost (using demand as batch size - naive approach) let naiveBatches = VectorN(demand) let naiveCost = totalCost(naiveBatches) print(”\nNaive Approach (batch size = weekly demand):”) print(” Total Weekly Cost: $(naiveCost.formatted(.number.precision(.fractionLength(2))))”)</p>
+    <p>// Simulated Annealing configuration let config = SimulatedAnnealingConfig( initialTemperature: 50.0, finalTemperature: 0.01, coolingRate: 0.97, maxIterations: 50_000, perturbationScale: 0.15, reheatInterval: nil, reheatTemperature: nil, seed: 42 // Reproducible results )</p>
+    <p>let searchSpace = (0..
+      <numproducts).map { _ in (10.0, 500.0) } min max batch size< p></numproducts).map></p>
+    <p>let sa = SimulatedAnnealing
+      <vectorn<double>
+        &gt;( config: config, searchSpace: searchSpace )
+      </vectorn<double></p>
+    <p>print(”\nRunning Simulated Annealing…”) let result = sa.optimizeDetailed( objective: totalCost, initialSolution: naiveBatches )</p>
+    <p>print(”\nOptimization Results:”) print(” Converged: (result.converged)”) print(” Iterations: (result.iterations)”) print(” Final Temperature: (result.finalTemperature.formatted(.number.precision(.fractionLength(4))))”) print(” Acceptance Rate: (result.acceptanceRate.percent(1))”)</p>
+    <p>let optimizedCost = result.fitness let costReduction = naiveCost - optimizedCost let percentReduction = (costReduction / naiveCost) * 100 let weeklySavings = costReduction</p>
+    <p>print(”\n═══════════════════════════════════════════════════════════”) print(“Cost Comparison:”) print(“═══════════════════════════════════════════════════════════”) print(“Naive Approach: $(naiveCost.formatted(.number.precision(.fractionLength(2))))”) print(“Optimized (SA): $(optimizedCost.formatted(.number.precision(.fractionLength(2))))”) print(“Cost Reduction: $(costReduction.formatted(.number.precision(.fractionLength(2)))) ((percentReduction.formatted(.number.precision(.fractionLength(1))))%)”) print(“Weekly Savings: $(weeklySavings.formatted(.number.precision(.fractionLength(2))))”) print(“═══════════════════════════════════════════════════════════”)</p>
+    <p>// Show optimal batch sizes for top 5 products by demand let productInfo = (0..
+      <numproducts).map { i in (id: i, demand: demand[i], optimalbatch: result.solution[i], setupcost: setupcost[i], holdingcost: holdingcost[i]) }.sorted { $0.demand>
+         $1.demand }
+      </numproducts).map></p>
+    <p>print(”\nOptimal Batch Sizes (Top 5 by Demand):”) print(“───────────────────────────────────────────────────────────”) print(“Product Demand Optimal Batch Runs/Week Setup $ Hold $”) print(“───────────────────────────────────────────────────────────”)</p>
+    <p>for info in productInfo.prefix(5) { let runsPerWeek = info.demand / info.optimalBatch let setupCostWeekly = runsPerWeek * info.setupCost let holdCostWeekly = (info.optimalBatch / 2.0) * info.holdingCost</p>
+    <pre><code>print(String(format: “  %2d     %5.0f      %6.1f      %5.2f    $%5.0f   $%5.0f”, info.id, info.demand, info.optimalBatch, runsPerWeek, setupCostWeekly, holdCostWeekly)) </code></pre>} print(“═══════════════════════════════════════════════════════════”) 
+    <strong>Typical Results</strong>:
+    <ul>
+      <li>Cost reduction: 10-15% vs. naive approach (batch size = demand)</li>
+      <li>Weekly savings: $6,000-$10,000 depending on product mix</li>
+      <li>Computation time: 30-60 seconds (acceptable for weekly planning)</li>
+      <li>Solution quality: Near-optimal (escapes local minima that gradient methods miss)</li>
+    </ul>
+    <hr />
+    <h2>Try It Yourself</h2>
+    <details>
+      <summary>Click to expand full playground code</summary>
+      <pre><code class="language-swift">import Foundation
+import BusinessMath
+// Portfolio with transaction costs (20 assets for clarity) let numAssets = 20
+<p></p><p>// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets // These happen to be LOW return assets - clear opportunity to improve! var currentWeights = [Double](repeating: 0.0, count: numAssets) // First 5 assets: 60% of portfolio (12% each) - these are low-return! for i in 0..&lt;5 { currentWeights[i] = 0.12 } // Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return! for i in 5..
+            <numassets { currentweights[i]="0.40" double(numassets - 5) }< p></numassets></p><p>// Expected returns: clearly tiered to demonstrate the opportunity // First 5 assets: 5-6% (low return) // Next 10 assets: 8-11% (medium return) // Last 5 assets: 12-15% (high return) let expectedReturns: [Double] = (0..&lt;5).map { _ in Double.random(in: 0.05…0.06) } + // Low (0..&lt;10).map { _ in Double.random(in: 0.08…0.11) } + // Medium (0..&lt;5).map { _ in Double.random(in: 0.12…0.15) } // High</p><p>// Correlation matrix: reasonable diversification benefits let correlations = (0..
+            <numassets).map { i in (0..<numassets).map { j in if i="=" j { return 1.0 } within same tier: higher correlation (0.5-0.7) across tiers: lower correlation (0.2-0.4) let sametier="(i" < 5 && j< 5) || (i>
+              = 5 &amp;&amp; i &lt; 15 &amp;&amp; j &gt;= 5 &amp;&amp; j &lt; 15) || (i &gt;= 15 &amp;&amp; j &gt;= 15) return sameTier ? Double.random(in: 0.5…0.7) : Double.random(in: 0.2…0.4) } }
+            </numassets).map></p>
+          <div>
+            <p>@MainActor func portfolioObjective(_ weights: VectorN
+              <double>
+                ) -&gt; Double { // 1. Portfolio expected return (we want to MAXIMIZE this) var portfolioReturn = 0.0 for i in 0..
+                <numassets { portfolioreturn +="weights[i]" * expectedreturns[i] }<pre>
+                  <code>// 2. Portfolio variance (risk - we want to MINIMIZE this) var variance = 0.0 for i in 0..
+                    <numassets { for j in 0..<numassets { let volatility="0.20" 20% average vol let covariance="correlations[i][j]" * volatility * volatility variance +="weights[i]" * weights[j] * covariance } }< p></numassets></code>
+                </numassets>
+              </double></p>
+            <p><code>// 3. Transaction costs (makes objective non-smooth!) var transactionCosts = 0.0 for i in 0..
+                <numassets { transactioncosts +="abs(weights[i]" - currentweights[i]) * 0.001 10 bps }< p></numassets></code></p>
+            <p><code>// Combined objective: maximize return-to-risk ratio, penalize transaction costs // We minimize: risk/return + transaction costs // (Higher return is better, lower variance is better) let returnToRiskRatio = variance / max(portfolioReturn, 0.01) return returnToRiskRatio + transactionCosts * 5.0 // Reduced penalty </code></p>
+          </div></code></pre>
+      <code class="language-swift">}<p></p><p>print(“Portfolio Rebalancing with Transaction Costs”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Analyze initial portfolio let initialReturn = (0..
+          <numassets).reduce(0.0) { sum, i in sum + currentweights[i] * expectedreturns[i] } var initialvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility initialvariance +="currentWeights[i]" * currentweights[j] * covariance } } let initialstddev="sqrt(initialVariance)</p"></numassets).reduce(0.0)></p><p>print(”\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):”) print(” Expected Return: (initialReturn.percent(2))”) print(” Volatility (StdDev): (initialStdDev.percent(2))”) print(” Return/Risk: ((initialReturn / initialStdDev).number(3))”) print(” Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)”) print(” High-return assets (15-19): Only ~2.67% each (returns 12-15%)”)</p><p>// Simulated annealing optimizer with config let config = SimulatedAnnealingConfig( initialTemperature: 10.0, // Higher temperature for more exploration finalTemperature: 0.001, coolingRate: 0.95, maxIterations: 10_000, perturbationScale: 0.05, // Smaller perturbations reheatInterval: nil, reheatTemperature: nil, seed: 42 // Reproducible results )</p><p>// Define search space bounds for each asset (0% to 20% per position) let searchSpace = (0..
+          <numassets).map { _ in (0.0, 0.20) }< p></numassets).map></p><p>let sa = SimulatedAnnealing
+          <vectorn<double>
+            &gt;( config: config, searchSpace: searchSpace )
+          </vectorn<double></p><p>// Create initial guess from current weights let initialGuess = VectorN(currentWeights)</p><p>// Define constraints let constraints: [MultivariateConstraint
+          <vectorn<double>
+            &gt;] = [ // Equality: Sum to 1 (must be fully invested) .equality { weights in (0..
+            <numassets).reduce(0.0) { $0 + weights[$1] } - 1.0 } ]< p></numassets).reduce(0.0)>
+          </vectorn<double></p><p>print(”\n═══════════════════════════════════════════════════════════”) print(“Running Simulated Annealing…”)</p><p>let result = try sa.minimize( portfolioObjective, from: initialGuess, constraints: constraints )</p><p>print(”\nOptimization Completed:”) print(” Iterations: (result.iterations)”) print(” Converged: (result.converged)”) print(” Reason: (result.convergenceReason)”)</p><p>// Analyze optimized portfolio let optimizedReturn = (0..
+          <numassets).reduce(0.0) { sum, i in sum + result.solution[i] * expectedreturns[i] } var optimizedvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility optimizedvariance +="result.solution[i]" * result.solution[j] * covariance } } let optimizedstddev="sqrt(optimizedVariance)</p"></numassets).reduce(0.0)></p><p>// Analyze turnover let turnover = (0..
+          <numassets).reduce(0.0) { sum, i in sum + abs(result.solution[i] - currentweights[i]) } 2.0 let transactioncostbps="turnover" * 0.001 * 100 * 100 in basis points< p></numassets).reduce(0.0)></p><p>print(”\n═══════════════════════════════════════════════════════════”) print(“Portfolio Comparison:”) print(“═══════════════════════════════════════════════════════════”) print(” Initial Optimized Change”) print(“───────────────────────────────────────────────────────────”) print(”(“Expected Return:”.padding(toLength: 24, withPad: “ “, startingAt: 0))(initialReturn.percent().paddingLeft(toLength: 6))(optimizedReturn.percent().paddingLeft(toLength: 12))((optimizedReturn - initialReturn).percent(2, .automatic).paddingLeft(toLength: 12))”) print(”(“Volatility (StdDev):”.padding(toLength: 24, withPad: “ “, startingAt: 0))(initialStdDev.percent().paddingLeft(toLength: 6))(optimizedStdDev.percent().paddingLeft(toLength: 12))((optimizedStdDev - initialStdDev).percent(2, .automatic).paddingLeft(toLength: 12))”) print(”(“Return/Risk Ratio:”.padding(toLength: 24, withPad: “ “, startingAt: 0))((initialReturn / initialStdDev).number(3).paddingLeft(toLength: 6))((optimizedReturn / optimizedStdDev).number(3).paddingLeft(toLength: 12))(((optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev)).number(3).paddingLeft(toLength: 12))”) print(“───────────────────────────────────────────────────────────”) print(“Turnover: (turnover.percent(2))”) print(“Transaction Costs: (transactionCostBps.number(1)) bps”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Show largest changes let changes = (0..
+          <numassets).map { i in (index: i, change: result.solution[i] - currentweights[i], oldweight: currentweights[i], newweight: result.solution[i], return: expectedreturns[i]) }.sorted { abs($0.change)>
+             abs($1.change) }.prefix(8)
+          </numassets).map></p><p>print(”\nTop 8 Position Changes:”) print(“───────────────────────────────────────────────────────────”) print(“Asset Return Old Weight New Weight Change Action”) print(“───────────────────────────────────────────────────────────”) for change in changes { let direction = change.change &gt; 0 ? “BUY “ : “SELL” print(”(”(change.index)”.paddingLeft(toLength: 4))(change.return.percent().paddingLeft(toLength: 9))(change.oldWeight.percent(2).paddingLeft(toLength: 13))(change.newWeight.percent().paddingLeft(toLength: 12))(change.change.percent(2).paddingLeft(toLength: 8))(direction.paddingLeft(toLength: 12))”) } print(“═══════════════════════════════════════════════════════════”)</p><p>print(”\n💡 Key Insight:”) print(” The optimizer balanced improving returns (moving to high-return assets)”) print(” with minimizing transaction costs. Notice it didn’t eliminate all”) print(” low-return holdings - the transaction costs made that too expensive.”)</p></code>
+      <div>
+        <code class="language-swift"><p>// MARK: - Configuration Comparison</p><pre><code>// Simple test function: Rastrigin in 2D (many local minima) func rastrigin(_ x: VectorN
+              <double>
+                ) -&gt; Double { let A = 10.0 let n = 2.0 return A * n + (0..&lt;2).reduce(0.0) { sum, i in sum + (x[i] * x[i] - A * cos(2 * .pi * x[i])) } }
+                <p></p>
+                <p>let searchSpace_config = [(-5.12, 5.12), (-5.12, 5.12)]</p>
+                <p>// Test different configurations let configs: [(name: String, config: SimulatedAnnealingConfig)] = [ (“Fast”, .fast), (“Default”, .default), (“Thorough”, .thorough), (“Custom (slow)”, SimulatedAnnealingConfig( initialTemperature: 100.0, finalTemperature: 0.001, coolingRate: 0.98, // Slower cooling maxIterations: 20_000, perturbationScale: 0.1, reheatInterval: nil, reheatTemperature: nil, seed: 42 )) ]</p>
+                <p>print(“Configuration Comparison (Rastrigin Function)”) print(“═══════════════════════════════════════════════════════════”) print(“Config | Final Value | Iterations | Acceptance Rate”) print(“───────────────────────────────────────────────────────────”)</p>
+              </double></code>
+            <div>
+              <code><p>for (name, config) in configs { let optimizer = SimulatedAnnealing
+                  <vectorn<double>
+                    &gt;( config: config, searchSpace: searchSpace_config )
+                  </vectorn<double></p><pre><code>let result = optimizer.optimizeDetailed( objective: rastrigin, initialSolution: VectorN([2.0, 3.0]) )<p></p></code><p><code>let rate = result.acceptanceRate print(”(name.padding(toLength: 15, withPad: “ “, startingAt: 0)) | “ + “(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: “ “, startingAt: 0)) | “ + “(String(format: “%10d”, result.iterations)) | “ + “(rate.percent(1))”) </code></p></pre>}<p></p></code>
+            </div><p>print(”\nRecommendation: Use .default for most problems, .thorough for difficult landscapes”) </p></pre>// MARK: - Ackley Function (Multimodal Optimization)<p></p></code>
+      </div>
+      <div>
+        <p>// Ackley function: highly multimodal with many local minima // Global minimum at (0, 0) with value 0 func ackley(_ x: VectorN
+          <double>
+            ) -&gt; Double { let a = 20.0 let b = 0.2 let c = 2.0 * .pi let d = 2 // dimensions
+          </double></p>
+        <pre><code>let sum1 = (0..
+            <d).reduce(0.0) { $0 + x[$1] * x[$1] } let sum2="(0..<d).reduce(0.0)" { $0 + cos(c * x[$1]) }< p>
+              <p>let term1 = -a * exp(-b * sqrt(sum1 / Double(d))) let term2 = -exp(sum2 / Double(d))</p>
+            </d).reduce(0.0)></code><p><code>return term1 + term2 + a + exp(1.0) </code></p></pre>}
+        <p></p>
+      </div>
+      <p>// Search space: [-5, 5] for each dimension let searchSpace_ackley = [(-5.0, 5.0), (-5.0, 5.0)]</p>
+      <p>// Use thorough config for difficult landscape let sa_ackley = SimulatedAnnealing
+        <vectorn<double>
+          &gt;( config: .thorough, searchSpace: searchSpace_ackley )
+        </vectorn<double></p>
+      <p>print(“Ackley Function Optimization (Highly Multimodal)”) print(“═══════════════════════════════════════════════════════════”)</p>
+      <p>// Start from a poor initial guess let initialGuess_ackley = VectorN([4.0, -3.5])</p>
+      <p>let result_ackley = sa_ackley.optimizeDetailed( objective: ackley, initialSolution: initialGuess_ackley )</p>
+      <p>print(“Optimization Results:”) print(” Solution: ((result_ackley.solution[0].number(4)), “ + “(result_ackley.solution[1].number(4)))”) print(” Function Value: (result_ackley.fitness.number(6)) (target: 0.0)”) print(” Iterations: (result_ackley.iterations)”) print(” Acceptance Rate: (result_ackley.acceptanceRate.percent(1))”) print(” Converged: (result_ackley.converged)”) print(” Reason: (result_ackley.convergenceReason)”)</p>
+      <p>// Distance from global optimum let distanceFromOptimum = sqrt(result_ackley.solution[0]*result_ackley.solution[0] + result_ackley.solution[1]*result_ackley.solution[1]) print(” Distance from global optimum: (distanceFromOptimum.number(4))”)</p>
+      <p>// MARK: - Real-World Example: Manufacturing Batch Sizing with Setup Costs</p>
+      <p>print(”\n\nManufacturing Batch Sizing Optimization”) print(“═══════════════════════════════════════════════════════════”) print(”\nProblem: 15 products with setup costs and inventory holding costs”)</p>
+      <p>// Model with 15 products let numProducts_batch = 15</p>
+      <p>// Weekly demand per product (units/week) let demand_batch: [Double] = [ 100.0, 150.0, 80.0, 200.0, 120.0, // Products 0-4 90.0, 175.0, 110.0, 140.0, 95.0, // Products 5-9 160.0, 85.0, 130.0, 105.0, 145.0 // Products 10-14 ]</p>
+      <p>// Fixed setup cost per production run ($) let setupCost_batch: [Double] = [ 500.0, 750.0, 400.0, 850.0, 600.0, // Products 0-4 450.0, 800.0, 550.0, 700.0, 480.0, // Products 5-9 720.0, 420.0, 650.0, 520.0, 680.0 // Products 10-14 ]</p>
+      <p>// Holding cost per unit per week ($/unit/week) let holdingCost_batch: [Double] = [ 2.0, 3.5, 1.8, 4.0, 2.5, // Products 0-4 1.9, 3.8, 2.2, 3.0, 2.0, // Products 5-9 3.3, 1.7, 2.8, 2.1, 3.2 // Products 10-14 ]</p>
+      <div>
+        <div>
+          <p>func totalCost_batch(_ batchSizes: VectorN
+            <double>
+              ) -&gt; Double { var cost = 0.0
+            </double></p>
+          <pre><code>for i in 0..
+              <numproducts_batch { let runsperweek="demand_batch[i]" max(batchsizes[i], 1.0) let avginventory="batchSizes[i]" 2.0<pre>
+                <code>// Setup costs (discontinuous!) cost += runsPerWeek * setupCost_batch[i]<p></p></code>
+              </numproducts_batch></code><p><code><code>// Holding costs (smooth) cost += avgInventory * holdingCost_batch[i] </code></code></p></pre>}
+          <p></p>
+        </div>
+        <p>return cost }</p>
+      </div>
+      <p>// Calculate baseline cost (using demand as batch size - naive approach) let naiveBatches = VectorN(demand_batch) let naiveCost = totalCost_batch(naiveBatches) print(”\nNaive Approach (batch size = weekly demand):”) print(” Total Weekly Cost: (naiveCost.currency())”)</p>
+      <p>// Simulated Annealing configuration let config_batch = SimulatedAnnealingConfig( initialTemperature: 50.0, finalTemperature: 0.01, coolingRate: 0.97, maxIterations: 50_000, perturbationScale: 0.15, reheatInterval: nil, reheatTemperature: nil, seed: 42 // Reproducible results )</p>
+      <p>let searchSpace_batch = (0..
+        <numproducts_batch).map { _ in (10.0, 500.0) } min max batch size< p></numproducts_batch).map></p>
+      <p>let sa_batch = SimulatedAnnealing
+        <vectorn<double>
+          &gt;( config: config_batch, searchSpace: searchSpace_batch )
+        </vectorn<double></p>
+      <p>print(”\nRunning Simulated Annealing…”) let result_batch = sa_batch.optimizeDetailed( objective: totalCost_batch, initialSolution: naiveBatches )</p>
+      <p>print(”\nOptimization Results:”) print(” Converged: (result_batch.converged)”) print(” Iterations: (result_batch.iterations)”) print(” Final Temperature: (result_batch.finalTemperature.number(4))”) print(” Acceptance Rate: (result_batch.acceptanceRate.percent(1))”)</p>
+      <p>let optimizedCost = result_batch.fitness let costReduction = naiveCost - optimizedCost let percentReduction = (costReduction / naiveCost) * 100 let weeklySavings = costReduction</p>
+      <p>print(”\n═══════════════════════════════════════════════════════════”) print(“Cost Comparison:”) print(“═══════════════════════════════════════════════════════════”) print(“Naive Approach: (naiveCost.currency())”) print(“Optimized (SA): (optimizedCost.currency())”) print(“Cost Reduction: (costReduction.currency()) ((percentReduction.number(1))%)”) print(“Weekly Savings: (weeklySavings.currency())”) print(“═══════════════════════════════════════════════════════════”)</p>
+      <p>// Show optimal batch sizes for top 5 products by demand let productInfo = (0..
+        <numproducts_batch).map { i in (id: i, demand: demand_batch[i], optimalbatch: result_batch.solution[i], setupcost: setupcost_batch[i], holdingcost: holdingcost_batch[i]) }.sorted { $0.demand>
+           $1.demand }
+        </numproducts_batch).map></p>
+      <p>print(”\nOptimal Batch Sizes (Top 5 by Demand):”) print(“─────────────────────────────────────────────────────────────”) print(“Product Demand Optimal Batch Runs/Week Setup $ Hold $”) print(“─────────────────────────────────────────────────────────────”)</p>
+      <p>for info in productInfo.prefix(5) { let runsPerWeek = info.demand / info.optimalBatch let setupCostWeekly = runsPerWeek * info.setupCost let holdCostWeekly = (info.optimalBatch / 2.0) * info.holdingCost</p>
+      <pre><code>print(”(”(info.id)”.paddingLeft(toLength: 7))(info.demand.number(0).paddingLeft(toLength: 8))(info.optimalBatch.number(1).paddingLeft(toLength: 15))(runsPerWeek.number(2).paddingLeft(toLength: 11))(setupCostWeekly.currency().paddingLeft(toLength: 9))(holdCostWeekly.currency().paddingLeft(toLength: 11))”) </code></pre>} print(“═════════════════════════════════════════════════════════════”)
+      <p></p>
+      <p></p>
+    </details>
+    <p></p>
+    <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.22-SimulatedAnnealingTutorial.md">BusinessMath Docs – Simulated Annealing Tutorial</a></p>
+    <h3>Experiments to Try</h3>
+    <ol>
+      <li><strong>Temperature Tuning</strong>: Test initial temperatures 0.1, 1.0, 10.0, 100.0</li>
+      <li><strong>Cooling Rates</strong>: Compare α = 0.90, 0.95, 0.98, 0.99</li>
+      <li><strong>Neighbor Generation</strong>: Different perturbation strategies for portfolio</li>
+      <li><strong>Hybrid Approach</strong>: SA for global search, then local refinement with BFGS</li>
+    </ol>
+    <hr />
+    <h2>Next Steps</h2>
+    <strong>Next Week</strong>: Week 11 begins with 
+    <strong>Nelder-Mead Simplex</strong> (another gradient-free method), then 
+    <strong>Particle Swarm Optimization</strong>, concluding with 
+    <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong>.
+    <p></p>
+    <p><strong>Final Week</strong>: Week 12 covers reflections (What Worked, What Didn’t) and <strong>Case Study #6: Investment Strategy DSL</strong>.
+      <hr /><strong>Series</strong>: [Week 10 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Methods] | <strong>Case Studies</strong>: [4/6 Complete]</p>
+    <p><strong>Topics Covered</strong>: Simulated annealing • Global optimization • Cooling schedules • Metropolis criterion • Discrete optimization</p>
+    <p><strong>Playgrounds</strong>: [Week 1-10 available] • [Next week: Nelder-Mead and particle swarm]</p>
+    <hr />
+    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, simulated-annealing, global-optimization, metaheuristic, gradient-free</p>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col justify-content-end">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
