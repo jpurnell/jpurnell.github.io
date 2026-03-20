@@ -7,7 +7,7 @@ post: 3
 playground: CaseStudies/RealTimeRebalancing.playground
 tags: businessmath, swift, case-study, async-await, real-time, portfolio-rebalancing, streaming, concurrency, actors
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Case Study: Real-Time Portfolio Rebalancing with Async Optimization
