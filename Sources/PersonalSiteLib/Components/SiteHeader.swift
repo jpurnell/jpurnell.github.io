@@ -13,7 +13,7 @@ public struct SiteHeader: HTML {
             Link("BusinessMath", target: BusinessMath())
             Link("NeXT", target: NeXT())
         })
-        .navigationItemAlignment(.trailing)
+        .navigationItemAlignment(.leading)
         .navigationBarStyle(.automatic)
         .style(.borderBottom, "0.01em solid #d5d5d5")
         .class("noPrint")

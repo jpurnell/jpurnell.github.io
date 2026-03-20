@@ -20,40 +20,32 @@ public struct BusinessMath: StaticPage {
 
         // Filter controls section
         Section {
-            Group {
-                generateTagDropdown()
-                generateSortButton()
-                generateResetButton()
-            }
-            .class("filter-controls")
-            .style(.marginBottom, "2rem")
-            .style(.display, "flex")
-            .style(.gap, "1rem")
-            .style(.alignItems, "center")
-            .style(.flexWrap, "wrap")
+            generateTagDropdown()
+            generateSortButton()
+            generateResetButton()
         }
+        .class("filter-controls")
+        .style(.marginBottom, "2rem")
+        .style(.display, "flex")
+        .style(.gap, "1rem")
+        .style(.alignItems, "center")
+        .style(.flexWrap, "wrap")
 
         // Main content area with sidebar layout
         Section {
-            Group {
-                // Left sidebar - Month navigation
-                Group {
-                    generateMonthSidebar()
-                }
-                .width(3)
-                .class("col-md-3")
-                .id("month-sidebar")
-
-                // Main content - Blog posts list
-                Group {
-                    generateBlogPostsList()
-                }
-                .width(9)
-                .class("col-md-9")
-                .id("blog-posts-list")
+            Section {
+                generateMonthSidebar()
             }
-            .class("row")
+            .class("col-md-3")
+            .id("month-sidebar")
+
+            Section {
+                generateBlogPostsList()
+            }
+            .class("col-md-9")
+            .id("blog-posts-list")
         }
+        .class("row")
 
         // Include the blog filtering JavaScript
         Script(file: "/js/blog-filter.js")
@@ -158,38 +150,34 @@ public struct BusinessMath: StaticPage {
         let blogPosts = getBlogPosts()
             .sorted(by: { $0.date < $1.date })
 
-        Group {
-            for post in blogPosts {
-                Group {
-                    Text {
-                        Link(post.metadata["title"] as? String ?? post.title, target: post.path)
-                    }
-                    .font(.title4)
-                    .fontWeight(.semibold)
-                    .style(.marginBottom, "0.5rem")
-
-                    Group {
-                        Text(formatPostDate(post.date))
-                            .class("text-muted")
-                            .style(.fontSize, "0.9rem")
-
-                        Group {
-                            Text("\(post.estimatedReadingMinutes) min read")
-                                .class("text-muted")
-                                .style(.fontSize, "0.85rem")
-                                .style(.marginTop, "0.5rem")
-                        }
-                    }
-                    .style(.marginBottom, "0.5rem")
+        for post in blogPosts {
+            Section {
+                Text {
+                    Link(post.metadata["title"] as? String ?? post.title, target: post.path)
                 }
-                .class("blog-post-item")
-                .data("date", formatDateForAttribute(post.date))
-                .data("tags", (post.tags ?? []).joined(separator: ","))
-                .data("month", extractYearMonthFromDate(post.date))
-                .style(.marginBottom, "1.5rem")
-                .style(.paddingBottom, "1rem")
-                .style(.borderBottom, "1px solid #dee2e6")
+                .font(.title4)
+                .fontWeight(.semibold)
+                .style(.marginBottom, "0.5rem")
+
+                Section {
+                    Text(formatPostDate(post.date))
+                        .class("text-muted")
+                        .style(.fontSize, "0.9rem")
+
+                    Text("\(post.estimatedReadingMinutes) min read")
+                        .class("text-muted")
+                        .style(.fontSize, "0.85rem")
+                        .style(.marginTop, "0.5rem")
+                }
+                .style(.marginBottom, "0.5rem")
             }
+            .class("blog-post-item")
+            .data("date", formatDateForAttribute(post.date))
+            .data("tags", (post.tags ?? []).joined(separator: ","))
+            .data("month", extractYearMonthFromDate(post.date))
+            .style(.marginBottom, "1.5rem")
+            .style(.paddingBottom, "1rem")
+            .style(.borderBottom, "1px solid #dee2e6")
         }
     }
 
@@ -209,7 +197,7 @@ public struct BusinessMath: StaticPage {
         let sortedMonths = monthGroups.keys.sorted(by: >)
 
         if monthGroups.count > 1 {
-            Group {
+            Section {
                 Text("Archive")
                     .font(.title5)
                     .fontWeight(.bold)

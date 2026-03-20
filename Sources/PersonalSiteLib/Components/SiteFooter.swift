@@ -11,7 +11,7 @@ public struct SiteFooter: HTML {
                 Link(link.title, target: link.url)
             }
         })
-        .navigationItemAlignment(.trailing)
+        .navigationItemAlignment(.leading)
         .navigationBarStyle(.automatic)
         .class("noPrint")
         .id("site-footer")
