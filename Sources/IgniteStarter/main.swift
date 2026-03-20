@@ -3,10 +3,10 @@ import Ignite
 import PersonalSiteLib
 
 /// Entry point that builds the site and runs post-build scripts.
-@main
+
 struct IgniteWebsite {
     static func main() async {
-        var site = PersonalSite()
+		var site = await PersonalSite()
 
         do {
             try await site.publish(buildDirectoryPath: "docs")
