@@ -6,7 +6,7 @@ week: 3
 post: 1
 docc_source: "3.1-GrowthModeling.md"
 playground: "Week03/GrowthModeling.playground"
-tags: businessmath, swift, growth, forecasting, cagr, trends, seasonality
+tags: forecasting
 layout: BlogPostLayout
 published: true
 ---

@@ -6,7 +6,7 @@ week: 7
 post: 1
 docc_source: "5.1-OptimizationGuide.md"
 playground: "Week07/Optimization.playground"
-tags: businessmath, swift, optimization, goal-seek, gradient-descent, bfgs, newton-raphson
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

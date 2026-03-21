@@ -6,7 +6,7 @@ week: 5
 post: 2
 docc_source: "3.8-InvestmentAnalysis.md"
 playground: "Week05/InvestmentAnalysis.playground"
-tags: businessmath, swift, npv, irr, investment-analysis, profitability-index, payback
+tags: investment-analysis
 layout: BlogPostLayout
 published: true
 ---

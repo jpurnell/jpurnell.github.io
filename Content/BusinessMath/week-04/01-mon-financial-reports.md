@@ -6,7 +6,7 @@ week: 4
 post: 1
 docc_source: "3.4-BuildingFinancialReports.md"
 playground: "Week04/FinancialReports.playground"
-tags: businessmath, swift, financial-reports, financial-statements, metrics
+tags: financial-analysis
 layout: BlogPostLayout
 published: true
 ---

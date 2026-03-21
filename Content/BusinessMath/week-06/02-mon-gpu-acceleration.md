@@ -6,7 +6,7 @@ week: 6
 post: 2
 docc_source: "4.2-MonteCarloGPUAcceleration.md"
 playground: "Week06/GPU-MonteCarlo.playground"
-tags: businessmath, swift, monte-carlo, gpu, metal, performance, expression-model, optimization
+tags: risk-and-simulation, performance
 layout: BlogPostLayout
 published: true
 ---

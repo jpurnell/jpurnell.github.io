@@ -7,7 +7,7 @@ week: 2
 post: 1
 docc_source: "2.1-DataTableAnalysis.md"
 playground: "Week02/DataTables.playground"
-tags: businessmath, swift, data-tables, sensitivity-analysis, what-if
+tags: fundamentals, forecasting
 published: true
 ---
 

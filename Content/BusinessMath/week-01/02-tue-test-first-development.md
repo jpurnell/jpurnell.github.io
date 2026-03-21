@@ -7,7 +7,7 @@ week: 1
 post: 2
 journey_source: "Week 3 from BusinessMath_Blog.md"
 category: "methodology"
-tags: ai-collaboration, tdd, testing, red-green-refactor, development journey
+tags: development-process
 published: true
 ---
 

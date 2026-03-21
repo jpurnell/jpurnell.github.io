@@ -6,7 +6,7 @@ week: 9
 post: 2
 docc_source: 5.8-IntegerProgramming.md
 playground: Week09/Integer-Programming.playground
-tags: businessmath, swift, optimization, integer-programming, branch-and-bound, discrete-optimization, scheduling
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

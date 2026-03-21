@@ -6,7 +6,7 @@ week: 6
 post: 1
 docc_source: "4.1-MonteCarloTimeSeriesGuide.md"
 playground: "Week06/MonteCarlo.playground"
-tags: businessmath, swift, monte-carlo, simulation, forecasting, uncertainty, risk-analysis
+tags: risk-and-simulation
 layout: BlogPostLayout
 published: true
 ---

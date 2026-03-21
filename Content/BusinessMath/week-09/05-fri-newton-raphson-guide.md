@@ -6,7 +6,7 @@ week: 9
 post: 5
 docc_source: 5.11-NewtonRaphsonGuide.md
 playground: Week09/05-fri-newton-raphson-guide.playground
-tags: businessmath, swift, optimization, newton-raphson, numerical-methods, algorithm-selection, numerical-stability
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

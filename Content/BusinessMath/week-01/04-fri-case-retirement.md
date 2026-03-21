@@ -8,7 +8,7 @@ case_study: 1
 topics_combined: ["TVM", "Time Series", "Distributions"]
 docc_tutorials: ["1.2-TimeSeries.md", "1.3-TimeValueOfMoney.md"]
 playground: "CaseStudies/RetirementPlanning.playground"
-tags: businessmath, swift, case-study, retirement, tvm, statistics
+tags: case-study, fundamentals
 published: true
 ---
 

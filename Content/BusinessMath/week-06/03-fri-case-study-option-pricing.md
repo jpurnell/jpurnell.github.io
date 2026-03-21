@@ -6,7 +6,7 @@ week: 6
 post: 3
 case_study: 3
 playground: "CaseStudies/OptionPricing.playground"
-tags: businessmath, swift, monte-carlo, options, derivatives, black-scholes, convergence, case-study
+tags: case-study, risk-and-simulation
 layout: BlogPostLayout
 published: true
 ---

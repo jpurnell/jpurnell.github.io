@@ -6,7 +6,7 @@ week: 7
 post: 4
 docc_source: "5.4-VectorOperations.md"
 playground: "Week07/Optimization.playground"
-tags: businessmath, swift, vectors, vectorspace, linear-algebra, protocols, generics
+tags: swift-patterns
 layout: BlogPostLayout
 published: true
 ---

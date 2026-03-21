@@ -7,7 +7,7 @@ week: 1
 post: 1
 docc_source: ""
 playground: ""
-tags: businessmath, swift, introduction
+tags: fundamentals
 published: true
 ---
 

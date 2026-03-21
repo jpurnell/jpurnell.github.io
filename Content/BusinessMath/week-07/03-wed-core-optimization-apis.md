@@ -6,7 +6,7 @@ week: 7
 post: 3
 docc_source: "5.3-CoreOptimization.md"
 playground: "Week07/Optimization.playground"
-tags: businessmath, swift, goal-seeking, root-finding, irr, breakeven, error-handling
+tags: optimization, swift-patterns
 layout: BlogPostLayout
 published: true
 ---

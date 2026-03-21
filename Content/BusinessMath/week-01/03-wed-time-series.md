@@ -7,7 +7,7 @@ week: 1
 post: 3
 docc_source: "1.2-TimeSeries.md"
 playground: "Week01/TimeSeries.playground"
-tags: businessmath, swift, time-series, periods, temporal-data
+tags: fundamentals
 published: true
 ---
 

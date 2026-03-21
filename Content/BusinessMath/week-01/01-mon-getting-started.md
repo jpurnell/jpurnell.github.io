@@ -7,7 +7,7 @@ week: 1
 post: 1
 docc_source: "1.1-GettingStarted.md"
 playground: "Week01/GettingStarted.playground"
-tags: businessmath, swift, getting-started, tvm, time-series
+tags: fundamentals
 published: true
 ---
 

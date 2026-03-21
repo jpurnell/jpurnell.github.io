@@ -6,7 +6,7 @@ week: 4
 post: 2
 docc_source: "3.5-FinancialStatementsGuide.md"
 playground: "Week04/FinancialStatements.playground"
-tags: businessmath, swift, income-statement, balance-sheet, cash-flow, financial-modeling
+tags: financial-analysis
 layout: BlogPostLayout
 published: true
 ---

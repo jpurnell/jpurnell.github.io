@@ -5,7 +5,7 @@ series: BusinessMath Quarterly Series
 week: 12
 post: 4
 playground: CaseStudies/InvestmentStrategyDSL.playground
-tags: businessmath, swift, case-study, result-builders, dsl, investment-strategy, type-safety, declarative
+tags: case-study, swift-patterns
 layout: BlogPostLayout
 published: false
 ---

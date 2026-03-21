@@ -6,7 +6,7 @@ week: 8
 post: 2
 docc_source: "5.6-ConstrainedOptimization.md"
 playground: "Week08/Advanced-Optimization.playground"
-tags: businessmath, swift, constrained-optimization, lagrange-multipliers, shadow-prices, augmented-lagrangian
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

@@ -6,7 +6,7 @@ week: 5
 post: 3
 docc_source: "3.9-EquityValuationGuide.md"
 playground: "Week05/EquityValuation.playground"
-tags: businessmath, swift, equity-valuation, ddm, fcfe, residual-income, stock-valuation
+tags: valuation
 layout: BlogPostLayout
 published: true
 ---

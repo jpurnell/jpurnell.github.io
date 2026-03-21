@@ -6,7 +6,7 @@ week: 3
 post: 2
 journey_source: "Week 5 from BusinessMath_Blog.md"
 category: "methodology"
-tags: ai-collaboration, project-management, planning, organization, development journey
+tags: development-process
 layout: BlogPostLayout
 published: true
 ---

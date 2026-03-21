@@ -6,7 +6,7 @@ week: 11
 post: 2
 docc_source: 5.19-ParticleSwarmOptimizationTutorial.md
 playground: Week11/Particle-Swarm.playground
-tags: businessmath, swift, optimization, particle-swarm, pso, swarm-intelligence, global-optimization, metaheuristic
+tags: metaheuristics
 layout: BlogPostLayout
 published: true
 ---

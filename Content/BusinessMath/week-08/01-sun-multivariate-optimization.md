@@ -6,7 +6,7 @@ week: 8
 post: 1
 docc_source: "5.5-MultivariateOptimization.md"
 playground: "Week08/Advanced-Optimization.playground"
-tags: businessmath, swift, optimization, gradient-descent, bfgs, newton-raphson, numerical-methods
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

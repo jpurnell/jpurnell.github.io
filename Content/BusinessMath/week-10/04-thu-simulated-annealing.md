@@ -6,7 +6,7 @@ week: 10
 post: 4
 docc_source: 5.22-SimulatedAnnealingTutorial.md
 playground: Week10/Simulated-Annealing.playground
-tags: businessmath, swift, optimization, simulated-annealing, global-optimization, metaheuristic, gradient-free
+tags: metaheuristics
 layout: BlogPostLayout
 published: true
 ---

@@ -6,7 +6,7 @@ week: 5
 post: 1
 docc_source: "3.7-LoanAmortization.md"
 playground: "Week05/LoanAmortization.playground"
-tags: businessmath, swift, loans, mortgages, amortization, payments
+tags: investment-analysis
 layout: BlogPostLayout
 published: true
 ---

@@ -5,7 +5,7 @@ series: BusinessMath Quarterly Series
 week: 11
 post: 3
 playground: CaseStudies/RealTimeRebalancing.playground
-tags: businessmath, swift, case-study, async-await, real-time, portfolio-rebalancing, streaming, concurrency, actors
+tags: case-study, concurrency, portfolio
 layout: BlogPostLayout
 published: true
 ---

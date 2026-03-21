@@ -6,7 +6,7 @@ week: 9
 post: 4
 docc_source: 5.10-ParallelOptimization.md
 playground: Week09/04-thu-parallel-optimization.playground
-tags: businessmath, swift, optimization, parallel-computing, concurrency, multi-start, global-optimization
+tags: optimization, concurrency
 layout: BlogPostLayout
 published: true
 ---

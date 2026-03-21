@@ -6,7 +6,7 @@ week: 10
 post: 1
 docc_source: 5.11-PerformanceBenchmarking.md
 playground: Week10/Performance-Benchmarking.playground
-tags: businessmath, swift, optimization, benchmarking, performance, profiling, monte-carlo, gpu-acceleration
+tags: performance, optimization
 layout: BlogPostLayout
 published: true
 ---

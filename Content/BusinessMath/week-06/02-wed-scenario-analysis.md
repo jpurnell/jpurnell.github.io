@@ -6,7 +6,7 @@ week: 6
 post: 2
 docc_source: "4.2-ScenarioAnalysisGuide.md"
 playground: "Week06/ScenarioAnalysis.playground"
-tags: businessmath, swift, scenarios, sensitivity-analysis, tornado-diagrams, what-if-analysis
+tags: forecasting
 layout: BlogPostLayout
 published: true
 ---

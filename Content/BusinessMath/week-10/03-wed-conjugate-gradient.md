@@ -6,7 +6,7 @@ week: 10
 post: 3
 docc_source: 5.21-ConjugateGradientTutorial.md
 playground: Week10/Conjugate-Gradient.playground
-tags: businessmath, swift, optimization, conjugate-gradient, gradient-descent, fletcher-reeves, polak-ribiere
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

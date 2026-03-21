@@ -6,7 +6,7 @@ week: 10
 post: 2
 docc_source: 5.20-LBFGSOptimizationTutorial.md
 playground: Week10/LBFGS-Optimization.playground
-tags: businessmath, swift, optimization, lbfgs, large-scale, memory-efficient, quasi-newton
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

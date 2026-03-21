@@ -6,7 +6,7 @@ week: 3
 post: 3
 docc_source: "3.3-BuildingRevenueModel.md"
 playground: "Week03/RevenueModel.playground"
-tags: businessmath, swift, revenue, forecasting, time-series, seasonality
+tags: forecasting
 layout: BlogPostLayout
 published: true
 ---

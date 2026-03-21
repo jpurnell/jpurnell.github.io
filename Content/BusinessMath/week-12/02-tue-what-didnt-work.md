@@ -4,7 +4,7 @@ date: 2026-03-25 13:00
 series: BusinessMath Quarterly Series
 week: 12
 post: 2
-tags: businessmath, swift, lessons-learned, failures, mistakes, retrospective, honest-assessment
+tags: development-process
 layout: BlogPostLayout
 published: false
 ---

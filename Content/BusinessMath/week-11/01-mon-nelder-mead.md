@@ -6,7 +6,7 @@ week: 11
 post: 1
 docc_source: 5.23-NelderMeadTutorial.md
 playground: Week11/Nelder-Mead.playground
-tags: businessmath, swift, optimization, nelder-mead, simplex, gradient-free, derivative-free, robust-optimization
+tags: metaheuristics
 layout: BlogPostLayout
 published: true
 ---

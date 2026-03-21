@@ -7,7 +7,7 @@ week: 2
 post: 3
 docc_source: "2.2-FinancialRatiosGuide.md"
 playground: "Week02/FinancialRatios.playground"
-tags: businessmath, swift, financial-ratios, profitability, liquidity, solvency
+tags: financial-analysis
 published: true
 ---
 

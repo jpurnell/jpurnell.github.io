@@ -6,7 +6,7 @@ week: 7
 post: 2
 docc_source: "5.2-PortfolioOptimizationGuide.md"
 playground: "Week07/Optimization.playground"
-tags: businessmath, swift, portfolio, optimization, modern-portfolio-theory, sharpe-ratio, efficient-frontier
+tags: portfolio, optimization
 layout: BlogPostLayout
 published: true
 ---

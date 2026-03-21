@@ -7,7 +7,7 @@ post: 3
 case_study: 4
 milestone: "midpoint"
 playground: "CaseStudies/PortfolioOptimization.playground"
-tags: businessmath, swift, portfolio, optimization, monte-carlo, sharpe-ratio, efficient-frontier, case-study
+tags: case-study, portfolio, optimization
 layout: BlogPostLayout
 published: false
 ---

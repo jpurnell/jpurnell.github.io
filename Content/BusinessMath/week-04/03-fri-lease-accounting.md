@@ -6,7 +6,7 @@ week: 4
 post: 3
 docc_source: "3.6-LeaseAccountingGuide.md"
 playground: "Week04/LeaseAccounting.playground"
-tags: businessmath, swift, leases, ifrs16, asc842, accounting, right-of-use-assets
+tags: financial-analysis
 layout: BlogPostLayout
 published: true
 ---

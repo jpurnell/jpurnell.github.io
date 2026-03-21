@@ -7,7 +7,7 @@ week: 2
 post: 4
 docc_source: "2.3-RiskAnalyticsGuide.md"
 playground: "Week02/RiskAnalytics.playground"
-tags: businessmath, swift, risk, var, stress-testing, portfolio
+tags: risk-and-simulation, portfolio
 published: true
 ---
 

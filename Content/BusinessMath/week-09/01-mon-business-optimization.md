@@ -6,7 +6,7 @@ week: 9
 post: 1
 docc_source: 5.7-BusinessOptimization.md
 playground: Week09/Business-Optimization.playground
-tags: businessmath, swift, optimization, business-problems, resource-allocation, scheduling, cost-minimization
+tags: optimization
 layout: BlogPostLayout
 published: true
 ---

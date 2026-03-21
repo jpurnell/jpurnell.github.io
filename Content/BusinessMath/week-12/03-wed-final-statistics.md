@@ -4,7 +4,7 @@ date: 2026-03-26 13:00
 series: BusinessMath Quarterly Series
 week: 12
 post: 3
-tags: businessmath, swift, statistics, metrics, project-summary, test-coverage, performance, benchmarks
+tags: development-process, performance
 layout: BlogPostLayout
 published: false
 ---

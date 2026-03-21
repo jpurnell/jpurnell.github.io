@@ -4,7 +4,7 @@ date: 2026-03-24 13:00
 series: BusinessMath Quarterly Series
 week: 12
 post: 1
-tags: businessmath, swift, lessons-learned, best-practices, software-engineering, financial-modeling, retrospective
+tags: development-process
 layout: BlogPostLayout
 published: false
 ---

@@ -7,7 +7,7 @@ week: 2
 post: 2
 journey_source: "Week 4 from BusinessMath_Blog.md"
 category: "methodology"
-tags: ai-collaboration, documentation, api-design, docc, development journey
+tags: development-process
 published: true
 ---
 

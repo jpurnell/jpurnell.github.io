@@ -8,7 +8,7 @@ case_study: 2
 topics_combined: "TVM", "Depreciation", "Financial Ratios"
 docc_tutorials: "1.3-TimeValueOfMoney.md", "2.2-FinancialRatiosGuide.md"
 playground: "CaseStudies/CapitalEquipment.playground"
-tags: businessmath, swift, case-study, capital-budgeting, depreciation, npv, roi
+tags: case-study, investment-analysis
 layout: BlogPostLayout
 published: true
 ---

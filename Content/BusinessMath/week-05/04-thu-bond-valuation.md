@@ -6,7 +6,7 @@ week: 5
 post: 4
 docc_source: "3.10-BondValuationGuide.md"
 playground: "Week05/BondValuation.playground"
-tags: businessmath, swift, bonds, fixed-income, credit-risk, duration, convexity, callable-bonds, oas
+tags: valuation
 layout: BlogPostLayout
 published: true
 ---

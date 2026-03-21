@@ -6,7 +6,7 @@ week: 7
 post: 0
 docc_source: ""
 playground: "Week07/Optimization.playground"
-tags: businessmath, swift, regression, multi-linear regression
+tags: forecasting
 layout: BlogPostLayout
 published: true
 ---
