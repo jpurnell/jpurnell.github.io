@@ -25,12 +25,14 @@
     });
 
     function initializeFilters() {
-        // Tag filter dropdown items
-        const tagItems = document.querySelectorAll('.filter-tag');
+        // Tag filter dropdown items (rendered as .dropdown-item inside #tag-dropdown)
+        const dropdown = document.getElementById('tag-dropdown');
+        if (!dropdown) return;
+        const tagItems = dropdown.querySelectorAll('.dropdown-item');
         tagItems.forEach(item => {
             item.addEventListener('click', function(e) {
                 e.preventDefault();
-                const tag = this.dataset.tag;
+                const tag = this.textContent.trim();
                 currentFilter.tag = tag;
                 updateDropdownLabel('tag-dropdown', `Tag: ${tag}`);
                 applyFilters();
