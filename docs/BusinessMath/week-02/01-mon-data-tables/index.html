@@ -162,125 +162,123 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Data Table Analysis for Sensitivity Testing</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Part 5 of 12-Week BusinessMath Series</strong>
-            <hr /></p>
-          <h2>What You’ll Learn</h2>
-          <ul>
-            <li>How to perform Excel-like sensitivity analysis with data tables</li>
-            <li>Creating one-variable tables to test single assumptions</li>
-            <li>Building two-variable matrices for scenario planning</li>
-            <li>Applying data tables to loans, investments, and pricing decisions</li>
-            <li>Exporting results for further analysis</li>
-          </ul>
-          <hr />
-          <h2>The Problem</h2>Business decisions often require assumptions about the future. 
-          <strong>What if the interest rate rises? What if our sales volume drops? What price maximizes profit?</strong>
-          <p></p>
-          <p>Excel’s “What-If Analysis” tools answer these questions by systematically varying inputs and calculating outputs. But building these analyses in code often requires writing custom loops, managing nested arrays, and formatting results manually.</p>
-          <p>BusinessMath allows you to explore scenarios programmatically—to test assumptions, find break-even points, and identify optimal strategies—without the complexity of manual iteration.
-            <hr /></p>
-          <h2>The Solution</h2>BusinessMath provides 
-          <strong>Data Tables</strong> that work just like Excel’s sensitivity analysis tools, but with Swift’s type safety and composability.
-          <h3>One-Variable Analysis: Loan Payment Sensitivity</h3>How much will monthly payments change if interest rates rise?
-          <pre><code class="language-swift">import BusinessMath // Loan parameters let principal = 300_000.0 let loanTerm = 360  // 30 years monthly<p></p><p>// Test different interest rates let rates = Array(stride(from: 0.03, through: 0.07, by: 0.005))</p><p>// Create data table let paymentTable = DataTable
-                <double, double>
-                  .oneVariable( inputs: rates, calculate: { annualRate in let monthlyRate = annualRate / 12.0 return payment( presentValue: principal, rate: monthlyRate, periods: loanTerm, futureValue: 0, type: .ordinary ) } )
-                </double,></p><p>print(“Mortgage Payment Sensitivity Analysis”) print(”======================================”) print(“Loan Amount: (principal.currency())”) print(“Term: 30 years\n”)</p><p>for (rate, monthlyPayment) in paymentTable { let totalPaid = monthlyPayment * Double(loanTerm) let totalInterest = totalPaid - principal</p><pre><code>print(”(round(rate * 1000)/10)%\t\t(monthlyPayment.currency())\t\t(totalInterest.currency())”) </code></pre>Loan Amount: $300,000.00 Term: 30 years<p></p></code><p><code class="language-swift">3.0% $1,264.81 $155,332.36 3.5% $1,347.13 $184,968.26 4.0% $1,432.25 $215,608.52 4.5% $1,520.06 $247,220.13 5.0% $1,610.46 $279,767.35 5.5% $1,703.37 $313,212.12 6.0% $1,798.65 $347,514.57 6.5% $1,896.20 $382,633.47 7.0% $1,995.91 $418,526.69 </code></p></pre>
-          <strong>The insight</strong>: A 1% rate increase (4% → 5%) adds $178/month and $64,000 in total interest over 30 years!
-          <hr />
-          <h3>Break-Even Analysis</h3>At what sales volume does a business become profitable?
-          <pre><code class="language-swift">// Business parameters let fixedCosts = 50_000.0 let variableCostPerUnit = 15.0 let pricePerUnit = 25.0<p></p><p>// Test different sales volumes let volumes = Array(stride(from: 1000.0, through: 10000.0, by: 1000.0))</p><p>let profitTable = DataTable
-                <double, double>
-                  .oneVariable( inputs: volumes, calculate: { volume in let revenue = pricePerUnit * volume let totalCosts = fixedCosts + (variableCostPerUnit * volume) return revenue - totalCosts } )
-                </double,></p><p>print(”\nBreak-Even Analysis”) print(“Fixed Costs: (fixedCosts.currency())”) print(“Contribution Margin: ((pricePerUnit - variableCostPerUnit).currency())/unit\n”)</p><p>for (volume, profit) in profitTable { let status = profit &gt;= 0 ? “✓” : “✗” print(”(volume.number()) units\t(profit.currency()) (status)”) }</p></code><p><code class="language-swift">// Calculate exact break-even let breakEvenVolume = fixedCosts / (pricePerUnit - variableCostPerUnit) print(”\nBreak-Even Volume: (breakEvenVolume.number()) units”) </code></p></pre>
-          <strong>Output:</strong>
-          <pre><code>Break-Even Analysis Fixed Costs: $50,000.00 Contribution Margin: $10.00/unit<p></p><p>1,000 units ($40,000.00) ✗ 2,000 units ($30,000.00) ✗ 3,000 units ($20,000.00) ✗ 4,000 units ($10,000.00) ✗ 5,000 units $0.00 ✓ 6,000 units $10,000.00 ✓ 7,000 units $20,000.00 ✓ 8,000 units $30,000.00 ✓ 9,000 units $40,000.00 ✓ 10,000 units $50,000.00 ✓</p></code><p><code>Break-Even Volume: 5,000 units </code></p></pre>
-          <hr />
-          <h3>Two-Variable Analysis: Pricing Strategy Matrix</h3>What price and volume combination maximizes profit?
-          <pre><code class="language-swift">// Fixed business parameters let monthlyFixedCosts = 100_000.0 let variableCostPerUnit = 30.0<p></p><p>// Scenarios to test let pricePoints = [40.0, 45.0, 50.0, 55.0, 60.0] let volumeScenarios = [2000.0, 2500.0, 3000.0, 3500.0, 4000.0]</p><p>// Create two-variable profit matrix let profitMatrix = DataTable
-                <double, double>
-                  .twoVariable( rowInputs: pricePoints, columnInputs: volumeScenarios, calculate: { price, volume in let revenue = price * volume let totalCosts = monthlyFixedCosts + (variableCostPerUnit * volume) return revenue - totalCosts } )
-                </double,></p><p>// Print formatted results print(”\nPricing Strategy Matrix (Monthly Profit)”)</p><p>// Option 1: Use built-in formatter (simpler, basic formatting) // let formatted = DataTable.formatTwoVariable( // profitMatrix, // rowInputs: pricePoints, // columnInputs: volumeScenarios // ) // print(formatted)</p><p>// Option 2: Custom formatting with currency (shown below) var header = “Price “ for volume in volumeScenarios { header += “(Int(volume))”.paddingLeft(toLength: 14) } print(header) print(String(repeating: “=”, count: 70))</p><p>for (rowIndex, price) in pricePoints.enumerated() { var rowString = “(price.currency()) “ for colIndex in 0..
-                <volumescenarios.count { let profit="profitMatrix[rowIndex][colIndex]" rowstring +="“(profit.currency())" “ } print(rowstring) }< p></volumescenarios.count></p><p>// Find optimal combination var maxProfit = -Double.infinity var optimalPrice = 0.0 var optimalVolume = 0.0</p><p>for (rowIndex, price) in pricePoints.enumerated() { for (colIndex, volume) in volumeScenarios.enumerated() { let profit = profitMatrix[rowIndex][colIndex] if profit &gt; maxProfit { maxProfit = profit optimalPrice = price optimalVolume = volume } } }</p></code><h1><code class="language-swift">print(”\nOptimal Strategy:”) print(“Price: (optimalPrice.currency()), Volume: (optimalVolume.number(0)) units”) print(“Maximum Monthly Profit: (maxProfit.currency())”) </code></h1></pre>
-          <strong>Output:</strong>
-          <pre><code>Pricing Strategy Matrix (Monthly Profit) Price             2000        2500        3000        3500        4000$40          ($80,000)   ($75,000)   ($70,000)   ($65,000)   ($60,000) $45          ($70,000)   ($62,500)   ($55,000)   ($47,500)   ($40,000) $50          ($60,000)   ($50,000)   ($40,000)   ($30,000)   ($20,000) $55          ($50,000)   ($37,500)   ($25,000)   ($12,500)          $0 $60          ($40,000)   ($25,000)   ($10,000)      $5,000     $20,000<p></p></code><p><code>Optimal Strategy: Price: $60.00, Volume: 4,000 units Maximum Monthly Profit: $20,000.00 </code></p></pre>
-          <strong>The insight</strong>: Higher prices with higher volumes yield maximum profit, but you need to validate whether demand supports both.
-          <hr />
-          <h2>How It Works</h2>
-          <h3>Type-Safe Generic Tables</h3>Data tables are generic over both input and output types:
-          <pre><code class="language-swift">public struct DataTable
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Data Table Analysis for Sensitivity Testing</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 5 of 12-Week BusinessMath Series</strong>
+          <hr /></p>
+        <h2>What You’ll Learn</h2>
+        <ul>
+          <li>How to perform Excel-like sensitivity analysis with data tables</li>
+          <li>Creating one-variable tables to test single assumptions</li>
+          <li>Building two-variable matrices for scenario planning</li>
+          <li>Applying data tables to loans, investments, and pricing decisions</li>
+          <li>Exporting results for further analysis</li>
+        </ul>
+        <hr />
+        <h2>The Problem</h2>Business decisions often require assumptions about the future. 
+        <strong>What if the interest rate rises? What if our sales volume drops? What price maximizes profit?</strong>
+        <p></p>
+        <p>Excel’s “What-If Analysis” tools answer these questions by systematically varying inputs and calculating outputs. But building these analyses in code often requires writing custom loops, managing nested arrays, and formatting results manually.</p>
+        <p>BusinessMath allows you to explore scenarios programmatically—to test assumptions, find break-even points, and identify optimal strategies—without the complexity of manual iteration.
+          <hr /></p>
+        <h2>The Solution</h2>BusinessMath provides 
+        <strong>Data Tables</strong> that work just like Excel’s sensitivity analysis tools, but with Swift’s type safety and composability.
+        <h3>One-Variable Analysis: Loan Payment Sensitivity</h3>How much will monthly payments change if interest rates rise?
+        <pre><code class="language-swift">import BusinessMath // Loan parameters let principal = 300_000.0 let loanTerm = 360  // 30 years monthly<p></p><p>// Test different interest rates let rates = Array(stride(from: 0.03, through: 0.07, by: 0.005))</p><p>// Create data table let paymentTable = DataTable
+              <double, double>
+                .oneVariable( inputs: rates, calculate: { annualRate in let monthlyRate = annualRate / 12.0 return payment( presentValue: principal, rate: monthlyRate, periods: loanTerm, futureValue: 0, type: .ordinary ) } )
+              </double,></p><p>print(“Mortgage Payment Sensitivity Analysis”) print(”======================================”) print(“Loan Amount: (principal.currency())”) print(“Term: 30 years\n”)</p><p>for (rate, monthlyPayment) in paymentTable { let totalPaid = monthlyPayment * Double(loanTerm) let totalInterest = totalPaid - principal</p><pre><code>print(”(round(rate * 1000)/10)%\t\t(monthlyPayment.currency())\t\t(totalInterest.currency())”) </code></pre>Loan Amount: $300,000.00 Term: 30 years<p></p></code><p><code class="language-swift">3.0% $1,264.81 $155,332.36 3.5% $1,347.13 $184,968.26 4.0% $1,432.25 $215,608.52 4.5% $1,520.06 $247,220.13 5.0% $1,610.46 $279,767.35 5.5% $1,703.37 $313,212.12 6.0% $1,798.65 $347,514.57 6.5% $1,896.20 $382,633.47 7.0% $1,995.91 $418,526.69 </code></p></pre>
+        <strong>The insight</strong>: A 1% rate increase (4% → 5%) adds $178/month and $64,000 in total interest over 30 years!
+        <hr />
+        <h3>Break-Even Analysis</h3>At what sales volume does a business become profitable?
+        <pre><code class="language-swift">// Business parameters let fixedCosts = 50_000.0 let variableCostPerUnit = 15.0 let pricePerUnit = 25.0<p></p><p>// Test different sales volumes let volumes = Array(stride(from: 1000.0, through: 10000.0, by: 1000.0))</p><p>let profitTable = DataTable
+              <double, double>
+                .oneVariable( inputs: volumes, calculate: { volume in let revenue = pricePerUnit * volume let totalCosts = fixedCosts + (variableCostPerUnit * volume) return revenue - totalCosts } )
+              </double,></p><p>print(”\nBreak-Even Analysis”) print(“Fixed Costs: (fixedCosts.currency())”) print(“Contribution Margin: ((pricePerUnit - variableCostPerUnit).currency())/unit\n”)</p><p>for (volume, profit) in profitTable { let status = profit &gt;= 0 ? “✓” : “✗” print(”(volume.number()) units\t(profit.currency()) (status)”) }</p></code><p><code class="language-swift">// Calculate exact break-even let breakEvenVolume = fixedCosts / (pricePerUnit - variableCostPerUnit) print(”\nBreak-Even Volume: (breakEvenVolume.number()) units”) </code></p></pre>
+        <strong>Output:</strong>
+        <pre><code>Break-Even Analysis Fixed Costs: $50,000.00 Contribution Margin: $10.00/unit<p></p><p>1,000 units ($40,000.00) ✗ 2,000 units ($30,000.00) ✗ 3,000 units ($20,000.00) ✗ 4,000 units ($10,000.00) ✗ 5,000 units $0.00 ✓ 6,000 units $10,000.00 ✓ 7,000 units $20,000.00 ✓ 8,000 units $30,000.00 ✓ 9,000 units $40,000.00 ✓ 10,000 units $50,000.00 ✓</p></code><p><code>Break-Even Volume: 5,000 units </code></p></pre>
+        <hr />
+        <h3>Two-Variable Analysis: Pricing Strategy Matrix</h3>What price and volume combination maximizes profit?
+        <pre><code class="language-swift">// Fixed business parameters let monthlyFixedCosts = 100_000.0 let variableCostPerUnit = 30.0<p></p><p>// Scenarios to test let pricePoints = [40.0, 45.0, 50.0, 55.0, 60.0] let volumeScenarios = [2000.0, 2500.0, 3000.0, 3500.0, 4000.0]</p><p>// Create two-variable profit matrix let profitMatrix = DataTable
+              <double, double>
+                .twoVariable( rowInputs: pricePoints, columnInputs: volumeScenarios, calculate: { price, volume in let revenue = price * volume let totalCosts = monthlyFixedCosts + (variableCostPerUnit * volume) return revenue - totalCosts } )
+              </double,></p><p>// Print formatted results print(”\nPricing Strategy Matrix (Monthly Profit)”)</p><p>// Option 1: Use built-in formatter (simpler, basic formatting) // let formatted = DataTable.formatTwoVariable( // profitMatrix, // rowInputs: pricePoints, // columnInputs: volumeScenarios // ) // print(formatted)</p><p>// Option 2: Custom formatting with currency (shown below) var header = “Price “ for volume in volumeScenarios { header += “(Int(volume))”.paddingLeft(toLength: 14) } print(header) print(String(repeating: “=”, count: 70))</p><p>for (rowIndex, price) in pricePoints.enumerated() { var rowString = “(price.currency()) “ for colIndex in 0..
+              <volumescenarios.count { let profit="profitMatrix[rowIndex][colIndex]" rowstring +="“(profit.currency())" “ } print(rowstring) }< p></volumescenarios.count></p><p>// Find optimal combination var maxProfit = -Double.infinity var optimalPrice = 0.0 var optimalVolume = 0.0</p><p>for (rowIndex, price) in pricePoints.enumerated() { for (colIndex, volume) in volumeScenarios.enumerated() { let profit = profitMatrix[rowIndex][colIndex] if profit &gt; maxProfit { maxProfit = profit optimalPrice = price optimalVolume = volume } } }</p></code><h1><code class="language-swift">print(”\nOptimal Strategy:”) print(“Price: (optimalPrice.currency()), Volume: (optimalVolume.number(0)) units”) print(“Maximum Monthly Profit: (maxProfit.currency())”) </code></h1></pre>
+        <strong>Output:</strong>
+        <pre><code>Pricing Strategy Matrix (Monthly Profit) Price             2000        2500        3000        3500        4000$40          ($80,000)   ($75,000)   ($70,000)   ($65,000)   ($60,000) $45          ($70,000)   ($62,500)   ($55,000)   ($47,500)   ($40,000) $50          ($60,000)   ($50,000)   ($40,000)   ($30,000)   ($20,000) $55          ($50,000)   ($37,500)   ($25,000)   ($12,500)          $0 $60          ($40,000)   ($25,000)   ($10,000)      $5,000     $20,000<p></p></code><p><code>Optimal Strategy: Price: $60.00, Volume: 4,000 units Maximum Monthly Profit: $20,000.00 </code></p></pre>
+        <strong>The insight</strong>: Higher prices with higher volumes yield maximum profit, but you need to validate whether demand supports both.
+        <hr />
+        <h2>How It Works</h2>
+        <h3>Type-Safe Generic Tables</h3>Data tables are generic over both input and output types:
+        <pre><code class="language-swift">public struct DataTable
+            <input, output>
+               { // One-variable table: [Input] → [Output] static func oneVariable( inputs: [Input], calculate: (Input) -&gt; Output ) -&gt; DataTable
               <input, output>
-                 { // One-variable table: [Input] → [Output] static func oneVariable( inputs: [Input], calculate: (Input) -&gt; Output ) -&gt; DataTable
-                <input, output>
-                  <pre><code>// Two-variable table: [Input₁] × [Input₂] → [[Output]] static func twoVariable( rowInputs: [Input], columnInputs: [Input], calculate: (Input, Input) -&gt; Output ) -&gt; [[Output]] </code></pre>} 
-                </input,>
-              </input,></code></pre>This works with any numeric type (Double, Float) and preserves type information through the calculation.
-          <h3>CSV Export</h3>Export results for spreadsheet analysis:
-          <pre><code class="language-swift">let csv = DataTable.toCSV( paymentTable, inputHeader: “Interest Rate”, outputHeader: “Monthly Payment” )<p></p></code><p><code class="language-swift">// Write to file try csv.write(toFile: “loan_payments.csv”, atomically: true, encoding: .utf8) </code></p></pre>
-          <hr />
-          <h2>Try It Yourself</h2>
-          <details>
-            <summary>Click to expand full playground code</summary>
-            <pre><code class="language-swift">import BusinessMath
+                <pre><code>// Two-variable table: [Input₁] × [Input₂] → [[Output]] static func twoVariable( rowInputs: [Input], columnInputs: [Input], calculate: (Input, Input) -&gt; Output ) -&gt; [[Output]] </code></pre>} 
+              </input,>
+            </input,></code></pre>This works with any numeric type (Double, Float) and preserves type information through the calculation.
+        <h3>CSV Export</h3>Export results for spreadsheet analysis:
+        <pre><code class="language-swift">let csv = DataTable.toCSV( paymentTable, inputHeader: “Interest Rate”, outputHeader: “Monthly Payment” )<p></p></code><p><code class="language-swift">// Write to file try csv.write(toFile: “loan_payments.csv”, atomically: true, encoding: .utf8) </code></p></pre>
+        <hr />
+        <h2>Try It Yourself</h2>
+        <details>
+          <summary>Click to expand full playground code</summary>
+          <pre><code class="language-swift">import BusinessMath
 // Loan parameters let principal = 300_000.0 let loanTerm = 360  // 30 years monthly
 <p></p><p>// Test different interest rates let rates = Array(stride(from: 0.03, through: 0.07, by: 0.005))</p><p>// Create data table let paymentTable = DataTable.oneVariable( inputs: rates, calculate: { annualRate in let monthlyRate = annualRate / 12.0 return payment( presentValue: principal, rate: monthlyRate, periods: loanTerm, futureValue: 0, type: .ordinary ) } )</p><p>print(“Mortgage Payment Sensitivity Analysis”) print(”======================================”) print(“Loan Amount: (principal.currency())”) print(“Term: 30 years\n”)</p><p>for (rate, monthlyPayment) in paymentTable { let totalPaid = monthlyPayment * Double(loanTerm) let totalInterest = totalPaid - principal</p><pre><code>print(”(rate.percent(1))\t\t(monthlyPayment.currency())\t\t(totalInterest.currency())”) </code></pre>}<p></p><p>// Business parameters let fixedCosts_mortgagePayment = 50_000.0 let variableCostPerUnit_mortgagePayment = 15.0 let pricePerUnit_mortgagePayment = 25.0</p><p>// Test different sales volumes let volumes = Array(stride(from: 1000.0, through: 10000.0, by: 1000.0))</p><p>let profitTable = DataTable.oneVariable( inputs: volumes, calculate: { volume in let revenue = pricePerUnit_mortgagePayment * volume let totalCosts = fixedCosts_mortgagePayment + (variableCostPerUnit_mortgagePayment * volume) return revenue - totalCosts } )</p><p>print(”\nBreak-Even Analysis”) print(“Fixed Costs: (fixedCosts_mortgagePayment.currency())”) print(“Contribution Margin: ((pricePerUnit_mortgagePayment - variableCostPerUnit_mortgagePayment).currency())/unit\n”)</p><p>for (volume, profit) in profitTable { let status = profit &gt;= 0 ? “✓” : “✗” print(”(volume.number(0).paddingLeft(toLength: 6)) units\t(profit.currency()) (status)”) }</p></code>
-              <div>
-                <code class="language-swift"><p>// Calculate exact break-even let breakEvenVolume = fixedCosts_mortgagePayment / (pricePerUnit_mortgagePayment - variableCostPerUnit_mortgagePayment) print(”\nBreak-Even Volume: (breakEvenVolume.number(0)) units”)</p><pre><code>// Fixed business parameters let monthlyFixedCosts = 100_000.0 let variableCostPerUnit = 30.0<p></p><p>// Scenarios to test let pricePoints = [40.0, 45.0, 50.0, 55.0, 60.0] let volumeScenarios = [2000.0, 2500.0, 3000.0, 3500.0, 4000.0]</p><p>// Create two-variable profit matrix let profitMatrix = DataTable
-                        <double, double>
-                          .twoVariable( rowInputs: pricePoints, columnInputs: volumeScenarios, calculate: { price, volume in let revenue = price * volume let totalCosts = monthlyFixedCosts + (variableCostPerUnit * volume) return revenue - totalCosts } )
-                        </double,></p><p>// Print formatted results print(”\nPricing Strategy Matrix (Monthly Profit)”)</p></code><p><code>// Option 1: Use built-in formatter (simpler, basic formatting) </code></p></pre>// let formatted = DataTable.formatTwoVariable( // profitMatrix, // rowInputs: pricePoints, // columnInputs: volumeScenarios // ) // print(formatted)<pre><code>// Option 2: Custom formatting with currency (shown below) </code></pre>var header = “Price”.padding(toLength: 10, withPad: “ “, startingAt: 0) for volume in volumeScenarios { header += “(Int(volume))”.paddingLeft(toLength: 12) } print(header) print(String(repeating: “=”, count: 70))<pre><code>for (rowIndex, price) in pricePoints.enumerated() { var rowString = “(price.currency(0).padding(toLength: 10, withPad: “ “, startingAt: 0))” for colIndex in 0..
-                      <volumescenarios.count { let profit="profitMatrix[rowIndex][colIndex]" rowstring +="“(profit.currency(0).paddingLeft(toLength:" 12))” } print(rowstring) }< p>
-                        <p>// Find optimal combination var maxProfit = -Double.infinity var optimalPrice = 0.0 var optimalVolume = 0.0</p>
-                        <p>for (rowIndex, price) in pricePoints.enumerated() { for (colIndex, volume) in volumeScenarios.enumerated() { let profit = profitMatrix[rowIndex][colIndex] if profit &gt; maxProfit { maxProfit = profit optimalPrice = price optimalVolume = volume } } }</p>
-                      </volumescenarios.count></code><p><code>print(”\nOptimal Strategy:”) print(“Price: (optimalPrice.currency()), Volume: (optimalVolume.number(0)) units”) print(“Maximum Monthly Profit: (maxProfit.currency())”) </code></p></pre></code>
-              </div></pre>
-          </details>
-          <p></p>
-        </div>
-        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md"><strong>BusinessMath Docs – 2.1 Data Table Analysis</strong></a></p>
-        <p><strong>Modifications to try</strong>:</p>
-        <ol>
-          <li>Test loan affordability at different income levels</li>
-          <li>Create an investment NPV matrix with varying growth and discount rates</li>
-          <li>Build a product pricing table comparing different cost structures</li>
-        </ol>
-        <hr />
-        <h2>Real-World Application</h2>A CFO analyzing capital equipment purchases needs to understand sensitivity to key assumptions:
-        <ul>
-          <li><strong>Discount rate sensitivity</strong>: How does NPV change from 8% to 12%?</li>
-          <li><strong>Volume assumptions</strong>: What happens if production is 20% lower than expected?</li>
-          <li><strong>Price/volume trade-offs</strong>: Which combination maximizes profit?</li>
-        </ul>Data tables answer all these questions with 10-20 lines of code instead of complex spreadsheets.
-        <hr />
-        <h3>📝 Development Note</h3>When we first implemented data tables, we assumed users would want highly customized formatting. So we built a complex system with format strings, alignment options, and custom renderers.
-        <p></p>
-        <p>It was too complicated.</p>
-        <p>The refactor was brutal: we deleted 300 lines of formatting code and replaced it with two simple functions: <code>toCSV()</code> and <code>formatTwoVariable()</code>. Users could export to CSV for Excel, or get basic console output. That’s it.</p>
-        <p><strong>The lesson</strong>: Don’t over-engineer formatting. Users either want raw data (CSV) or basic display (console). Everything in between is complexity they don’t need.</p>
-        <p><strong>Related Methodology</strong>: <a href="../week-05/02-tue-coding-standards.md">Coding Standards That Scale</a> (Week 5)
-          <hr /></p>
-        <h2>Next Steps</h2>
-        <strong>Coming up next</strong>: Documentation as Design (Tuesday) - How writing docs before code reveals API flaws early.
-        <p></p>
-        <p><strong>This week</strong>: We’ll explore financial ratios (Wednesday) and risk analytics (Friday) to complete the Analysis Tools topic.
-          <hr /><strong>Series Progress</strong>:</p>
-        <ul>
-          <li>Week: 2/12</li>
-          <li>Posts Published: 5/~48</li>
-          <li>Topics Covered: Foundation + Analysis Tools (starting)</li>
-          <li>Playgrounds: 5 available</li>
-        </ul>
+            <div>
+              <code class="language-swift"><p>// Calculate exact break-even let breakEvenVolume = fixedCosts_mortgagePayment / (pricePerUnit_mortgagePayment - variableCostPerUnit_mortgagePayment) print(”\nBreak-Even Volume: (breakEvenVolume.number(0)) units”)</p><pre><code>// Fixed business parameters let monthlyFixedCosts = 100_000.0 let variableCostPerUnit = 30.0<p></p><p>// Scenarios to test let pricePoints = [40.0, 45.0, 50.0, 55.0, 60.0] let volumeScenarios = [2000.0, 2500.0, 3000.0, 3500.0, 4000.0]</p><p>// Create two-variable profit matrix let profitMatrix = DataTable
+                      <double, double>
+                        .twoVariable( rowInputs: pricePoints, columnInputs: volumeScenarios, calculate: { price, volume in let revenue = price * volume let totalCosts = monthlyFixedCosts + (variableCostPerUnit * volume) return revenue - totalCosts } )
+                      </double,></p><p>// Print formatted results print(”\nPricing Strategy Matrix (Monthly Profit)”)</p></code><p><code>// Option 1: Use built-in formatter (simpler, basic formatting) </code></p></pre>// let formatted = DataTable.formatTwoVariable( // profitMatrix, // rowInputs: pricePoints, // columnInputs: volumeScenarios // ) // print(formatted)<pre><code>// Option 2: Custom formatting with currency (shown below) </code></pre>var header = “Price”.padding(toLength: 10, withPad: “ “, startingAt: 0) for volume in volumeScenarios { header += “(Int(volume))”.paddingLeft(toLength: 12) } print(header) print(String(repeating: “=”, count: 70))<pre><code>for (rowIndex, price) in pricePoints.enumerated() { var rowString = “(price.currency(0).padding(toLength: 10, withPad: “ “, startingAt: 0))” for colIndex in 0..
+                    <volumescenarios.count { let profit="profitMatrix[rowIndex][colIndex]" rowstring +="“(profit.currency(0).paddingLeft(toLength:" 12))” } print(rowstring) }< p>
+                      <p>// Find optimal combination var maxProfit = -Double.infinity var optimalPrice = 0.0 var optimalVolume = 0.0</p>
+                      <p>for (rowIndex, price) in pricePoints.enumerated() { for (colIndex, volume) in volumeScenarios.enumerated() { let profit = profitMatrix[rowIndex][colIndex] if profit &gt; maxProfit { maxProfit = profit optimalPrice = price optimalVolume = volume } } }</p>
+                    </volumescenarios.count></code><p><code>print(”\nOptimal Strategy:”) print(“Price: (optimalPrice.currency()), Volume: (optimalVolume.number(0)) units”) print(“Maximum Monthly Profit: (maxProfit.currency())”) </code></p></pre></code>
+            </div></pre>
+        </details>
         <p></p>
       </div>
+      <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md"><strong>BusinessMath Docs – 2.1 Data Table Analysis</strong></a></p>
+      <p><strong>Modifications to try</strong>:</p>
+      <ol>
+        <li>Test loan affordability at different income levels</li>
+        <li>Create an investment NPV matrix with varying growth and discount rates</li>
+        <li>Build a product pricing table comparing different cost structures</li>
+      </ol>
       <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, data-tables, sensitivity-analysis, what-if</p>
+      <h2>Real-World Application</h2>A CFO analyzing capital equipment purchases needs to understand sensitivity to key assumptions:
+      <ul>
+        <li><strong>Discount rate sensitivity</strong>: How does NPV change from 8% to 12%?</li>
+        <li><strong>Volume assumptions</strong>: What happens if production is 20% lower than expected?</li>
+        <li><strong>Price/volume trade-offs</strong>: Which combination maximizes profit?</li>
+      </ul>Data tables answer all these questions with 10-20 lines of code instead of complex spreadsheets.
+      <hr />
+      <h3>📝 Development Note</h3>When we first implemented data tables, we assumed users would want highly customized formatting. So we built a complex system with format strings, alignment options, and custom renderers.
+      <p></p>
+      <p>It was too complicated.</p>
+      <p>The refactor was brutal: we deleted 300 lines of formatting code and replaced it with two simple functions: <code>toCSV()</code> and <code>formatTwoVariable()</code>. Users could export to CSV for Excel, or get basic console output. That’s it.</p>
+      <p><strong>The lesson</strong>: Don’t over-engineer formatting. Users either want raw data (CSV) or basic display (console). Everything in between is complexity they don’t need.</p>
+      <p><strong>Related Methodology</strong>: <a href="../week-05/02-tue-coding-standards.md">Coding Standards That Scale</a> (Week 5)
+        <hr /></p>
+      <h2>Next Steps</h2>
+      <strong>Coming up next</strong>: Documentation as Design (Tuesday) - How writing docs before code reveals API flaws early.
+      <p></p>
+      <p><strong>This week</strong>: We’ll explore financial ratios (Wednesday) and risk analytics (Friday) to complete the Analysis Tools topic.
+        <hr /><strong>Series Progress</strong>:</p>
+      <ul>
+        <li>Week: 2/12</li>
+        <li>Posts Published: 5/~48</li>
+        <li>Topics Covered: Foundation + Analysis Tools (starting)</li>
+        <li>Playgrounds: 5 available</li>
+      </ul>
+      <p></p>
     </div>
+    <hr />
+    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, data-tables, sensitivity-analysis, what-if</p>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

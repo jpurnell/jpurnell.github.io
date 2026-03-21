@@ -162,98 +162,96 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Time Series Foundation</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">7 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Part 3 of 12-Week BusinessMath Series</strong>
-            <hr /></p>
-          <h2>What You’ll Learn</h2>
-          <ul>
-            <li>How periods provide type-safe temporal identifiers</li>
-            <li>Period arithmetic and subdivision operations</li>
-            <li>Creating and manipulating time series data</li>
-            <li>Real-world time series workflows</li>
-          </ul>
-          <hr />
-          <h2>The Problem</h2>Business data is inherently temporal. Revenue happens in months, quarters, and years. Stock prices change daily. Forecasts project into future periods.
-          <p></p>
-          <p>But handling temporal data correctly is tricky. What happens when you add a month to January 31st? How do you align quarterly data with monthly data? How do you ensure you’re not accidentally comparing January 2024 revenue with January 2025?</p>
-          <p>Arrays with dates are fragile—index mistakes are silent, type mixing goes undetected, and time arithmetic is error-prone. Getting the data model right requires a thoughtful execution and a better abstraction.
-            <hr /></p>
-          <h2>The Solution</h2>BusinessMath provides 
-          <strong>Periods</strong> and 
-          <strong>TimeSeries</strong> for type-safe temporal data:
-          <h3>Periods: Type-Safe Time Identifiers</h3>
-          <pre><code class="language-swift">import Foundation import BusinessMath // Create periods at different granularities let jan2025 = Period.month(year: 2025, month: 1) let q1_2025 = Period.quarter(year: 2025, quarter: 1) let fy2025 = Period.year(2025) let today = Period.day(Date())<p></p><p>// Period arithmetic let feb2025 = jan2025 + 1 // Next month let dec2024 = jan2025 - 1 // Previous month let yearRange = jan2025…jan2025 + 11 // 12 months</p></code><p><code class="language-swift">// Distance between periods let months = try jan2025.distance(to: Period.month(year: 2025, month: 6)) print(“Months: (months)”) // Output: 5 </code></p></pre>
-          <h3>Period Properties and Formatting</h3>
-          <pre><code class="language-swift">let period = Period.month(year: 2025, month: 3)<p></p><p>// Get boundary dates let start = period.startDate // March 1, 2025 00:00:00 let end = period.endDate // March 31, 2025 23:59:59</p><p>// Built-in label let label = period.label // “2025-03”</p></code><p><code class="language-swift">// Custom formatting let formatter = DateFormatter() formatter.dateFormat = “MMMM yyyy” let formatted = period.formatted(using: formatter) print(formatted) // Output: “March 2025” </code></p></pre>
-          <h3>Period Subdivision</h3>Larger periods subdivide into smaller ones:
-          <pre><code class="language-swift">// Year to quarters let year = Period.year(2025) let quarters = year.quarters() // Result: [Q1 2025, Q2 2025, Q3 2025, Q4 2025]<p></p><p>// Year to months let months = year.months() // Result: [Jan 2025, Feb 2025, …, Dec 2025]</p><p>// Quarter to months let q1 = Period.quarter(year: 2025, quarter: 1) let q1Months = q1.months() // Result: [Jan 2025, Feb 2025, Mar 2025]</p></code><p><code class="language-swift">// Month to days (leap year aware) let feb2024 = Period.month(year: 2024, month: 2) let days = feb2024.days() // Result: [Feb 1, Feb 2, …, Feb 29] (2024 is a leap year) </code></p></pre>
-          <h3>Creating Time Series</h3>Associate values with periods:
-          <pre><code class="language-swift">// From parallel arrays let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ] let revenue: [Double] = [100_000, 120_000, 115_000]<p></p><p>let ts = TimeSeries(periods: periods, values: revenue)</p></code><p><code class="language-swift">// From dictionary let data: [Period: Double] = [ Period.month(year: 2025, month: 1): 100_000, Period.month(year: 2025, month: 2): 120_000, Period.month(year: 2025, month: 3): 115_000 ] let ts2 = TimeSeries(data: data) </code></p></pre>
-          <h3>Working with Time Series</h3>
-          <pre><code class="language-swift">// Access by period if let janRevenue = ts[periods[0]] { print(“January: $(janRevenue.formatted(.number))”) }<p></p><p>// Iterate over period-value pairs for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) } // Output: // 2025-01: $100,000 // 2025-02: $120,000 // 2025-03: $115,000</p><p>// Get all values as array let values = ts.valuesArray // [100000.0, 120000.0, 115000.0]</p></code><p><code class="language-swift">// Get all periods let allPeriods = ts.periods // [Jan 2025, Feb 2025, Mar 2025] </code></p></pre>
-          <hr />
-          <h2>How It Works</h2>
-          <h3>Type-First Period Ordering</h3>Periods use a clever ordering strategy:
-          <pre><code class="language-swift">let daily = Period.day(Date()) let monthly = Period.month(year: 2025, month: 1) let quarterly = Period.quarter(year: 2025, quarter: 1) let annual = Period.year(2025)<p></p><p>// Type comes before chronology daily &lt; monthly // true (day &lt; month in hierarchy) monthly &lt; quarterly // true (month &lt; quarter in hierarchy) quarterly &lt; annual // true (quarter &lt; year in hierarchy)</p></code><p><code class="language-swift">// Within same type, chronological order Period.month(year: 2025, month: 1) &lt; Period.month(year: 2025, month: 2) // true </code></p></pre>This prevents accidental mixing of granularities while maintaining intuitive ordering.
-          <h3>Period Arithmetic Safety</h3>Period arithmetic is safe and predictable:
-          <pre><code class="language-swift">// Adding months handles year boundaries let dec2024 = Period.month(year: 2024, month: 12) let jan2025 = dec2024 + 1  // Automatically → January 2025<p></p></code><p><code class="language-swift">// Adding months handles varying lengths correctly let jan31 = Period.day(DateComponents(year: 2025, month: 1, day: 31)!) // Can’t add “month” to day period - compile error! // Must work at month granularity: let janMonth = Period.month(year: 2025, month: 1) let febMonth = janMonth + 1 // → February 2025 </code></p></pre>
-          <hr />
-          <h2>Try It Yourself</h2>
-          <details>
-            <summary>Click to expand full playground code</summary>
-            <pre><code class="language-swift">import BusinessMath
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Time Series Foundation</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">7 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 3 of 12-Week BusinessMath Series</strong>
+          <hr /></p>
+        <h2>What You’ll Learn</h2>
+        <ul>
+          <li>How periods provide type-safe temporal identifiers</li>
+          <li>Period arithmetic and subdivision operations</li>
+          <li>Creating and manipulating time series data</li>
+          <li>Real-world time series workflows</li>
+        </ul>
+        <hr />
+        <h2>The Problem</h2>Business data is inherently temporal. Revenue happens in months, quarters, and years. Stock prices change daily. Forecasts project into future periods.
+        <p></p>
+        <p>But handling temporal data correctly is tricky. What happens when you add a month to January 31st? How do you align quarterly data with monthly data? How do you ensure you’re not accidentally comparing January 2024 revenue with January 2025?</p>
+        <p>Arrays with dates are fragile—index mistakes are silent, type mixing goes undetected, and time arithmetic is error-prone. Getting the data model right requires a thoughtful execution and a better abstraction.
+          <hr /></p>
+        <h2>The Solution</h2>BusinessMath provides 
+        <strong>Periods</strong> and 
+        <strong>TimeSeries</strong> for type-safe temporal data:
+        <h3>Periods: Type-Safe Time Identifiers</h3>
+        <pre><code class="language-swift">import Foundation import BusinessMath // Create periods at different granularities let jan2025 = Period.month(year: 2025, month: 1) let q1_2025 = Period.quarter(year: 2025, quarter: 1) let fy2025 = Period.year(2025) let today = Period.day(Date())<p></p><p>// Period arithmetic let feb2025 = jan2025 + 1 // Next month let dec2024 = jan2025 - 1 // Previous month let yearRange = jan2025…jan2025 + 11 // 12 months</p></code><p><code class="language-swift">// Distance between periods let months = try jan2025.distance(to: Period.month(year: 2025, month: 6)) print(“Months: (months)”) // Output: 5 </code></p></pre>
+        <h3>Period Properties and Formatting</h3>
+        <pre><code class="language-swift">let period = Period.month(year: 2025, month: 3)<p></p><p>// Get boundary dates let start = period.startDate // March 1, 2025 00:00:00 let end = period.endDate // March 31, 2025 23:59:59</p><p>// Built-in label let label = period.label // “2025-03”</p></code><p><code class="language-swift">// Custom formatting let formatter = DateFormatter() formatter.dateFormat = “MMMM yyyy” let formatted = period.formatted(using: formatter) print(formatted) // Output: “March 2025” </code></p></pre>
+        <h3>Period Subdivision</h3>Larger periods subdivide into smaller ones:
+        <pre><code class="language-swift">// Year to quarters let year = Period.year(2025) let quarters = year.quarters() // Result: [Q1 2025, Q2 2025, Q3 2025, Q4 2025]<p></p><p>// Year to months let months = year.months() // Result: [Jan 2025, Feb 2025, …, Dec 2025]</p><p>// Quarter to months let q1 = Period.quarter(year: 2025, quarter: 1) let q1Months = q1.months() // Result: [Jan 2025, Feb 2025, Mar 2025]</p></code><p><code class="language-swift">// Month to days (leap year aware) let feb2024 = Period.month(year: 2024, month: 2) let days = feb2024.days() // Result: [Feb 1, Feb 2, …, Feb 29] (2024 is a leap year) </code></p></pre>
+        <h3>Creating Time Series</h3>Associate values with periods:
+        <pre><code class="language-swift">// From parallel arrays let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ] let revenue: [Double] = [100_000, 120_000, 115_000]<p></p><p>let ts = TimeSeries(periods: periods, values: revenue)</p></code><p><code class="language-swift">// From dictionary let data: [Period: Double] = [ Period.month(year: 2025, month: 1): 100_000, Period.month(year: 2025, month: 2): 120_000, Period.month(year: 2025, month: 3): 115_000 ] let ts2 = TimeSeries(data: data) </code></p></pre>
+        <h3>Working with Time Series</h3>
+        <pre><code class="language-swift">// Access by period if let janRevenue = ts[periods[0]] { print(“January: $(janRevenue.formatted(.number))”) }<p></p><p>// Iterate over period-value pairs for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) } // Output: // 2025-01: $100,000 // 2025-02: $120,000 // 2025-03: $115,000</p><p>// Get all values as array let values = ts.valuesArray // [100000.0, 120000.0, 115000.0]</p></code><p><code class="language-swift">// Get all periods let allPeriods = ts.periods // [Jan 2025, Feb 2025, Mar 2025] </code></p></pre>
+        <hr />
+        <h2>How It Works</h2>
+        <h3>Type-First Period Ordering</h3>Periods use a clever ordering strategy:
+        <pre><code class="language-swift">let daily = Period.day(Date()) let monthly = Period.month(year: 2025, month: 1) let quarterly = Period.quarter(year: 2025, quarter: 1) let annual = Period.year(2025)<p></p><p>// Type comes before chronology daily &lt; monthly // true (day &lt; month in hierarchy) monthly &lt; quarterly // true (month &lt; quarter in hierarchy) quarterly &lt; annual // true (quarter &lt; year in hierarchy)</p></code><p><code class="language-swift">// Within same type, chronological order Period.month(year: 2025, month: 1) &lt; Period.month(year: 2025, month: 2) // true </code></p></pre>This prevents accidental mixing of granularities while maintaining intuitive ordering.
+        <h3>Period Arithmetic Safety</h3>Period arithmetic is safe and predictable:
+        <pre><code class="language-swift">// Adding months handles year boundaries let dec2024 = Period.month(year: 2024, month: 12) let jan2025 = dec2024 + 1  // Automatically → January 2025<p></p></code><p><code class="language-swift">// Adding months handles varying lengths correctly let jan31 = Period.day(DateComponents(year: 2025, month: 1, day: 31)!) // Can’t add “month” to day period - compile error! // Must work at month granularity: let janMonth = Period.month(year: 2025, month: 1) let febMonth = janMonth + 1 // → February 2025 </code></p></pre>
+        <hr />
+        <h2>Try It Yourself</h2>
+        <details>
+          <summary>Click to expand full playground code</summary>
+          <pre><code class="language-swift">import BusinessMath
 // Create periods at different granularities let jan2025 = Period.month(year: 2025, month: 1) let q1_2025 = Period.quarter(year: 2025, quarter: 1) let fy2025 = Period.year(2025) let today = Period.day(Date())
 <p></p><p>// Period arithmetic let feb2025 = jan2025 + 1 // Next month let dec2024 = jan2025 - 1 // Previous month let yearRange = jan2025…jan2025 + 11 // 12 months</p><p>// Distance between periods //let months = try jan2025.distance(to: Period.month(year: 2025, month: 6)) //print(“Months: (months)”) // Output: 5</p><p>let period = Period.month(year: 2025, month: 3)</p><p>// Get boundary dates let start = period.startDate // March 1, 2025 00:00:00 let end = period.endDate // March 31, 2025 23:59:59</p><p>// Built-in label let label = period.label // “2025-03”</p></code>
-              <div>
-                <code class="language-swift"><p>// Custom formatting let formatter = DateFormatter() formatter.dateFormat = “MMMM yyyy” let formatted = period.formatted(using: formatter) print(formatted) // Output: “March 2025”</p><pre><code>// Year to quarters let year = Period.year(2025) let quarters = year.quarters() // Result: [Q1 2025, Q2 2025, Q3 2025, Q4 2025]<p></p><p>// Year to months let months = year.months() // Result: [Jan 2025, Feb 2025, …, Dec 2025]</p><p>// Quarter to months let q1 = Period.quarter(year: 2025, quarter: 1) let q1Months = q1.months() // Result: [Jan 2025, Feb 2025, Mar 2025]</p><p>// Month to days (leap year aware) let feb2024 = Period.month(year: 2024, month: 2) let days = feb2024.days() // Result: [Feb 1, Feb 2, …, Feb 29] (2024 is a leap year)</p><p>// From parallel arrays let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ] let revenue: [Double] = [100_000, 120_000, 115_000]</p><p>let ts = TimeSeries(periods: periods, values: revenue)</p><p>// From dictionary let data: [Period: Double] = [ Period.month(year: 2025, month: 1): 100_000, Period.month(year: 2025, month: 2): 120_000, Period.month(year: 2025, month: 3): 115_000 ] let ts2 = TimeSeries(data: data)</p><p>// Access by period if let janRevenue = ts[periods[0]] { print(“January: $(janRevenue.formatted(.number))”) }</p><p>// Iterate over period-value pairs for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) } // Output: // 2025-01: $100,000 // 2025-02: $120,000 // 2025-03: $115,000</p><p>// Get all values as array let values = ts.valuesArray // [100000.0, 120000.0, 115000.0]</p><p>// Get all periods let allPeriods = ts.periods // [Jan 2025, Feb 2025, Mar 2025]</p><p>// Monthly revenue data let monthlyRevenue = TimeSeries( periods: (1…12).map { Period.month(year: 2024, month: $0) }, values: [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140] )</p></code><p><code>// Group into quarters let q1Monthss = Period.quarter(year: 2024, quarter: 1).months() let q1Revenue = q1Monthss.compactMap { monthlyRevenue[$0] }.reduce(0, +) print(“Q1 Revenue: (q1Revenue.currency(0))”) // $315K </code></p></pre></code>
-              </div></pre>
-          </details>
-          <p></p>
-        </div>
-        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md"><strong>BusinessMath Docs – Time Series Analysis</strong></a></p>
-        <p><strong>Modifications to try</strong>:</p>
-        <ol>
-          <li>Create a time series for quarterly revenue and subdivide to monthly</li>
-          <li>Calculate the distance between two periods in different years</li>
-          <li>Build a time series from Q1 2024 to Q4 2025 (8 quarters)</li>
-        </ol>
-        <hr />
-        <h2>Real-World Application</h2>Financial analysts work with time series constantly. Internal revenue data may come monthly, but executives want quarterly summaries. Historical analysis might span years, but forecasts may project only 3 or 6 months.
-        <p></p>
-        <p>Period subdivision makes aggregation simple:</p>
-        <pre><code class="language-swift">// Monthly revenue data let monthlyRevenue = TimeSeries( periods: (1…12).map { Period.month(year: 2024, month: $0) }, values: [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140] ) // Group into quarters let q1Months = Period.quarter(year: 2024, quarter: 1).months() let q1Revenue = q1Months.compactMap { monthlyRevenue[$0] }.reduce(0, +) print(“Q1 Revenue: (q1Revenue.currency(0))”)  // $315K </code></pre>
-        <hr />
-        <h3>📝 Development Note</h3>During development of the time series functionality, we discovered that multiple statistical formulas have different variants. For example, there are at least three common definitions of “exponential moving average.”
-        <p></p>
-        <p>Without explicit documentation of <em>which</em> variant we chose, tests would pass but results wouldn’t match external tools like Excel, which is the defacto standard for the financial community. This led to a practice: when implementing any algorithm with multiple valid interpretations, we document the exact formula in both the code and DocC.</p>
-        <p>“AI will confidently implement <em>a</em> version of the algorithm. Your job is to ensure it’s the <em>right</em> version for your use case.”</p>
-        <p>The fix: Include the formula in the test itself:</p>
-        <pre><code class="language-swift">@Test(“EMA uses alpha = 2/(window+1) formula”) func testEMAFormula() { let prices = [10.0, 11.0, 12.0, 11.5, 13.0] let ema = calculateEMA(values: prices, window: 3)<pre><code>// Explicitly verify formula: EMA(t) = α×P(t) + (1-α)×EMA(t-1) // where α = 2 / (3 + 1) = 0.5 let expected = 12.25  // Calculated manually with this formula #expect(abs(ema.last! - expected) &lt; 0.01) </code></pre>} </code></pre>This test not only verifies correctness but documents which variant we’re using.
-        <p></p>
-        <p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2)
-          <hr /></p>
-        <h2>Next Steps</h2>
-        <strong>Coming up next</strong>: Friday’s case study combines Time Series with Time Value of Money to build a retirement planning calculator.
-        <p></p>
-        <p><strong>Case Study #1</strong>: <a href="../04-fri-case-retirement">Retirement Planning Calculator (Friday)</a> - See time series and TVM working together to answer real business questions.
-          <hr /><strong>Series Progress</strong>:</p>
-        <ul>
-          <li>Week: 1/12</li>
-          <li>Posts Published: 3/~48</li>
-          <li>Case Studies: 0/6</li>
-          <li>Topics Covered: Getting Started, Test-First Development, Time Series</li>
-          <li>Playgrounds: 2 available</li>
-        </ul>
+            <div>
+              <code class="language-swift"><p>// Custom formatting let formatter = DateFormatter() formatter.dateFormat = “MMMM yyyy” let formatted = period.formatted(using: formatter) print(formatted) // Output: “March 2025”</p><pre><code>// Year to quarters let year = Period.year(2025) let quarters = year.quarters() // Result: [Q1 2025, Q2 2025, Q3 2025, Q4 2025]<p></p><p>// Year to months let months = year.months() // Result: [Jan 2025, Feb 2025, …, Dec 2025]</p><p>// Quarter to months let q1 = Period.quarter(year: 2025, quarter: 1) let q1Months = q1.months() // Result: [Jan 2025, Feb 2025, Mar 2025]</p><p>// Month to days (leap year aware) let feb2024 = Period.month(year: 2024, month: 2) let days = feb2024.days() // Result: [Feb 1, Feb 2, …, Feb 29] (2024 is a leap year)</p><p>// From parallel arrays let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ] let revenue: [Double] = [100_000, 120_000, 115_000]</p><p>let ts = TimeSeries(periods: periods, values: revenue)</p><p>// From dictionary let data: [Period: Double] = [ Period.month(year: 2025, month: 1): 100_000, Period.month(year: 2025, month: 2): 120_000, Period.month(year: 2025, month: 3): 115_000 ] let ts2 = TimeSeries(data: data)</p><p>// Access by period if let janRevenue = ts[periods[0]] { print(“January: $(janRevenue.formatted(.number))”) }</p><p>// Iterate over period-value pairs for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) } // Output: // 2025-01: $100,000 // 2025-02: $120,000 // 2025-03: $115,000</p><p>// Get all values as array let values = ts.valuesArray // [100000.0, 120000.0, 115000.0]</p><p>// Get all periods let allPeriods = ts.periods // [Jan 2025, Feb 2025, Mar 2025]</p><p>// Monthly revenue data let monthlyRevenue = TimeSeries( periods: (1…12).map { Period.month(year: 2024, month: $0) }, values: [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140] )</p></code><p><code>// Group into quarters let q1Monthss = Period.quarter(year: 2024, quarter: 1).months() let q1Revenue = q1Monthss.compactMap { monthlyRevenue[$0] }.reduce(0, +) print(“Q1 Revenue: (q1Revenue.currency(0))”) // $315K </code></p></pre></code>
+            </div></pre>
+        </details>
         <p></p>
       </div>
+      <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md"><strong>BusinessMath Docs – Time Series Analysis</strong></a></p>
+      <p><strong>Modifications to try</strong>:</p>
+      <ol>
+        <li>Create a time series for quarterly revenue and subdivide to monthly</li>
+        <li>Calculate the distance between two periods in different years</li>
+        <li>Build a time series from Q1 2024 to Q4 2025 (8 quarters)</li>
+      </ol>
       <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, time-series, periods, temporal-data</p>
+      <h2>Real-World Application</h2>Financial analysts work with time series constantly. Internal revenue data may come monthly, but executives want quarterly summaries. Historical analysis might span years, but forecasts may project only 3 or 6 months.
+      <p></p>
+      <p>Period subdivision makes aggregation simple:</p>
+      <pre><code class="language-swift">// Monthly revenue data let monthlyRevenue = TimeSeries( periods: (1…12).map { Period.month(year: 2024, month: $0) }, values: [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140] ) // Group into quarters let q1Months = Period.quarter(year: 2024, quarter: 1).months() let q1Revenue = q1Months.compactMap { monthlyRevenue[$0] }.reduce(0, +) print(“Q1 Revenue: (q1Revenue.currency(0))”)  // $315K </code></pre>
+      <hr />
+      <h3>📝 Development Note</h3>During development of the time series functionality, we discovered that multiple statistical formulas have different variants. For example, there are at least three common definitions of “exponential moving average.”
+      <p></p>
+      <p>Without explicit documentation of <em>which</em> variant we chose, tests would pass but results wouldn’t match external tools like Excel, which is the defacto standard for the financial community. This led to a practice: when implementing any algorithm with multiple valid interpretations, we document the exact formula in both the code and DocC.</p>
+      <p>“AI will confidently implement <em>a</em> version of the algorithm. Your job is to ensure it’s the <em>right</em> version for your use case.”</p>
+      <p>The fix: Include the formula in the test itself:</p>
+      <pre><code class="language-swift">@Test(“EMA uses alpha = 2/(window+1) formula”) func testEMAFormula() { let prices = [10.0, 11.0, 12.0, 11.5, 13.0] let ema = calculateEMA(values: prices, window: 3)<pre><code>// Explicitly verify formula: EMA(t) = α×P(t) + (1-α)×EMA(t-1) // where α = 2 / (3 + 1) = 0.5 let expected = 12.25  // Calculated manually with this formula #expect(abs(ema.last! - expected) &lt; 0.01) </code></pre>} </code></pre>This test not only verifies correctness but documents which variant we’re using.
+      <p></p>
+      <p><strong>Related Methodology</strong>: <a href="../../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2)
+        <hr /></p>
+      <h2>Next Steps</h2>
+      <strong>Coming up next</strong>: Friday’s case study combines Time Series with Time Value of Money to build a retirement planning calculator.
+      <p></p>
+      <p><strong>Case Study #1</strong>: <a href="../04-fri-case-retirement">Retirement Planning Calculator (Friday)</a> - See time series and TVM working together to answer real business questions.
+        <hr /><strong>Series Progress</strong>:</p>
+      <ul>
+        <li>Week: 1/12</li>
+        <li>Posts Published: 3/~48</li>
+        <li>Case Studies: 0/6</li>
+        <li>Topics Covered: Getting Started, Test-First Development, Time Series</li>
+        <li>Playgrounds: 2 available</li>
+      </ul>
+      <p></p>
     </div>
+    <hr />
+    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, time-series, periods, temporal-data</p>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

@@ -162,250 +162,248 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Simulated Annealing: Global Optimization Without Gradients</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">20 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Part 36 of 12-Week BusinessMath Series</strong>
-            <hr /></p>
-          <h2>What You’ll Learn</h2>
-          <ul>
-            <li>Understanding simulated annealing for global optimization</li>
-            <li>Cooling schedules: exponential, linear, adaptive</li>
-            <li>Acceptance probability and the Metropolis criterion</li>
-            <li>When to use simulated annealing vs. gradient methods</li>
-            <li>Escaping local minima through controlled randomness</li>
-            <li>Parameter tuning: initial temperature, cooling rate, iterations</li>
-          </ul>
-          <hr />
-          <h2>The Problem</h2>Many business optimization problems have multiple local minima:
-          <ul>
-            <li><strong>Production scheduling</strong> with setup costs (discontinuous objective)</li>
-            <li><strong>Portfolio optimization</strong> with transaction costs and lot sizes</li>
-            <li><strong>Facility location</strong> with discrete choices (city A vs. city B)</li>
-            <li><strong>Hyperparameter tuning</strong> for machine learning models</li>
-          </ul>
-          <strong>Gradient-based methods get stuck in local minima. Need global search capability.</strong>
-          <hr />
-          <h2>The Solution</h2>Simulated annealing mimics the physical process of metal cooling: accept worse solutions with probability that decreases over time. This allows escaping local minima early while converging to global optimum later.
-          <h3>Pattern 1: Portfolio Optimization with Transaction Costs</h3>
-          <strong>Business Problem</strong>: Rebalance portfolio from suboptimal starting point, but minimize transaction costs (non-smooth objective).
-          <pre><code class="language-swift">import BusinessMath // Portfolio with transaction costs (20 assets for clarity) let numAssets = 20<p></p><p>// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets // These happen to be LOW return assets - clear opportunity to improve! var currentWeights = [Double](repeating: 0.0, count: numAssets) // First 5 assets: 60% of portfolio (12% each) - these are low-return! for i in 0..&lt;5 { currentWeights[i] = 0.12 } // Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return! for i in 5..
-                <numassets { currentweights[i]="0.40" double(numassets - 5) }< p></numassets></p><p>// Expected returns: clearly tiered to demonstrate the opportunity // First 5 assets: 5-6% (low return) // Next 10 assets: 8-11% (medium return) // Last 5 assets: 12-15% (high return) let expectedReturns: [Double] = (0..&lt;5).map { _ in Double.random(in: 0.05…0.06) } + // Low (0..&lt;10).map { _ in Double.random(in: 0.08…0.11) } + // Medium (0..&lt;5).map { _ in Double.random(in: 0.12…0.15) } // High</p><p>// Correlation matrix: reasonable diversification benefits let correlations = (0..
-                <numassets).map { i in (0..<numassets).map { j in if i="=" j { return 1.0 } within same tier: higher correlation (0.5-0.7) across tiers: lower correlation (0.2-0.4) let sametier="(i" < 5 && j< 5) || (i>
-                  = 5 &amp;&amp; i &lt; 15 &amp;&amp; j &gt;= 5 &amp;&amp; j &lt; 15) || (i &gt;= 15 &amp;&amp; j &gt;= 15) return sameTier ? Double.random(in: 0.5…0.7) : Double.random(in: 0.2…0.4) } }
-                </numassets).map></p>
-              <div>
-                <p>func portfolioObjective(_ weights: VectorN
-                  <double>
-                    ) -&gt; Double { // 1. Portfolio expected return (we want to MAXIMIZE this) var portfolioReturn = 0.0 for i in 0..
-                    <numassets { portfolioreturn +="weights[i]" * expectedreturns[i] }<pre>
-                      <code>// 2. Portfolio variance (risk - we want to MINIMIZE this) var variance = 0.0 for i in 0..
-                        <numassets { for j in 0..<numassets { let volatility="0.20" 20% average vol let covariance="correlations[i][j]" * volatility * volatility variance +="weights[i]" * weights[j] * covariance } }< p></numassets></code>
-                    </numassets>
-                  </double></p>
-                <p><code>// 3. Transaction costs (makes objective non-smooth!) var transactionCosts = 0.0 for i in 0..
-                    <numassets { transactioncosts +="abs(weights[i]" - currentweights[i]) * 0.001 10 bps }< p></numassets></code></p>
-                <p><code>// Combined objective: maximize return-to-risk ratio, penalize transaction costs let returnToRiskRatio = variance / max(portfolioReturn, 0.01) return returnToRiskRatio + transactionCosts * 5.0 </code></p>
-              </div></code></pre>
-          <code class="language-swift">}<p></p></code>
-        </div>
-        <p><code class="language-swift">print(“Portfolio Rebalancing with Transaction Costs”) print(“═══════════════════════════════════════════════════════════”)</code></p>
-        <p><code class="language-swift">// Analyze initial portfolio let initialReturn = (0..
-            <numassets).reduce(0.0) { $0 + currentweights[$1] * expectedreturns[$1] } var initialvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility initialvariance +="currentWeights[i]" * currentweights[j] * covariance } } let initialstddev="sqrt(initialVariance)</p"></numassets).reduce(0.0)></code></p>
-        <p><code class="language-swift">print(”\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):”) print(” Expected Return: ((initialReturn * 100).formatted(.number.precision(.fractionLength(2))))%”) print(” Volatility (StdDev): ((initialStdDev * 100).formatted(.number.precision(.fractionLength(2))))%”) print(” Return/Risk: ((initialReturn / initialStdDev).formatted(.number.precision(.fractionLength(3))))”) print(” Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)”) print(” High-return assets (15-19): Only ~2.67% each (returns 12-15%)”)</code></p>
-        <p><code class="language-swift">// Simulated annealing optimizer with config let config = SimulatedAnnealingConfig( initialTemperature: 10.0, // Higher temperature for more exploration finalTemperature: 0.001, coolingRate: 0.95, maxIterations: 10_000, perturbationScale: 0.05, // Smaller perturbations reheatInterval: nil, reheatTemperature: nil, seed: 42 // Reproducible results )</code></p>
-        <p><code class="language-swift">// Define search space bounds for each asset (0% to 20% per position) let searchSpace = (0..
-            <numassets).map { _ in (0.0, 0.20) }< p></numassets).map></code></p>
-        <p><code class="language-swift">let sa = SimulatedAnnealing
-            <vectorn<double>
-              &gt;( config: config, searchSpace: searchSpace )
-            </vectorn<double></code></p>
-        <p><code class="language-swift">// Create initial guess from current weights let initialGuess = VectorN(currentWeights)</code></p>
-        <p><code class="language-swift">// Define constraints (FIXED API - no ‘constraint:’ or ‘tolerance:’ parameters!) let constraints: [MultivariateConstraint
-            <vectorn<double>
-              &gt;] = [ // Equality: Sum to 1 (must be fully invested) .equality { weights in (0..
-              <numassets).reduce(0.0) { $0 + weights[$1] } - 1.0 } ]< p></numassets).reduce(0.0)>
-            </vectorn<double></code></p>
-        <p><code class="language-swift">print(”\n═══════════════════════════════════════════════════════════”) print(“Running Simulated Annealing…”)</code></p>
-        <p><code class="language-swift">let result = try sa.minimize( portfolioObjective, from: initialGuess, constraints: constraints )</code></p>
-        <p><code class="language-swift">print(”\nOptimization Completed:”) print(” Iterations: (result.iterations)”) print(” Converged: (result.converged)”) print(” Reason: (result.convergenceReason)”)</code></p>
-        <p><code class="language-swift">// Analyze optimized portfolio let optimizedReturn = (0..
-            <numassets).reduce(0.0) { $0 + result.solution[$1] * expectedreturns[$1] } var optimizedvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility optimizedvariance +="result.solution[i]" * result.solution[j] * covariance } } let optimizedstddev="sqrt(optimizedVariance)</p"></numassets).reduce(0.0)></code></p>
-        <p><code class="language-swift">// Analyze turnover let turnover = (0..
-            <numassets).reduce(0.0) { sum, i in sum + abs(result.solution[i] - currentweights[i]) } 2.0 let transactioncostbps="turnover" * 0.001 * 100 * 100 in basis points< p></numassets).reduce(0.0)></code></p>
-        <p><code class="language-swift">print(”\n═══════════════════════════════════════════════════════════”) print(“Portfolio Comparison:”) print(“═══════════════════════════════════════════════════════════”) print(” Initial Optimized Change”) print(“───────────────────────────────────────────────────────────”) print(String(format: “Expected Return: %6.2f%% %6.2f%% %+6.2f%%”, initialReturn * 100, optimizedReturn * 100, (optimizedReturn - initialReturn) * 100)) print(String(format: “Volatility (StdDev): %6.2f%% %6.2f%% %+6.2f%%”, initialStdDev * 100, optimizedStdDev * 100, (optimizedStdDev - initialStdDev) * 100)) print(String(format: “Return/Risk Ratio: %6.3f %6.3f %+6.3f”, initialReturn / initialStdDev, optimizedReturn / optimizedStdDev, (optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev))) print(“───────────────────────────────────────────────────────────”) print(String(format: “Turnover: %6.2f%%”, turnover * 100)) print(String(format: “Transaction Costs: %6.1f bps”, transactionCostBps)) print(“═══════════════════════════════════════════════════════════”)</code></p>
-        <p><code class="language-swift">// Show largest changes let changes = (0..
-            <numassets).map { i in (index: i, change: result.solution[i] - currentweights[i], oldweight: currentweights[i], newweight: result.solution[i], return: expectedreturns[i]) }.sorted { abs($0.change)>
-               abs($1.change) }.prefix(8)
-            </numassets).map></code></p>
-        <p><code class="language-swift">print(”\nTop 8 Position Changes:”) print(“───────────────────────────────────────────────────────────”) print(“Asset Return Old Weight New Weight Change Action”) print(“───────────────────────────────────────────────────────────”) for change in changes { let direction = change.change &gt; 0 ? “BUY “ : “SELL” print(String(format: “ %2d %5.2f%% %6.2f%% %6.2f%% %+6.2f%% %s”, change.index, change.return * 100, change.oldWeight * 100, change.newWeight * 100, change.change * 100, direction)) } print(“═══════════════════════════════════════════════════════════”)</code></p>
-        <p><code class="language-swift">print(”\n💡 Key Insight:”) print(” The optimizer balanced improving returns (moving to high-return assets)”) print(” with minimizing transaction costs. Notice it didn’t eliminate all”) print(” low-return holdings - the transaction costs made that too expensive.”) </code></p>
-        <h3>Pattern 2: Configuration Comparison</h3>
-        <strong>Pattern</strong>: Compare different cooling configurations.
-        <pre><code class="language-swift">// Simple test function: Rastrigin in 2D (many local minima) func rastrigin(_ x: VectorN
-            <double>
-              ) -&gt; Double { let A = 10.0 let n = 2.0 return A * n + (0..&lt;2).reduce(0.0) { sum, i in sum + (x[i] * x[i] - A * cos(2 * .pi * x[i])) } }
-              <p></p>
-              <p>let searchSpace = [(-5.12, 5.12), (-5.12, 5.12)]</p>
-              <p>// Test different configurations let configs: [(name: String, config: SimulatedAnnealingConfig)] = [ (“Fast”, .fast), (“Default”, .default), (“Thorough”, .thorough), (“Custom (slow)”, SimulatedAnnealingConfig( initialTemperature: 100.0, finalTemperature: 0.001, coolingRate: 0.98, // Slower cooling maxIterations: 20_000, perturbationScale: 0.1, reheatInterval: nil, reheatTemperature: nil, seed: 42 )) ]</p>
-              <p>print(“Configuration Comparison (Rastrigin Function)”) print(“═══════════════════════════════════════════════════════════”) print(“Config | Final Value | Iterations | Acceptance Rate”) print(“───────────────────────────────────────────────────────────”)</p>
-            </double></code>
-          <div>
-            <code class="language-swift"><p>for (name, config) in configs { let optimizer = SimulatedAnnealing
-                <vectorn<double>
-                  &gt;( config: config, searchSpace: searchSpace )
-                </vectorn<double></p><pre><code>let result = optimizer.optimizeDetailed( objective: rastrigin, initialSolution: VectorN([2.0, 3.0]) )<p></p></code><p><code>let rate = result.acceptanceRate * 100 print(”(name.padding(toLength: 15, withPad: “ “, startingAt: 0)) | “ + “(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: “ “, startingAt: 0)) | “ + “(String(format: “%10d”, result.iterations)) | “ + “(rate.formatted(.number.precision(.fractionLength(1))))%”) </code></p></pre>}<p></p></code>
-          </div>
-          <div>
-            <p>print(”\nRecommendation: Use .default for most problems, .thorough for difficult landscapes”) </p>
-          </div></pre>
-        <h3>Pattern 3: Ackley Function (Multimodal Optimization)</h3>
-        <strong>Pattern</strong>: Global optimization for highly multimodal functions.
-        <pre><code class="language-swift">// Ackley function: highly multimodal with many local minima // Global minimum at (0, 0) with value 0 func ackley(_ x: VectorN
-            <double>
-              ) -&gt; Double { let a = 20.0 let b = 0.2 let c = 2.0 * .pi let d = 2 // dimensions
-            </double></code><pre><code class="language-swift"><code>let sum1 = (0..
-                <d).reduce(0.0) { $0 + x[$1] * x[$1] } let sum2="(0..<d).reduce(0.0)" { $0 + cos(c * x[$1]) }< p>
-                  <p>let term1 = -a * exp(-b * sqrt(sum1 / Double(d))) let term2 = -exp(sum2 / Double(d))</p>
-                </d).reduce(0.0)></code><p><code>return term1 + term2 + a + .e </code></p></code></pre>}<p></p></pre>
-      </div>
-      <p>// Search space: [-5, 5] for each dimension let searchSpace = [(-5.0, 5.0), (-5.0, 5.0)]</p>
-      <p>// Use thorough config for difficult landscape let sa = SimulatedAnnealing
-        <vectorn<double>
-          &gt;( config: .thorough, searchSpace: searchSpace )
-        </vectorn<double></p>
-      <p>print(“Ackley Function Optimization (Highly Multimodal)”) print(“═══════════════════════════════════════════════════════════”)</p>
-      <p>// Start from a poor initial guess let initialGuess = VectorN([4.0, -3.5])</p>
-      <p>let result = sa.optimizeDetailed( objective: ackley, initialSolution: initialGuess )</p>
-      <p>print(“Optimization Results:”) print(” Solution: ((result.solution[0].formatted(.number.precision(.fractionLength(4)))), “ + “(result.solution[1].formatted(.number.precision(.fractionLength(4)))))”) print(” Function Value: (result.fitness.formatted(.number.precision(.fractionLength(6)))) (target: 0.0)”) print(” Iterations: (result.iterations)”) print(” Acceptance Rate: ((result.acceptanceRate * 100).formatted(.number.precision(.fractionLength(1))))%”) print(” Converged: (result.converged)”) print(” Reason: (result.convergenceReason)”)</p>
-      <p>// Distance from global optimum let distanceFromOptimum = sqrt(result.solution[0]*result.solution[0] + result.solution[1]*result.solution[1]) print(” Distance from global optimum: (distanceFromOptimum.formatted(.number.precision(.fractionLength(4))))”) 
-        <hr /></p>
-      <h2>How It Works</h2>
-      <h3>Simulated Annealing Algorithm</h3>
-      <ol>
-        <li><strong>Initialize</strong>: Set T = T_0, x = x_0</li>
-        <li><strong>Generate Neighbor</strong>: x’ = random perturbation of x</li>
-        <li><strong>Calculate ΔE</strong>: ΔE = f(x’) - f(x)</li>
-        <li><strong>Accept/Reject</strong>:
-          <ul>
-            <li>If ΔE &lt; 0: Always accept (improvement)</li>
-            <li>Else: Accept with probability P = exp(-ΔE / T)</li>
-          </ul></li>
-        <li><strong>Cool Down</strong>: T = α * T (exponential) or T = T - β (linear)</li>
-        <li><strong>Repeat</strong>: Until T &lt; T_min or max iterations</li>
-      </ol>
-      <h3>Acceptance Probability</h3>
-      <strong>Metropolis Criterion</strong>: P(accept worse solution) = exp(-ΔE / T)
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Temperature</th>
-            <th scope="col">ΔE = 0.1</th>
-            <th scope="col">ΔE = 1.0</th>
-            <th scope="col">ΔE = 10.0</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>T = 10</td>
-            <td>99.0%</td>
-            <td>90.5%</td>
-            <td>36.8%</td>
-          </tr>
-          <tr>
-            <td>T = 1</td>
-            <td>90.5%</td>
-            <td>36.8%</td>
-            <td>0.005%</td>
-          </tr>
-          <tr>
-            <td>T = 0.1</td>
-            <td>36.8%</td>
-            <td>0.005%</td>
-            <td>~0%</td>
-          </tr>
-        </tbody>
-      </table>
-      <strong>Insight</strong>: Early (high T), accept almost anything. Late (low T), only accept improvements.
-      <h3>Cooling Schedule Impact</h3>
-      <strong>Problem: 100-variable portfolio optimization</strong>
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Schedule</th>
-            <th scope="col">Final Value</th>
-            <th scope="col">Iterations</th>
-            <th scope="col">Quality</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Fast (α=0.90)</td>
-            <td>0.0245</td>
-            <td>2,500</td>
-            <td>Good</td>
-          </tr>
-          <tr>
-            <td>Medium (α=0.95)</td>
-            <td>0.0238</td>
-            <td>5,800</td>
-            <td>Better</td>
-          </tr>
-          <tr>
-            <td>Slow (α=0.98)</td>
-            <td>0.0235</td>
-            <td>18,000</td>
-            <td>Best</td>
-          </tr>
-          <tr>
-            <td>Adaptive</td>
-            <td>0.0237</td>
-            <td>7,200</td>
-            <td>Better</td>
-          </tr>
-        </tbody>
-      </table>
-      <strong>Tradeoff</strong>: Slower cooling = better solution, more time
-      <hr />
-      <h2>Real-World Application</h2>
-      <h3>Manufacturing: Batch Sizing with Setup Costs</h3>
-      <strong>Company</strong>: Electronics manufacturer optimizing production batch sizes for 15 products 
-      <strong>Challenge</strong>: Minimize total costs (inventory + setup) subject to demand and capacity
-      <p></p>
-      <p><strong>Problem Characteristics</strong>:</p>
-      <ul>
-        <li><strong>Continuous variables</strong>: Batch sizes (treated as continuous for optimization)</li>
-        <li><strong>Setup costs</strong>: Fixed cost per production run (non-smooth)</li>
-        <li><strong>Holding costs</strong>: Penalty for excess inventory (smooth)</li>
-        <li><strong>Multiple local minima</strong>: ~100+ feasible configurations</li>
-      </ul>
-      <strong>Why Simulated Annealing</strong>:
-      <ul>
-        <li>Setup costs create discontinuous objective</li>
-        <li>Global search needed (many local minima)</li>
-        <li>Can escape poor local solutions</li>
-      </ul>
-      <strong>Implementation</strong>:
-      <pre><code class="language-swift">import BusinessMath<p></p><p>import BusinessMath</p><p>// Model with 15 products let numProducts = 15</p><p>// Weekly demand per product (units/week) let demand: [Double] = [ 100.0, 150.0, 80.0, 200.0, 120.0, // Products 0-4 90.0, 175.0, 110.0, 140.0, 95.0, // Products 5-9 160.0, 85.0, 130.0, 105.0, 145.0 // Products 10-14 ]</p><p>// Fixed setup cost per production run ($) let setupCost: [Double] = [ 500.0, 750.0, 400.0, 850.0, 600.0, // Products 0-4 450.0, 800.0, 550.0, 700.0, 480.0, // Products 5-9 720.0, 420.0, 650.0, 520.0, 680.0 // Products 10-14 ]</p><p>// Holding cost per unit per week ($/unit/week) let holdingCost: [Double] = [ 2.0, 3.5, 1.8, 4.0, 2.5, // Products 0-4 1.9, 3.8, 2.2, 3.0, 2.0, // Products 5-9 3.3, 1.7, 2.8, 2.1, 3.2 // Products 10-14 ]</p></code>
-        <div>
-          <code class="language-swift">
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Simulated Annealing: Global Optimization Without Gradients</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">20 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 36 of 12-Week BusinessMath Series</strong>
+          <hr /></p>
+        <h2>What You’ll Learn</h2>
+        <ul>
+          <li>Understanding simulated annealing for global optimization</li>
+          <li>Cooling schedules: exponential, linear, adaptive</li>
+          <li>Acceptance probability and the Metropolis criterion</li>
+          <li>When to use simulated annealing vs. gradient methods</li>
+          <li>Escaping local minima through controlled randomness</li>
+          <li>Parameter tuning: initial temperature, cooling rate, iterations</li>
+        </ul>
+        <hr />
+        <h2>The Problem</h2>Many business optimization problems have multiple local minima:
+        <ul>
+          <li><strong>Production scheduling</strong> with setup costs (discontinuous objective)</li>
+          <li><strong>Portfolio optimization</strong> with transaction costs and lot sizes</li>
+          <li><strong>Facility location</strong> with discrete choices (city A vs. city B)</li>
+          <li><strong>Hyperparameter tuning</strong> for machine learning models</li>
+        </ul>
+        <strong>Gradient-based methods get stuck in local minima. Need global search capability.</strong>
+        <hr />
+        <h2>The Solution</h2>Simulated annealing mimics the physical process of metal cooling: accept worse solutions with probability that decreases over time. This allows escaping local minima early while converging to global optimum later.
+        <h3>Pattern 1: Portfolio Optimization with Transaction Costs</h3>
+        <strong>Business Problem</strong>: Rebalance portfolio from suboptimal starting point, but minimize transaction costs (non-smooth objective).
+        <pre><code class="language-swift">import BusinessMath // Portfolio with transaction costs (20 assets for clarity) let numAssets = 20<p></p><p>// Create a suboptimal starting portfolio: heavily concentrated in first 5 assets // These happen to be LOW return assets - clear opportunity to improve! var currentWeights = [Double](repeating: 0.0, count: numAssets) // First 5 assets: 60% of portfolio (12% each) - these are low-return! for i in 0..&lt;5 { currentWeights[i] = 0.12 } // Remaining 15 assets: 40% of portfolio (2.67% each) - these include high-return! for i in 5..
+              <numassets { currentweights[i]="0.40" double(numassets - 5) }< p></numassets></p><p>// Expected returns: clearly tiered to demonstrate the opportunity // First 5 assets: 5-6% (low return) // Next 10 assets: 8-11% (medium return) // Last 5 assets: 12-15% (high return) let expectedReturns: [Double] = (0..&lt;5).map { _ in Double.random(in: 0.05…0.06) } + // Low (0..&lt;10).map { _ in Double.random(in: 0.08…0.11) } + // Medium (0..&lt;5).map { _ in Double.random(in: 0.12…0.15) } // High</p><p>// Correlation matrix: reasonable diversification benefits let correlations = (0..
+              <numassets).map { i in (0..<numassets).map { j in if i="=" j { return 1.0 } within same tier: higher correlation (0.5-0.7) across tiers: lower correlation (0.2-0.4) let sametier="(i" < 5 && j< 5) || (i>
+                = 5 &amp;&amp; i &lt; 15 &amp;&amp; j &gt;= 5 &amp;&amp; j &lt; 15) || (i &gt;= 15 &amp;&amp; j &gt;= 15) return sameTier ? Double.random(in: 0.5…0.7) : Double.random(in: 0.2…0.4) } }
+              </numassets).map></p>
             <div>
-              <p>func totalCost(_ batchSizes: VectorN
+              <p>func portfolioObjective(_ weights: VectorN
                 <double>
-                  ) -&gt; Double { var cost = 0.0
+                  ) -&gt; Double { // 1. Portfolio expected return (we want to MAXIMIZE this) var portfolioReturn = 0.0 for i in 0..
+                  <numassets { portfolioreturn +="weights[i]" * expectedreturns[i] }<pre>
+                    <code>// 2. Portfolio variance (risk - we want to MINIMIZE this) var variance = 0.0 for i in 0..
+                      <numassets { for j in 0..<numassets { let volatility="0.20" 20% average vol let covariance="correlations[i][j]" * volatility * volatility variance +="weights[i]" * weights[j] * covariance } }< p></numassets></code>
+                  </numassets>
                 </double></p>
-              <pre><code>for i in 0..
-                  <numproducts { let runsperweek="demand[i]" max(batchsizes[i], 1.0) let avginventory="batchSizes[i]" 2.0<pre>
-                    <code>// Setup costs (discontinuous!) cost += runsPerWeek * setupCost[i]<p></p></code>
-                  </numproducts></code><p><code><code>// Holding costs (smooth) cost += avgInventory * holdingCost[i] </code></code></p></pre>}
-              <p></p>
-            </div><p>return cost </p></code>
-        </div></pre>}
-      <p></p>
+              <p><code>// 3. Transaction costs (makes objective non-smooth!) var transactionCosts = 0.0 for i in 0..
+                  <numassets { transactioncosts +="abs(weights[i]" - currentweights[i]) * 0.001 10 bps }< p></numassets></code></p>
+              <p><code>// Combined objective: maximize return-to-risk ratio, penalize transaction costs let returnToRiskRatio = variance / max(portfolioReturn, 0.01) return returnToRiskRatio + transactionCosts * 5.0 </code></p>
+            </div></code></pre>
+        <code class="language-swift">}<p></p></code>
+      </div>
+      <p><code class="language-swift">print(“Portfolio Rebalancing with Transaction Costs”) print(“═══════════════════════════════════════════════════════════”)</code></p>
+      <p><code class="language-swift">// Analyze initial portfolio let initialReturn = (0..
+          <numassets).reduce(0.0) { $0 + currentweights[$1] * expectedreturns[$1] } var initialvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility initialvariance +="currentWeights[i]" * currentweights[j] * covariance } } let initialstddev="sqrt(initialVariance)</p"></numassets).reduce(0.0)></code></p>
+      <p><code class="language-swift">print(”\nInitial Portfolio (Suboptimal - Concentrated in Low-Return Assets):”) print(” Expected Return: ((initialReturn * 100).formatted(.number.precision(.fractionLength(2))))%”) print(” Volatility (StdDev): ((initialStdDev * 100).formatted(.number.precision(.fractionLength(2))))%”) print(” Return/Risk: ((initialReturn / initialStdDev).formatted(.number.precision(.fractionLength(3))))”) print(” Top 5 holdings: Assets 0-4 @ 12.00% each (low return ~5-6%)”) print(” High-return assets (15-19): Only ~2.67% each (returns 12-15%)”)</code></p>
+      <p><code class="language-swift">// Simulated annealing optimizer with config let config = SimulatedAnnealingConfig( initialTemperature: 10.0, // Higher temperature for more exploration finalTemperature: 0.001, coolingRate: 0.95, maxIterations: 10_000, perturbationScale: 0.05, // Smaller perturbations reheatInterval: nil, reheatTemperature: nil, seed: 42 // Reproducible results )</code></p>
+      <p><code class="language-swift">// Define search space bounds for each asset (0% to 20% per position) let searchSpace = (0..
+          <numassets).map { _ in (0.0, 0.20) }< p></numassets).map></code></p>
+      <p><code class="language-swift">let sa = SimulatedAnnealing
+          <vectorn<double>
+            &gt;( config: config, searchSpace: searchSpace )
+          </vectorn<double></code></p>
+      <p><code class="language-swift">// Create initial guess from current weights let initialGuess = VectorN(currentWeights)</code></p>
+      <p><code class="language-swift">// Define constraints (FIXED API - no ‘constraint:’ or ‘tolerance:’ parameters!) let constraints: [MultivariateConstraint
+          <vectorn<double>
+            &gt;] = [ // Equality: Sum to 1 (must be fully invested) .equality { weights in (0..
+            <numassets).reduce(0.0) { $0 + weights[$1] } - 1.0 } ]< p></numassets).reduce(0.0)>
+          </vectorn<double></code></p>
+      <p><code class="language-swift">print(”\n═══════════════════════════════════════════════════════════”) print(“Running Simulated Annealing…”)</code></p>
+      <p><code class="language-swift">let result = try sa.minimize( portfolioObjective, from: initialGuess, constraints: constraints )</code></p>
+      <p><code class="language-swift">print(”\nOptimization Completed:”) print(” Iterations: (result.iterations)”) print(” Converged: (result.converged)”) print(” Reason: (result.convergenceReason)”)</code></p>
+      <p><code class="language-swift">// Analyze optimized portfolio let optimizedReturn = (0..
+          <numassets).reduce(0.0) { $0 + result.solution[$1] * expectedreturns[$1] } var optimizedvariance="0.0" for i in 0..<numassets { for j in 0..<numassets { let volatility="0.20" let covariance="correlations[i][j]" * volatility * volatility optimizedvariance +="result.solution[i]" * result.solution[j] * covariance } } let optimizedstddev="sqrt(optimizedVariance)</p"></numassets).reduce(0.0)></code></p>
+      <p><code class="language-swift">// Analyze turnover let turnover = (0..
+          <numassets).reduce(0.0) { sum, i in sum + abs(result.solution[i] - currentweights[i]) } 2.0 let transactioncostbps="turnover" * 0.001 * 100 * 100 in basis points< p></numassets).reduce(0.0)></code></p>
+      <p><code class="language-swift">print(”\n═══════════════════════════════════════════════════════════”) print(“Portfolio Comparison:”) print(“═══════════════════════════════════════════════════════════”) print(” Initial Optimized Change”) print(“───────────────────────────────────────────────────────────”) print(String(format: “Expected Return: %6.2f%% %6.2f%% %+6.2f%%”, initialReturn * 100, optimizedReturn * 100, (optimizedReturn - initialReturn) * 100)) print(String(format: “Volatility (StdDev): %6.2f%% %6.2f%% %+6.2f%%”, initialStdDev * 100, optimizedStdDev * 100, (optimizedStdDev - initialStdDev) * 100)) print(String(format: “Return/Risk Ratio: %6.3f %6.3f %+6.3f”, initialReturn / initialStdDev, optimizedReturn / optimizedStdDev, (optimizedReturn / optimizedStdDev) - (initialReturn / initialStdDev))) print(“───────────────────────────────────────────────────────────”) print(String(format: “Turnover: %6.2f%%”, turnover * 100)) print(String(format: “Transaction Costs: %6.1f bps”, transactionCostBps)) print(“═══════════════════════════════════════════════════════════”)</code></p>
+      <p><code class="language-swift">// Show largest changes let changes = (0..
+          <numassets).map { i in (index: i, change: result.solution[i] - currentweights[i], oldweight: currentweights[i], newweight: result.solution[i], return: expectedreturns[i]) }.sorted { abs($0.change)>
+             abs($1.change) }.prefix(8)
+          </numassets).map></code></p>
+      <p><code class="language-swift">print(”\nTop 8 Position Changes:”) print(“───────────────────────────────────────────────────────────”) print(“Asset Return Old Weight New Weight Change Action”) print(“───────────────────────────────────────────────────────────”) for change in changes { let direction = change.change &gt; 0 ? “BUY “ : “SELL” print(String(format: “ %2d %5.2f%% %6.2f%% %6.2f%% %+6.2f%% %s”, change.index, change.return * 100, change.oldWeight * 100, change.newWeight * 100, change.change * 100, direction)) } print(“═══════════════════════════════════════════════════════════”)</code></p>
+      <p><code class="language-swift">print(”\n💡 Key Insight:”) print(” The optimizer balanced improving returns (moving to high-return assets)”) print(” with minimizing transaction costs. Notice it didn’t eliminate all”) print(” low-return holdings - the transaction costs made that too expensive.”) </code></p>
+      <h3>Pattern 2: Configuration Comparison</h3>
+      <strong>Pattern</strong>: Compare different cooling configurations.
+      <pre><code class="language-swift">// Simple test function: Rastrigin in 2D (many local minima) func rastrigin(_ x: VectorN
+          <double>
+            ) -&gt; Double { let A = 10.0 let n = 2.0 return A * n + (0..&lt;2).reduce(0.0) { sum, i in sum + (x[i] * x[i] - A * cos(2 * .pi * x[i])) } }
+            <p></p>
+            <p>let searchSpace = [(-5.12, 5.12), (-5.12, 5.12)]</p>
+            <p>// Test different configurations let configs: [(name: String, config: SimulatedAnnealingConfig)] = [ (“Fast”, .fast), (“Default”, .default), (“Thorough”, .thorough), (“Custom (slow)”, SimulatedAnnealingConfig( initialTemperature: 100.0, finalTemperature: 0.001, coolingRate: 0.98, // Slower cooling maxIterations: 20_000, perturbationScale: 0.1, reheatInterval: nil, reheatTemperature: nil, seed: 42 )) ]</p>
+            <p>print(“Configuration Comparison (Rastrigin Function)”) print(“═══════════════════════════════════════════════════════════”) print(“Config | Final Value | Iterations | Acceptance Rate”) print(“───────────────────────────────────────────────────────────”)</p>
+          </double></code>
+        <div>
+          <code class="language-swift"><p>for (name, config) in configs { let optimizer = SimulatedAnnealing
+              <vectorn<double>
+                &gt;( config: config, searchSpace: searchSpace )
+              </vectorn<double></p><pre><code>let result = optimizer.optimizeDetailed( objective: rastrigin, initialSolution: VectorN([2.0, 3.0]) )<p></p></code><p><code>let rate = result.acceptanceRate * 100 print(”(name.padding(toLength: 15, withPad: “ “, startingAt: 0)) | “ + “(result.fitness.formatted(.number.precision(.fractionLength(6))).padding(toLength: 11, withPad: “ “, startingAt: 0)) | “ + “(String(format: “%10d”, result.iterations)) | “ + “(rate.formatted(.number.precision(.fractionLength(1))))%”) </code></p></pre>}<p></p></code>
+        </div>
+        <div>
+          <p>print(”\nRecommendation: Use .default for most problems, .thorough for difficult landscapes”) </p>
+        </div></pre>
+      <h3>Pattern 3: Ackley Function (Multimodal Optimization)</h3>
+      <strong>Pattern</strong>: Global optimization for highly multimodal functions.
+      <pre><code class="language-swift">// Ackley function: highly multimodal with many local minima // Global minimum at (0, 0) with value 0 func ackley(_ x: VectorN
+          <double>
+            ) -&gt; Double { let a = 20.0 let b = 0.2 let c = 2.0 * .pi let d = 2 // dimensions
+          </double></code><pre><code class="language-swift"><code>let sum1 = (0..
+              <d).reduce(0.0) { $0 + x[$1] * x[$1] } let sum2="(0..<d).reduce(0.0)" { $0 + cos(c * x[$1]) }< p>
+                <p>let term1 = -a * exp(-b * sqrt(sum1 / Double(d))) let term2 = -exp(sum2 / Double(d))</p>
+              </d).reduce(0.0)></code><p><code>return term1 + term2 + a + .e </code></p></code></pre>}<p></p></pre>
     </div>
+    <p>// Search space: [-5, 5] for each dimension let searchSpace = [(-5.0, 5.0), (-5.0, 5.0)]</p>
+    <p>// Use thorough config for difficult landscape let sa = SimulatedAnnealing
+      <vectorn<double>
+        &gt;( config: .thorough, searchSpace: searchSpace )
+      </vectorn<double></p>
+    <p>print(“Ackley Function Optimization (Highly Multimodal)”) print(“═══════════════════════════════════════════════════════════”)</p>
+    <p>// Start from a poor initial guess let initialGuess = VectorN([4.0, -3.5])</p>
+    <p>let result = sa.optimizeDetailed( objective: ackley, initialSolution: initialGuess )</p>
+    <p>print(“Optimization Results:”) print(” Solution: ((result.solution[0].formatted(.number.precision(.fractionLength(4)))), “ + “(result.solution[1].formatted(.number.precision(.fractionLength(4)))))”) print(” Function Value: (result.fitness.formatted(.number.precision(.fractionLength(6)))) (target: 0.0)”) print(” Iterations: (result.iterations)”) print(” Acceptance Rate: ((result.acceptanceRate * 100).formatted(.number.precision(.fractionLength(1))))%”) print(” Converged: (result.converged)”) print(” Reason: (result.convergenceReason)”)</p>
+    <p>// Distance from global optimum let distanceFromOptimum = sqrt(result.solution[0]*result.solution[0] + result.solution[1]*result.solution[1]) print(” Distance from global optimum: (distanceFromOptimum.formatted(.number.precision(.fractionLength(4))))”) 
+      <hr /></p>
+    <h2>How It Works</h2>
+    <h3>Simulated Annealing Algorithm</h3>
+    <ol>
+      <li><strong>Initialize</strong>: Set T = T_0, x = x_0</li>
+      <li><strong>Generate Neighbor</strong>: x’ = random perturbation of x</li>
+      <li><strong>Calculate ΔE</strong>: ΔE = f(x’) - f(x)</li>
+      <li><strong>Accept/Reject</strong>:
+        <ul>
+          <li>If ΔE &lt; 0: Always accept (improvement)</li>
+          <li>Else: Accept with probability P = exp(-ΔE / T)</li>
+        </ul></li>
+      <li><strong>Cool Down</strong>: T = α * T (exponential) or T = T - β (linear)</li>
+      <li><strong>Repeat</strong>: Until T &lt; T_min or max iterations</li>
+    </ol>
+    <h3>Acceptance Probability</h3>
+    <strong>Metropolis Criterion</strong>: P(accept worse solution) = exp(-ΔE / T)
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Temperature</th>
+          <th scope="col">ΔE = 0.1</th>
+          <th scope="col">ΔE = 1.0</th>
+          <th scope="col">ΔE = 10.0</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>T = 10</td>
+          <td>99.0%</td>
+          <td>90.5%</td>
+          <td>36.8%</td>
+        </tr>
+        <tr>
+          <td>T = 1</td>
+          <td>90.5%</td>
+          <td>36.8%</td>
+          <td>0.005%</td>
+        </tr>
+        <tr>
+          <td>T = 0.1</td>
+          <td>36.8%</td>
+          <td>0.005%</td>
+          <td>~0%</td>
+        </tr>
+      </tbody>
+    </table>
+    <strong>Insight</strong>: Early (high T), accept almost anything. Late (low T), only accept improvements.
+    <h3>Cooling Schedule Impact</h3>
+    <strong>Problem: 100-variable portfolio optimization</strong>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Schedule</th>
+          <th scope="col">Final Value</th>
+          <th scope="col">Iterations</th>
+          <th scope="col">Quality</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Fast (α=0.90)</td>
+          <td>0.0245</td>
+          <td>2,500</td>
+          <td>Good</td>
+        </tr>
+        <tr>
+          <td>Medium (α=0.95)</td>
+          <td>0.0238</td>
+          <td>5,800</td>
+          <td>Better</td>
+        </tr>
+        <tr>
+          <td>Slow (α=0.98)</td>
+          <td>0.0235</td>
+          <td>18,000</td>
+          <td>Best</td>
+        </tr>
+        <tr>
+          <td>Adaptive</td>
+          <td>0.0237</td>
+          <td>7,200</td>
+          <td>Better</td>
+        </tr>
+      </tbody>
+    </table>
+    <strong>Tradeoff</strong>: Slower cooling = better solution, more time
+    <hr />
+    <h2>Real-World Application</h2>
+    <h3>Manufacturing: Batch Sizing with Setup Costs</h3>
+    <strong>Company</strong>: Electronics manufacturer optimizing production batch sizes for 15 products 
+    <strong>Challenge</strong>: Minimize total costs (inventory + setup) subject to demand and capacity
+    <p></p>
+    <p><strong>Problem Characteristics</strong>:</p>
+    <ul>
+      <li><strong>Continuous variables</strong>: Batch sizes (treated as continuous for optimization)</li>
+      <li><strong>Setup costs</strong>: Fixed cost per production run (non-smooth)</li>
+      <li><strong>Holding costs</strong>: Penalty for excess inventory (smooth)</li>
+      <li><strong>Multiple local minima</strong>: ~100+ feasible configurations</li>
+    </ul>
+    <strong>Why Simulated Annealing</strong>:
+    <ul>
+      <li>Setup costs create discontinuous objective</li>
+      <li>Global search needed (many local minima)</li>
+      <li>Can escape poor local solutions</li>
+    </ul>
+    <strong>Implementation</strong>:
+    <pre><code class="language-swift">import BusinessMath<p></p><p>import BusinessMath</p><p>// Model with 15 products let numProducts = 15</p><p>// Weekly demand per product (units/week) let demand: [Double] = [ 100.0, 150.0, 80.0, 200.0, 120.0, // Products 0-4 90.0, 175.0, 110.0, 140.0, 95.0, // Products 5-9 160.0, 85.0, 130.0, 105.0, 145.0 // Products 10-14 ]</p><p>// Fixed setup cost per production run ($) let setupCost: [Double] = [ 500.0, 750.0, 400.0, 850.0, 600.0, // Products 0-4 450.0, 800.0, 550.0, 700.0, 480.0, // Products 5-9 720.0, 420.0, 650.0, 520.0, 680.0 // Products 10-14 ]</p><p>// Holding cost per unit per week ($/unit/week) let holdingCost: [Double] = [ 2.0, 3.5, 1.8, 4.0, 2.5, // Products 0-4 1.9, 3.8, 2.2, 3.0, 2.0, // Products 5-9 3.3, 1.7, 2.8, 2.1, 3.2 // Products 10-14 ]</p></code>
+      <div>
+        <code class="language-swift">
+          <div>
+            <p>func totalCost(_ batchSizes: VectorN
+              <double>
+                ) -&gt; Double { var cost = 0.0
+              </double></p>
+            <pre><code>for i in 0..
+                <numproducts { let runsperweek="demand[i]" max(batchsizes[i], 1.0) let avginventory="batchSizes[i]" 2.0<pre>
+                  <code>// Setup costs (discontinuous!) cost += runsPerWeek * setupCost[i]<p></p></code>
+                </numproducts></code><p><code><code>// Holding costs (smooth) cost += avgInventory * holdingCost[i] </code></code></p></pre>}
+            <p></p>
+          </div><p>return cost </p></code>
+      </div></pre>}
+    <p></p>
     <p>print(“Manufacturing Batch Sizing Optimization”) print(“═══════════════════════════════════════════════════════════”) print(”\nProblem: 15 products with setup costs and inventory holding costs”)</p>
     <p>// Calculate baseline cost (using demand as batch size - naive approach) let naiveBatches = VectorN(demand) let naiveCost = totalCost(naiveBatches) print(”\nNaive Approach (batch size = weekly demand):”) print(” Total Weekly Cost: $(naiveCost.formatted(.number.precision(.fractionLength(2))))”)</p>
     <p>// Simulated Annealing configuration let config = SimulatedAnnealingConfig( initialTemperature: 50.0, finalTemperature: 0.01, coolingRate: 0.97, maxIterations: 50_000, perturbationScale: 0.15, reheatInterval: nil, reheatTemperature: nil, seed: 42 // Reproducible results )</p>

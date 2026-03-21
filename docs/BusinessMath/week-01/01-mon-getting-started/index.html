@@ -162,100 +162,98 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Getting Started with BusinessMath</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">6 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Part 1 of 12-Week BusinessMath Series</strong>
-            <hr /></p>
-          <h2>What You’ll Learn</h2>
-          <ul>
-            <li>How to install and configure BusinessMath in your Swift project</li>
-            <li>Core concepts: Periods, Time Series, and Time Value of Money</li>
-            <li>Common workflows for financial calculations and forecasting</li>
-            <li>Building your first business calculations</li>
-          </ul>
-          <hr />
-          <h2>The Problem</h2>Financial calculations are everywhere in business: retirement planning, loan amortization, investment analysis, revenue forecasting. But implementing these correctly requires understanding compound interest, time series data structures, and numerical precision—and getting any of it wrong can cost real money.
-          <p></p>
-          <p><a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> is a library that handles the complexity while giving you confidence in the results. Calculations work across different numeric types (Double, Float) without rewriting code. And the API is ergonomic and clear enough that you can understand it six months from now or pick it up and work with it day-to-day.
-            <hr /></p>
-          <h2>The Solution</h2>
-          <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> makes complex calculations simple. Here’s how to get started:
-          <h3>Installation</h3>Add 
-          <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> to your 
-          <code>Package.swift</code>:
-          <pre><code class="language-swift">dependencies: [ .package(url: “https://github.com/jpurnell/BusinessMath.git”, from: “2.0.0”) ] </code></pre>Then import it:
-          <pre><code class="language-swift">import BusinessMath </code></pre>
-          <h3>Your First Calculation: Time Value of Money</h3>
-          <pre><code class="language-swift">import BusinessMath // Present value: What’s $110,000 in 1 year worth today at 10% rate? let pv = presentValue( futureValue: 110_000, rate: 0.10, periods: 1 ) print(“Present value: (pv.currency())”) // Output: Present value: $100,000.00<p></p></code><p><code class="language-swift">// Future value: What will $100K grow to in 5 years at 8%? let fv = futureValue( presentValue: 100_000, rate: 0.08, periods: 5 ) print(“Future value: (fv.currency())”) // Output: Future value: $146,932.81 </code></p></pre>
-          <h3>Working with Time Periods</h3>
-          <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> provides type-safe temporal identifiers:
-          <pre><code class="language-swift">// Create periods at different granularities let jan2025 = Period.month(year: 2025, month: 1) let q1_2025 = Period.quarter(year: 2025, quarter: 1) let fy2025 = Period.year(2025)<p></p><p>// Period arithmetic let feb2025 = jan2025 + 1 // Next month let yearRange = jan2025…jan2025 + 11 // Full year</p></code><p><code class="language-swift">// Subdivision let quarters = fy2025.quarters() // [Q1, Q2, Q3, Q4] let months = q1_2025.months() // [Jan, Feb, Mar] </code></p></pre>
-          <h3>Building Time Series</h3>Associate values with time periods for analysis:
-          <pre><code class="language-swift">let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ] let revenue: [Double] = [100_000, 120_000, 115_000]<p></p><p>let ts = TimeSeries(periods: periods, values: revenue)</p><p>// Access values by period if let janRevenue = ts[periods[0]] { print(“January: (janRevenue.currency())”) }</p></code><p><code class="language-swift">// Iterate over values for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) } </code></p></pre>
-          <h3>Investment Analysis</h3>Evaluate projects with NPV and IRR:
-          <pre><code class="language-swift">// Cash flows: initial investment, then returns over 5 years let cashFlows = [-250_000.0, 100_000, 150_000, 200_000, 250_000, 300_000]<p></p><p>// Net Present Value at 10% discount rate let npvValue = npv(discountRate: 0.10, cashFlows: cashFlows) print(“NPV: $(npvValue.formatted(.number.precision(.fractionLength(2))))”) // Output: NPV: $472,169.05 (positive NPV → good investment!)</p></code><p><code class="language-swift">// Internal Rate of Return let irrValue = try irr(cashFlows: cashFlows) print(“IRR: (irrValue.formatted(.percent.precision(.fractionLength(2))))”) // Output: IRR: 56.77% (impressive return!) </code></p></pre>
-          <hr />
-          <h2>How It Works</h2>
-          <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> is built on three core principles:
-          <h3>1. Type Safety</h3>Periods use Swift enums to prevent mixing incompatible time granularities. You can’t accidentally add a month to a day—the compiler catches it.
-          <h3>2. Generic Programming</h3>Financial functions work with any numeric type conforming to 
-          <code>Real</code> from swift-numerics:
-          <pre><code class="language-swift">// Works with Double let pvDouble = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0)<p></p></code><p><code class="language-swift">// Works with Float let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0) </code></p></pre>
-          <h3>3. Composability</h3>Functions compose naturally. Time series can be transformed, aggregated, and analyzed using simple and ergonomic Swift patterns.
-          <hr />
-          <h2>Try It Yourself</h2>Copy to an Xcode playground and experiment:
-          <details>
-            <summary>Click to expand full playground code</summary>
-            <pre><code class="language-swift">import BusinessMath
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Getting Started with BusinessMath</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">6 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 1 of 12-Week BusinessMath Series</strong>
+          <hr /></p>
+        <h2>What You’ll Learn</h2>
+        <ul>
+          <li>How to install and configure BusinessMath in your Swift project</li>
+          <li>Core concepts: Periods, Time Series, and Time Value of Money</li>
+          <li>Common workflows for financial calculations and forecasting</li>
+          <li>Building your first business calculations</li>
+        </ul>
+        <hr />
+        <h2>The Problem</h2>Financial calculations are everywhere in business: retirement planning, loan amortization, investment analysis, revenue forecasting. But implementing these correctly requires understanding compound interest, time series data structures, and numerical precision—and getting any of it wrong can cost real money.
+        <p></p>
+        <p><a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> is a library that handles the complexity while giving you confidence in the results. Calculations work across different numeric types (Double, Float) without rewriting code. And the API is ergonomic and clear enough that you can understand it six months from now or pick it up and work with it day-to-day.
+          <hr /></p>
+        <h2>The Solution</h2>
+        <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> makes complex calculations simple. Here’s how to get started:
+        <h3>Installation</h3>Add 
+        <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> to your 
+        <code>Package.swift</code>:
+        <pre><code class="language-swift">dependencies: [ .package(url: “https://github.com/jpurnell/BusinessMath.git”, from: “2.0.0”) ] </code></pre>Then import it:
+        <pre><code class="language-swift">import BusinessMath </code></pre>
+        <h3>Your First Calculation: Time Value of Money</h3>
+        <pre><code class="language-swift">import BusinessMath // Present value: What’s $110,000 in 1 year worth today at 10% rate? let pv = presentValue( futureValue: 110_000, rate: 0.10, periods: 1 ) print(“Present value: (pv.currency())”) // Output: Present value: $100,000.00<p></p></code><p><code class="language-swift">// Future value: What will $100K grow to in 5 years at 8%? let fv = futureValue( presentValue: 100_000, rate: 0.08, periods: 5 ) print(“Future value: (fv.currency())”) // Output: Future value: $146,932.81 </code></p></pre>
+        <h3>Working with Time Periods</h3>
+        <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> provides type-safe temporal identifiers:
+        <pre><code class="language-swift">// Create periods at different granularities let jan2025 = Period.month(year: 2025, month: 1) let q1_2025 = Period.quarter(year: 2025, quarter: 1) let fy2025 = Period.year(2025)<p></p><p>// Period arithmetic let feb2025 = jan2025 + 1 // Next month let yearRange = jan2025…jan2025 + 11 // Full year</p></code><p><code class="language-swift">// Subdivision let quarters = fy2025.quarters() // [Q1, Q2, Q3, Q4] let months = q1_2025.months() // [Jan, Feb, Mar] </code></p></pre>
+        <h3>Building Time Series</h3>Associate values with time periods for analysis:
+        <pre><code class="language-swift">let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ] let revenue: [Double] = [100_000, 120_000, 115_000]<p></p><p>let ts = TimeSeries(periods: periods, values: revenue)</p><p>// Access values by period if let janRevenue = ts[periods[0]] { print(“January: (janRevenue.currency())”) }</p></code><p><code class="language-swift">// Iterate over values for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) } </code></p></pre>
+        <h3>Investment Analysis</h3>Evaluate projects with NPV and IRR:
+        <pre><code class="language-swift">// Cash flows: initial investment, then returns over 5 years let cashFlows = [-250_000.0, 100_000, 150_000, 200_000, 250_000, 300_000]<p></p><p>// Net Present Value at 10% discount rate let npvValue = npv(discountRate: 0.10, cashFlows: cashFlows) print(“NPV: $(npvValue.formatted(.number.precision(.fractionLength(2))))”) // Output: NPV: $472,169.05 (positive NPV → good investment!)</p></code><p><code class="language-swift">// Internal Rate of Return let irrValue = try irr(cashFlows: cashFlows) print(“IRR: (irrValue.formatted(.percent.precision(.fractionLength(2))))”) // Output: IRR: 56.77% (impressive return!) </code></p></pre>
+        <hr />
+        <h2>How It Works</h2>
+        <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> is built on three core principles:
+        <h3>1. Type Safety</h3>Periods use Swift enums to prevent mixing incompatible time granularities. You can’t accidentally add a month to a day—the compiler catches it.
+        <h3>2. Generic Programming</h3>Financial functions work with any numeric type conforming to 
+        <code>Real</code> from swift-numerics:
+        <pre><code class="language-swift">// Works with Double let pvDouble = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0)<p></p></code><p><code class="language-swift">// Works with Float let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0) </code></p></pre>
+        <h3>3. Composability</h3>Functions compose naturally. Time series can be transformed, aggregated, and analyzed using simple and ergonomic Swift patterns.
+        <hr />
+        <h2>Try It Yourself</h2>Copy to an Xcode playground and experiment:
+        <details>
+          <summary>Click to expand full playground code</summary>
+          <pre><code class="language-swift">import BusinessMath
 // Present value: What’s $110,000 in 1 year worth today at 10% rate? let pv = presentValue( futureValue: 110_000, rate: 0.10, periods: 1 )
 <p></p><p>print(“Present value: (pv.currency())”) // Output: Present value: $100,000.00</p><p>// Future value: What will $100K grow to in 5 years at 8%? let fv = futureValue( presentValue: 100_000, rate: 0.08, periods: 5 )</p></code>
-              <div>
-                <code class="language-swift"><p>print(“Future value: (fv.currency())”) // Output: Future value: $146,932.81</p><pre><code>// Create periods at different granularities let jan2025 = Period.month(year: 2025, month: 1) let q1_2025 = Period.quarter(year: 2025, quarter: 1) let fy2025 = Period.year(2025)<p></p><p>// Period arithmetic let feb2025 = jan2025 + 1 // Next month let yearRange = jan2025…jan2025 + 11 // Full year</p></code><p><code>// Subdivision let quarters = fy2025.quarters() // [Q1, Q2, Q3, Q4] let months = q1_2025.months() // [Jan, Feb, Mar] </code></p></pre>let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ]<p></p></code>
-              </div><p>let revenue: [Double] = [100_000, 120_000, 115_000]</p><p>let ts = TimeSeries(periods: periods, values: revenue)</p><p>// Access values by period if let janRevenue = ts[periods[0]] { print(“January: (janRevenue.currency())”) }</p><p>for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) }</p><p>// Cash flows: initial investment, then returns over 5 years let cashFlows = [-250_000.0, 100_000, 150_000, 200_000, 250_000, 300_000]</p><p>// Net Present Value at 10% discount rate let npvValue = npv(discountRate: 0.10, cashFlows: cashFlows) print(“NPV: (npvValue.currency())”) // Output: NPV: $472,168.75 (positive NPV → good investment!)</p><p>// Internal Rate of Return let irrValue = try irr(cashFlows: cashFlows) print(“IRR: (irrValue.percent())”) // Output: IRR: 56.72% (impressive return!)</p><p>// Works with Double let pvDouble = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10)</p><p>// Works with Float let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10) </p></pre>
-          </details>
-          <p></p>
-          <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.1-GettingStarted.md"><strong>BusinessMath Docs – Getting Started</strong></a></p>
-          <p><strong>Modifications to try</strong>:</p>
-          <ol>
-            <li>Change the interest rate from 10% to 5%—how does PV change?</li>
-            <li>Calculate monthly loan payments for different principal amounts</li>
-            <li>Create a time series for your own revenue data</li>
-          </ol>
-          <hr />
-          <h2>Real-World Application</h2>Financial calculations power critical business decisions. A financial advisor uses PV/FV to calculate retirement contributions. A CFO uses NPV to evaluate capital projects. A business analyst uses time series to forecast revenue.
-          <p></p>
-          <p>Getting these calculations right matters. A 0.1% error in IRR on a $10M project translates to $10,000 in misallocated capital. <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a>’s rigorous testing (200+ tests) and documentation ensure you can trust the results.
-            <hr /></p>
-          <h3>📝 Development Note</h3>When we started the 
-          <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> project, the first question was: “What does production quality mean?” We defined it explicitly from day one: comprehensive tests, full documentation, zero compiler warnings.
-          <p></p>
-          <p>That clarity determined every decision afterward. AI doesn’t inherently produce production-quality code—it amplifies your standards. Set them high initially, and AI helps you meet them. Set them low, and AI happily generates technical debt.</p>
-          <p>The first function (present value) had one test. By the end, we had 247 tests and 100% documentation coverage. The standards compounded.</p>
-          <p><strong>Lesson</strong>: Define “production quality” for your next project before writing any code. Be explicit. Write it down. Reference it in every AI prompt.</p>
-          <p><strong>Related Methodology</strong>: <a href="../02-tue-test-first-development">Test-First Development with AI</a> (Tuesday’s post)
-            <hr /></p>
-          <h2>Next Steps</h2>
-          <strong>Coming up next</strong>: 
-          <a href="../03-wed-time-series">Time Series Foundation (Wednesday)</a> - Deep dive into periods and temporal data structures
-          <p></p>
-          <p><strong>This week’s capstone</strong>: <a href="../04-fri-case-retirement">Case Study #1: Retirement Planning Calculator (Friday)</a> - Combines TVM and statistical distributions to answer “How much do I need to save?”
-            <hr /><strong>Series Progress</strong>:</p>
-          <ul>
-            <li>Week: 1/12</li>
-            <li>Posts Published: 1/~48</li>
-            <li>Case Studies: 0/6</li>
-            <li>Topics Covered: Getting Started</li>
-            <li>Playgrounds: 1 available</li>
-          </ul>
-          <p></p>
-        </div>
+            <div>
+              <code class="language-swift"><p>print(“Future value: (fv.currency())”) // Output: Future value: $146,932.81</p><pre><code>// Create periods at different granularities let jan2025 = Period.month(year: 2025, month: 1) let q1_2025 = Period.quarter(year: 2025, quarter: 1) let fy2025 = Period.year(2025)<p></p><p>// Period arithmetic let feb2025 = jan2025 + 1 // Next month let yearRange = jan2025…jan2025 + 11 // Full year</p></code><p><code>// Subdivision let quarters = fy2025.quarters() // [Q1, Q2, Q3, Q4] let months = q1_2025.months() // [Jan, Feb, Mar] </code></p></pre>let periods = [ Period.month(year: 2025, month: 1), Period.month(year: 2025, month: 2), Period.month(year: 2025, month: 3) ]<p></p></code>
+            </div><p>let revenue: [Double] = [100_000, 120_000, 115_000]</p><p>let ts = TimeSeries(periods: periods, values: revenue)</p><p>// Access values by period if let janRevenue = ts[periods[0]] { print(“January: (janRevenue.currency())”) }</p><p>for (period, value) in zip(periods, ts) { print(”(period.label): (ts[period]!.currency())”) }</p><p>// Cash flows: initial investment, then returns over 5 years let cashFlows = [-250_000.0, 100_000, 150_000, 200_000, 250_000, 300_000]</p><p>// Net Present Value at 10% discount rate let npvValue = npv(discountRate: 0.10, cashFlows: cashFlows) print(“NPV: (npvValue.currency())”) // Output: NPV: $472,168.75 (positive NPV → good investment!)</p><p>// Internal Rate of Return let irrValue = try irr(cashFlows: cashFlows) print(“IRR: (irrValue.percent())”) // Output: IRR: 56.72% (impressive return!)</p><p>// Works with Double let pvDouble = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10)</p><p>// Works with Float let pvFloat: Float = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10) </p></pre>
+        </details>
+        <p></p>
+        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.1-GettingStarted.md"><strong>BusinessMath Docs – Getting Started</strong></a></p>
+        <p><strong>Modifications to try</strong>:</p>
+        <ol>
+          <li>Change the interest rate from 10% to 5%—how does PV change?</li>
+          <li>Calculate monthly loan payments for different principal amounts</li>
+          <li>Create a time series for your own revenue data</li>
+        </ol>
         <hr />
-        <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, getting-started, tvm, time-series</p>
+        <h2>Real-World Application</h2>Financial calculations power critical business decisions. A financial advisor uses PV/FV to calculate retirement contributions. A CFO uses NPV to evaluate capital projects. A business analyst uses time series to forecast revenue.
+        <p></p>
+        <p>Getting these calculations right matters. A 0.1% error in IRR on a $10M project translates to $10,000 in misallocated capital. <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a>’s rigorous testing (200+ tests) and documentation ensure you can trust the results.
+          <hr /></p>
+        <h3>📝 Development Note</h3>When we started the 
+        <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> project, the first question was: “What does production quality mean?” We defined it explicitly from day one: comprehensive tests, full documentation, zero compiler warnings.
+        <p></p>
+        <p>That clarity determined every decision afterward. AI doesn’t inherently produce production-quality code—it amplifies your standards. Set them high initially, and AI helps you meet them. Set them low, and AI happily generates technical debt.</p>
+        <p>The first function (present value) had one test. By the end, we had 247 tests and 100% documentation coverage. The standards compounded.</p>
+        <p><strong>Lesson</strong>: Define “production quality” for your next project before writing any code. Be explicit. Write it down. Reference it in every AI prompt.</p>
+        <p><strong>Related Methodology</strong>: <a href="../02-tue-test-first-development">Test-First Development with AI</a> (Tuesday’s post)
+          <hr /></p>
+        <h2>Next Steps</h2>
+        <strong>Coming up next</strong>: 
+        <a href="../03-wed-time-series">Time Series Foundation (Wednesday)</a> - Deep dive into periods and temporal data structures
+        <p></p>
+        <p><strong>This week’s capstone</strong>: <a href="../04-fri-case-retirement">Case Study #1: Retirement Planning Calculator (Friday)</a> - Combines TVM and statistical distributions to answer “How much do I need to save?”
+          <hr /><strong>Series Progress</strong>:</p>
+        <ul>
+          <li>Week: 1/12</li>
+          <li>Posts Published: 1/~48</li>
+          <li>Case Studies: 0/6</li>
+          <li>Topics Covered: Getting Started</li>
+          <li>Playgrounds: 1 available</li>
+        </ul>
+        <p></p>
       </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, getting-started, tvm, time-series</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">

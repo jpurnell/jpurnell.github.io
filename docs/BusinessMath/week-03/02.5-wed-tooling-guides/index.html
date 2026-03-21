@@ -162,301 +162,300 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">The Supporting Cast: Coding Rules, DocC Guidelines, and Testing Standards</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Development Journey</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">12 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Development Journey Series</strong>
-            <hr /></p>
-          <h2>The Context</h2>In the previous post, we discussed how the Master Plan serves as the project’s memory across sessions. But the master plan only answers “what to build next”—it doesn’t answer 
-          <strong>how to build it consistently</strong>.
-          <p></p>
-          <p>After a few weeks of BusinessMath development, I had a different problem: <strong>pattern drift</strong>.</p>
-          <ul>
-            <li>Week 1: Functions used <code>guard</code> statements for validation</li>
-            <li>Week 3: Some functions started using early returns with <code>if !condition</code></li>
-            <li>Week 5: Parameter naming became inconsistent (<code>rate</code> vs. <code>r</code> vs. <code>discountRate</code>)</li>
-            <li>Week 7: DocC comments had three different documentation styles</li>
-          </ul>Each individual choice made sense in isolation. But across 200+ tests and 11 topic areas, the inconsistency was creating friction:
-          <ul>
-            <li>“Wait, did we decide to use external parameter labels?”</li>
-            <li>“Should this throw an error or return zero for empty input?”</li>
-            <li>“What’s the format for DocC mathematical formulas?”</li>
-          </ul>Without explicit standards, every decision becomes a mini research project. AI doesn’t remember past decisions, so it defaults to whatever seems reasonable 
-          <em>right now</em>.
-          <hr />
-          <h2>The Solution</h2>
-          <strong>Create living standards documents that serve as the project’s consistency engine.</strong>
-          <p></p>
-          <p>We developed three core documents:</p>
-          <ol>
-            <li><strong>CODING_RULES.md</strong> - How to write code</li>
-            <li><strong>DOCC_GUIDELINES.md</strong> - How to document APIs</li>
-            <li><strong>TEST_DRIVEN_DEVELOPMENT.md</strong> - How to test code</li>
-          </ol>These aren’t heavyweight “process manuals”—they’re quick-reference guides that answer common questions in seconds.
-          <hr />
-          <h2>Document 1: Coding Rules</h2>
-          <strong>The Problem It Solves</strong>: “How should I structure this code?”
-          <h3>What It Contains</h3>
-          <pre><code class="language-markdown"># Coding Rules for BusinessMath Library
-              <ul>
-                <li>Use <code>
-                    <t: real></t:></code> for all numeric functions</li>
-                <li>Enables flexibility across Float, Double, Float16, etc.</li>
-              </ul><h2>2. Function Signatures</h2>
-              <ul>
-                <li>Public API: All user-facing functions marked <code>public</code></li>
-                <li>Descriptive parameter labels</li>
-                <li>Default parameters for common cases</li>
-              </ul><h2>3. Guard Clauses &amp; Validation</h2>
-              <ul>
-                <li>Use <code>guard</code> for input validation</li>
-                <li>Return sensible defaults for empty inputs (e.g., <code>T(0)</code>)</li>
-                <li>Throw errors for truly invalid cases</li>
-              </ul><h2>4. Formatting Rules</h2></code>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">The Supporting Cast: Coding Rules, DocC Guidelines, and Testing Standards</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Development Journey</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">12 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Development Journey Series</strong>
+          <hr /></p>
+        <h2>The Context</h2>In the previous post, we discussed how the Master Plan serves as the project’s memory across sessions. But the master plan only answers “what to build next”—it doesn’t answer 
+        <strong>how to build it consistently</strong>.
+        <p></p>
+        <p>After a few weeks of BusinessMath development, I had a different problem: <strong>pattern drift</strong>.</p>
+        <ul>
+          <li>Week 1: Functions used <code>guard</code> statements for validation</li>
+          <li>Week 3: Some functions started using early returns with <code>if !condition</code></li>
+          <li>Week 5: Parameter naming became inconsistent (<code>rate</code> vs. <code>r</code> vs. <code>discountRate</code>)</li>
+          <li>Week 7: DocC comments had three different documentation styles</li>
+        </ul>Each individual choice made sense in isolation. But across 200+ tests and 11 topic areas, the inconsistency was creating friction:
+        <ul>
+          <li>“Wait, did we decide to use external parameter labels?”</li>
+          <li>“Should this throw an error or return zero for empty input?”</li>
+          <li>“What’s the format for DocC mathematical formulas?”</li>
+        </ul>Without explicit standards, every decision becomes a mini research project. AI doesn’t remember past decisions, so it defaults to whatever seems reasonable 
+        <em>right now</em>.
+        <hr />
+        <h2>The Solution</h2>
+        <strong>Create living standards documents that serve as the project’s consistency engine.</strong>
+        <p></p>
+        <p>We developed three core documents:</p>
+        <ol>
+          <li><strong>CODING_RULES.md</strong> - How to write code</li>
+          <li><strong>DOCC_GUIDELINES.md</strong> - How to document APIs</li>
+          <li><strong>TEST_DRIVEN_DEVELOPMENT.md</strong> - How to test code</li>
+        </ol>These aren’t heavyweight “process manuals”—they’re quick-reference guides that answer common questions in seconds.
+        <hr />
+        <h2>Document 1: Coding Rules</h2>
+        <strong>The Problem It Solves</strong>: “How should I structure this code?”
+        <h3>What It Contains</h3>
+        <pre><code class="language-markdown"># Coding Rules for BusinessMath Library
             <ul>
-              <code class="language-markdown"><li>NEVER use String(format:) for number formatting</li><li>ALWAYS use Swift’s formatted() API</li><li>Respect user locales automatically </li></code>
-            </ul></pre>
-          <h3>Real Example: The String Formatting Rule</h3>Early in the project, we used C-style formatting:
-          <pre><code class="language-swift">// Week 2 code let output = String(format: “%.2f”, value) </code></pre>This created problems:
+              <li>Use <code>
+                  <t: real></t:></code> for all numeric functions</li>
+              <li>Enables flexibility across Float, Double, Float16, etc.</li>
+            </ul><h2>2. Function Signatures</h2>
+            <ul>
+              <li>Public API: All user-facing functions marked <code>public</code></li>
+              <li>Descriptive parameter labels</li>
+              <li>Default parameters for common cases</li>
+            </ul><h2>3. Guard Clauses &amp; Validation</h2>
+            <ul>
+              <li>Use <code>guard</code> for input validation</li>
+              <li>Return sensible defaults for empty inputs (e.g., <code>T(0)</code>)</li>
+              <li>Throw errors for truly invalid cases</li>
+            </ul><h2>4. Formatting Rules</h2></code>
           <ul>
-            <li>Doesn’t respect user locales</li>
-            <li>Breaks with non-decimal numeric types</li>
-            <li>Error-prone format strings</li>
-          </ul>We established a rule:
-          <pre><code class="language-swift">// RULE: Never use String(format:) // ALWAYS use formatted() API// Correct approach let output = value.formatted(.number.precision(.fractionLength(2))) </code></pre>
-          <strong>Before the rule</strong>: 30 minutes per session debating formatting approaches. 
-          <p></p>
-          <p><strong>After the rule</strong>: 0 minutes. “Check CODING_RULES.md. Use formatted().”
-            <hr /></p>
-          <h3>Why This Worked</h3>
-          <h4>1. AI Can Follow Rules It Can Read</h4>When starting a session:
-          <blockquote>
-            “Read CODING_RULES.md. Implement the IRR function following these standards.”
-          </blockquote>AI responds:
-          <blockquote>
-            “Using 
-            <code>
-              <t: real></t:></code> generic constraint, 
-            <code>guard</code> for validation, and Swift’s formatted() API as specified in CODING_RULES.md.”
-          </blockquote>
-          <strong>Result</strong>: Consistent code on first try.
-          <h4>2. Rules Prevent Regression</h4>Week 10, implementing a new feature:
-          <pre><code class="language-swift">// AI’s first attempt let result = String(format: “%.4f”, value) </code></pre>My review:
-          <blockquote>
-            “This violates CODING_RULES.md section 4. Use formatted() API.”
-          </blockquote>AI immediately corrects:
-          <pre><code class="language-swift">let result = value.formatted(.number.precision(.fractionLength(4))) </code></pre>
-          <strong>Without the documented rule</strong>, I’d have to re-explain 
-          <em>why</em> every single time.
-          <h4>3. Rules Capture Hard-Won Lessons</h4>The string formatting rule exists because we spent 2 hours debugging locale issues in Week 2. The rule captures that lesson so it’s never repeated.
-          <hr />
-          <h2>Document 2: DocC Guidelines</h2>
-          <strong>The Problem It Solves</strong>: “How should I document this API?”
-          <h3>What It Contains</h3>
-          <pre><code class="language-markdown"># DocC Documentation Guidelines<h2>Required for All Public APIs</h2>
-              <ol>
-                <li>Brief one-line summary</li>
-                <li>Detailed explanation including:
-                  <ul>
-                    <li>What problem it solves</li>
-                    <li>How it works (if non-obvious)</li>
-                    <li>When to use it</li>
-                  </ul></li>
-                <li>Parameter documentation</li>
-                <li>Return value documentation</li>
-                <li>Throws documentation (if applicable)</li>
-                <li>Usage example</li>
-                <li>Mathematical formula (for math functions)</li>
-                <li>Excel equivalent (if applicable)</li>
-                <li>See Also links</li>
-              </ol><h2>Documentation Template</h2>/// /// Brief one-line summary. /// /// Detailed explanation… /// /// - Parameters: ///   - param1: Description with valid ranges /// - Returns: Description of return value and guarantees /// - Throws: Specific errors and when they occur /// /// ## Usage Example /// /// let result = function(param: value) /// // Output: expected result /// /// /// ## Mathematical Formula /// [LaTeX or ASCII math notation] /// /// - SeeAlso: ///   - <code>RelatedType</code> ///   - <code>relatedFunction(_:)</code> </code></pre>
-          <h3>Real Example: The Formula Format</h3>Week 4, documenting the NPV function. First attempt:
-          <pre><code class="language-swift">/// NPV = sum of (cash flow / (1 + rate)^period) </code></pre>
-          <strong>Problems</strong>:
-          <ul>
-            <li>Unclear notation</li>
-            <li>No variable definitions</li>
-            <li>Doesn’t render well in DocC</li>
-          </ul>After establishing guidelines:
-          <pre><code class="language-swift">/// ## Mathematical Formula /// NPV is calculated as: /// /// NPV = Σ (CFₜ / (1 + r)ᵗ) /// /// where: /// - CFₜ = cash flow at time t /// - r = discount rate /// - t = time period </code></pre>
-          <strong>Result</strong>: Consistent, readable mathematical notation across all 200+ documented functions.
-          <hr />
-          <h3>Why This Worked</h3>
-          <h4>1. Documentation as Design Tool</h4>Writing DocC comments before implementation forced clarification:
-          <p></p>
-          <p><strong>Question</strong>: “What errors can calculateIRR throw?”</p>
-          <p><strong>DocC forces answer</strong>:</p>
-          <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if calculation ///   does not converge within <code>maxIterations</code>. ///   <code>FinancialError.invalidInput</code> if cash flows array is empty. </code></pre>Now I know 
-          <em>exactly</em> what to implement.
-          <h4>2. Examples Must Compile</h4>The guidelines require runnable examples:
-          <pre><code class="language-swift">/// ## Usage Example /// /// let cashFlows = [-1000.0, 300.0, 400.0, 500.0] /// let irr = try calculateIRR(cashFlows: cashFlows) /// print(irr.formatted(.percent))  // Output: 12.5% /// </code></pre>
-          <strong>Rule</strong>: Every example must run successfully in a playground.
-          <p></p>
-          <p>We manually verified all of the documented examples to make sure we had correct values and an ergonomic approach for users.</p>
-          <p>This caught:</p>
-          <ul>
-            <li>API design issues (awkward to use → redesign)</li>
-            <li>Missing error handling (forgot to mark <code>throws</code>)</li>
-            <li>Incorrect output claims (example output didn’t match reality)</li>
-          </ul>
-          <h4>3. Prevents Documentation Drift</h4>Week 15, adding async versions of functions. The template ensures consistent documentation:
-          <pre><code class="language-swift">/// [Async version follows same structure as sync version] /// - Same brief summary /// - Same parameter docs /// - Added: Concurrency section /// - Same usage examples (with await) </code></pre>
-          <strong>Without guidelines</strong>: 15 different documentation styles for 15 async functions.
-          <p></p>
-          <p><strong>With guidelines</strong>: Perfect consistency.
-            <hr /></p>
-          <h2>Document 3: Test-Driven Development Standards</h2>
-          <strong>The Problem It Solves</strong>: “How should I test this function?”
-          <h3>What It Contains</h3>
-          <pre><code class="language-markdown"># Test-Driven Development Standards<h2>Test Structure (Swift Testing)</h2>
-              <ul>
-                <li>Use <code>@Test</code> attribute with descriptive names</li>
-                <li>Use <code>@Suite</code> to group related tests</li>
-                <li>Use <code>#expect</code> for assertions</li>
-                <li>Use parameterized tests for multiple scenarios</li>
-              </ul><h2>Test Organization</h2>Tests mirror source structure:<p></p><p>Tests/BusinessMathTests/ ├── Time Series Tests/ │ ├── PeriodTests.swift │ └── TVM Tests/ │ └── NPVTests.swift</p><h2>RED-GREEN-REFACTOR Cycle</h2>
-              <ol>
-                <li>RED: Write failing test</li>
-                <li>GREEN: Minimal implementation to pass</li>
-                <li>REFACTOR: Improve code quality (tests still pass)</li>
-              </ol><h2>Deterministic Testing for Random Functions</h2><strong>Always use seeded random number generators</strong><p></p></code><p><code class="language-markdown">@Test(“Monte Carlo with seed is deterministic”) func testDeterministic() { let seed: UInt64 = 12345 let result1 = runSimulation(trials: 10000, seed: seed) let result2 = runSimulation(trials: 10000, seed: seed) #expect(result1 == result2) // Must be identical } </code></p></pre>
-          <h3>Real Example: The Deterministic Testing Rule</h3>Week 6, implementing Monte Carlo simulations. First test:
-          <pre><code class="language-swift">@Test(“Monte Carlo converges to expected value”) func testConvergence() { let result = runSimulation(trials: 10000) #expect(abs(result.mean - 100.0) &lt; 1.0) } </code></pre>
-          <strong>Problem</strong>: Flaky test. Sometimes passed, sometimes failed (randomness).
-          <p></p>
-          <p>After establishing the rule:</p>
-          <pre><code class="language-swift">@Test(“Monte Carlo with seed converges to expected value”) func testConvergence() { let seed: UInt64 = 12345 let result = runSimulation(trials: 10000, seed: seed) #expect(abs(result.mean - 100.023) &lt; 0.001)  // Exact value } </code></pre>
-          <strong>Result</strong>: 100% reliable tests. CI never flakes.
-          <hr />
-          <h3>Why This Worked</h3>
-          <h4>1. Tests as Specifications</h4>The RED-GREEN-REFACTOR rule means tests are written 
-          <em>before</em> code:
-          <pre><code class="language-swift">// STEP 1: Write test (RED) @Test(“IRR calculates correctly”) func testIRR() { let cashFlows = [-1000.0, 300.0, 400.0, 500.0] let result = try calculateIRR(cashFlows: cashFlows) #expect(abs(result - 0.125) &lt; 0.001)  // 12.5% } // ❌ Test fails: calculateIRR doesn’t exist yet<p></p><p>// STEP 2: Implement function (GREEN) public func calculateIRR
-                <t: real>
-                  (cashFlows: [T]) throws -&gt; T { // … implementation … } // ✅ Test passes
-                </t:></p></code><p><code class="language-swift">// STEP 3: Refactor (tests still pass) // Extract validation logic, improve performance, etc. // ✅ Tests still pass after refactoring </code></p></pre>
-          <strong>The test specifies behavior before implementation exists.</strong>
-          <h4>2. Parameterized Tests Prevent Duplication</h4>Instead of:
-          <pre><code class="language-swift">@Test(“NPV at 5%”) func npv5() { /* … <em>/ } @Test(“NPV at 10%”) func npv10() { /</em> … <em>/ } @Test(“NPV at 15%”) func npv15() { /</em> … */ } </code></pre>Use parameterized tests:
-          <pre><code class="language-swift">@Test(“NPV at multiple discount rates”, arguments: [ (rate: 0.05, expected: 297.59), (rate: 0.10, expected: 146.87), (rate: 0.15, expected: 20.42) ]) func multipleRates(rate: Double, expected: Double) { let cashFlows = [-1000.0, 300.0, 300.0, 300.0, 300.0] let result = npv(discountRate: rate, cashFlows: cashFlows) #expect(abs(result - expected) &lt; 0.01) } </code></pre>
-          <strong>Result</strong>: 3 test cases, 10 lines of code instead of 30.
-          <hr />
-          <h2>The Triad Working Together</h2>These three documents form a complete system:
-          <pre><code>┌─────────────────────────────────────────────┐ │          MASTER_PLAN.md                     │ │   “What to build next”                      │ └─────────────────────┬───────────────────────┘ │ ┌────────────┴────────────┐ │                         │ ┌────▼──────┐         ┌────────▼───────┐ │  CODING   │         │  TEST_DRIVEN   │ │  RULES    │◄────────┤  DEVELOPMENT   │ └────┬──────┘         └────────┬───────┘ │                         │ │                         │ ┌────▼─────────────────────────▼───────┐ │       DOCC_GUIDELINES.md              │ │   “How to document it”                │ └───────────────────────────────────────┘ </code></pre>
-          <strong>Master Plan</strong>: “Implement Statistical Distributions (Topic 2)”
-          <p></p>
-          <p><strong>Test-Driven Development</strong>: “Write tests for normalCDF first, then implement”</p>
-          <p><strong>Coding Rules</strong>: “Use <code>
-              <t: real></t:></code>, guard clauses, and formatted() API”</p>
-          <p><strong>DocC Guidelines</strong>: “Document with formula, example, Excel equivalent, and See Also links”</p>
-          <p><strong>Result</strong>: Consistent, high-quality implementation on the first try.
-            <hr /></p>
-          <h2>What Worked</h2>
-          <h3>1. Quick Reference Beats Long Documents</h3>Each document is 200-500 lines—scannable in 60 seconds.
-          <p></p>
-          <p><strong>Anti-pattern</strong>: 50-page “Software Development Manual” that nobody reads.</p>
-          <p><strong>Better</strong>: “Check CODING_RULES.md section 3 for guard clause patterns.”</p>
-          <h3>2. Living Documents That Evolve</h3>Week 2: CODING_RULES.md has 5 rules. Week 10: CODING_RULES.md has 15 rules. Week 20: CODING_RULES.md has 25 rules.
-          <p></p>
-          <p>As we discovered patterns that worked, we documented them. As we hit issues, we added rules to prevent recurrence.</p>
-          <h3>3. AI Follows Written Rules Reliably</h3>Unwritten rule: “We prefer functional patterns.”
-          <ul>
-            <li>AI interpretation: Uses <code>reduce</code> even when a loop is clearer.</li>
-          </ul>Written rule: “Prefer functional patterns (
-          <code>reduce</code>, 
-          <code>map</code>) where readable. Use loops when clarity demands it.”
-          <ul>
-            <li>AI gets it right every time.</li>
-          </ul>
-          <strong>Lesson</strong>: Make implicit standards explicit.
-          <h3>4. Standards Prevent “Why Did We Do It This Way?” Debates</h3>Week 15, reviewing code:
-          <p></p>
-          <p><strong>Without standards</strong>:</p>
-          <ul>
-            <li>“Should we use String(format:) here?”</li>
-            <li>“I don’t remember why we decided against it…”</li>
-            <li><em>30 minutes lost to research and re-debate</em></li>
-          </ul>
-          <strong>With standards</strong>:
-          <ul>
-            <li>“Check CODING_RULES.md—String(format:) is forbidden, use formatted().”</li>
-            <li><em>0 minutes lost</em></li>
-          </ul>
-          <hr />
-          <h2>The Insight</h2>
-          <strong>The master plan answers “what to build.” The standards documents answer “how to build it consistently.”</strong>
-          <p></p>
-          <p>Without standards:</p>
-          <ul>
-            <li>Every decision is re-litigated</li>
-            <li>Patterns drift across sessions</li>
-            <li>AI generates inconsistent code</li>
-            <li>Code reviews become re-teaching sessions</li>
-          </ul>With standards:
-          <ul>
-            <li>Decisions are made once, documented, and followed</li>
-            <li>Consistency across 200+ functions</li>
-            <li>AI generates correct code on first attempt</li>
-            <li>Code reviews verify adherence to documented standards</li>
-          </ul>
-          <strong>Key Takeaway</strong>: Create quick-reference standards documents. Start with 5-10 rules. Evolve as you discover what matters.
-          <hr />
-          <h2>How to Apply This</h2>
-          <strong>For your next project</strong>:
-          <h3>1. Start Small</h3>Don’t try to write comprehensive standards on day 1. Start with:
-          <ul>
-            <li>3 coding rules that matter most</li>
-            <li>1 documentation template</li>
-            <li>1 testing pattern</li>
-          </ul>
-          <h3>2. Document Decisions As You Make Them</h3>When you decide something important:
-          <ul>
-            <li>Add it to the relevant document immediately</li>
-            <li>Include the “why” (so you don’t forget)</li>
-            <li>Show an example</li>
-          </ul>
-          <h3>3. Use Templates</h3>Create copy-paste templates for:
-          <ul>
-            <li>Function documentation</li>
-            <li>Test structure</li>
-            <li>Common patterns</li>
-          </ul>
-          <h3>4. Reference Documents in Prompts</h3>When working with AI:
-          <blockquote>
-            “Read CODING_RULES.md. Implement calculateXIRR following these standards.”
-          </blockquote>Not:
-          <blockquote>
-            “Implement calculateXIRR. Oh, and use generics. And guard clauses. And formatted(). And…”
-          </blockquote>
-          <h3>5. Update After Mistakes</h3>Made a mistake this session? Add a rule to prevent it next time.
-          <p></p>
-          <p><strong>Example</strong>: Week 5, forgot to handle empty array in mean() function. Added rule: “Always validate array input with guard.”
-            <hr /></p>
-          <h2>Template Starter Pack</h2>
-          <h3>CODING_RULES.md Template</h3>
-          <pre><code class="language-markdown"># Coding Rules for [Project Name]<p></p><p><strong>Updated</strong>: [Date]</p><h2>MUST (Non-Negotiable)</h2>
-              <ol>
-                <li>[Critical rule with rationale]<pre><code class="language-swift">// Example </code></pre></li>
-              </ol></code></pre>
-          <h2>SHOULD (Strong Preference)</h2>
-          <ol>
-            <li>[Preferred pattern]<pre><code class="language-swift">// Example </code></pre></li>
-          </ol>
-          <h2>CONSIDER (Suggestions)</h2>
-          <ol>
-            <li>[Optional guideline]</li>
-          </ol>
-          <pre><code><h3>DOCC_GUIDELINES.md Template</h3><pre><code class="language-markdown"># Documentation Guidelines
-                  <ol>
-                    <li>Brief summary</li>
-                    <li>Detailed explanation</li>
-                    <li>Parameters/Returns/Throws</li>
-                    <li>Usage example</li>
-                    <li>See Also</li>
-                  </ol><h2>Template</h2>/// /// [Brief one-line summary] /// /// [Detailed explanation] /// /// - Parameters: ///   - param: [Description] /// - Returns: [Description] /// /// ## Usage Example /// <code>swift /// [Runnable code] /// </code> </code></pre><h3>TEST_DRIVEN_DEVELOPMENT.md Template</h3><pre><code class="language-markdown"># Testing Standards<h2>Test Structure</h2><pre><code class="language-swift">@Suite("[Topic] Tests")
+            <code class="language-markdown"><li>NEVER use String(format:) for number formatting</li><li>ALWAYS use Swift’s formatted() API</li><li>Respect user locales automatically </li></code>
+          </ul></pre>
+        <h3>Real Example: The String Formatting Rule</h3>Early in the project, we used C-style formatting:
+        <pre><code class="language-swift">// Week 2 code let output = String(format: “%.2f”, value) </code></pre>This created problems:
+        <ul>
+          <li>Doesn’t respect user locales</li>
+          <li>Breaks with non-decimal numeric types</li>
+          <li>Error-prone format strings</li>
+        </ul>We established a rule:
+        <pre><code class="language-swift">// RULE: Never use String(format:) // ALWAYS use formatted() API// Correct approach let output = value.formatted(.number.precision(.fractionLength(2))) </code></pre>
+        <strong>Before the rule</strong>: 30 minutes per session debating formatting approaches. 
+        <p></p>
+        <p><strong>After the rule</strong>: 0 minutes. “Check CODING_RULES.md. Use formatted().”
+          <hr /></p>
+        <h3>Why This Worked</h3>
+        <h4>1. AI Can Follow Rules It Can Read</h4>When starting a session:
+        <blockquote>
+          “Read CODING_RULES.md. Implement the IRR function following these standards.”
+        </blockquote>AI responds:
+        <blockquote>
+          “Using 
+          <code>
+            <t: real></t:></code> generic constraint, 
+          <code>guard</code> for validation, and Swift’s formatted() API as specified in CODING_RULES.md.”
+        </blockquote>
+        <strong>Result</strong>: Consistent code on first try.
+        <h4>2. Rules Prevent Regression</h4>Week 10, implementing a new feature:
+        <pre><code class="language-swift">// AI’s first attempt let result = String(format: “%.4f”, value) </code></pre>My review:
+        <blockquote>
+          “This violates CODING_RULES.md section 4. Use formatted() API.”
+        </blockquote>AI immediately corrects:
+        <pre><code class="language-swift">let result = value.formatted(.number.precision(.fractionLength(4))) </code></pre>
+        <strong>Without the documented rule</strong>, I’d have to re-explain 
+        <em>why</em> every single time.
+        <h4>3. Rules Capture Hard-Won Lessons</h4>The string formatting rule exists because we spent 2 hours debugging locale issues in Week 2. The rule captures that lesson so it’s never repeated.
+        <hr />
+        <h2>Document 2: DocC Guidelines</h2>
+        <strong>The Problem It Solves</strong>: “How should I document this API?”
+        <h3>What It Contains</h3>
+        <pre><code class="language-markdown"># DocC Documentation Guidelines<h2>Required for All Public APIs</h2>
+            <ol>
+              <li>Brief one-line summary</li>
+              <li>Detailed explanation including:
+                <ul>
+                  <li>What problem it solves</li>
+                  <li>How it works (if non-obvious)</li>
+                  <li>When to use it</li>
+                </ul></li>
+              <li>Parameter documentation</li>
+              <li>Return value documentation</li>
+              <li>Throws documentation (if applicable)</li>
+              <li>Usage example</li>
+              <li>Mathematical formula (for math functions)</li>
+              <li>Excel equivalent (if applicable)</li>
+              <li>See Also links</li>
+            </ol><h2>Documentation Template</h2>/// /// Brief one-line summary. /// /// Detailed explanation… /// /// - Parameters: ///   - param1: Description with valid ranges /// - Returns: Description of return value and guarantees /// - Throws: Specific errors and when they occur /// /// ## Usage Example /// /// let result = function(param: value) /// // Output: expected result /// /// /// ## Mathematical Formula /// [LaTeX or ASCII math notation] /// /// - SeeAlso: ///   - <code>RelatedType</code> ///   - <code>relatedFunction(_:)</code> </code></pre>
+        <h3>Real Example: The Formula Format</h3>Week 4, documenting the NPV function. First attempt:
+        <pre><code class="language-swift">/// NPV = sum of (cash flow / (1 + rate)^period) </code></pre>
+        <strong>Problems</strong>:
+        <ul>
+          <li>Unclear notation</li>
+          <li>No variable definitions</li>
+          <li>Doesn’t render well in DocC</li>
+        </ul>After establishing guidelines:
+        <pre><code class="language-swift">/// ## Mathematical Formula /// NPV is calculated as: /// /// NPV = Σ (CFₜ / (1 + r)ᵗ) /// /// where: /// - CFₜ = cash flow at time t /// - r = discount rate /// - t = time period </code></pre>
+        <strong>Result</strong>: Consistent, readable mathematical notation across all 200+ documented functions.
+        <hr />
+        <h3>Why This Worked</h3>
+        <h4>1. Documentation as Design Tool</h4>Writing DocC comments before implementation forced clarification:
+        <p></p>
+        <p><strong>Question</strong>: “What errors can calculateIRR throw?”</p>
+        <p><strong>DocC forces answer</strong>:</p>
+        <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if calculation ///   does not converge within <code>maxIterations</code>. ///   <code>FinancialError.invalidInput</code> if cash flows array is empty. </code></pre>Now I know 
+        <em>exactly</em> what to implement.
+        <h4>2. Examples Must Compile</h4>The guidelines require runnable examples:
+        <pre><code class="language-swift">/// ## Usage Example /// /// let cashFlows = [-1000.0, 300.0, 400.0, 500.0] /// let irr = try calculateIRR(cashFlows: cashFlows) /// print(irr.formatted(.percent))  // Output: 12.5% /// </code></pre>
+        <strong>Rule</strong>: Every example must run successfully in a playground.
+        <p></p>
+        <p>We manually verified all of the documented examples to make sure we had correct values and an ergonomic approach for users.</p>
+        <p>This caught:</p>
+        <ul>
+          <li>API design issues (awkward to use → redesign)</li>
+          <li>Missing error handling (forgot to mark <code>throws</code>)</li>
+          <li>Incorrect output claims (example output didn’t match reality)</li>
+        </ul>
+        <h4>3. Prevents Documentation Drift</h4>Week 15, adding async versions of functions. The template ensures consistent documentation:
+        <pre><code class="language-swift">/// [Async version follows same structure as sync version] /// - Same brief summary /// - Same parameter docs /// - Added: Concurrency section /// - Same usage examples (with await) </code></pre>
+        <strong>Without guidelines</strong>: 15 different documentation styles for 15 async functions.
+        <p></p>
+        <p><strong>With guidelines</strong>: Perfect consistency.
+          <hr /></p>
+        <h2>Document 3: Test-Driven Development Standards</h2>
+        <strong>The Problem It Solves</strong>: “How should I test this function?”
+        <h3>What It Contains</h3>
+        <pre><code class="language-markdown"># Test-Driven Development Standards<h2>Test Structure (Swift Testing)</h2>
+            <ul>
+              <li>Use <code>@Test</code> attribute with descriptive names</li>
+              <li>Use <code>@Suite</code> to group related tests</li>
+              <li>Use <code>#expect</code> for assertions</li>
+              <li>Use parameterized tests for multiple scenarios</li>
+            </ul><h2>Test Organization</h2>Tests mirror source structure:<p></p><p>Tests/BusinessMathTests/ ├── Time Series Tests/ │ ├── PeriodTests.swift │ └── TVM Tests/ │ └── NPVTests.swift</p><h2>RED-GREEN-REFACTOR Cycle</h2>
+            <ol>
+              <li>RED: Write failing test</li>
+              <li>GREEN: Minimal implementation to pass</li>
+              <li>REFACTOR: Improve code quality (tests still pass)</li>
+            </ol><h2>Deterministic Testing for Random Functions</h2><strong>Always use seeded random number generators</strong><p></p></code><p><code class="language-markdown">@Test(“Monte Carlo with seed is deterministic”) func testDeterministic() { let seed: UInt64 = 12345 let result1 = runSimulation(trials: 10000, seed: seed) let result2 = runSimulation(trials: 10000, seed: seed) #expect(result1 == result2) // Must be identical } </code></p></pre>
+        <h3>Real Example: The Deterministic Testing Rule</h3>Week 6, implementing Monte Carlo simulations. First test:
+        <pre><code class="language-swift">@Test(“Monte Carlo converges to expected value”) func testConvergence() { let result = runSimulation(trials: 10000) #expect(abs(result.mean - 100.0) &lt; 1.0) } </code></pre>
+        <strong>Problem</strong>: Flaky test. Sometimes passed, sometimes failed (randomness).
+        <p></p>
+        <p>After establishing the rule:</p>
+        <pre><code class="language-swift">@Test(“Monte Carlo with seed converges to expected value”) func testConvergence() { let seed: UInt64 = 12345 let result = runSimulation(trials: 10000, seed: seed) #expect(abs(result.mean - 100.023) &lt; 0.001)  // Exact value } </code></pre>
+        <strong>Result</strong>: 100% reliable tests. CI never flakes.
+        <hr />
+        <h3>Why This Worked</h3>
+        <h4>1. Tests as Specifications</h4>The RED-GREEN-REFACTOR rule means tests are written 
+        <em>before</em> code:
+        <pre><code class="language-swift">// STEP 1: Write test (RED) @Test(“IRR calculates correctly”) func testIRR() { let cashFlows = [-1000.0, 300.0, 400.0, 500.0] let result = try calculateIRR(cashFlows: cashFlows) #expect(abs(result - 0.125) &lt; 0.001)  // 12.5% } // ❌ Test fails: calculateIRR doesn’t exist yet<p></p><p>// STEP 2: Implement function (GREEN) public func calculateIRR
+              <t: real>
+                (cashFlows: [T]) throws -&gt; T { // … implementation … } // ✅ Test passes
+              </t:></p></code><p><code class="language-swift">// STEP 3: Refactor (tests still pass) // Extract validation logic, improve performance, etc. // ✅ Tests still pass after refactoring </code></p></pre>
+        <strong>The test specifies behavior before implementation exists.</strong>
+        <h4>2. Parameterized Tests Prevent Duplication</h4>Instead of:
+        <pre><code class="language-swift">@Test(“NPV at 5%”) func npv5() { /* … <em>/ } @Test(“NPV at 10%”) func npv10() { /</em> … <em>/ } @Test(“NPV at 15%”) func npv15() { /</em> … */ } </code></pre>Use parameterized tests:
+        <pre><code class="language-swift">@Test(“NPV at multiple discount rates”, arguments: [ (rate: 0.05, expected: 297.59), (rate: 0.10, expected: 146.87), (rate: 0.15, expected: 20.42) ]) func multipleRates(rate: Double, expected: Double) { let cashFlows = [-1000.0, 300.0, 300.0, 300.0, 300.0] let result = npv(discountRate: rate, cashFlows: cashFlows) #expect(abs(result - expected) &lt; 0.01) } </code></pre>
+        <strong>Result</strong>: 3 test cases, 10 lines of code instead of 30.
+        <hr />
+        <h2>The Triad Working Together</h2>These three documents form a complete system:
+        <pre><code>┌─────────────────────────────────────────────┐ │          MASTER_PLAN.md                     │ │   “What to build next”                      │ └─────────────────────┬───────────────────────┘ │ ┌────────────┴────────────┐ │                         │ ┌────▼──────┐         ┌────────▼───────┐ │  CODING   │         │  TEST_DRIVEN   │ │  RULES    │◄────────┤  DEVELOPMENT   │ └────┬──────┘         └────────┬───────┘ │                         │ │                         │ ┌────▼─────────────────────────▼───────┐ │       DOCC_GUIDELINES.md              │ │   “How to document it”                │ └───────────────────────────────────────┘ </code></pre>
+        <strong>Master Plan</strong>: “Implement Statistical Distributions (Topic 2)”
+        <p></p>
+        <p><strong>Test-Driven Development</strong>: “Write tests for normalCDF first, then implement”</p>
+        <p><strong>Coding Rules</strong>: “Use <code>
+            <t: real></t:></code>, guard clauses, and formatted() API”</p>
+        <p><strong>DocC Guidelines</strong>: “Document with formula, example, Excel equivalent, and See Also links”</p>
+        <p><strong>Result</strong>: Consistent, high-quality implementation on the first try.
+          <hr /></p>
+        <h2>What Worked</h2>
+        <h3>1. Quick Reference Beats Long Documents</h3>Each document is 200-500 lines—scannable in 60 seconds.
+        <p></p>
+        <p><strong>Anti-pattern</strong>: 50-page “Software Development Manual” that nobody reads.</p>
+        <p><strong>Better</strong>: “Check CODING_RULES.md section 3 for guard clause patterns.”</p>
+        <h3>2. Living Documents That Evolve</h3>Week 2: CODING_RULES.md has 5 rules. Week 10: CODING_RULES.md has 15 rules. Week 20: CODING_RULES.md has 25 rules.
+        <p></p>
+        <p>As we discovered patterns that worked, we documented them. As we hit issues, we added rules to prevent recurrence.</p>
+        <h3>3. AI Follows Written Rules Reliably</h3>Unwritten rule: “We prefer functional patterns.”
+        <ul>
+          <li>AI interpretation: Uses <code>reduce</code> even when a loop is clearer.</li>
+        </ul>Written rule: “Prefer functional patterns (
+        <code>reduce</code>, 
+        <code>map</code>) where readable. Use loops when clarity demands it.”
+        <ul>
+          <li>AI gets it right every time.</li>
+        </ul>
+        <strong>Lesson</strong>: Make implicit standards explicit.
+        <h3>4. Standards Prevent “Why Did We Do It This Way?” Debates</h3>Week 15, reviewing code:
+        <p></p>
+        <p><strong>Without standards</strong>:</p>
+        <ul>
+          <li>“Should we use String(format:) here?”</li>
+          <li>“I don’t remember why we decided against it…”</li>
+          <li><em>30 minutes lost to research and re-debate</em></li>
+        </ul>
+        <strong>With standards</strong>:
+        <ul>
+          <li>“Check CODING_RULES.md—String(format:) is forbidden, use formatted().”</li>
+          <li><em>0 minutes lost</em></li>
+        </ul>
+        <hr />
+        <h2>The Insight</h2>
+        <strong>The master plan answers “what to build.” The standards documents answer “how to build it consistently.”</strong>
+        <p></p>
+        <p>Without standards:</p>
+        <ul>
+          <li>Every decision is re-litigated</li>
+          <li>Patterns drift across sessions</li>
+          <li>AI generates inconsistent code</li>
+          <li>Code reviews become re-teaching sessions</li>
+        </ul>With standards:
+        <ul>
+          <li>Decisions are made once, documented, and followed</li>
+          <li>Consistency across 200+ functions</li>
+          <li>AI generates correct code on first attempt</li>
+          <li>Code reviews verify adherence to documented standards</li>
+        </ul>
+        <strong>Key Takeaway</strong>: Create quick-reference standards documents. Start with 5-10 rules. Evolve as you discover what matters.
+        <hr />
+        <h2>How to Apply This</h2>
+        <strong>For your next project</strong>:
+        <h3>1. Start Small</h3>Don’t try to write comprehensive standards on day 1. Start with:
+        <ul>
+          <li>3 coding rules that matter most</li>
+          <li>1 documentation template</li>
+          <li>1 testing pattern</li>
+        </ul>
+        <h3>2. Document Decisions As You Make Them</h3>When you decide something important:
+        <ul>
+          <li>Add it to the relevant document immediately</li>
+          <li>Include the “why” (so you don’t forget)</li>
+          <li>Show an example</li>
+        </ul>
+        <h3>3. Use Templates</h3>Create copy-paste templates for:
+        <ul>
+          <li>Function documentation</li>
+          <li>Test structure</li>
+          <li>Common patterns</li>
+        </ul>
+        <h3>4. Reference Documents in Prompts</h3>When working with AI:
+        <blockquote>
+          “Read CODING_RULES.md. Implement calculateXIRR following these standards.”
+        </blockquote>Not:
+        <blockquote>
+          “Implement calculateXIRR. Oh, and use generics. And guard clauses. And formatted(). And…”
+        </blockquote>
+        <h3>5. Update After Mistakes</h3>Made a mistake this session? Add a rule to prevent it next time.
+        <p></p>
+        <p><strong>Example</strong>: Week 5, forgot to handle empty array in mean() function. Added rule: “Always validate array input with guard.”
+          <hr /></p>
+        <h2>Template Starter Pack</h2>
+        <h3>CODING_RULES.md Template</h3>
+        <pre><code class="language-markdown"># Coding Rules for [Project Name]<p></p><p><strong>Updated</strong>: [Date]</p><h2>MUST (Non-Negotiable)</h2>
+            <ol>
+              <li>[Critical rule with rationale]<pre><code class="language-swift">// Example </code></pre></li>
+            </ol></code></pre>
+        <h2>SHOULD (Strong Preference)</h2>
+        <ol>
+          <li>[Preferred pattern]<pre><code class="language-swift">// Example </code></pre></li>
+        </ol>
+        <h2>CONSIDER (Suggestions)</h2>
+        <ol>
+          <li>[Optional guideline]</li>
+        </ol>
+        <pre><code><h3>DOCC_GUIDELINES.md Template</h3><pre><code class="language-markdown"># Documentation Guidelines
+                <ol>
+                  <li>Brief summary</li>
+                  <li>Detailed explanation</li>
+                  <li>Parameters/Returns/Throws</li>
+                  <li>Usage example</li>
+                  <li>See Also</li>
+                </ol><h2>Template</h2>/// /// [Brief one-line summary] /// /// [Detailed explanation] /// /// - Parameters: ///   - param: [Description] /// - Returns: [Description] /// /// ## Usage Example /// <code>swift /// [Runnable code] /// </code> </code></pre><h3>TEST_DRIVEN_DEVELOPMENT.md Template</h3><pre><code class="language-markdown"># Testing Standards<h2>Test Structure</h2><pre><code class="language-swift">@Suite("[Topic] Tests")
 struct TopicTests {
     @Test("[What this tests]")
     func descriptiveName() {
@@ -466,11 +465,11 @@ struct TopicTests {
     }
 }
 </code></pre><h2>RED-GREEN-REFACTOR</h2>
-                  <ol>
-                    <li>Write failing test (RED)</li>
-                    <li>Minimal implementation (GREEN)</li>
-                    <li>Improve quality (REFACTOR)</li>
-                  </ol><pre><code>
+                <ol>
+                  <li>Write failing test (RED)</li>
+                  <li>Minimal implementation (GREEN)</li>
+                  <li>Improve quality (REFACTOR)</li>
+                </ol><pre><code>
 ---
 
 ## See It In Action
@@ -515,11 +514,10 @@ BusinessMath's standards documents:
 </code></pre>
 </code></pre>
 </code></pre>
-          <p></p>
-        </div>
-        <hr />
-        <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: ai-collaboration, coding-standards, documentation, testing, development-journey</p>
+        <p></p>
       </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: ai-collaboration, coding-standards, documentation, testing, development-journey</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">

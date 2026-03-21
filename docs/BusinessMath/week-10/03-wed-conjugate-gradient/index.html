@@ -162,240 +162,238 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Conjugate Gradient: Efficient Optimization Without Hessians</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Part 35 of 12-Week BusinessMath Series</strong>
-            <hr /></p>
-          <h2>What You’ll Learn</h2>
-          <ul>
-            <li>Understanding conjugate gradient method for quadratic optimization</li>
-            <li>Fletcher-Reeves and Polak-Ribière variants</li>
-            <li>When conjugate gradient outperforms gradient descent</li>
-            <li>Memory requirements: O(n) vs. O(n²) for Newton methods</li>
-            <li>Nonlinear conjugate gradient for general problems</li>
-            <li>Performance on portfolio and least-squares problems</li>
-          </ul>
-          <hr />
-          <h2>The Problem</h2>Gradient descent is simple but slow (zigzags toward optimum). Newton’s method is fast but requires storing/inverting n × n Hessian matrices. For large problems:
-          <ul>
-            <li><strong>Gradient descent</strong>: Thousands of iterations</li>
-            <li><strong>Newton/BFGS</strong>: Memory explosion for 1,000+ variables</li>
-            <li><strong>L-BFGS</strong>: Better, but still requires tuning history size</li>
-          </ul>
-          <strong>Need: Fast convergence like Newton, memory footprint like gradient descent.</strong>
-          <hr />
-          <h2>The Solution</h2>Conjugate gradient chooses search directions that are “conjugate” (orthogonal in a special sense), avoiding the zigzagging of gradient descent while using only O(n) memory. Theoretically solves quadratic problems in at most n iterations.
-          <h3>Pattern 1: Univariate Optimization (Finding Optimal Parameter)</h3>
-          <strong>Business Problem</strong>: Find optimal discount rate that minimizes pricing error for bond valuation.
-          <pre><code class="language-swift">import Foundation import BusinessMath // Bond pricing: find discount rate that minimizes squared error let marketPrice = 95.0  // Observed market price let faceValue = 100.0 let couponRate = 0.05 let yearsToMaturity = 5.0<p></p></code>
-            <div>
-              <code class="language-swift"><p>// Price a bond given a discount rate func bondPrice(discountRate: Double) -&gt; Double { let periods = Int(yearsToMaturity) var price = 0.0</p><pre><code>// Present value of coupons for t in 1…periods { let coupon = faceValue * couponRate price += coupon / pow(1 + discountRate, Double(t)) }<p></p><p>// Present value of face value price += faceValue / pow(1 + discountRate, yearsToMaturity)</p></code><p><code>return price </code></p></pre>}<p></p></code>
-            </div><p>// Objective: minimize squared pricing error func pricingError(discountRate: Double) -&gt; Double { let predicted = bondPrice(discountRate: discountRate) let error = marketPrice - predicted return error * error }</p><p>// Conjugate gradient optimizer (note: async API) let cg = AsyncConjugateGradientOptimizer( method: .fletcherReeves,  // Classic method for quadratic problems tolerance: 1e-6, maxIterations: 100 )</p><p>Task { let result = try await cg.optimize( objective: pricingError, constraints: [], initialGuess: 0.05,  // Start with 5% discount rate bounds: (0.001, 0.20)  // Rate must be between 0.1% and 20% )</p><pre><code>print(“Bond Yield Estimation via Conjugate Gradient”) print(“═══════════════════════════════════════════════════════════”) print(“Optimization Results:”) print(”  Iterations: (result.iterations)”) print(”  Optimal Discount Rate: (result.optimalValue.percent(2))”) print(”  Final Pricing Error: (result.objectiveValue.number(3))”) print(”  Implied Bond Price: (bondPrice(discountRate: result.optimalValue).currency(2))”) print(”  Market Price: (marketPrice.currency(2))”) </code></pre>} </pre>
-          <strong>Output</strong>:
-          <pre><code>Bond Yield Estimation via Conjugate Gradient ═══════════════════════════════════════════════════════════ Optimization Results: Iterations: 17 Optimal Discount Rate: 6.1932% Final Pricing Error: 0.000000 Implied Bond Price: 95.00 Market Price: 95.00 </code></pre>
-          <strong>Note</strong>: The current BusinessMath API supports univariate conjugate gradient optimization. For multivariate problems (like multi-factor regression), consider using L-BFGS or gradient descent optimizers.
-          <h3>Pattern 2: Nonlinear Optimization (Polak-Ribière Method)</h3>
-          <strong>Pattern</strong>: Use Polak-Ribière method for nonlinear objectives (option pricing).
-          <pre><code class="language-swift">// Black-Scholes implied volatility calculation struct OptionData { let spotPrice: Double = 100.0 let strikePrice: Double = 105.0 let timeToExpiry: Double = 0.25  // 3 months let riskFreeRate: Double = 0.05 let marketPrice: Double = 3.50 }<p></p><p>let option = OptionData()</p></code>
-            <div>
-              <code class="language-swift"><p>// Black-Scholes call option price func blackScholesCall(volatility: Double) -&gt; Double { let S = option.spotPrice let K = option.strikePrice let T = option.timeToExpiry let r = option.riskFreeRate</p><pre><code>let d1 = (log(S/K) + (r + volatility<em>volatility/2)<em>T) / (volatility</em>sqrt(T)) let d2 = d1 - volatility</em>sqrt(T)<p></p><p>// Simplified normal CDF approximation func normalCDF(_ x: Double) -&gt; Double { return 0.5 * (1 + erf(x / sqrt(2))) }</p></code><p><code>return S * normalCDF(d1) - K * exp(-r*T) * normalCDF(d2) </code></p></pre>}<p></p></code>
-            </div><p>// Objective: minimize squared error between model and market price func impliedVolError(volatility: Double) -&gt; Double { let modelPrice = blackScholesCall(volatility: volatility) let error = option.marketPrice - modelPrice return error * error }</p><p>// Polak-Ribière method (better for nonlinear problems) let cgNonlinear = AsyncConjugateGradientOptimizer( method: .polakRibiere, tolerance: 1e-8, maxIterations: 50 )</p><p>print(“Implied Volatility Calculation (Nonlinear CG)”) print(“═══════════════════════════════════════════════════════════”)</p><p>Task { let result = try await cgNonlinear.optimize( objective: impliedVolError, constraints: [], initialGuess: 0.20,  // Start with 20% volatility bounds: (0.01, 2.0)  // Vol must be between 1% and 200% )</p><pre><code>print(“Implied Volatility Calculation (Nonlinear CG)”) print(“═══════════════════════════════════════════════════════════”) print(”  Implied Volatility: (result.optimalValue.percent(2))”) print(”  Model Price: (blackScholesCall(volatility: result.optimalValue).currency(2))”) print(”  Market Price: (option.marketPrice.currency(2))”) print(”  Pricing Error: (sqrt(result.objectiveValue).currency(2))”) print(”  Iterations: (result.iterations)”) </code></pre>} </pre>
-          <h3>Pattern 3: Progress Monitoring with AsyncSequence</h3>
-          <strong>Pattern</strong>: Monitor optimization progress in real-time using async streams.
-          <pre><code class="language-swift">// Option pricing with progress tracking func pricingObjective(param: Double) -&gt; Double { // Simulate a complex pricing calculation let x = param - 0.25 return x<em>x</em>x<em>x - 3</em>x<em>x + 2</em>x + 1  // Quartic function with local minima }<p></p><p>let asyncCG = AsyncConjugateGradientOptimizer( method: .fletcherReeves, tolerance: 1e-8, maxIterations: 100 )</p><p>Task { // Use async stream to monitor progress let stream = asyncCG.optimizeWithProgressStream( objective: pricingObjective, constraints: [], initialGuess: 2.0, bounds: (-5.0, 5.0) ) print(“Optimization with Real-Time Progress”) print(“═══════════════════════════════════════════════════════════”) var lastObjective = Double.infinity for try await progress in stream { // Print every 10th iteration if progress.iteration % 10 == 0 { let improvement = lastObjective - progress.metrics.objectiveValue print(” Iter (progress.iteration): obj=(progress.metrics.objectiveValue.formatted(.number.precision(.fractionLength(6)))), β=(progress.beta.formatted(.number.precision(.fractionLength(4))))”) lastObjective = progress.metrics.objectiveValue }</p><pre><code>    // Access final result when available if let result = progress.result { print(”\nFinal Result:”) print(”  Optimal Value: (result.optimalValue.formatted(.number.precision(.fractionLength(6))))”) print(”  Objective: (result.objectiveValue.formatted(.number.precision(.fractionLength(8))))”) print(”  Converged: (result.converged)”) print(”  Total Iterations: (result.iterations)”) } } </code></pre>} </code></pre>
-          <strong>Advanced</strong>: For multivariate optimization, consider using L-BFGS which supports full vector spaces.
-          <hr />
-          <h2>How It Works</h2>
-          <h3>Conjugate Gradient Algorithm</h3>
-          <ol>
-            <li><strong>Initialize</strong>: Set r_0 = -∇f(x_0), d_0 = r_0</li>
-            <li><strong>Line Search</strong>: Find α_k that minimizes f(x_k + α_k d_k)</li>
-            <li><strong>Update Position</strong>: x_{k+1} = x_k + α_k d_k</li>
-            <li><strong>Compute Gradient</strong>: r_{k+1} = -∇f(x_{k+1})</li>
-            <li><strong>Compute β</strong>:
-              <ul>
-                <li>Fletcher-Reeves: β = ||r_{k+1}||² / ||r_k||²</li>
-                <li>Polak-Ribière: β = r_{k+1}^T (r_{k+1} - r_k) / ||r_k||²</li>
-              </ul></li>
-            <li><strong>Update Direction</strong>: d_{k+1} = r_{k+1} + β_k d_k</li>
-            <li><strong>Repeat</strong>: Until convergence</li>
-          </ol>
-          <h3>Variant Comparison</h3>
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">Variant</th>
-                <th scope="col">Best For</th>
-                <th scope="col">Convergence</th>
-                <th scope="col">Robustness</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Fletcher-Reeves</strong></td>
-                <td>Quadratic problems</td>
-                <td>Guaranteed (quadratic)</td>
-                <td>Stable</td>
-              </tr>
-              <tr>
-                <td><strong>Polak-Ribière</strong></td>
-                <td>Nonlinear problems</td>
-                <td>Often faster</td>
-                <td>Can cycle</td>
-              </tr>
-              <tr>
-                <td><strong>Hestenes-Stiefel</strong></td>
-                <td>General nonlinear</td>
-                <td>Middle ground</td>
-                <td>Good</td>
-              </tr>
-              <tr>
-                <td><strong>Dai-Yuan</strong></td>
-                <td>Difficult problems</td>
-                <td>Robust</td>
-                <td>Best for tough cases</td>
-              </tr>
-            </tbody>
-          </table>
-          <h3>Memory &amp; Speed Comparison</h3>
-          <strong>Problem: 1,000 variables, quadratic objective</strong>
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col">Method</th>
-                <th scope="col">Memory</th>
-                <th scope="col">Iterations</th>
-                <th scope="col">Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Gradient Descent</td>
-                <td>O(n) = 8 KB</td>
-                <td>8,420</td>
-                <td>42s</td>
-              </tr>
-              <tr>
-                <td>Conjugate Gradient</td>
-                <td>O(n) = 8 KB</td>
-                <td>127</td>
-                <td>3.2s</td>
-              </tr>
-              <tr>
-                <td>BFGS</td>
-                <td>O(n²) = 8 MB</td>
-                <td>95</td>
-                <td>12s</td>
-              </tr>
-              <tr>
-                <td>L-BFGS (m=10)</td>
-                <td>O(mn) = 80 KB</td>
-                <td>112</td>
-                <td>8s</td>
-              </tr>
-              <tr>
-                <td>Newton</td>
-                <td>O(n²) = 8 MB</td>
-                <td>45</td>
-                <td>18s (Hessian computation)</td>
-              </tr>
-            </tbody>
-          </table>
-          <strong>Winner for large quadratic problems: Conjugate Gradient (fast + minimal memory)</strong>
-          <hr />
-          <h2>Real-World Application</h2>
-          <h3>Fixed Income Trading: Yield Curve Calibration</h3>
-          <strong>Company</strong>: Bond trading desk calibrating Nelson-Siegel yield curve model 
-          <strong>Challenge</strong>: Find optimal parameters that minimize pricing errors across treasury bonds
-          <p></p>
-          <p><strong>Problem</strong>:</p>
-          <ul>
-            <li>Minimize sum of squared pricing errors for all bonds</li>
-            <li>3 parameters (level, slope, curvature) in Nelson-Siegel model</li>
-            <li>Nonlinear objective function (bond prices are nonlinear in yield)</li>
-            <li>Need fast recalibration every 5 minutes as market moves</li>
-          </ul>
-          <strong>Nelson-Siegel Model</strong>:
-          <pre><code>Y(τ) = β₀ + β₁·[(1-exp(-τ/λ))/(τ/λ)] + β₂·[(1-exp(-τ/λ))/(τ/λ) - exp(-τ/λ)] </code></pre>Where:
-          <ul>
-            <li>β₀ = level (long-term rate)</li>
-            <li>β₁ = slope (short-term component)</li>
-            <li>β₂ = curvature (medium-term hump)</li>
-            <li>λ = decay parameter (fixed at 2.5)</li>
-          </ul>
-          <strong>Implementation</strong> (Production-Ready):
-          <p></p>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Conjugate Gradient: Efficient Optimization Without Hessians</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 35 of 12-Week BusinessMath Series</strong>
+          <hr /></p>
+        <h2>What You’ll Learn</h2>
+        <ul>
+          <li>Understanding conjugate gradient method for quadratic optimization</li>
+          <li>Fletcher-Reeves and Polak-Ribière variants</li>
+          <li>When conjugate gradient outperforms gradient descent</li>
+          <li>Memory requirements: O(n) vs. O(n²) for Newton methods</li>
+          <li>Nonlinear conjugate gradient for general problems</li>
+          <li>Performance on portfolio and least-squares problems</li>
+        </ul>
+        <hr />
+        <h2>The Problem</h2>Gradient descent is simple but slow (zigzags toward optimum). Newton’s method is fast but requires storing/inverting n × n Hessian matrices. For large problems:
+        <ul>
+          <li><strong>Gradient descent</strong>: Thousands of iterations</li>
+          <li><strong>Newton/BFGS</strong>: Memory explosion for 1,000+ variables</li>
+          <li><strong>L-BFGS</strong>: Better, but still requires tuning history size</li>
+        </ul>
+        <strong>Need: Fast convergence like Newton, memory footprint like gradient descent.</strong>
+        <hr />
+        <h2>The Solution</h2>Conjugate gradient chooses search directions that are “conjugate” (orthogonal in a special sense), avoiding the zigzagging of gradient descent while using only O(n) memory. Theoretically solves quadratic problems in at most n iterations.
+        <h3>Pattern 1: Univariate Optimization (Finding Optimal Parameter)</h3>
+        <strong>Business Problem</strong>: Find optimal discount rate that minimizes pricing error for bond valuation.
+        <pre><code class="language-swift">import Foundation import BusinessMath // Bond pricing: find discount rate that minimizes squared error let marketPrice = 95.0  // Observed market price let faceValue = 100.0 let couponRate = 0.05 let yearsToMaturity = 5.0<p></p></code>
           <div>
-            <p>BusinessMath now includes a complete, tested Nelson-Siegel implementation in <code>Valuation/Debt/NelsonSiegel.swift</code>. This uses <strong>multivariate L-BFGS optimization</strong> (not scalar conjugate gradient) to properly calibrate all three parameters simultaneously:</p>
-            <pre><code class="language-swift">import BusinessMath</code><pre><code class="language-swift"><code>// Create bond market data let bonds = [ BondMarketData(maturity: 1.0, couponRate: 0.050, faceValue: 100, marketPrice: 98.8), BondMarketData(maturity: 2.0, couponRate: 0.052, faceValue: 100, marketPrice: 98.0), BondMarketData(maturity: 5.0, couponRate: 0.058, faceValue: 100, marketPrice: 96.8), BondMarketData(maturity: 10.0, couponRate: 0.062, faceValue: 100, marketPrice: 95.5), ]<p></p><p>// Calibrate with comprehensive diagnostics let result = try NelsonSiegelYieldCurve.calibrateWithDiagnostics( to: bonds, fixedLambda: 2.5 )</p><p>print(“Calibrated Parameters:”) print(” β₀ (level): (result.curve.parameters.beta0.percent(2))”) print(” β₁ (slope): (result.curve.parameters.beta1.percent(2))”) print(” β₂ (curvature): (result.curve.parameters.beta2.percent(2))”) print(” λ (decay): (result.curve.parameters.lambda.number(2))”) print(” Converged: (result.converged)”) print(” Iterations: (result.iterations)”) print(” SSE: (result.sumSquaredErrors.number(2))”) print(” RMSE: $(result.rootMeanSquaredError.number(3))”) print(” MAE: $(result.meanAbsoluteError.number(3))”)</p><p>// Get yields at any maturity let yield5Y = result.curve.yield(maturity: 5.0) let yield10Y = result.curve.yield(maturity: 10.0)</p><p>// Price bonds using the fitted curve let bond = BondMarketData(maturity: 7.0, couponRate: 0.06, faceValue: 100, marketPrice: 0) let theoreticalPrice = result.curve.price(bond: bond)</p></code><p><code>// Display fitted yield curve print(”\nFitted Yield Curve:”) let maturities = [0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0] for maturity in maturities { let yieldValue = result.curve.yield(maturity: maturity) print(” (maturity.number(2))Y: (yieldValue.percent(2))”) } </code></p></code></pre></pre>
-            <strong>Example Output</strong> (from 4 Treasury bonds):
-            <pre><code>Calibrated Parameters: β₀ (level):     7.32% β₁ (slope):     -1.27% β₂ (curvature): -1.00% λ  (decay):     2.50 Converged:      true Iterations:     25 SSE:            0.00 RMSE:           $0.029 MAE:            $0.024<p></p></code></pre>
-          </div>
-          <p><code>Fitted Yield Curve: 0.25Y: 6.07% 0.50Y: 6.08% 1.00Y: 6.12% 2.00Y: 6.21% 3.00Y: 6.30% 5.00Y: 6.47% 7.00Y: 6.62% 10.00Y: 6.78% 20.00Y: 7.03% 30.00Y: 7.13%</code></p>
-          <p><code>✓ All tests passed - model is production-ready </code><strong>Results</strong>:</p>
-          <ul>
-            <li><strong>Convergence</strong>: 47 iterations (simultaneous multivariate optimization)</li>
-            <li><strong>Time</strong>: ~0.02 seconds (L-BFGS is very efficient)</li>
-            <li><strong>Accuracy</strong>: RMSE &lt; $1.00, MAE &lt; $1.00 per $100 face value</li>
-            <li><strong>Stability</strong>: 18/18 tests pass, handles edge cases correctly</li>
-          </ul>
-          <strong>Key Lesson</strong>:
-          <p></p>
-          <p>The original blog post attempted to use scalar <code>AsyncConjugateGradientOptimizer</code> with coordinate descent for a <strong>multivariate</strong> problem. This was the wrong tool! The production implementation uses <code>MultivariateLBFGS</code> which:</p>
-          <ul>
-            <li>Optimizes all 3 parameters simultaneously</li>
-            <li>Uses proper numerical gradients</li>
-            <li>Converges faster and more reliably</li>
-            <li>Is backed by comprehensive tests</li>
-          </ul>
-          <strong>Full Working Example</strong>: See the playground for both the scalar CG examples (bond yield, implied volatility) and the production Nelson-Siegel implementation using L-BFGS.
-          <hr />
-          <h2>Try It Yourself</h2>
-          <details>
-            <summary>Click to expand full playground code</summary>
-            <pre><code class="language-swift">import Foundation
+            <code class="language-swift"><p>// Price a bond given a discount rate func bondPrice(discountRate: Double) -&gt; Double { let periods = Int(yearsToMaturity) var price = 0.0</p><pre><code>// Present value of coupons for t in 1…periods { let coupon = faceValue * couponRate price += coupon / pow(1 + discountRate, Double(t)) }<p></p><p>// Present value of face value price += faceValue / pow(1 + discountRate, yearsToMaturity)</p></code><p><code>return price </code></p></pre>}<p></p></code>
+          </div><p>// Objective: minimize squared pricing error func pricingError(discountRate: Double) -&gt; Double { let predicted = bondPrice(discountRate: discountRate) let error = marketPrice - predicted return error * error }</p><p>// Conjugate gradient optimizer (note: async API) let cg = AsyncConjugateGradientOptimizer( method: .fletcherReeves,  // Classic method for quadratic problems tolerance: 1e-6, maxIterations: 100 )</p><p>Task { let result = try await cg.optimize( objective: pricingError, constraints: [], initialGuess: 0.05,  // Start with 5% discount rate bounds: (0.001, 0.20)  // Rate must be between 0.1% and 20% )</p><pre><code>print(“Bond Yield Estimation via Conjugate Gradient”) print(“═══════════════════════════════════════════════════════════”) print(“Optimization Results:”) print(”  Iterations: (result.iterations)”) print(”  Optimal Discount Rate: (result.optimalValue.percent(2))”) print(”  Final Pricing Error: (result.objectiveValue.number(3))”) print(”  Implied Bond Price: (bondPrice(discountRate: result.optimalValue).currency(2))”) print(”  Market Price: (marketPrice.currency(2))”) </code></pre>} </pre>
+        <strong>Output</strong>:
+        <pre><code>Bond Yield Estimation via Conjugate Gradient ═══════════════════════════════════════════════════════════ Optimization Results: Iterations: 17 Optimal Discount Rate: 6.1932% Final Pricing Error: 0.000000 Implied Bond Price: 95.00 Market Price: 95.00 </code></pre>
+        <strong>Note</strong>: The current BusinessMath API supports univariate conjugate gradient optimization. For multivariate problems (like multi-factor regression), consider using L-BFGS or gradient descent optimizers.
+        <h3>Pattern 2: Nonlinear Optimization (Polak-Ribière Method)</h3>
+        <strong>Pattern</strong>: Use Polak-Ribière method for nonlinear objectives (option pricing).
+        <pre><code class="language-swift">// Black-Scholes implied volatility calculation struct OptionData { let spotPrice: Double = 100.0 let strikePrice: Double = 105.0 let timeToExpiry: Double = 0.25  // 3 months let riskFreeRate: Double = 0.05 let marketPrice: Double = 3.50 }<p></p><p>let option = OptionData()</p></code>
+          <div>
+            <code class="language-swift"><p>// Black-Scholes call option price func blackScholesCall(volatility: Double) -&gt; Double { let S = option.spotPrice let K = option.strikePrice let T = option.timeToExpiry let r = option.riskFreeRate</p><pre><code>let d1 = (log(S/K) + (r + volatility<em>volatility/2)<em>T) / (volatility</em>sqrt(T)) let d2 = d1 - volatility</em>sqrt(T)<p></p><p>// Simplified normal CDF approximation func normalCDF(_ x: Double) -&gt; Double { return 0.5 * (1 + erf(x / sqrt(2))) }</p></code><p><code>return S * normalCDF(d1) - K * exp(-r*T) * normalCDF(d2) </code></p></pre>}<p></p></code>
+          </div><p>// Objective: minimize squared error between model and market price func impliedVolError(volatility: Double) -&gt; Double { let modelPrice = blackScholesCall(volatility: volatility) let error = option.marketPrice - modelPrice return error * error }</p><p>// Polak-Ribière method (better for nonlinear problems) let cgNonlinear = AsyncConjugateGradientOptimizer( method: .polakRibiere, tolerance: 1e-8, maxIterations: 50 )</p><p>print(“Implied Volatility Calculation (Nonlinear CG)”) print(“═══════════════════════════════════════════════════════════”)</p><p>Task { let result = try await cgNonlinear.optimize( objective: impliedVolError, constraints: [], initialGuess: 0.20,  // Start with 20% volatility bounds: (0.01, 2.0)  // Vol must be between 1% and 200% )</p><pre><code>print(“Implied Volatility Calculation (Nonlinear CG)”) print(“═══════════════════════════════════════════════════════════”) print(”  Implied Volatility: (result.optimalValue.percent(2))”) print(”  Model Price: (blackScholesCall(volatility: result.optimalValue).currency(2))”) print(”  Market Price: (option.marketPrice.currency(2))”) print(”  Pricing Error: (sqrt(result.objectiveValue).currency(2))”) print(”  Iterations: (result.iterations)”) </code></pre>} </pre>
+        <h3>Pattern 3: Progress Monitoring with AsyncSequence</h3>
+        <strong>Pattern</strong>: Monitor optimization progress in real-time using async streams.
+        <pre><code class="language-swift">// Option pricing with progress tracking func pricingObjective(param: Double) -&gt; Double { // Simulate a complex pricing calculation let x = param - 0.25 return x<em>x</em>x<em>x - 3</em>x<em>x + 2</em>x + 1  // Quartic function with local minima }<p></p><p>let asyncCG = AsyncConjugateGradientOptimizer( method: .fletcherReeves, tolerance: 1e-8, maxIterations: 100 )</p><p>Task { // Use async stream to monitor progress let stream = asyncCG.optimizeWithProgressStream( objective: pricingObjective, constraints: [], initialGuess: 2.0, bounds: (-5.0, 5.0) ) print(“Optimization with Real-Time Progress”) print(“═══════════════════════════════════════════════════════════”) var lastObjective = Double.infinity for try await progress in stream { // Print every 10th iteration if progress.iteration % 10 == 0 { let improvement = lastObjective - progress.metrics.objectiveValue print(” Iter (progress.iteration): obj=(progress.metrics.objectiveValue.formatted(.number.precision(.fractionLength(6)))), β=(progress.beta.formatted(.number.precision(.fractionLength(4))))”) lastObjective = progress.metrics.objectiveValue }</p><pre><code>    // Access final result when available if let result = progress.result { print(”\nFinal Result:”) print(”  Optimal Value: (result.optimalValue.formatted(.number.precision(.fractionLength(6))))”) print(”  Objective: (result.objectiveValue.formatted(.number.precision(.fractionLength(8))))”) print(”  Converged: (result.converged)”) print(”  Total Iterations: (result.iterations)”) } } </code></pre>} </code></pre>
+        <strong>Advanced</strong>: For multivariate optimization, consider using L-BFGS which supports full vector spaces.
+        <hr />
+        <h2>How It Works</h2>
+        <h3>Conjugate Gradient Algorithm</h3>
+        <ol>
+          <li><strong>Initialize</strong>: Set r_0 = -∇f(x_0), d_0 = r_0</li>
+          <li><strong>Line Search</strong>: Find α_k that minimizes f(x_k + α_k d_k)</li>
+          <li><strong>Update Position</strong>: x_{k+1} = x_k + α_k d_k</li>
+          <li><strong>Compute Gradient</strong>: r_{k+1} = -∇f(x_{k+1})</li>
+          <li><strong>Compute β</strong>:
+            <ul>
+              <li>Fletcher-Reeves: β = ||r_{k+1}||² / ||r_k||²</li>
+              <li>Polak-Ribière: β = r_{k+1}^T (r_{k+1} - r_k) / ||r_k||²</li>
+            </ul></li>
+          <li><strong>Update Direction</strong>: d_{k+1} = r_{k+1} + β_k d_k</li>
+          <li><strong>Repeat</strong>: Until convergence</li>
+        </ol>
+        <h3>Variant Comparison</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Variant</th>
+              <th scope="col">Best For</th>
+              <th scope="col">Convergence</th>
+              <th scope="col">Robustness</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Fletcher-Reeves</strong></td>
+              <td>Quadratic problems</td>
+              <td>Guaranteed (quadratic)</td>
+              <td>Stable</td>
+            </tr>
+            <tr>
+              <td><strong>Polak-Ribière</strong></td>
+              <td>Nonlinear problems</td>
+              <td>Often faster</td>
+              <td>Can cycle</td>
+            </tr>
+            <tr>
+              <td><strong>Hestenes-Stiefel</strong></td>
+              <td>General nonlinear</td>
+              <td>Middle ground</td>
+              <td>Good</td>
+            </tr>
+            <tr>
+              <td><strong>Dai-Yuan</strong></td>
+              <td>Difficult problems</td>
+              <td>Robust</td>
+              <td>Best for tough cases</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Memory &amp; Speed Comparison</h3>
+        <strong>Problem: 1,000 variables, quadratic objective</strong>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col">Memory</th>
+              <th scope="col">Iterations</th>
+              <th scope="col">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Gradient Descent</td>
+              <td>O(n) = 8 KB</td>
+              <td>8,420</td>
+              <td>42s</td>
+            </tr>
+            <tr>
+              <td>Conjugate Gradient</td>
+              <td>O(n) = 8 KB</td>
+              <td>127</td>
+              <td>3.2s</td>
+            </tr>
+            <tr>
+              <td>BFGS</td>
+              <td>O(n²) = 8 MB</td>
+              <td>95</td>
+              <td>12s</td>
+            </tr>
+            <tr>
+              <td>L-BFGS (m=10)</td>
+              <td>O(mn) = 80 KB</td>
+              <td>112</td>
+              <td>8s</td>
+            </tr>
+            <tr>
+              <td>Newton</td>
+              <td>O(n²) = 8 MB</td>
+              <td>45</td>
+              <td>18s (Hessian computation)</td>
+            </tr>
+          </tbody>
+        </table>
+        <strong>Winner for large quadratic problems: Conjugate Gradient (fast + minimal memory)</strong>
+        <hr />
+        <h2>Real-World Application</h2>
+        <h3>Fixed Income Trading: Yield Curve Calibration</h3>
+        <strong>Company</strong>: Bond trading desk calibrating Nelson-Siegel yield curve model 
+        <strong>Challenge</strong>: Find optimal parameters that minimize pricing errors across treasury bonds
+        <p></p>
+        <p><strong>Problem</strong>:</p>
+        <ul>
+          <li>Minimize sum of squared pricing errors for all bonds</li>
+          <li>3 parameters (level, slope, curvature) in Nelson-Siegel model</li>
+          <li>Nonlinear objective function (bond prices are nonlinear in yield)</li>
+          <li>Need fast recalibration every 5 minutes as market moves</li>
+        </ul>
+        <strong>Nelson-Siegel Model</strong>:
+        <pre><code>Y(τ) = β₀ + β₁·[(1-exp(-τ/λ))/(τ/λ)] + β₂·[(1-exp(-τ/λ))/(τ/λ) - exp(-τ/λ)] </code></pre>Where:
+        <ul>
+          <li>β₀ = level (long-term rate)</li>
+          <li>β₁ = slope (short-term component)</li>
+          <li>β₂ = curvature (medium-term hump)</li>
+          <li>λ = decay parameter (fixed at 2.5)</li>
+        </ul>
+        <strong>Implementation</strong> (Production-Ready):
+        <p></p>
+        <div>
+          <p>BusinessMath now includes a complete, tested Nelson-Siegel implementation in <code>Valuation/Debt/NelsonSiegel.swift</code>. This uses <strong>multivariate L-BFGS optimization</strong> (not scalar conjugate gradient) to properly calibrate all three parameters simultaneously:</p>
+          <pre><code class="language-swift">import BusinessMath</code><pre><code class="language-swift"><code>// Create bond market data let bonds = [ BondMarketData(maturity: 1.0, couponRate: 0.050, faceValue: 100, marketPrice: 98.8), BondMarketData(maturity: 2.0, couponRate: 0.052, faceValue: 100, marketPrice: 98.0), BondMarketData(maturity: 5.0, couponRate: 0.058, faceValue: 100, marketPrice: 96.8), BondMarketData(maturity: 10.0, couponRate: 0.062, faceValue: 100, marketPrice: 95.5), ]<p></p><p>// Calibrate with comprehensive diagnostics let result = try NelsonSiegelYieldCurve.calibrateWithDiagnostics( to: bonds, fixedLambda: 2.5 )</p><p>print(“Calibrated Parameters:”) print(” β₀ (level): (result.curve.parameters.beta0.percent(2))”) print(” β₁ (slope): (result.curve.parameters.beta1.percent(2))”) print(” β₂ (curvature): (result.curve.parameters.beta2.percent(2))”) print(” λ (decay): (result.curve.parameters.lambda.number(2))”) print(” Converged: (result.converged)”) print(” Iterations: (result.iterations)”) print(” SSE: (result.sumSquaredErrors.number(2))”) print(” RMSE: $(result.rootMeanSquaredError.number(3))”) print(” MAE: $(result.meanAbsoluteError.number(3))”)</p><p>// Get yields at any maturity let yield5Y = result.curve.yield(maturity: 5.0) let yield10Y = result.curve.yield(maturity: 10.0)</p><p>// Price bonds using the fitted curve let bond = BondMarketData(maturity: 7.0, couponRate: 0.06, faceValue: 100, marketPrice: 0) let theoreticalPrice = result.curve.price(bond: bond)</p></code><p><code>// Display fitted yield curve print(”\nFitted Yield Curve:”) let maturities = [0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0] for maturity in maturities { let yieldValue = result.curve.yield(maturity: maturity) print(” (maturity.number(2))Y: (yieldValue.percent(2))”) } </code></p></code></pre></pre>
+          <strong>Example Output</strong> (from 4 Treasury bonds):
+          <pre><code>Calibrated Parameters: β₀ (level):     7.32% β₁ (slope):     -1.27% β₂ (curvature): -1.00% λ  (decay):     2.50 Converged:      true Iterations:     25 SSE:            0.00 RMSE:           $0.029 MAE:            $0.024<p></p></code></pre>
+        </div>
+        <p><code>Fitted Yield Curve: 0.25Y: 6.07% 0.50Y: 6.08% 1.00Y: 6.12% 2.00Y: 6.21% 3.00Y: 6.30% 5.00Y: 6.47% 7.00Y: 6.62% 10.00Y: 6.78% 20.00Y: 7.03% 30.00Y: 7.13%</code></p>
+        <p><code>✓ All tests passed - model is production-ready </code><strong>Results</strong>:</p>
+        <ul>
+          <li><strong>Convergence</strong>: 47 iterations (simultaneous multivariate optimization)</li>
+          <li><strong>Time</strong>: ~0.02 seconds (L-BFGS is very efficient)</li>
+          <li><strong>Accuracy</strong>: RMSE &lt; $1.00, MAE &lt; $1.00 per $100 face value</li>
+          <li><strong>Stability</strong>: 18/18 tests pass, handles edge cases correctly</li>
+        </ul>
+        <strong>Key Lesson</strong>:
+        <p></p>
+        <p>The original blog post attempted to use scalar <code>AsyncConjugateGradientOptimizer</code> with coordinate descent for a <strong>multivariate</strong> problem. This was the wrong tool! The production implementation uses <code>MultivariateLBFGS</code> which:</p>
+        <ul>
+          <li>Optimizes all 3 parameters simultaneously</li>
+          <li>Uses proper numerical gradients</li>
+          <li>Converges faster and more reliably</li>
+          <li>Is backed by comprehensive tests</li>
+        </ul>
+        <strong>Full Working Example</strong>: See the playground for both the scalar CG examples (bond yield, implied volatility) and the production Nelson-Siegel implementation using L-BFGS.
+        <hr />
+        <h2>Try It Yourself</h2>
+        <details>
+          <summary>Click to expand full playground code</summary>
+          <pre><code class="language-swift">import Foundation
 import BusinessMath
 // Bond pricing: find discount rate that minimizes squared error let marketPrice = 95.0  // Observed market price let faceValue = 100.0 let couponRate = 0.05 let yearsToMaturity = 5.0
 <p></p></code>
-              <div>
-                <code class="language-swift"><p>// Price a bond given a discount rate func bondPrice(discountRate: Double) -&gt; Double { let periods = Int(yearsToMaturity) var price = 0.0</p><pre><code>// Present value of coupons for t in 1…periods { let coupon = faceValue * couponRate price += coupon / pow(1 + discountRate, Double(t)) }<p></p><p>// Present value of face value price += faceValue / pow(1 + discountRate, yearsToMaturity)</p></code><p><code>return price </code></p></pre>}<p></p></code>
-              </div><p>// Objective: minimize squared pricing error func pricingError(discountRate: Double) -&gt; Double { let predicted = bondPrice(discountRate: discountRate) let error = marketPrice - predicted return error * error }</p><p>// Conjugate gradient optimizer (note: async API) let cg = AsyncConjugateGradientOptimizer( method: .fletcherReeves,  // Classic method for quadratic problems tolerance: 1e-6, maxIterations: 100 )</p><p>Task { let result = try await cg.optimize( objective: pricingError, constraints: [], initialGuess: 0.05,  // Start with 5% discount rate bounds: (0.001, 0.20)  // Rate must be between 0.1% and 20% )</p><pre><code>print(“Bond Yield Estimation via Conjugate Gradient”) print(“═══════════════════════════════════════════════════════════”) print(“Optimization Results:”) print(”  Iterations: (result.iterations)”) print(”  Optimal Discount Rate: (result.optimalValue.percent(2))”) print(”  Final Pricing Error: (result.objectiveValue.number(3))”) print(”  Implied Bond Price: (bondPrice(discountRate: result.optimalValue).currency(2))”) print(”  Market Price: (marketPrice.currency(2))”) </code></pre>}<p></p>
-              <div>
-                <p>// MARK: - Nonlinear Optimization</p>
-                <pre><code>// Black-Scholes implied volatility calculation struct OptionData { let spotPrice: Double = 100.0 let strikePrice: Double = 105.0 let timeToExpiry: Double = 0.25  // 3 months let riskFreeRate: Double = 0.05 let marketPrice: Double = 3.50 }<p></p><p>let option = OptionData()</p></code>
-                  <div>
-                    <code><p>// Black-Scholes call option price func blackScholesCall(volatility: Double) -&gt; Double { let S = option.spotPrice let K = option.strikePrice let T = option.timeToExpiry let r = option.riskFreeRate</p><pre><code>let d1 = (log(S/K) + (r + volatility<em>volatility/2)<em>T) / (volatility</em>sqrt(T)) let d2 = d1 - volatility</em>sqrt(T)<p></p><p>// Simplified normal CDF approximation func normalCDF(_ x: Double) -&gt; Double { return 0.5 * (1 + erf(x / sqrt(2))) }</p></code><p><code>return S * normalCDF(d1) - K * exp(-r*T) * normalCDF(d2) </code></p></pre>}<p></p></code>
-                  </div><p>// Objective: minimize squared error between model and market price func impliedVolError(volatility: Double) -&gt; Double { let modelPrice = blackScholesCall(volatility: volatility) let error = option.marketPrice - modelPrice return error * error }</p><p>// Polak-Ribière method (better for nonlinear problems) let cgNonlinear = AsyncConjugateGradientOptimizer( method: .polakRibiere, tolerance: 1e-8, maxIterations: 50 )</p><p>Task { let result = try await cgNonlinear.optimize( objective: impliedVolError, constraints: [], initialGuess: 0.20,  // Start with 20% volatility bounds: (0.01, 2.0)  // Vol must be between 1% and 200% )</p><pre><code>print(“Implied Volatility Calculation (Nonlinear CG)”) print(“═══════════════════════════════════════════════════════════”) print(”  Implied Volatility: (result.optimalValue.percent(2))”) print(”  Model Price: (blackScholesCall(volatility: result.optimalValue).currency(2))”) print(”  Market Price: (option.marketPrice.currency(2))”) print(”  Pricing Error: (sqrt(result.objectiveValue).currency(2))”) print(”  Iterations: (result.iterations)”) </code></pre>} </pre>// MARK: - Progress Monitoring with AsyncSequence
-                <pre><code>// Option pricing with progress tracking func pricingObjective(param: Double) -&gt; Double { // Simulate a complex pricing calculation let x = param - 0.25 return x<em>x</em>x<em>x - 3</em>x<em>x + 2</em>x + 1  // Quartic function with local minima }<p></p><p>let asyncCG = AsyncConjugateGradientOptimizer( method: .fletcherReeves, tolerance: 1e-8, maxIterations: 100 )</p><p>Task { // Use async stream to monitor progress let stream = asyncCG.optimizeWithProgressStream( objective: pricingObjective, constraints: [], initialGuess: 2.0, bounds: (-5.0, 5.0) ) print(“Optimization with Real-Time Progress”) print(“═══════════════════════════════════════════════════════════”) var lastObjective = Double.infinity for try await progress in stream { // Print every 10th iteration if progress.iteration % 10 == 0 { let improvement = lastObjective - progress.metrics.objectiveValue print(” Iter (progress.iteration): obj=(progress.metrics.objectiveValue.formatted(.number.precision(.fractionLength(6)))), β=(progress.beta.formatted(.number.precision(.fractionLength(4))))”) lastObjective = progress.metrics.objectiveValue }</p><pre><code>	// Access final result when available if let result = progress.result { print(”\nFinal Result:”) print(”  Optimal Value: (result.optimalValue.formatted(.number.precision(.fractionLength(6))))”) print(”  Objective: (result.objectiveValue.formatted(.number.precision(.fractionLength(8))))”) print(”  Converged: (result.converged)”) print(”  Total Iterations: (result.iterations)”) } } </code></pre>}<p></p><p>// MARK: - Production Nelson-Siegel Implementation (Using L-BFGS)</p><p>// Create bond market data let bonds = [ BondMarketData(maturity: 1.0, couponRate: 0.050, faceValue: 100, marketPrice: 98.8), BondMarketData(maturity: 2.0, couponRate: 0.052, faceValue: 100, marketPrice: 98.0), BondMarketData(maturity: 5.0, couponRate: 0.058, faceValue: 100, marketPrice: 96.8), BondMarketData(maturity: 10.0, couponRate: 0.062, faceValue: 100, marketPrice: 95.5), ]</p><p>// Calibrate with comprehensive diagnostics let result = try NelsonSiegelYieldCurve.calibrateWithDiagnostics( to: bonds, fixedLambda: 2.5 )</p><p>print(“Calibrated Parameters:”) print(” β₀ (level): (result.curve.parameters.beta0.percent(2))”) print(” β₁ (slope): (result.curve.parameters.beta1.percent(2))”) print(” β₂ (curvature): (result.curve.parameters.beta2.percent(2))”) print(” λ (decay): (result.curve.parameters.lambda.number(2))”) print(” Converged: (result.converged)”) print(” Iterations: (result.iterations)”) print(” SSE: (result.sumSquaredErrors.number(2))”) print(” RMSE: $(result.rootMeanSquaredError.number(3))”) print(” MAE: $(result.meanAbsoluteError.number(3))”)</p><p>// Get yields at any maturity let yield5Y = result.curve.yield(maturity: 5.0) let yield10Y = result.curve.yield(maturity: 10.0)</p><p>// Price bonds using the fitted curve let bond = BondMarketData(maturity: 7.0, couponRate: 0.06, faceValue: 100, marketPrice: 0) let theoreticalPrice = result.curve.price(bond: bond)</p></code><p><code>// Display fitted yield curve print(”\nFitted Yield Curve:”) let maturities = [0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0] for maturity in maturities { let yieldValue = result.curve.yield(maturity: maturity) print(” (maturity.number(2))Y: (yieldValue.percent(2))”) } </code></p></pre>
-              </div></pre>
-          </details>
-          <p></p>
-        </div>
-        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.21-ConjugateGradientTutorial.md">BusinessMath Docs – Conjugate Gradient Tutorial</a></p>
-        <h3>Experiments to Try</h3>
-        <ol>
-          <li><strong>Variant Comparison</strong>: Test Fletcher-Reeves vs. Polak-Ribière on nonlinear problem</li>
-          <li><strong>Restart Strategy</strong>: CG with periodic restarts every n iterations</li>
-          <li><strong>Preconditioning</strong>: Test diagonal vs. incomplete Cholesky preconditioners</li>
-          <li><strong>Convergence</strong>: Plot residual norm vs. iteration for quadratic problem</li>
-        </ol>
-        <hr />
-        <h2>Next Steps</h2>
-        <strong>Tomorrow</strong>: We’ll conclude Week 10 with 
-        <strong>Simulated Annealing</strong>, a global optimization method that doesn’t require gradients and can escape local minima.
+            <div>
+              <code class="language-swift"><p>// Price a bond given a discount rate func bondPrice(discountRate: Double) -&gt; Double { let periods = Int(yearsToMaturity) var price = 0.0</p><pre><code>// Present value of coupons for t in 1…periods { let coupon = faceValue * couponRate price += coupon / pow(1 + discountRate, Double(t)) }<p></p><p>// Present value of face value price += faceValue / pow(1 + discountRate, yearsToMaturity)</p></code><p><code>return price </code></p></pre>}<p></p></code>
+            </div><p>// Objective: minimize squared pricing error func pricingError(discountRate: Double) -&gt; Double { let predicted = bondPrice(discountRate: discountRate) let error = marketPrice - predicted return error * error }</p><p>// Conjugate gradient optimizer (note: async API) let cg = AsyncConjugateGradientOptimizer( method: .fletcherReeves,  // Classic method for quadratic problems tolerance: 1e-6, maxIterations: 100 )</p><p>Task { let result = try await cg.optimize( objective: pricingError, constraints: [], initialGuess: 0.05,  // Start with 5% discount rate bounds: (0.001, 0.20)  // Rate must be between 0.1% and 20% )</p><pre><code>print(“Bond Yield Estimation via Conjugate Gradient”) print(“═══════════════════════════════════════════════════════════”) print(“Optimization Results:”) print(”  Iterations: (result.iterations)”) print(”  Optimal Discount Rate: (result.optimalValue.percent(2))”) print(”  Final Pricing Error: (result.objectiveValue.number(3))”) print(”  Implied Bond Price: (bondPrice(discountRate: result.optimalValue).currency(2))”) print(”  Market Price: (marketPrice.currency(2))”) </code></pre>}<p></p>
+            <div>
+              <p>// MARK: - Nonlinear Optimization</p>
+              <pre><code>// Black-Scholes implied volatility calculation struct OptionData { let spotPrice: Double = 100.0 let strikePrice: Double = 105.0 let timeToExpiry: Double = 0.25  // 3 months let riskFreeRate: Double = 0.05 let marketPrice: Double = 3.50 }<p></p><p>let option = OptionData()</p></code>
+                <div>
+                  <code><p>// Black-Scholes call option price func blackScholesCall(volatility: Double) -&gt; Double { let S = option.spotPrice let K = option.strikePrice let T = option.timeToExpiry let r = option.riskFreeRate</p><pre><code>let d1 = (log(S/K) + (r + volatility<em>volatility/2)<em>T) / (volatility</em>sqrt(T)) let d2 = d1 - volatility</em>sqrt(T)<p></p><p>// Simplified normal CDF approximation func normalCDF(_ x: Double) -&gt; Double { return 0.5 * (1 + erf(x / sqrt(2))) }</p></code><p><code>return S * normalCDF(d1) - K * exp(-r*T) * normalCDF(d2) </code></p></pre>}<p></p></code>
+                </div><p>// Objective: minimize squared error between model and market price func impliedVolError(volatility: Double) -&gt; Double { let modelPrice = blackScholesCall(volatility: volatility) let error = option.marketPrice - modelPrice return error * error }</p><p>// Polak-Ribière method (better for nonlinear problems) let cgNonlinear = AsyncConjugateGradientOptimizer( method: .polakRibiere, tolerance: 1e-8, maxIterations: 50 )</p><p>Task { let result = try await cgNonlinear.optimize( objective: impliedVolError, constraints: [], initialGuess: 0.20,  // Start with 20% volatility bounds: (0.01, 2.0)  // Vol must be between 1% and 200% )</p><pre><code>print(“Implied Volatility Calculation (Nonlinear CG)”) print(“═══════════════════════════════════════════════════════════”) print(”  Implied Volatility: (result.optimalValue.percent(2))”) print(”  Model Price: (blackScholesCall(volatility: result.optimalValue).currency(2))”) print(”  Market Price: (option.marketPrice.currency(2))”) print(”  Pricing Error: (sqrt(result.objectiveValue).currency(2))”) print(”  Iterations: (result.iterations)”) </code></pre>} </pre>// MARK: - Progress Monitoring with AsyncSequence
+              <pre><code>// Option pricing with progress tracking func pricingObjective(param: Double) -&gt; Double { // Simulate a complex pricing calculation let x = param - 0.25 return x<em>x</em>x<em>x - 3</em>x<em>x + 2</em>x + 1  // Quartic function with local minima }<p></p><p>let asyncCG = AsyncConjugateGradientOptimizer( method: .fletcherReeves, tolerance: 1e-8, maxIterations: 100 )</p><p>Task { // Use async stream to monitor progress let stream = asyncCG.optimizeWithProgressStream( objective: pricingObjective, constraints: [], initialGuess: 2.0, bounds: (-5.0, 5.0) ) print(“Optimization with Real-Time Progress”) print(“═══════════════════════════════════════════════════════════”) var lastObjective = Double.infinity for try await progress in stream { // Print every 10th iteration if progress.iteration % 10 == 0 { let improvement = lastObjective - progress.metrics.objectiveValue print(” Iter (progress.iteration): obj=(progress.metrics.objectiveValue.formatted(.number.precision(.fractionLength(6)))), β=(progress.beta.formatted(.number.precision(.fractionLength(4))))”) lastObjective = progress.metrics.objectiveValue }</p><pre><code>	// Access final result when available if let result = progress.result { print(”\nFinal Result:”) print(”  Optimal Value: (result.optimalValue.formatted(.number.precision(.fractionLength(6))))”) print(”  Objective: (result.objectiveValue.formatted(.number.precision(.fractionLength(8))))”) print(”  Converged: (result.converged)”) print(”  Total Iterations: (result.iterations)”) } } </code></pre>}<p></p><p>// MARK: - Production Nelson-Siegel Implementation (Using L-BFGS)</p><p>// Create bond market data let bonds = [ BondMarketData(maturity: 1.0, couponRate: 0.050, faceValue: 100, marketPrice: 98.8), BondMarketData(maturity: 2.0, couponRate: 0.052, faceValue: 100, marketPrice: 98.0), BondMarketData(maturity: 5.0, couponRate: 0.058, faceValue: 100, marketPrice: 96.8), BondMarketData(maturity: 10.0, couponRate: 0.062, faceValue: 100, marketPrice: 95.5), ]</p><p>// Calibrate with comprehensive diagnostics let result = try NelsonSiegelYieldCurve.calibrateWithDiagnostics( to: bonds, fixedLambda: 2.5 )</p><p>print(“Calibrated Parameters:”) print(” β₀ (level): (result.curve.parameters.beta0.percent(2))”) print(” β₁ (slope): (result.curve.parameters.beta1.percent(2))”) print(” β₂ (curvature): (result.curve.parameters.beta2.percent(2))”) print(” λ (decay): (result.curve.parameters.lambda.number(2))”) print(” Converged: (result.converged)”) print(” Iterations: (result.iterations)”) print(” SSE: (result.sumSquaredErrors.number(2))”) print(” RMSE: $(result.rootMeanSquaredError.number(3))”) print(” MAE: $(result.meanAbsoluteError.number(3))”)</p><p>// Get yields at any maturity let yield5Y = result.curve.yield(maturity: 5.0) let yield10Y = result.curve.yield(maturity: 10.0)</p><p>// Price bonds using the fitted curve let bond = BondMarketData(maturity: 7.0, couponRate: 0.06, faceValue: 100, marketPrice: 0) let theoreticalPrice = result.curve.price(bond: bond)</p></code><p><code>// Display fitted yield curve print(”\nFitted Yield Curve:”) let maturities = [0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0] for maturity in maturities { let yieldValue = result.curve.yield(maturity: maturity) print(” (maturity.number(2))Y: (yieldValue.percent(2))”) } </code></p></pre>
+            </div></pre>
+        </details>
         <p></p>
-        <p><strong>Next Week</strong>: Week 11 explores <strong>Nelder-Mead Simplex</strong>, <strong>Particle Swarm Optimization</strong>, and <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong>.
-          <hr /><strong>Series</strong>: [Week 10 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Methods] | <strong>Case Studies</strong>: [4/6 Complete]</p>
-        <p><strong>Topics Covered</strong>: Conjugate gradient • Fletcher-Reeves • Polak-Ribière • Preconditioning • Least squares • Quadratic optimization</p>
-        <p><strong>Playgrounds</strong>: [Week 1-10 available] • [Next: Simulated annealing for global optimization]</p>
       </div>
+      <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.21-ConjugateGradientTutorial.md">BusinessMath Docs – Conjugate Gradient Tutorial</a></p>
+      <h3>Experiments to Try</h3>
+      <ol>
+        <li><strong>Variant Comparison</strong>: Test Fletcher-Reeves vs. Polak-Ribière on nonlinear problem</li>
+        <li><strong>Restart Strategy</strong>: CG with periodic restarts every n iterations</li>
+        <li><strong>Preconditioning</strong>: Test diagonal vs. incomplete Cholesky preconditioners</li>
+        <li><strong>Convergence</strong>: Plot residual norm vs. iteration for quadratic problem</li>
+      </ol>
       <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, conjugate-gradient, gradient-descent, fletcher-reeves, polak-ribiere</p>
+      <h2>Next Steps</h2>
+      <strong>Tomorrow</strong>: We’ll conclude Week 10 with 
+      <strong>Simulated Annealing</strong>, a global optimization method that doesn’t require gradients and can escape local minima.
+      <p></p>
+      <p><strong>Next Week</strong>: Week 11 explores <strong>Nelder-Mead Simplex</strong>, <strong>Particle Swarm Optimization</strong>, and <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong>.
+        <hr /><strong>Series</strong>: [Week 10 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Methods] | <strong>Case Studies</strong>: [4/6 Complete]</p>
+      <p><strong>Topics Covered</strong>: Conjugate gradient • Fletcher-Reeves • Polak-Ribière • Preconditioning • Least squares • Quadratic optimization</p>
+      <p><strong>Playgrounds</strong>: [Week 1-10 available] • [Next: Simulated annealing for global optimization]</p>
     </div>
+    <hr />
+    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, conjugate-gradient, gradient-descent, fletcher-reeves, polak-ribiere</p>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

@@ -66,10 +66,7 @@ public struct MainLayout: Layout {
         Body {
             Include("GTM.html")
             SiteHeader()
-            Section {
-                content
-            }
-            .width(.max)
+            content
             SiteFooter()
             Script(file: "/js/theme-toggle.js")
         }

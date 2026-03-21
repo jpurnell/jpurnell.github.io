@@ -162,200 +162,198 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Case Study: Real-Time Portfolio Rebalancing with Async Optimization</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">22 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Case Study #5 of 6 • Capstone for Async/Streaming/Optimization</strong>
-            <hr /></p>
-          <h2>The Business Challenge</h2>
-          <strong>Company</strong>: Quantitative trading desk at mid-size hedge fund 
-          <strong>Portfolio</strong>: $250M across 500 positions 
-          <strong>Challenge</strong>: Rebalance portfolio in real-time as market moves and risk limits change
-          <p></p>
-          <div>
-            <p><strong>Requirements</strong>:</p>
-            <ol>
-              <li><strong>Speed</strong>: Optimization must complete within 30 seconds (before next market tick)</li>
-              <li><strong>Live Updates</strong>: Show progress as optimization runs (not just final result)</li>
-              <li><strong>Cancellation</strong>: Traders can abort if market conditions change dramatically</li>
-              <li><strong>Risk Monitoring</strong>: Check VaR/tracking error limits continuously during optimization</li>
-              <li><strong>Trade Generation</strong>: Output executable trades with lot sizes and limit prices</li>
-            </ol>
-            <strong>The Stakes</strong>: Poor rebalancing costs ~$2M annually in tracking error and transaction costs. Slow optimization means stale decisions.
-            <hr />
-            <h2>The Solution Architecture</h2>
-            <h3>Part 1: Actor-Based Async Optimizer</h3>Swift’s modern concurrency (async/await, actors) enables progress updates and cancellation.
-            <pre><code class="language-swift">import BusinessMath // Actor managing optimization state actor RealTimePortfolioOptimizer { private var currentIteration = 0 private var bestSolution: VectorN
-                <double>
-                  ? private var bestValue: Double = .infinity private var convergenceHistory: [(iteration: Int, value: Double, timestamp: Date)] = [] private var isCancelled = false
-                </double></code><pre><code class="language-swift"><code> // PSO state (velocities and personal bests) private var velocities: [VectorN
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Case Study: Real-Time Portfolio Rebalancing with Async Optimization</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">22 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Case Study #5 of 6 • Capstone for Async/Streaming/Optimization</strong>
+          <hr /></p>
+        <h2>The Business Challenge</h2>
+        <strong>Company</strong>: Quantitative trading desk at mid-size hedge fund 
+        <strong>Portfolio</strong>: $250M across 500 positions 
+        <strong>Challenge</strong>: Rebalance portfolio in real-time as market moves and risk limits change
+        <p></p>
+        <div>
+          <p><strong>Requirements</strong>:</p>
+          <ol>
+            <li><strong>Speed</strong>: Optimization must complete within 30 seconds (before next market tick)</li>
+            <li><strong>Live Updates</strong>: Show progress as optimization runs (not just final result)</li>
+            <li><strong>Cancellation</strong>: Traders can abort if market conditions change dramatically</li>
+            <li><strong>Risk Monitoring</strong>: Check VaR/tracking error limits continuously during optimization</li>
+            <li><strong>Trade Generation</strong>: Output executable trades with lot sizes and limit prices</li>
+          </ol>
+          <strong>The Stakes</strong>: Poor rebalancing costs ~$2M annually in tracking error and transaction costs. Slow optimization means stale decisions.
+          <hr />
+          <h2>The Solution Architecture</h2>
+          <h3>Part 1: Actor-Based Async Optimizer</h3>Swift’s modern concurrency (async/await, actors) enables progress updates and cancellation.
+          <pre><code class="language-swift">import BusinessMath // Actor managing optimization state actor RealTimePortfolioOptimizer { private var currentIteration = 0 private var bestSolution: VectorN
+              <double>
+                ? private var bestValue: Double = .infinity private var convergenceHistory: [(iteration: Int, value: Double, timestamp: Date)] = [] private var isCancelled = false
+              </double></code><pre><code class="language-swift"><code> // PSO state (velocities and personal bests) private var velocities: [VectorN
+                  <double>
+                    ] = [] private var personalBest: [(position: VectorN
                     <double>
-                      ] = [] private var personalBest: [(position: VectorN
+                      , value: Double)] = [] private var globalBest: (position: VectorN
                       <double>
-                        , value: Double)] = [] private var globalBest: (position: VectorN
-                        <double>
-                          , value: Double)?
-                          <p></p>
-                          <p>// Market data stream private let marketDataStream: AsyncMarketDataStream private let riskMonitor: RiskMonitor</p>
-                          <p>// Optimization parameters private let numAssets: Int private let targetWeights: VectorN
-                            <double>
-                               private let constraints: PortfolioConstraintSet
-                            </double></p>
-                          <p>init( numAssets: Int, targetWeights: VectorN
-                            <double>
-                              , constraints: PortfolioConstraintSet, marketData: AsyncMarketDataStream, riskMonitor: RiskMonitor ) { self.numAssets = numAssets self.targetWeights = targetWeights self.constraints = constraints self.marketDataStream = marketData self.riskMonitor = riskMonitor }
-                            </double></p>
-                          <div>
-                            <p>// Main optimization loop func optimize() async throws -&gt; OptimizationResult { print(“🚀 Starting real-time optimization…”) let startTime = Date()</p>
-                            <pre><code> // Initialize particle swarm (parallelizable!) var swarm = initializeSwarm(size: 100)<p></p><p>// Initialize PSO state velocities = (0..
-                                  <swarm.count).map { _ in vectorn((0..<numassets).map { _ in double.random(in: -0.1…0.1) }) } personalbest="swarm.map" { (position: $0, value: double.infinity) }< p></swarm.count).map></p></code>
-                              <div>
-                                <code>
-                                  <div>
-                                    <p>// Optimization loop with async updates for iteration in 0..&lt;200 { // Check cancellation guard !isCancelled else { throw OptimizationError.cancelled }</p>
-                                    <pre><code> // Evaluate swarm in parallel let evaluations = await withTaskGroup(of: (Int, Double).self) { group in for (index, particle) in swarm.enumerated() { group.addTask { let value = await self.evaluateParticle(particle) return (index, value) } }</code><pre><code><code> var results: [Double] = Array(repeating: 0.0, count: swarm.count) for await (index, value) in group { results[index] = value }<p></p></code><p><code>return results </code></p></code></pre>}<p></p></pre>
-                                  </div><p>// Update personal bests for (index, value) in evaluations.enumerated() { if value &lt; personalBest[index].value { personalBest[index] = (position: swarm[index], value: value) } }</p><p>// Update global best if let (bestIndex, bestIterValue) = evaluations.enumerated().min(by: { $0.element &lt; $1.element }) { if globalBest == nil || bestIterValue &lt; globalBest!.value { globalBest = (position: swarm[bestIndex], value: bestIterValue) bestValue = bestIterValue bestSolution = swarm[bestIndex]</p><pre><code>	 // Record convergence convergenceHistory.append((iteration, bestValue, Date()))<pre><code> // Publish progress update
+                        , value: Double)?
+                        <p></p>
+                        <p>// Market data stream private let marketDataStream: AsyncMarketDataStream private let riskMonitor: RiskMonitor</p>
+                        <p>// Optimization parameters private let numAssets: Int private let targetWeights: VectorN
+                          <double>
+                             private let constraints: PortfolioConstraintSet
+                          </double></p>
+                        <p>init( numAssets: Int, targetWeights: VectorN
+                          <double>
+                            , constraints: PortfolioConstraintSet, marketData: AsyncMarketDataStream, riskMonitor: RiskMonitor ) { self.numAssets = numAssets self.targetWeights = targetWeights self.constraints = constraints self.marketDataStream = marketData self.riskMonitor = riskMonitor }
+                          </double></p>
+                        <div>
+                          <p>// Main optimization loop func optimize() async throws -&gt; OptimizationResult { print(“🚀 Starting real-time optimization…”) let startTime = Date()</p>
+                          <pre><code> // Initialize particle swarm (parallelizable!) var swarm = initializeSwarm(size: 100)<p></p><p>// Initialize PSO state velocities = (0..
+                                <swarm.count).map { _ in vectorn((0..<numassets).map { _ in double.random(in: -0.1…0.1) }) } personalbest="swarm.map" { (position: $0, value: double.infinity) }< p></swarm.count).map></p></code>
+                            <div>
+                              <code>
+                                <div>
+                                  <p>// Optimization loop with async updates for iteration in 0..&lt;200 { // Check cancellation guard !isCancelled else { throw OptimizationError.cancelled }</p>
+                                  <pre><code> // Evaluate swarm in parallel let evaluations = await withTaskGroup(of: (Int, Double).self) { group in for (index, particle) in swarm.enumerated() { group.addTask { let value = await self.evaluateParticle(particle) return (index, value) } }</code><pre><code><code> var results: [Double] = Array(repeating: 0.0, count: swarm.count) for await (index, value) in group { results[index] = value }<p></p></code><p><code>return results </code></p></code></pre>}<p></p></pre>
+                                </div><p>// Update personal bests for (index, value) in evaluations.enumerated() { if value &lt; personalBest[index].value { personalBest[index] = (position: swarm[index], value: value) } }</p><p>// Update global best if let (bestIndex, bestIterValue) = evaluations.enumerated().min(by: { $0.element &lt; $1.element }) { if globalBest == nil || bestIterValue &lt; globalBest!.value { globalBest = (position: swarm[bestIndex], value: bestIterValue) bestValue = bestIterValue bestSolution = swarm[bestIndex]</p><pre><code>	 // Record convergence convergenceHistory.append((iteration, bestValue, Date()))<pre><code> // Publish progress update
  await publishProgress(
 	 iteration: iteration,
 	 bestValue: bestValue,
 	 elapsedTime: Date().timeIntervalSince(startTime)
  )
 </code></pre>} </code></pre>}<p></p><p>// Check risk limits (abort if violated) if let solution = bestSolution { let riskCheck = await riskMonitor.checkLimits(solution) guard riskCheck.withinLimits else { throw OptimizationError.riskLimitViolation(riskCheck.violations) } }</p><p>// Update swarm (PSO velocity/position updates) swarm = updateSwarm(swarm, evaluations: evaluations, iteration: iteration)</p><p>// Early stopping if converged if hasConverged(recentHistory: convergenceHistory.suffix(10)) { print(“✅ Converged early at iteration (iteration)”) break } </p></code>
-                              </div></pre>}
-                            <p></p>
-                          </div>
-                          <p>guard let finalSolution = bestSolution else { throw OptimizationError.noSolutionFound }</p>
-                          <p>return OptimizationResult( weights: finalSolution, objectiveValue: bestValue, convergenceHistory: convergenceHistory, elapsedTime: Date().timeIntervalSince(startTime) ) </p>
-                        </double>
+                            </div></pre>}
+                          <p></p>
+                        </div>
+                        <p>guard let finalSolution = bestSolution else { throw OptimizationError.noSolutionFound }</p>
+                        <p>return OptimizationResult( weights: finalSolution, objectiveValue: bestValue, convergenceHistory: convergenceHistory, elapsedTime: Date().timeIntervalSince(startTime) ) </p>
                       </double>
-                    </double></code></code></pre>}<p></p></pre>
-          </div>
-          <div>
-            <p>// Evaluate single particle (async to fetch live prices) private func evaluateParticle(_ weights: VectorN
-              <double>
-                ) async -&gt; Double { // Fetch current market prices (async!) let prices = await marketDataStream.getCurrentPrices()
-              </double></p>
-            <pre><code> // Calculate tracking error let trackingError = calculateTrackingError( weights: weights, targetWeights: targetWeights, prices: prices )<p></p><p>// Calculate transaction costs let turnover = zip(weights.toArray(), targetWeights.toArray()) .map { abs($0 - $1) } .reduce(0, +) / 2.0</p><p>let transactionCosts = turnover * 0.001 // 10 bps</p></code><p><code>// Combined objective return trackingError + transactionCosts * 10.0 </code></p></pre>}
-            <p></p>
-          </div>
-          <p>// Publish progress to UI/dashboard private func publishProgress(iteration: Int, bestValue: Double, elapsedTime: TimeInterval) async { let progress = OptimizationProgress( iteration: iteration, bestValue: bestValue, elapsedTime: elapsedTime, iterationsPerSecond: Double(iteration) / elapsedTime )</p>
-          <pre><code> // Send to monitoring dashboard await ProgressPublisher.shared.publish(progress) </code></pre>}
-          <p></p>
-          <p>// Cancellation support func cancel() { isCancelled = true }</p>
-          <div>
-            <p>private func hasConverged(recentHistory: ArraySlice&lt;(iteration: Int, value: Double, timestamp: Date)&gt;) -&gt; Bool { guard recentHistory.count &gt;= 10 else { return false }</p>
-            <pre><code> let values = recentHistory.map(.value) let improvement = values.first! - values.last!<p></p></code><p><code>return improvement &lt; 1e-6 // No meaningful improvement </code></p></pre>}
-            <p></p>
-          </div>
-          <div>
-            <p>// Swarm update (PSO algorithm) // Implements standard PSO 2011 with adaptive inertia weight private func updateSwarm( _ swarm: [VectorN
-              <double>
-                ], evaluations: [Double], iteration: Int ) -&gt; [VectorN
-                <double>
-                  ] { // Adaptive inertia: linearly decrease from 0.9 to 0.4 over iterations // Higher early = more exploration, lower later = more exploitation let inertia = 0.9 - (0.5 * Double(iteration) / 200.0) let cognitive = 1.5 // c₁: Personal best attraction (individual learning) let social = 1.5 // c₂: Global best attraction (social learning)
-                </double>
-              </double></p>
-            <pre><code> guard let gBest = globalBest else { return swarm  // No update if no global best yet }<p></p></code>
-              <div>
-                <code><p>return swarm.enumerated().map { index, particle in // Get personal best for this particle let pBest = personalBest[index].position</p><pre><code> // Update velocity: v = w<em>v + c1</em>r1*(pbest - x) + c2<em>r2</em>(gbest - x) let r1 = Double.random(in: 0…1) let r2 = Double.random(in: 0…1)<p></p><p>let oldVelocity = velocities[index]</p><p>// Scalar must be on left side for VectorN multiplication let cognitiveComponent = (cognitive * r1) * (pBest - particle) let socialComponent = (social * r2) * (gBest.position - particle)</p><p>var newVelocity = inertia * oldVelocity + cognitiveComponent + socialComponent</p><p>// Clamp velocity to prevent explosion (max 20% change) newVelocity = VectorN(newVelocity.toArray().map { v in max(-0.2, min(0.2, v)) })</p><p>velocities[index] = newVelocity</p><p>// Update position: x = x + v var newPosition = particle + newVelocity</p><p>// Clamp to valid range [0, 1] newPosition = VectorN(newPosition.toArray().map { w in max(0.0, min(1.0, w)) })</p><p>// Normalize to sum to 1 (portfolio constraint) let sum = newPosition.toArray().reduce(0, +) if sum &gt; 0 { newPosition = VectorN(newPosition.toArray().map { $0 / sum }) }</p></code><p><code>return newPosition </code></p></pre>} </code>
-              </div></pre>}
-            <p></p>
-          </div>
+                    </double>
+                  </double></code></code></pre>}<p></p></pre>
         </div>
-        <p>private func initializeSwarm(size: Int) -&gt; [VectorN
-          <double>
-            ] { (0..
-            <size).map { _ in let weights="VectorN((0..<numAssets).map" { _ in double.random(in: 0…1) }) let sum="weights.toArray().reduce(0," +) return vectorn(weights.toarray().map { $0 sum }) sum to 1 (simplex projection) } }< p></size).map>
-          </double></p>
-        <p>private func calculateTrackingError( weights: VectorN
-          <double>
-            , targetWeights: VectorN
-            <double>
-              , prices: [Double] ) -&gt; Double { // Simplified tracking error calculation zip(weights.toArray(), targetWeights.toArray()) .map { pow($0 - $1, 2) } .reduce(0, +) } }
-            </double>
-          </double></p>
-      </div>
-      <div>
-        <p>// Market data stream actor actor AsyncMarketDataStream { private var latestPrices: [Double] = []</p>
-        <pre><code> func getCurrentPrices() async -&gt; [Double] { // In production: fetch from market data API // For demo: return cached prices return latestPrices }<p></p></code><p><code>func updatePrices(_ newPrices: [Double]) { latestPrices = newPrices } </code></p></pre>}
-        <p></p>
-      </div>
-      <div>
         <div>
-          <p>// Risk monitoring actor actor RiskMonitor { private let varLimit: Double = 0.02 // 2% daily VaR private let trackingErrorLimit: Double = 0.005 // 50 bps tracking error</p>
-          <pre><code> func checkLimits(_ weights: VectorN
-              <double>
-                ) async -&gt; RiskCheckResult { // Calculate risk metrics let var95 = calculateVaR(weights: weights, confidenceLevel: 0.95) let trackingError = calculateTrackingError(weights: weights)
-              </double></code><pre><code><code> var violations: [String] = []<p></p><p>if var95 &gt; varLimit { violations.append(“VaR exceeds limit: (var95.percent()) &gt; (varLimit.percent())”) }</p><p>if trackingError &gt; trackingErrorLimit { violations.append(“Tracking error exceeds limit: ((trackingError * 10_000).number(0))bps &gt; ((trackingErrorLimit * 10_000).number(0))bps”) }</p></code><p><code>return RiskCheckResult( withinLimits: violations.isEmpty, violations: violations, var95: var95, trackingError: trackingError ) </code></p></code></pre>}<p></p></pre>
+          <p>// Evaluate single particle (async to fetch live prices) private func evaluateParticle(_ weights: VectorN
+            <double>
+              ) async -&gt; Double { // Fetch current market prices (async!) let prices = await marketDataStream.getCurrentPrices()
+            </double></p>
+          <pre><code> // Calculate tracking error let trackingError = calculateTrackingError( weights: weights, targetWeights: targetWeights, prices: prices )<p></p><p>// Calculate transaction costs let turnover = zip(weights.toArray(), targetWeights.toArray()) .map { abs($0 - $1) } .reduce(0, +) / 2.0</p><p>let transactionCosts = turnover * 0.001 // 10 bps</p></code><p><code>// Combined objective return trackingError + transactionCosts * 10.0 </code></p></pre>}
+          <p></p>
         </div>
-        <p>private func calculateVaR(weights: VectorN
-          <double>
-            , confidenceLevel: Double) -&gt; Double { // Simplified VaR calculation 0.018 // 1.8% daily VaR }
-          </double></p>
-        <p>private func calculateTrackingError(weights: VectorN
-          <double>
-            ) -&gt; Double { // Simplified tracking error 0.0035 // 35 bps } }
-          </double></p>
+        <p>// Publish progress to UI/dashboard private func publishProgress(iteration: Int, bestValue: Double, elapsedTime: TimeInterval) async { let progress = OptimizationProgress( iteration: iteration, bestValue: bestValue, elapsedTime: elapsedTime, iterationsPerSecond: Double(iteration) / elapsedTime )</p>
+        <pre><code> // Send to monitoring dashboard await ProgressPublisher.shared.publish(progress) </code></pre>}
+        <p></p>
+        <p>// Cancellation support func cancel() { isCancelled = true }</p>
+        <div>
+          <p>private func hasConverged(recentHistory: ArraySlice&lt;(iteration: Int, value: Double, timestamp: Date)&gt;) -&gt; Bool { guard recentHistory.count &gt;= 10 else { return false }</p>
+          <pre><code> let values = recentHistory.map(.value) let improvement = values.first! - values.last!<p></p></code><p><code>return improvement &lt; 1e-6 // No meaningful improvement </code></p></pre>}
+          <p></p>
+        </div>
+        <div>
+          <p>// Swarm update (PSO algorithm) // Implements standard PSO 2011 with adaptive inertia weight private func updateSwarm( _ swarm: [VectorN
+            <double>
+              ], evaluations: [Double], iteration: Int ) -&gt; [VectorN
+              <double>
+                ] { // Adaptive inertia: linearly decrease from 0.9 to 0.4 over iterations // Higher early = more exploration, lower later = more exploitation let inertia = 0.9 - (0.5 * Double(iteration) / 200.0) let cognitive = 1.5 // c₁: Personal best attraction (individual learning) let social = 1.5 // c₂: Global best attraction (social learning)
+              </double>
+            </double></p>
+          <pre><code> guard let gBest = globalBest else { return swarm  // No update if no global best yet }<p></p></code>
+            <div>
+              <code><p>return swarm.enumerated().map { index, particle in // Get personal best for this particle let pBest = personalBest[index].position</p><pre><code> // Update velocity: v = w<em>v + c1</em>r1*(pbest - x) + c2<em>r2</em>(gbest - x) let r1 = Double.random(in: 0…1) let r2 = Double.random(in: 0…1)<p></p><p>let oldVelocity = velocities[index]</p><p>// Scalar must be on left side for VectorN multiplication let cognitiveComponent = (cognitive * r1) * (pBest - particle) let socialComponent = (social * r2) * (gBest.position - particle)</p><p>var newVelocity = inertia * oldVelocity + cognitiveComponent + socialComponent</p><p>// Clamp velocity to prevent explosion (max 20% change) newVelocity = VectorN(newVelocity.toArray().map { v in max(-0.2, min(0.2, v)) })</p><p>velocities[index] = newVelocity</p><p>// Update position: x = x + v var newPosition = particle + newVelocity</p><p>// Clamp to valid range [0, 1] newPosition = VectorN(newPosition.toArray().map { w in max(0.0, min(1.0, w)) })</p><p>// Normalize to sum to 1 (portfolio constraint) let sum = newPosition.toArray().reduce(0, +) if sum &gt; 0 { newPosition = VectorN(newPosition.toArray().map { $0 / sum }) }</p></code><p><code>return newPosition </code></p></pre>} </code>
+            </div></pre>}
+          <p></p>
+        </div>
       </div>
-      <p>struct RiskCheckResult { let withinLimits: Bool let violations: [String] let var95: Double let trackingError: Double }</p>
-      <p>struct OptimizationProgress { let iteration: Int let bestValue: Double let elapsedTime: TimeInterval let iterationsPerSecond: Double }</p>
-      <p>struct OptimizationResult { let weights: VectorN
+      <p>private func initializeSwarm(size: Int) -&gt; [VectorN
         <double>
-           let objectiveValue: Double let convergenceHistory: [(iteration: Int, value: Double, timestamp: Date)] let elapsedTime: TimeInterval }
+          ] { (0..
+          <size).map { _ in let weights="VectorN((0..<numAssets).map" { _ in double.random(in: 0…1) }) let sum="weights.toArray().reduce(0," +) return vectorn(weights.toarray().map { $0 sum }) sum to 1 (simplex projection) } }< p></size).map>
         </double></p>
-      <div>
-        <p>enum OptimizationError: Error { case cancelled case riskLimitViolation([String]) case noSolutionFound } </p>
-        <h3>Part 2: Progress Monitoring Dashboard</h3>Publish real-time updates to trading dashboard.
-        <pre><code class="language-swift">// Global progress publisher actor ProgressPublisher { static let shared = ProgressPublisher()</code><pre><code class="language-swift"><code>private var subscribers: [UUID: AsyncStream
-                <optimizationprogress>
-                  .Continuation] = [:]
-                  <p></p>
-                  <p>func publish(_ progress: OptimizationProgress) { for continuation in subscribers.values { continuation.yield(progress) } }</p>
-                  <p>func subscribe() -&gt; (UUID, AsyncStream
-                    <optimizationprogress>
-                      ) { let id = UUID() let stream = AsyncStream
-                      <optimizationprogress>
-                         { continuation in Task { await addSubscriber(id: id, continuation: continuation) } } return (id, stream) }
-                      </optimizationprogress>
-                    </optimizationprogress></p>
-                  <p>private func addSubscriber(id: UUID, continuation: AsyncStream
-                    <optimizationprogress>
-                      .Continuation) async { subscribers[id] = continuation }
-                    </optimizationprogress></p>
-                </optimizationprogress></code><p><code>func unsubscribe(id: UUID) { subscribers[id]?.finish() subscribers.removeValue(forKey: id) } </code></p></code></pre>}<p></p></pre>
-      </div>
-      <div>
-        <p>// Dashboard view (SwiftUI) @MainActor class OptimizationViewModel: ObservableObject { @Published var currentIteration = 0 @Published var bestValue: Double = 0 @Published var elapsedTime: TimeInterval = 0 @Published var isRunning = false</p>
-        <pre><code>private var subscriberID: UUID? private var optimizationTask: Task
-            <optimizationresult, error>
-              ?
-              <p></p>
-            </optimizationresult,></code>
-          <div>
-            <code><p>func startOptimization(optimizer: RealTimePortfolioOptimizer) async { isRunning = true</p><pre><code>// Subscribe to progress updates let (id, stream) = await ProgressPublisher.shared.subscribe() subscriberID = id<p></p><p>// Monitor progress Task { for await progress in stream { self.currentIteration = progress.iteration self.bestValue = progress.bestValue self.elapsedTime = progress.elapsedTime } }</p></code><p><code>// Run optimization optimizationTask = Task { return try await optimizer.optimize() } </code></p></pre>}<p></p></code>
-          </div>
-          <div>
-            <p>func cancelOptimization(optimizer: RealTimePortfolioOptimizer) async { await optimizer.cancel() optimizationTask?.cancel()</p>
-            <pre><code>if let id = subscriberID { await ProgressPublisher.shared.unsubscribe(id: id) }<p></p></code>
-              <div>
-                <code><p>isRunning = false </p></code>
-              </div></pre>} 
-          </div></pre>} 
-        <h3>Part 3: Trade Generation</h3>Convert optimized weights to executable trades.
-        <pre><code class="language-swift">struct TradeGenerator { let currentHoldings: [String: Double]  // Symbol → shares let prices: [String: Double]  // Symbol → price let lotSize: Int = 100  // Trade in 100-share lots<pre><code>func generateTrades( from currentWeights: VectorN
-                <double>
-                  , to targetWeights: VectorN
-                  <double>
-                    , symbols: [String], portfolioValue: Double ) -&gt; [Trade] { var trades: [Trade] = []
-                    <pre><code>for (i, symbol) in symbols.enumerated() { let currentWeight = currentWeights[i] let targetWeight = targetWeights[i]<pre><code>let currentValue = portfolioValue * currentWeight let targetValue = portfolioValue * targetWeight<p></p><p>let currentShares = currentHoldings[symbol] ?? 0 let targetShares = targetValue / prices[symbol]!</p><p>let deltaShares = targetShares - currentShares</p><p>// Round to lot size let lots = Int((deltaShares / Double(lotSize)).rounded()) let tradedShares = Double(lots * lotSize)</p><p>if abs(tradedShares) &gt;= Double(lotSize) { let trade = Trade( symbol: symbol, side: tradedShares &gt; 0 ? .buy : .sell, shares: abs(tradedShares), limitPrice: calculateLimitPrice(symbol: symbol, side: tradedShares &gt; 0 ? .buy : .sell), estimatedCost: abs(tradedShares) * prices[symbol]! )</p><pre><code>trades.append(trade) </code></pre>} </code></pre>}<p></p></code></pre>
-                  </double>
-                </double></code></pre></code></pre>
-      </div>
-      <p><code class="language-swift"><code>return trades.sorted { $0.estimatedCost &gt; $1.estimatedCost } // Largest first </code>}</code></p>
+      <p>private func calculateTrackingError( weights: VectorN
+        <double>
+          , targetWeights: VectorN
+          <double>
+            , prices: [Double] ) -&gt; Double { // Simplified tracking error calculation zip(weights.toArray(), targetWeights.toArray()) .map { pow($0 - $1, 2) } .reduce(0, +) } }
+          </double>
+        </double></p>
     </div>
+    <div>
+      <p>// Market data stream actor actor AsyncMarketDataStream { private var latestPrices: [Double] = []</p>
+      <pre><code> func getCurrentPrices() async -&gt; [Double] { // In production: fetch from market data API // For demo: return cached prices return latestPrices }<p></p></code><p><code>func updatePrices(_ newPrices: [Double]) { latestPrices = newPrices } </code></p></pre>}
+      <p></p>
+    </div>
+    <div>
+      <div>
+        <p>// Risk monitoring actor actor RiskMonitor { private let varLimit: Double = 0.02 // 2% daily VaR private let trackingErrorLimit: Double = 0.005 // 50 bps tracking error</p>
+        <pre><code> func checkLimits(_ weights: VectorN
+            <double>
+              ) async -&gt; RiskCheckResult { // Calculate risk metrics let var95 = calculateVaR(weights: weights, confidenceLevel: 0.95) let trackingError = calculateTrackingError(weights: weights)
+            </double></code><pre><code><code> var violations: [String] = []<p></p><p>if var95 &gt; varLimit { violations.append(“VaR exceeds limit: (var95.percent()) &gt; (varLimit.percent())”) }</p><p>if trackingError &gt; trackingErrorLimit { violations.append(“Tracking error exceeds limit: ((trackingError * 10_000).number(0))bps &gt; ((trackingErrorLimit * 10_000).number(0))bps”) }</p></code><p><code>return RiskCheckResult( withinLimits: violations.isEmpty, violations: violations, var95: var95, trackingError: trackingError ) </code></p></code></pre>}<p></p></pre>
+      </div>
+      <p>private func calculateVaR(weights: VectorN
+        <double>
+          , confidenceLevel: Double) -&gt; Double { // Simplified VaR calculation 0.018 // 1.8% daily VaR }
+        </double></p>
+      <p>private func calculateTrackingError(weights: VectorN
+        <double>
+          ) -&gt; Double { // Simplified tracking error 0.0035 // 35 bps } }
+        </double></p>
+    </div>
+    <p>struct RiskCheckResult { let withinLimits: Bool let violations: [String] let var95: Double let trackingError: Double }</p>
+    <p>struct OptimizationProgress { let iteration: Int let bestValue: Double let elapsedTime: TimeInterval let iterationsPerSecond: Double }</p>
+    <p>struct OptimizationResult { let weights: VectorN
+      <double>
+         let objectiveValue: Double let convergenceHistory: [(iteration: Int, value: Double, timestamp: Date)] let elapsedTime: TimeInterval }
+      </double></p>
+    <div>
+      <p>enum OptimizationError: Error { case cancelled case riskLimitViolation([String]) case noSolutionFound } </p>
+      <h3>Part 2: Progress Monitoring Dashboard</h3>Publish real-time updates to trading dashboard.
+      <pre><code class="language-swift">// Global progress publisher actor ProgressPublisher { static let shared = ProgressPublisher()</code><pre><code class="language-swift"><code>private var subscribers: [UUID: AsyncStream
+              <optimizationprogress>
+                .Continuation] = [:]
+                <p></p>
+                <p>func publish(_ progress: OptimizationProgress) { for continuation in subscribers.values { continuation.yield(progress) } }</p>
+                <p>func subscribe() -&gt; (UUID, AsyncStream
+                  <optimizationprogress>
+                    ) { let id = UUID() let stream = AsyncStream
+                    <optimizationprogress>
+                       { continuation in Task { await addSubscriber(id: id, continuation: continuation) } } return (id, stream) }
+                    </optimizationprogress>
+                  </optimizationprogress></p>
+                <p>private func addSubscriber(id: UUID, continuation: AsyncStream
+                  <optimizationprogress>
+                    .Continuation) async { subscribers[id] = continuation }
+                  </optimizationprogress></p>
+              </optimizationprogress></code><p><code>func unsubscribe(id: UUID) { subscribers[id]?.finish() subscribers.removeValue(forKey: id) } </code></p></code></pre>}<p></p></pre>
+    </div>
+    <div>
+      <p>// Dashboard view (SwiftUI) @MainActor class OptimizationViewModel: ObservableObject { @Published var currentIteration = 0 @Published var bestValue: Double = 0 @Published var elapsedTime: TimeInterval = 0 @Published var isRunning = false</p>
+      <pre><code>private var subscriberID: UUID? private var optimizationTask: Task
+          <optimizationresult, error>
+            ?
+            <p></p>
+          </optimizationresult,></code>
+        <div>
+          <code><p>func startOptimization(optimizer: RealTimePortfolioOptimizer) async { isRunning = true</p><pre><code>// Subscribe to progress updates let (id, stream) = await ProgressPublisher.shared.subscribe() subscriberID = id<p></p><p>// Monitor progress Task { for await progress in stream { self.currentIteration = progress.iteration self.bestValue = progress.bestValue self.elapsedTime = progress.elapsedTime } }</p></code><p><code>// Run optimization optimizationTask = Task { return try await optimizer.optimize() } </code></p></pre>}<p></p></code>
+        </div>
+        <div>
+          <p>func cancelOptimization(optimizer: RealTimePortfolioOptimizer) async { await optimizer.cancel() optimizationTask?.cancel()</p>
+          <pre><code>if let id = subscriberID { await ProgressPublisher.shared.unsubscribe(id: id) }<p></p></code>
+            <div>
+              <code><p>isRunning = false </p></code>
+            </div></pre>} 
+        </div></pre>} 
+      <h3>Part 3: Trade Generation</h3>Convert optimized weights to executable trades.
+      <pre><code class="language-swift">struct TradeGenerator { let currentHoldings: [String: Double]  // Symbol → shares let prices: [String: Double]  // Symbol → price let lotSize: Int = 100  // Trade in 100-share lots<pre><code>func generateTrades( from currentWeights: VectorN
+              <double>
+                , to targetWeights: VectorN
+                <double>
+                  , symbols: [String], portfolioValue: Double ) -&gt; [Trade] { var trades: [Trade] = []
+                  <pre><code>for (i, symbol) in symbols.enumerated() { let currentWeight = currentWeights[i] let targetWeight = targetWeights[i]<pre><code>let currentValue = portfolioValue * currentWeight let targetValue = portfolioValue * targetWeight<p></p><p>let currentShares = currentHoldings[symbol] ?? 0 let targetShares = targetValue / prices[symbol]!</p><p>let deltaShares = targetShares - currentShares</p><p>// Round to lot size let lots = Int((deltaShares / Double(lotSize)).rounded()) let tradedShares = Double(lots * lotSize)</p><p>if abs(tradedShares) &gt;= Double(lotSize) { let trade = Trade( symbol: symbol, side: tradedShares &gt; 0 ? .buy : .sell, shares: abs(tradedShares), limitPrice: calculateLimitPrice(symbol: symbol, side: tradedShares &gt; 0 ? .buy : .sell), estimatedCost: abs(tradedShares) * prices[symbol]! )</p><pre><code>trades.append(trade) </code></pre>} </code></pre>}<p></p></code></pre>
+                </double>
+              </double></code></pre></code></pre>
+    </div>
+    <p><code class="language-swift"><code>return trades.sorted { $0.estimatedCost &gt; $1.estimatedCost } // Largest first </code>}</code></p>
     <p><code class="language-swift">private func calculateLimitPrice(symbol: String, side: TradeSide) -&gt; Double { let midPrice = prices[symbol]!</code></p>
     <pre><code class="language-swift"><code>// Add/subtract half spread for limit order let spread = midPrice * 0.001 // 10 bps spread return side == .buy ? midPrice + spread / 2 : midPrice - spread / 2 </code></code></pre>
     <code class="language-swift">} </code>}

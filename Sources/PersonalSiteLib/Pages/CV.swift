@@ -123,9 +123,11 @@ public struct CV: StaticPage {
             Text(cv.skills.map { "\($0.name)" }.joined(separator: " | "))
         }
         // MARK: - Social
-        Group {
+        Section {
             Text("Social").class("sectionHeader").id("Social")
-            Group { SocialLinks() }.padding(.horizontal)
+            Section { SocialLinks() }
+                .padding(.horizontal)
+                .class("clearfix")
         }.class("noPrint")
     }
 }

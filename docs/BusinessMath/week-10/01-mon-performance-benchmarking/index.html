@@ -162,103 +162,100 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Performance Benchmarking: Measure, Compare, Optimize</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Part 33 of 12-Week BusinessMath Series</strong>
-            <hr /></p>
-          <h2>What You’ll Learn</h2>
-          <ul>
-            <li>Systematic performance measurement for Monte Carlo simulations</li>
-            <li>CPU vs GPU performance comparison and when to use each</li>
-            <li>Scaling analysis: how iteration count affects runtime</li>
-            <li>Model complexity impact on performance</li>
-            <li>Expression-based vs closure-based model performance</li>
-            <li>Correlation handling and its performance trade-offs</li>
-            <li>Building performance regression tests</li>
-          </ul>
-          <hr />
-          <h2>The Problem</h2>“How long will this simulation take?” is often unanswerable without measurement:
-          <ul>
-            <li><strong>Scale decisions</strong>: 10,000 iterations or 1,000,000?</li>
-            <li><strong>Hardware choice</strong>: CPU or GPU acceleration?</li>
-            <li><strong>Model complexity</strong>: Is your calculation bottleneck costing you hours?</li>
-            <li><strong>Correlation trade-offs</strong>: Does correlation handling slow you down?</li>
-          </ul>
-          <strong>Without benchmarks, you’re simulating blind.</strong>
-          <hr />
-          <h2>The Solution</h2>BusinessMath provides GPU-accelerated Monte Carlo simulations with built-in performance tracking. Systematic measurement reveals the sweet spot between accuracy and runtime for your specific problems.
-          <h3>Pattern 1: CPU vs GPU Comparison</h3>
-          <strong>Business Problem</strong>: Should I use GPU acceleration for my risk analysis?
-          <pre><code class="language-swift">import BusinessMath import Foundation // Define a portfolio profit model let portfolioModel = MonteCarloExpressionModel { builder in let revenue = builder[0]      // Revenue input let costs = builder[1]        // Operating costs let taxRate = builder[2]      // Tax rate<pre><code>let profit = revenue - costs let afterTax = profit * (1.0 - taxRate) return afterTax </code></pre>}<p></p></code>
-            <div>
-              <code class="language-swift"><p>// Benchmark function func benchmarkSimulation( iterations: Int, enableGPU: Bool, label: String ) throws -&gt; (result: SimulationResults, time: Double) { var simulation = MonteCarloSimulation( iterations: iterations, enableGPU: enableGPU, expressionModel: portfolioModel )</p><pre><code>// Add input distributions simulation.addInput(SimulationInput( name: “Revenue”, distribution: DistributionNormal(1_000_000, 150_000) ))<p></p><p>simulation.addInput(SimulationInput( name: “Costs”, distribution: DistributionNormal(650_000, 80_000) ))</p><p>simulation.addInput(SimulationInput( name: “Tax Rate”, distribution: DistributionUniform(0.15, 0.25) ))</p><p>let startTime = Date() let result = try simulation.run() let elapsed = Date().timeIntervalSince(startTime)</p><p>print(”(label.padding(toLength: 30, withPad: “ “, startingAt: 0)): (String(format: “%8.3f”, elapsed))s (GPU: (result.usedGPU ? “✓” : “✗”))”)</p></code><p><code>return (result, elapsed) </code></p></pre>}<p></p></code>
-            </div><p>print(“CPU vs GPU Performance Comparison”) print(“═══════════════════════════════════════════════════════”)</p><p>// Test different iteration counts let testSizes = [1_000, 10_000, 100_000, 1_000_000]</p>
-            <div>
-              <p>for size in testSizes { print(”\n(size.formatted()) iterations:”)</p>
-              <pre><code>let (_, cpuTime) = try benchmarkSimulation( iterations: size, enableGPU: false, label: “  CPU” )<p></p><p>let (_, gpuTime) = try benchmarkSimulation( iterations: size, enableGPU: true, label: “ GPU” )</p></code><p><code>let speedup = cpuTime / gpuTime print(” Speedup: (String(format: “%.1f”, speedup))×”) </code></p></pre>} 
-            </div></pre>
-          <strong>Output</strong>:
-          <pre><code>CPU vs GPU Performance Comparison ═══════════════════════════════════════════════════════<p></p></code></pre>
-        </div>
-        <p><code>1,000 iterations: CPU : 0.010s (GPU: ✗) GPU : 0.009s (GPU: ✓) Speedup: 1.1×</code></p>
-        <p><code>10,000 iterations: CPU : 0.080s (GPU: ✗) GPU : 0.040s (GPU: ✓) Speedup: 2.0×</code></p>
-        <p><code>100,000 iterations: CPU : 0.829s (GPU: ✗) GPU : 0.529s (GPU: ✓) Speedup: 1.6×</code></p>
-        <p><code>250,000 iterations: CPU : 2.213s (GPU: ✗) GPU : 1.246s (GPU: ✓) Speedup: 1.8× </code><strong>Key Insight</strong>: GPU overhead costs ~8ms. Only use GPU when iteration count × model complexity exceeds that fixed cost. For this model, GPU wins at ~5,000+ iterations.
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Performance Benchmarking: Measure, Compare, Optimize</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 33 of 12-Week BusinessMath Series</strong>
           <hr /></p>
-        <h3>Pattern 2: Model Complexity Scaling</h3>
-        <strong>Pattern</strong>: How does model complexity affect GPU speedup?
-        <pre><code class="language-swift">// Simple model (3 operations) let simpleModel = MonteCarloExpressionModel { builder in let a = builder[0] let b = builder[1] return a + b  // Just addition }<p></p><p>// Medium model (10 operations) let mediumModel = MonteCarloExpressionModel { builder in let revenue = builder[0] let costs = builder[1] let tax = builder[2] let discount = builder[3]</p><pre><code>let profit = revenue - costs let taxed = profit * (1.0 - tax) let discounted = taxed / (1.0 + discount) return discounted </code></pre>}<p></p></code>
+        <h2>What You’ll Learn</h2>
+        <ul>
+          <li>Systematic performance measurement for Monte Carlo simulations</li>
+          <li>CPU vs GPU performance comparison and when to use each</li>
+          <li>Scaling analysis: how iteration count affects runtime</li>
+          <li>Model complexity impact on performance</li>
+          <li>Expression-based vs closure-based model performance</li>
+          <li>Correlation handling and its performance trade-offs</li>
+          <li>Building performance regression tests</li>
+        </ul>
+        <hr />
+        <h2>The Problem</h2>“How long will this simulation take?” is often unanswerable without measurement:
+        <ul>
+          <li><strong>Scale decisions</strong>: 10,000 iterations or 1,000,000?</li>
+          <li><strong>Hardware choice</strong>: CPU or GPU acceleration?</li>
+          <li><strong>Model complexity</strong>: Is your calculation bottleneck costing you hours?</li>
+          <li><strong>Correlation trade-offs</strong>: Does correlation handling slow you down?</li>
+        </ul>
+        <strong>Without benchmarks, you’re simulating blind.</strong>
+        <hr />
+        <h2>The Solution</h2>BusinessMath provides GPU-accelerated Monte Carlo simulations with built-in performance tracking. Systematic measurement reveals the sweet spot between accuracy and runtime for your specific problems.
+        <h3>Pattern 1: CPU vs GPU Comparison</h3>
+        <strong>Business Problem</strong>: Should I use GPU acceleration for my risk analysis?
+        <pre><code class="language-swift">import BusinessMath import Foundation // Define a portfolio profit model let portfolioModel = MonteCarloExpressionModel { builder in let revenue = builder[0]      // Revenue input let costs = builder[1]        // Operating costs let taxRate = builder[2]      // Tax rate<pre><code>let profit = revenue - costs let afterTax = profit * (1.0 - taxRate) return afterTax </code></pre>}<p></p></code>
           <div>
-            <code class="language-swift"><p>// Complex model (25+ operations) let complexModel = MonteCarloExpressionModel { builder in // Multi-year NPV calculation let year1CF = builder[0] let year2CF = builder[1] let year3CF = builder[2] let year4CF = builder[3] let year5CF = builder[4] let discountRate = builder[5]</p><pre><code>// Build discount factors incrementally to help type checker let discountFactor = 1.0 + discountRate let df2 = discountFactor * discountFactor let df3 = df2 * discountFactor let df4 = df3 * discountFactor let df5 = df4 * discountFactor<p></p><p>let pv1 = year1CF / discountFactor let pv2 = year2CF / df2 let pv3 = year3CF / df3 let pv4 = year4CF / df4 let pv5 = year5CF / df5</p></code><p><code>return pv1 + pv2 + pv3 + pv4 + pv5 </code></p></pre>}<p></p></code>
-          </div><p>print(“Model Complexity vs GPU Speedup (100,000 iterations)”) print(“═══════════════════════════════════════════════════════”)</p><p>let models = [ (“Simple (3 ops)”, simpleModel, 2), (“Medium (10 ops)”, mediumModel, 4), (“Complex (25 ops)”, complexModel, 6) ]</p>
+            <code class="language-swift"><p>// Benchmark function func benchmarkSimulation( iterations: Int, enableGPU: Bool, label: String ) throws -&gt; (result: SimulationResults, time: Double) { var simulation = MonteCarloSimulation( iterations: iterations, enableGPU: enableGPU, expressionModel: portfolioModel )</p><pre><code>// Add input distributions simulation.addInput(SimulationInput( name: “Revenue”, distribution: DistributionNormal(1_000_000, 150_000) ))<p></p><p>simulation.addInput(SimulationInput( name: “Costs”, distribution: DistributionNormal(650_000, 80_000) ))</p><p>simulation.addInput(SimulationInput( name: “Tax Rate”, distribution: DistributionUniform(0.15, 0.25) ))</p><p>let startTime = Date() let result = try simulation.run() let elapsed = Date().timeIntervalSince(startTime)</p><p>print(”(label.padding(toLength: 30, withPad: “ “, startingAt: 0)): (String(format: “%8.3f”, elapsed))s (GPU: (result.usedGPU ? “✓” : “✗”))”)</p></code><p><code>return (result, elapsed) </code></p></pre>}<p></p></code>
+          </div><p>print(“CPU vs GPU Performance Comparison”) print(“═══════════════════════════════════════════════════════”)</p><p>// Test different iteration counts let testSizes = [1_000, 10_000, 100_000, 1_000_000]</p>
           <div>
-            <p>for (name, model, inputCount) in models { var cpuSim = MonteCarloSimulation( iterations: 100_000, enableGPU: false, expressionModel: model )</p>
-            <pre><code>var gpuSim = MonteCarloSimulation( iterations: 100_000, enableGPU: true, expressionModel: model )<p></p><p>// Add random inputs for i in 0..
-                  <inputcount { let input="SimulationInput(" name: “input(i)”, distribution: distributionnormal(100, 20) ) cpusim.addinput(input) gpusim.addinput(input) }< p></inputcount></p><p>let cpuStart = Date() _ = try cpuSim.run() let cpuTime = Date().timeIntervalSince(cpuStart)</p><p>let gpuStart = Date() _ = try gpuSim.run() let gpuTime = Date().timeIntervalSince(gpuStart)</p><p>let speedup = cpuTime / gpuTime</p><pre><code>print(”(name.padding(toLength: 20, withPad: “ “, startingAt: 0)): CPU(cpuTime.number(3).paddingLeft(toLength: 6))s, GPU(gpuTime.number(3).paddingLeft(toLength: 6))s → (speedup.number(1).paddingLeft(toLength: 5))× speedup”) </code></pre></code></pre>} 
+            <p>for size in testSizes { print(”\n(size.formatted()) iterations:”)</p>
+            <pre><code>let (_, cpuTime) = try benchmarkSimulation( iterations: size, enableGPU: false, label: “  CPU” )<p></p><p>let (_, gpuTime) = try benchmarkSimulation( iterations: size, enableGPU: true, label: “ GPU” )</p></code><p><code>let speedup = cpuTime / gpuTime print(” Speedup: (String(format: “%.1f”, speedup))×”) </code></p></pre>} 
           </div></pre>
         <strong>Output</strong>:
-        <pre><code>Model Complexity vs GPU Speedup (100,000 iterations) ═══════════════════════════════════════════════════════ Simple (3 ops): CPU 0.697s, GPU 0.435s →  1.6× speedup Medium (10 ops: CPU 1.023s, GPU 0.433s →  2.4× speedup Complex (25 op: CPU 2.182s, GPU 0.438s →  5.0× speedup </code></pre>
-        <strong>Key Finding</strong>: GPU speedup scales with model complexity. Complex models see 4× better speedup than simple ones.
-        <hr />
-        <h3>Pattern 3: Expression vs Closure Performance</h3>
-        <strong>Pattern</strong>: Should I use expression-based or closure-based models?
-        <pre><code class="language-swift">// Expression-based (GPU-compatible, compiled) let expressionModel = MonteCarloExpressionModel { builder in let revenue = builder[0] let costs = builder[1] return revenue - costs }<p></p></code></pre>
+        <pre><code>CPU vs GPU Performance Comparison ═══════════════════════════════════════════════════════<p></p></code></pre>
       </div>
-      <p><code class="language-swift">var expressionSim = MonteCarloSimulation( iterations: 100_000, enableGPU: true, expressionModel: expressionModel )</code></p>
-      <p><code class="language-swift">// Closure-based (CPU-only, interpreted) var closureSim = MonteCarloSimulation( iterations: 100_000, enableGPU: false // Closures can’t use GPU ) { inputs in let revenue = inputs[0] let costs = inputs[1] return revenue - costs }</code></p>
-      <p><code class="language-swift">// Add same inputs to both let revenueInput = SimulationInput( name: “Revenue”, distribution: DistributionNormal(1_000_000, 100_000) ) let costsInput = SimulationInput( name: “Costs”, distribution: DistributionNormal(700_000, 50_000) )</code></p>
-      <p><code class="language-swift">expressionSim.addInput(revenueInput) expressionSim.addInput(costsInput) closureSim.addInput(revenueInput) closureSim.addInput(costsInput)</code></p>
-      <p><code class="language-swift">print(“Expression vs Closure Model Performance”) print(“═══════════════════════════════════════════════════════”)</code></p>
-      <p><code class="language-swift">let exprStart = Date() let exprResult = try expressionSim.run() let exprTime = Date().timeIntervalSince(exprStart)</code></p>
-      <p><code class="language-swift">let closureStart = Date() let closureResult = try closureSim.run() let closureTime = Date().timeIntervalSince(closureStart)</code></p>
-      <p><code class="language-swift">print(“Expression (GPU): (exprTime.number(3))s”) print(“Closure (CPU): (closureTime.number(3))s”) print(“Speedup: ((closureTime / exprTime).number(1))×”) print(”\nResults match: (abs(exprResult.statistics.mean - closureResult.statistics.mean) &lt; 1000)”) </code><strong>Output</strong>:</p>
-      <pre><code>Expression vs Closure Model Performance ═══════════════════════════════════════════════════════ Expression (GPU):  0.526s Closure (CPU):     2.270s Speedup:           4.3×<p></p></code>
+      <p><code>1,000 iterations: CPU : 0.010s (GPU: ✗) GPU : 0.009s (GPU: ✓) Speedup: 1.1×</code></p>
+      <p><code>10,000 iterations: CPU : 0.080s (GPU: ✗) GPU : 0.040s (GPU: ✓) Speedup: 2.0×</code></p>
+      <p><code>100,000 iterations: CPU : 0.829s (GPU: ✗) GPU : 0.529s (GPU: ✓) Speedup: 1.6×</code></p>
+      <p><code>250,000 iterations: CPU : 2.213s (GPU: ✗) GPU : 1.246s (GPU: ✓) Speedup: 1.8× </code><strong>Key Insight</strong>: GPU overhead costs ~8ms. Only use GPU when iteration count × model complexity exceeds that fixed cost. For this model, GPU wins at ~5,000+ iterations.
+        <hr /></p>
+      <h3>Pattern 2: Model Complexity Scaling</h3>
+      <strong>Pattern</strong>: How does model complexity affect GPU speedup?
+      <pre><code class="language-swift">// Simple model (3 operations) let simpleModel = MonteCarloExpressionModel { builder in let a = builder[0] let b = builder[1] return a + b  // Just addition }<p></p><p>// Medium model (10 operations) let mediumModel = MonteCarloExpressionModel { builder in let revenue = builder[0] let costs = builder[1] let tax = builder[2] let discount = builder[3]</p><pre><code>let profit = revenue - costs let taxed = profit * (1.0 - tax) let discounted = taxed / (1.0 + discount) return discounted </code></pre>}<p></p></code>
         <div>
-          <code><p>Results match: true </p></code>
+          <code class="language-swift"><p>// Complex model (25+ operations) let complexModel = MonteCarloExpressionModel { builder in // Multi-year NPV calculation let year1CF = builder[0] let year2CF = builder[1] let year3CF = builder[2] let year4CF = builder[3] let year5CF = builder[4] let discountRate = builder[5]</p><pre><code>// Build discount factors incrementally to help type checker let discountFactor = 1.0 + discountRate let df2 = discountFactor * discountFactor let df3 = df2 * discountFactor let df4 = df3 * discountFactor let df5 = df4 * discountFactor<p></p><p>let pv1 = year1CF / discountFactor let pv2 = year2CF / df2 let pv3 = year3CF / df3 let pv4 = year4CF / df4 let pv5 = year5CF / df5</p></code><p><code>return pv1 + pv2 + pv3 + pv4 + pv5 </code></p></pre>}<p></p></code>
+        </div><p>print(“Model Complexity vs GPU Speedup (100,000 iterations)”) print(“═══════════════════════════════════════════════════════”)</p><p>let models = [ (“Simple (3 ops)”, simpleModel, 2), (“Medium (10 ops)”, mediumModel, 4), (“Complex (25 ops)”, complexModel, 6) ]</p>
+        <div>
+          <p>for (name, model, inputCount) in models { var cpuSim = MonteCarloSimulation( iterations: 100_000, enableGPU: false, expressionModel: model )</p>
+          <pre><code>var gpuSim = MonteCarloSimulation( iterations: 100_000, enableGPU: true, expressionModel: model )<p></p><p>// Add random inputs for i in 0..
+                <inputcount { let input="SimulationInput(" name: “input(i)”, distribution: distributionnormal(100, 20) ) cpusim.addinput(input) gpusim.addinput(input) }< p></inputcount></p><p>let cpuStart = Date() _ = try cpuSim.run() let cpuTime = Date().timeIntervalSince(cpuStart)</p><p>let gpuStart = Date() _ = try gpuSim.run() let gpuTime = Date().timeIntervalSince(gpuStart)</p><p>let speedup = cpuTime / gpuTime</p><pre><code>print(”(name.padding(toLength: 20, withPad: “ “, startingAt: 0)): CPU(cpuTime.number(3).paddingLeft(toLength: 6))s, GPU(gpuTime.number(3).paddingLeft(toLength: 6))s → (speedup.number(1).paddingLeft(toLength: 5))× speedup”) </code></pre></code></pre>} 
         </div></pre>
-      <hr />
-      <h3>Pattern 4: Correlation Performance Impact</h3>
-      <strong>Pattern</strong>: How much does correlation slow down simulations?
-      <pre><code class="language-swift">func benchmarkCorrelation( iterations: Int, withCorrelation: Bool ) throws -&gt; Double { let model = MonteCarloExpressionModel { builder in let a = builder[0] let b = builder[1] let c = builder[2] return a + b + c }</code><pre><code class="language-swift"><code>var simulation = MonteCarloSimulation( iterations: iterations, enableGPU: !withCorrelation, // GPU incompatible with correlation expressionModel: model )<p></p><p>simulation.addInput(SimulationInput( name: “A”, distribution: DistributionNormal(mean: 100, stdDev: 15) )) simulation.addInput(SimulationInput( name: “B”, distribution: DistributionNormal(mean: 200, stdDev: 25) )) simulation.addInput(SimulationInput( name: “C”, distribution: DistributionNormal(mean: 150, stdDev: 20) ))</p><p>if withCorrelation { // Set correlation matrix (Iman-Conover method) try simulation.setCorrelationMatrix([ [1.0, 0.7, 0.5], [0.7, 1.0, 0.6], [0.5, 0.6, 1.0] ]) }</p></code><p><code>let startTime = Date() _ = try simulation.run() return Date().timeIntervalSince(startTime) </code></p></code></pre>}<p></p></pre>
-    </div>
-    <p>print(“Correlation Performance Impact”) print(“═══════════════════════════════════════════════════════”) print(“Iterations | Independent | Correlated | Overhead”) print(“───────────────────────────────────────────────────────”)</p>
-    <div>
-      <p>for iterations in [10_000, 50_000, 100_000, 500_000] { let independentTime = try benchmarkCorrelation( iterations: iterations, withCorrelation: false )</p>
-      <pre><code>let correlatedTime = try benchmarkCorrelation( iterations: iterations, withCorrelation: true )<p></p><p>let overhead = ((correlatedTime - independentTime) / independentTime * 100)</p></code><p><code>print(”(String(format: “%10d”, iterations)) | (String(format: “%11.3f”, independentTime))s | (String(format: “%10.3f”, correlatedTime))s | +(String(format: “%5.1f”, overhead))%”) </code></p></pre>} 
       <strong>Output</strong>:
-      <pre><code>Correlation Performance Impact ═══════════════════════════════════════════════════════ Iterations | Independent | Correlated | Overhead ─────────────────────────────────────────────────────── 10000 |      0.039s |     0.191s | +96.2% 50000 |      0.213s |     0.997s | +68.0% 100000 |      0.437s |     1.995s | +56.4% 500000 |      2.461s |    10.873s | +41.8% </code></pre>
-      <strong>Key Insight</strong>: Correlation uses Iman-Conover rank correlation (CPU-only), adding significant overhead. Only use when correlation is statistically necessary for your model.
+      <pre><code>Model Complexity vs GPU Speedup (100,000 iterations) ═══════════════════════════════════════════════════════ Simple (3 ops): CPU 0.697s, GPU 0.435s →  1.6× speedup Medium (10 ops: CPU 1.023s, GPU 0.433s →  2.4× speedup Complex (25 op: CPU 2.182s, GPU 0.438s →  5.0× speedup </code></pre>
+      <strong>Key Finding</strong>: GPU speedup scales with model complexity. Complex models see 4× better speedup than simple ones.
       <hr />
-      <h2>Real-World Application</h2>
-      <h3>Investment Firm: Choosing Simulation Scale for Risk Metrics</h3>
-      <strong>Company</strong>: Asset manager calculating Value-at-Risk (VaR) for 12 portfolio strategies 
-      <strong>Challenge</strong>: Balance accuracy (higher iterations) with runtime (faster reporting)
-      <p></p>
+      <h3>Pattern 3: Expression vs Closure Performance</h3>
+      <strong>Pattern</strong>: Should I use expression-based or closure-based models?
+      <pre><code class="language-swift">// Expression-based (GPU-compatible, compiled) let expressionModel = MonteCarloExpressionModel { builder in let revenue = builder[0] let costs = builder[1] return revenue - costs }<p></p></code></pre>
     </div>
+    <p><code class="language-swift">var expressionSim = MonteCarloSimulation( iterations: 100_000, enableGPU: true, expressionModel: expressionModel )</code></p>
+    <p><code class="language-swift">// Closure-based (CPU-only, interpreted) var closureSim = MonteCarloSimulation( iterations: 100_000, enableGPU: false // Closures can’t use GPU ) { inputs in let revenue = inputs[0] let costs = inputs[1] return revenue - costs }</code></p>
+    <p><code class="language-swift">// Add same inputs to both let revenueInput = SimulationInput( name: “Revenue”, distribution: DistributionNormal(1_000_000, 100_000) ) let costsInput = SimulationInput( name: “Costs”, distribution: DistributionNormal(700_000, 50_000) )</code></p>
+    <p><code class="language-swift">expressionSim.addInput(revenueInput) expressionSim.addInput(costsInput) closureSim.addInput(revenueInput) closureSim.addInput(costsInput)</code></p>
+    <p><code class="language-swift">print(“Expression vs Closure Model Performance”) print(“═══════════════════════════════════════════════════════”)</code></p>
+    <p><code class="language-swift">let exprStart = Date() let exprResult = try expressionSim.run() let exprTime = Date().timeIntervalSince(exprStart)</code></p>
+    <p><code class="language-swift">let closureStart = Date() let closureResult = try closureSim.run() let closureTime = Date().timeIntervalSince(closureStart)</code></p>
+    <p><code class="language-swift">print(“Expression (GPU): (exprTime.number(3))s”) print(“Closure (CPU): (closureTime.number(3))s”) print(“Speedup: ((closureTime / exprTime).number(1))×”) print(”\nResults match: (abs(exprResult.statistics.mean - closureResult.statistics.mean) &lt; 1000)”) </code><strong>Output</strong>:</p>
+    <pre><code>Expression vs Closure Model Performance ═══════════════════════════════════════════════════════ Expression (GPU):  0.526s Closure (CPU):     2.270s Speedup:           4.3×<p></p></code>
+      <div>
+        <code><p>Results match: true </p></code>
+      </div></pre>
+    <hr />
+    <h3>Pattern 4: Correlation Performance Impact</h3>
+    <strong>Pattern</strong>: How much does correlation slow down simulations?
+    <pre><code class="language-swift">func benchmarkCorrelation( iterations: Int, withCorrelation: Bool ) throws -&gt; Double { let model = MonteCarloExpressionModel { builder in let a = builder[0] let b = builder[1] let c = builder[2] return a + b + c }</code><pre><code class="language-swift"><code>var simulation = MonteCarloSimulation( iterations: iterations, enableGPU: !withCorrelation, // GPU incompatible with correlation expressionModel: model )<p></p><p>simulation.addInput(SimulationInput( name: “A”, distribution: DistributionNormal(mean: 100, stdDev: 15) )) simulation.addInput(SimulationInput( name: “B”, distribution: DistributionNormal(mean: 200, stdDev: 25) )) simulation.addInput(SimulationInput( name: “C”, distribution: DistributionNormal(mean: 150, stdDev: 20) ))</p><p>if withCorrelation { // Set correlation matrix (Iman-Conover method) try simulation.setCorrelationMatrix([ [1.0, 0.7, 0.5], [0.7, 1.0, 0.6], [0.5, 0.6, 1.0] ]) }</p></code><p><code>let startTime = Date() _ = try simulation.run() return Date().timeIntervalSince(startTime) </code></p></code></pre>}<p></p><p>print(“Correlation Performance Impact”) print(“═══════════════════════════════════════════════════════”) print(“Iterations | Independent | Correlated | Overhead”) print(“───────────────────────────────────────────────────────”)</p>
+      <div>
+        <p>for iterations in [10_000, 50_000, 100_000, 500_000] { let independentTime = try benchmarkCorrelation( iterations: iterations, withCorrelation: false )</p>
+        <pre><code>let correlatedTime = try benchmarkCorrelation( iterations: iterations, withCorrelation: true )<p></p><p>let overhead = ((correlatedTime - independentTime) / independentTime * 100)</p></code><p><code>print(”(String(format: “%10d”, iterations)) | (String(format: “%11.3f”, independentTime))s | (String(format: “%10.3f”, correlatedTime))s | +(String(format: “%5.1f”, overhead))%”) </code></p></pre>} 
+      </div></pre>
+    <strong>Output</strong>:
+    <pre><code>Correlation Performance Impact ═══════════════════════════════════════════════════════ Iterations | Independent | Correlated | Overhead ─────────────────────────────────────────────────────── 10000 |      0.039s |     0.191s | +96.2% 50000 |      0.213s |     0.997s | +68.0% 100000 |      0.437s |     1.995s | +56.4% 500000 |      2.461s |    10.873s | +41.8% </code></pre>
+    <strong>Key Insight</strong>: Correlation uses Iman-Conover rank correlation (CPU-only), adding significant overhead. Only use when correlation is statistically necessary for your model.
+    <hr />
+    <h2>Real-World Application</h2>
+    <h3>Investment Firm: Choosing Simulation Scale for Risk Metrics</h3>
+    <strong>Company</strong>: Asset manager calculating Value-at-Risk (VaR) for 12 portfolio strategies 
+    <strong>Challenge</strong>: Balance accuracy (higher iterations) with runtime (faster reporting)
+    <p></p>
     <div>
       <p><strong>Benchmarking Process</strong>:</p>
       <pre><code class="language-swift">// Define portfolio profit model let portfolioModel = MonteCarloExpressionModel { builder in let stock1Return = builder[0] let stock2Return = builder[1] let stock3Return = builder[2] let bondReturn = builder[3]</code><pre><code class="language-swift"><code>// Portfolio: 40% stock1, 30% stock2, 20% stock3, 10% bonds let portfolioReturn = 0.4 * stock1Return + 0.3 * stock2Return + 0.2 * stock3Return + 0.1 * bondReturn<p></p></code><p><code>return portfolioReturn </code></p></code></pre>}<p></p></pre>

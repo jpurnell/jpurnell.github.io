@@ -161,12 +161,10 @@ public struct BusinessMath: StaticPage {
 
                 Section {
                     Text(formatPostDate(post.date))
-                        .class("text-muted")
-                        .style(.fontSize, "0.9rem")
+                        .class("blogDateTime")
 
                     Text("\(post.estimatedReadingMinutes) min read")
-                        .class("text-muted")
-                        .style(.fontSize, "0.85rem")
+                        .class("blogDateTime")
                         .style(.marginTop, "0.5rem")
                 }
                 .style(.marginBottom, "0.5rem")

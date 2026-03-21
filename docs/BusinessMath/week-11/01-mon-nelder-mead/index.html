@@ -162,38 +162,203 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Nelder-Mead Simplex: Robust Gradient-Free Optimization</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Nelder-Mead Simplex: Robust Gradient-Free Optimization</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <div>
+          <p><strong>Part 37 of 12-Week BusinessMath Series</strong>
+            <hr /></p>
+          <h2>What You’ll Learn</h2>
+          <ul>
+            <li>Understanding the Nelder-Mead downhill simplex method</li>
+            <li>Reflection, expansion, contraction, and shrinkage operations</li>
+            <li>When Nelder-Mead outperforms gradient-based methods</li>
+            <li>Handling noisy or non-smooth objective functions</li>
+            <li>Parameter tuning: reflection, expansion, contraction coefficients</li>
+            <li>Performance on small-to-medium dimensional problems (&lt; 50 variables)</li>
+          </ul>
+          <hr />
+          <h2>The Problem</h2>Many real-world objectives are black boxes:
+          <ul>
+            <li><strong>Simulations</strong>: Run Monte Carlo, get result, but no gradient available</li>
+            <li><strong>Noisy functions</strong>: Objective varies with each evaluation</li>
+            <li><strong>Non-smooth</strong>: Discontinuities from rounding, thresholds, if/else logic</li>
+            <li><strong>External systems</strong>: Call pricing API, optimization engine, or database</li>
+          </ul>
+          <strong>Can’t compute gradients → gradient-based methods fail.</strong>
+          <hr />
+          <h2>The Solution</h2>Nelder-Mead builds a simplex (triangle in 2D, tetrahedron in 3D, etc.) and iteratively moves it toward the optimum through geometric transformations: reflection, expansion, contraction, shrinkage. No gradients needed—only function evaluations.
+          <h3>Pattern 1: Black-Box Optimization</h3>
+          <strong>Business Problem</strong>: Optimize parameters for a Monte Carlo simulation where each evaluation is expensive and noisy.
+          <pre><code class="language-swift">import BusinessMath // Helper: Simulate one year of portfolio returns func simulatePortfolioYear( stockAllocation: Double,  // 0-1: fraction in stocks vs bonds rebalanceThreshold: Double,  // When to rebalance (drift tolerance) marketReturn: Double,  // Random market return scenario bondReturn: Double  // Random bond return scenario ) -&gt; Double { // Stock returns are volatile, bonds are stable let stockReturn = marketReturn let portfolioReturn = stockAllocation * stockReturn + (1 - stockAllocation) * bondReturn</code><pre><code class="language-swift"><code>// Transaction costs from rebalancing // More frequent rebalancing (lower threshold) = higher costs let annualRebalances = 12.0 / max(rebalanceThreshold * 100, 1.0) // Monthly opportunities let transactionCosts = annualRebalances * 0.0005 // 5 bps per rebalance<p></p></code><p><code>return portfolioReturn - transactionCosts </code></p></code></pre>}<p></p></pre>
+        </div>
+        <div>
+          <p>// Black-box objective: Monte Carlo portfolio simulation func portfolioSimulationObjective(_ parameters: VectorN
+            <double>
+              ) -&gt; Double { // Parameters: [stockAllocation (0-1), rebalanceThreshold (0.01-0.20)] let stockAllocation = parameters[0] let rebalanceThreshold = parameters[1]
+            </double></p>
+          <pre><code>// Penalty for out-of-bounds parameters if stockAllocation &lt; 0 || stockAllocation &gt; 1 || rebalanceThreshold &lt; 0.01 || rebalanceThreshold &gt; 0.20 { return 1e10  // Large penalty }<p></p><p>// Run Monte Carlo simulation (expensive!) var simulation = MonteCarloSimulation(iterations: 1_000, enableGPU: false) { inputs in let marketReturn = inputs[0] let bondReturn = inputs[1]</p><pre><code>return simulatePortfolioYear( stockAllocation: stockAllocation, rebalanceThreshold: rebalanceThreshold, marketReturn: marketReturn, bondReturn: bondReturn ) </code></pre>}<p></p><p>simulation.addInput(SimulationInput( name: “Market Return”, distribution: DistributionNormal(0.10, 0.18) // 10% mean, 18% volatility ))</p><p>simulation.addInput(SimulationInput( name: “Bond Return”, distribution: DistributionNormal(0.04, 0.06) // 4% mean, 6% volatility ))</p><p>let results = try! simulation.run()</p><p>// Objective: Maximize Sharpe ratio (minimize negative) let meanReturn = results.statistics.mean let stdDev = results.statistics.stdDev let riskFreeRate = 0.02 let sharpeRatio = (meanReturn - riskFreeRate) / stdDev</p></code><p><code>return -sharpeRatio // Minimize negative = maximize positive </code></p></pre>}
+          <p></p>
+        </div>
+        <p>// Nelder-Mead optimizer (no gradients needed!) let nm = NelderMead
+          <vectorn<double>
+            &gt;(config: .default)
+          </vectorn<double></p>
+        <p>let initialGuess = VectorN([0.60, 0.05]) // [60% stocks, 5% rebalance threshold]</p>
+        <p>print(“Black-Box Parameter Optimization”) print(“═══════════════════════════════════════════════════════════”)</p>
+        <p>let result = try nm.minimize( portfolioSimulationObjective, from: initialGuess )</p>
+        <p>print(“Optimization Results:”) print(” Optimal Parameters:”) print(” Stock Allocation: ((result.solution[0] * 100).number(1))%”) print(” Rebalance Threshold: ((result.solution[1] * 100).number(2))%”) print(” Final Sharpe Ratio: ((-result.value).number(3))”)</p>
+        <p>// For detailed metrics, use optimizeDetailed() let detailedResult = nm.optimizeDetailed( objective: portfolioSimulationObjective, initialGuess: initialGuess ) print(” Function Evaluations: (detailedResult.evaluations)”) print(” Iterations: (detailedResult.iterations)”) </p>
+        <h3>Pattern 2: Non-Smooth Objective (Transaction Costs)</h3>
+        <strong>Pattern</strong>: Optimize with discontinuities that break gradient methods.
+        <pre><code class="language-swift">// Generate realistic covariance matrix for 10 assets let covarianceMatrix = generateCovarianceMatrix( size: 10, avgCorrelation: 0.3, volatility: (0.15, 0.25) )<p></p></code>
           <div>
-            <p><strong>Part 37 of 12-Week BusinessMath Series</strong>
-              <hr /></p>
-            <h2>What You’ll Learn</h2>
-            <ul>
-              <li>Understanding the Nelder-Mead downhill simplex method</li>
-              <li>Reflection, expansion, contraction, and shrinkage operations</li>
-              <li>When Nelder-Mead outperforms gradient-based methods</li>
-              <li>Handling noisy or non-smooth objective functions</li>
-              <li>Parameter tuning: reflection, expansion, contraction coefficients</li>
-              <li>Performance on small-to-medium dimensional problems (&lt; 50 variables)</li>
-            </ul>
-            <hr />
-            <h2>The Problem</h2>Many real-world objectives are black boxes:
-            <ul>
-              <li><strong>Simulations</strong>: Run Monte Carlo, get result, but no gradient available</li>
-              <li><strong>Noisy functions</strong>: Objective varies with each evaluation</li>
-              <li><strong>Non-smooth</strong>: Discontinuities from rounding, thresholds, if/else logic</li>
-              <li><strong>External systems</strong>: Call pricing API, optimization engine, or database</li>
-            </ul>
-            <strong>Can’t compute gradients → gradient-based methods fail.</strong>
-            <hr />
-            <h2>The Solution</h2>Nelder-Mead builds a simplex (triangle in 2D, tetrahedron in 3D, etc.) and iteratively moves it toward the optimum through geometric transformations: reflection, expansion, contraction, shrinkage. No gradients needed—only function evaluations.
-            <h3>Pattern 1: Black-Box Optimization</h3>
-            <strong>Business Problem</strong>: Optimize parameters for a Monte Carlo simulation where each evaluation is expensive and noisy.
-            <pre><code class="language-swift">import BusinessMath // Helper: Simulate one year of portfolio returns func simulatePortfolioYear( stockAllocation: Double,  // 0-1: fraction in stocks vs bonds rebalanceThreshold: Double,  // When to rebalance (drift tolerance) marketReturn: Double,  // Random market return scenario bondReturn: Double  // Random bond return scenario ) -&gt; Double { // Stock returns are volatile, bonds are stable let stockReturn = marketReturn let portfolioReturn = stockAllocation * stockReturn + (1 - stockAllocation) * bondReturn</code><pre><code class="language-swift"><code>// Transaction costs from rebalancing // More frequent rebalancing (lower threshold) = higher costs let annualRebalances = 12.0 / max(rebalanceThreshold * 100, 1.0) // Monthly opportunities let transactionCosts = annualRebalances * 0.0005 // 5 bps per rebalance<p></p></code><p><code>return portfolioReturn - transactionCosts </code></p></code></pre>}<p></p></pre>
+            <code class="language-swift"><p>// Portfolio with discrete lot sizes (non-smooth!) func portfolioWithLotSizes(_ weights: VectorN
+                <double>
+                  ) -&gt; Double { let lotSize = 100.0 // Must trade in multiples of 100 shares let sharesPerAsset = weights.toArray().map { weight in let idealShares = weight * 100_000.0 // $100K portfolio return (idealShares / lotSize).rounded() * lotSize }
+                </double></p><pre><code>// Actual weights after rounding to lot sizes let totalValue = sharesPerAsset.reduce(0, +) let actualWeights = VectorN(sharesPerAsset.map { $0 / totalValue })<p></p><p>// Portfolio variance with actual weights var variance = 0.0 for i in 0..
+                    <actualweights.count { for j in 0..<actualweights.count { variance +="actualWeights[i]" * actualweights[j] * covariancematrix[i][j] } }< p></actualweights.count></p><p>// Transaction costs from deviations let deviations = zip(weights.toArray(), actualWeights.toArray()) .map { abs($0 - $1) } .reduce(0, +)</p></code><p><code>return variance + deviations * 0.001 // Penalty for rounding </code></p></pre>}<p></p></code>
+          </div><p>// Standard coefficients are fine for this problem let nmNonSmooth = NelderMead
+            <vectorn<double>
+              &gt;(config: .default)
+            </vectorn<double></p><p>let nonSmoothResult = try nmNonSmooth.minimize( portfolioWithLotSizes, from: VectorN(repeating: 0.10, count: 10)  // 10 assets )</p><p>print(”\nNon-Smooth Optimization (Lot Sizes):”) print(”  Final Variance: (nonSmoothResult.value.number(6))”) print(”  Evaluations: (nonSmoothResult.evaluations)”)</p>
+          <div>
+            <p>// Compare: Gradient method would fail due to discontinuities </p>
+          </div></pre>
+        <h3>Pattern 3: Noisy Objective Functions</h3>
+        <strong>Pattern</strong>: Handle stochastic objectives where repeated evaluations give different results.
+        <pre><code class="language-swift">// Noisy objective: each evaluation adds random noise var evaluationCount = 0 @MainActor func noisyObjective(_ x: VectorN
+            <double>
+              ) -&gt; Double { evaluationCount += 1
+            </double></code><pre><code class="language-swift"><code>// True underlying function (sphere: simple convex bowl) // Minimum at [0, 0] with value 0 let trueValue = x[0] * x[0] + x[1] * x[1]<p></p><p>// Add noise (simulates measurement error, simulation variance, etc.) let noise = Double.random(in: -0.5…0.5)</p></code><p><code>return trueValue + noise </code></p></code></pre>}<p></p></pre>
+      </div>
+      <p>print(”\nNoisy Objective Optimization:”) print(“═══════════════════════════════════════════════════════════”)</p>
+      <p>evaluationCount = 0</p>
+      <p>// For noisy functions, need: // 1. Much larger tolerance (noise swamps small improvements) // 2. Many more iterations to average out noise // 3. Larger simplex to avoid premature convergence let nmNoisy = NelderMead
+        <vectorn<double>
+          &gt;( config: NelderMeadConfig( initialSimplexSize: 1.0, tolerance: 0.5, // Tolerance must be &gt; noise magnitude maxIterations: 1000 ) )
+        </vectorn<double></p>
+      <p>let noisyResult = try nmNoisy.minimize( noisyObjective, from: VectorN([5.0, 5.0]) // Start far from optimum )</p>
+      <p>print(“Results:”) print(” Final Position: [(noisyResult.solution[0].number(3)), (noisyResult.solution[1].number(3))]”) print(” True Optimum: [0.0, 0.0]”) print(” Distance from Optimum: (sqrt(noisyResult.solution[0]*noisyResult.solution[0] + noisyResult.solution[1]*noisyResult.solution[1]).number(3))”) print(” Final Value (noisy): (noisyResult.value.number(3))”) print(” Evaluations: (evaluationCount)”)</p>
+      <p>print(”\nNote: With ±0.5 noise, perfect convergence is impossible.”) print(“Getting within 0.5 units of the optimum shows the algorithm”) print(“successfully finds signal despite 1:1 noise-to-signal ratio.”) 
+        <hr /></p>
+      <h2>How It Works</h2>
+      <h3>Nelder-Mead Operations</h3>
+      <strong>Simplex</strong>: n+1 points in n-dimensional space (triangle for 2D, tetrahedron for 3D)
+      <p></p>
+      <p><strong>Operations</strong> (from worst point):</p>
+      <ol>
+        <li><strong>Reflection</strong>: Flip worst point across centroid of other points</li>
+        <li><strong>Expansion</strong>: If reflection is best, expand further in that direction</li>
+        <li><strong>Contraction</strong>: If reflection is still bad, contract toward centroid</li>
+        <li><strong>Shrinkage</strong>: If all else fails, shrink entire simplex toward best point</li>
+      </ol>
+      <strong>Pseudocode</strong>:
+      <pre><code>1. Order points: f(x₁) ≤ f(x₂) ≤ … ≤ f(xₙ₊₁) 2. Calculate centroid: x̄ = (x₁ + … + xₙ) / n 3. Reflect worst: xᵣ = x̄ + α(x̄ - xₙ₊₁) 4. If f(xᵣ) &lt; f(x₁): Expand → xₑ = x̄ + γ(xᵣ - x̄) 5. Else if f(xᵣ) &lt; f(xₙ): Accept reflection 6. Else: Contract → xc = x̄ + β(xₙ₊₁ - x̄) 7. If contraction fails: Shrink all toward x₁ </code></pre>
+      <h3>Standard Coefficients</h3>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Operation</th>
+            <th scope="col">Coefficient</th>
+            <th scope="col">Standard Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Reflection</td>
+            <td>α</td>
+            <td>1.0</td>
+          </tr>
+          <tr>
+            <td>Expansion</td>
+            <td>γ</td>
+            <td>2.0</td>
+          </tr>
+          <tr>
+            <td>Contraction</td>
+            <td>β</td>
+            <td>0.5</td>
+          </tr>
+          <tr>
+            <td>Shrinkage</td>
+            <td>δ</td>
+            <td>0.5</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Performance Characteristics</h3>
+      <strong>Strengths</strong>:
+      <ul>
+        <li>No gradient computation needed</li>
+        <li>Robust to noise and discontinuities</li>
+        <li>Simple to implement and understand</li>
+        <li>Works well for small problems (&lt; 50 variables)</li>
+      </ul>
+      <strong>Weaknesses</strong>:
+      <ul>
+        <li>Slow for large problems (&gt; 100 variables)</li>
+        <li>Can stagnate (simplex becomes degenerate)</li>
+        <li>No convergence guarantee for non-convex problems</li>
+        <li>Requires n+1 function evaluations per iteration</li>
+      </ul>
+      <strong>Typical Use Cases</strong>:
+      <ul>
+        <li>Hyperparameter tuning (5-20 parameters)</li>
+        <li>Simulation optimization (expensive black-box)</li>
+        <li>Non-smooth objectives (transaction costs, lot sizes)</li>
+        <li>Noisy functions (Monte Carlo, measurement error)</li>
+      </ul>
+      <hr />
+      <h2>Real-World Application</h2>
+      <h3>Pharmaceutical: Drug Dosing Optimization</h3>
+      <strong>Company</strong>: Biotech optimizing drug delivery parameters 
+      <strong>Challenge</strong>: Find optimal dosing schedule to maximize efficacy while minimizing side effects
+      <p></p>
+      <p><strong>Problem Characteristics</strong>:</p>
+      <ul>
+        <li><strong>Black-box objective</strong>: Patient simulation model (15 minutes per run)</li>
+        <li><strong>5 parameters</strong>: Dose amount, frequency, duration, combination ratios</li>
+        <li><strong>Non-smooth</strong>: Discrete dosing times, threshold effects</li>
+        <li><strong>Noisy</strong>: Patient response varies stochastically</li>
+      </ul>
+      <strong>Why Nelder-Mead</strong>:
+      <ul>
+        <li>No gradients available from simulation</li>
+        <li>Robust to simulation noise</li>
+        <li>Handles discrete constraints naturally</li>
+        <li>Small parameter space (5 variables)</li>
+      </ul>
+      <strong>Implementation</strong> (conceptual):
+      <pre><code class="language-swift">// Mock simulation for demonstration // Real implementation would call proprietary pharmacokinetic model func simulatePatientOutcome( dose: Double, frequency: Double, duration: Double, drugARatio: Double, drugBRatio: Double ) -&gt; Double { // Simplified model: efficacy vs side effects tradeoff let efficacy = dose * (drugARatio + drugBRatio * 0.8) let sideEffects = pow(dose, 1.5) * frequency / duration let compliance = exp(-frequency / 3.0)  // Less frequent = better compliance<pre><code>// Overall outcome: maximize efficacy, minimize side effects // Add noise to simulate patient variability let noise = Double.random(in: -0.1…0.1) return -(efficacy * compliance - sideEffects * 2.0) + noise </code></pre>}<p></p><p>let dosingOptimizer = NelderMead
+            <vectorn<double>
+              &gt;( config: NelderMeadConfig( tolerance: 1e-2, // Relaxed for noisy simulation maxIterations: 200 ) )
+            </vectorn<double></p></code>
+        <div>
+          <code class="language-swift"><p>func patientOutcome(_ params: VectorN
+              <double>
+                ) -&gt; Double { let dose = params[0] // mg per dose let frequency = params[1] // doses per day let duration = params[2] // days of treatment let drugARatio = params[3] // ratio of drug A (0-1) let drugBRatio = params[4] // ratio of drug B (0-1)
+              </double></p><pre><code>// Constraint: ratios must sum to 1.0 if abs(drugARatio + drugBRatio - 1.0) &gt; 0.01 { return 1e6  // Penalty }<p></p><p>// Constraint: clinically safe ranges if dose &lt; 10 || dose &gt; 100 || frequency &lt; 1 || frequency &gt; 4 || duration &lt; 7 || duration &gt; 90 { return 1e6 // Penalty }</p></code><p><code>return simulatePatientOutcome( dose: dose, frequency: frequency, duration: duration, drugARatio: drugARatio, drugBRatio: drugBRatio ) </code></p></pre>}<p></p></code>
+        </div><p>// Starting point from clinical guidelines let clinicalGuess = VectorN([25.0, 2.0, 30.0, 0.6, 0.4])</p><p>let optimalDosing = try dosingOptimizer.minimize( patientOutcome, from: clinicalGuess )</p><p>print(“Optimal Dosing Schedule:”) print(”  Dose: (optimalDosing.solution[0].number(1)) mg”) print(”  Frequency: (optimalDosing.solution[1].number(1)) doses/day”) print(”  Duration: (optimalDosing.solution[2].number(0)) days”) print(”  Drug A Ratio: (optimalDosing.solution[3].percent(1))”) print(”  Drug B Ratio: (optimalDosing.solution[4].percent(1))”) </p></pre>
+      <strong>Results</strong>:
+      <ul>
+        <li>Optimal parameters found: 85 evaluations (~21 hours computation)</li>
+        <li>Efficacy improvement: +12% vs. standard protocol</li>
+        <li>Side effects: Reduced by 18%</li>
+        <li>Clinical trial: Parameters validated in Phase II study</li>
+      </ul>
+      <hr />
+      <h2>Try It Yourself</h2>
+      <details>
+        <summary>Click to expand full playground code</summary>
+        <pre><code class="language-swift">import Foundation
+import BusinessMath
+// MARK: - Black Box Monte Carlo Profolio Simulation
+<p></p></code>
+          <div>
+            <code class="language-swift"><p>// Helper: Simulate one year of portfolio returns func simulatePortfolioYear( stockAllocation: Double, // 0-1: fraction in stocks vs bonds rebalanceThreshold: Double, // When to rebalance (drift tolerance) marketReturn: Double, // Random market return scenario bondReturn: Double // Random bond return scenario ) -&gt; Double { // Stock returns are volatile, bonds are stable let stockReturn = marketReturn let portfolioReturn = stockAllocation * stockReturn + (1 - stockAllocation) * bondReturn</p><pre><code>// Transaction costs from rebalancing // More frequent rebalancing (lower threshold) = higher costs let annualRebalances = 12.0 / max(rebalanceThreshold * 100, 1.0)  // Monthly opportunities let transactionCosts = annualRebalances * 0.0005  // 5 bps per rebalance<p></p></code><p><code>return portfolioReturn - transactionCosts </code></p></pre>}<p></p></code>
           </div>
           <div>
             <p>// Black-box objective: Monte Carlo portfolio simulation func portfolioSimulationObjective(_ parameters: VectorN
@@ -202,233 +367,66 @@
               </double></p>
             <pre><code>// Penalty for out-of-bounds parameters if stockAllocation &lt; 0 || stockAllocation &gt; 1 || rebalanceThreshold &lt; 0.01 || rebalanceThreshold &gt; 0.20 { return 1e10  // Large penalty }<p></p><p>// Run Monte Carlo simulation (expensive!) var simulation = MonteCarloSimulation(iterations: 1_000, enableGPU: false) { inputs in let marketReturn = inputs[0] let bondReturn = inputs[1]</p><pre><code>return simulatePortfolioYear( stockAllocation: stockAllocation, rebalanceThreshold: rebalanceThreshold, marketReturn: marketReturn, bondReturn: bondReturn ) </code></pre>}<p></p><p>simulation.addInput(SimulationInput( name: “Market Return”, distribution: DistributionNormal(0.10, 0.18) // 10% mean, 18% volatility ))</p><p>simulation.addInput(SimulationInput( name: “Bond Return”, distribution: DistributionNormal(0.04, 0.06) // 4% mean, 6% volatility ))</p><p>let results = try! simulation.run()</p><p>// Objective: Maximize Sharpe ratio (minimize negative) let meanReturn = results.statistics.mean let stdDev = results.statistics.stdDev let riskFreeRate = 0.02 let sharpeRatio = (meanReturn - riskFreeRate) / stdDev</p></code><p><code>return -sharpeRatio // Minimize negative = maximize positive </code></p></pre>}
             <p></p>
-          </div>
-          <p>// Nelder-Mead optimizer (no gradients needed!) let nm = NelderMead
+          </div><p>// Nelder-Mead optimizer (no gradients needed!) let nm = NelderMead
             <vectorn<double>
               &gt;(config: .default)
-            </vectorn<double></p>
-          <p>let initialGuess = VectorN([0.60, 0.05]) // [60% stocks, 5% rebalance threshold]</p>
-          <p>print(“Black-Box Parameter Optimization”) print(“═══════════════════════════════════════════════════════════”)</p>
-          <p>let result = try nm.minimize( portfolioSimulationObjective, from: initialGuess )</p>
-          <p>print(“Optimization Results:”) print(” Optimal Parameters:”) print(” Stock Allocation: ((result.solution[0] * 100).number(1))%”) print(” Rebalance Threshold: ((result.solution[1] * 100).number(2))%”) print(” Final Sharpe Ratio: ((-result.value).number(3))”)</p>
-          <p>// For detailed metrics, use optimizeDetailed() let detailedResult = nm.optimizeDetailed( objective: portfolioSimulationObjective, initialGuess: initialGuess ) print(” Function Evaluations: (detailedResult.evaluations)”) print(” Iterations: (detailedResult.iterations)”) </p>
-          <h3>Pattern 2: Non-Smooth Objective (Transaction Costs)</h3>
-          <strong>Pattern</strong>: Optimize with discontinuities that break gradient methods.
-          <pre><code class="language-swift">// Generate realistic covariance matrix for 10 assets let covarianceMatrix = generateCovarianceMatrix( size: 10, avgCorrelation: 0.3, volatility: (0.15, 0.25) )<p></p></code>
-            <div>
-              <code class="language-swift"><p>// Portfolio with discrete lot sizes (non-smooth!) func portfolioWithLotSizes(_ weights: VectorN
-                  <double>
-                    ) -&gt; Double { let lotSize = 100.0 // Must trade in multiples of 100 shares let sharesPerAsset = weights.toArray().map { weight in let idealShares = weight * 100_000.0 // $100K portfolio return (idealShares / lotSize).rounded() * lotSize }
-                  </double></p><pre><code>// Actual weights after rounding to lot sizes let totalValue = sharesPerAsset.reduce(0, +) let actualWeights = VectorN(sharesPerAsset.map { $0 / totalValue })<p></p><p>// Portfolio variance with actual weights var variance = 0.0 for i in 0..
-                      <actualweights.count { for j in 0..<actualweights.count { variance +="actualWeights[i]" * actualweights[j] * covariancematrix[i][j] } }< p></actualweights.count></p><p>// Transaction costs from deviations let deviations = zip(weights.toArray(), actualWeights.toArray()) .map { abs($0 - $1) } .reduce(0, +)</p></code><p><code>return variance + deviations * 0.001 // Penalty for rounding </code></p></pre>}<p></p></code>
-            </div><p>// Standard coefficients are fine for this problem let nmNonSmooth = NelderMead
-              <vectorn<double>
-                &gt;(config: .default)
-              </vectorn<double></p><p>let nonSmoothResult = try nmNonSmooth.minimize( portfolioWithLotSizes, from: VectorN(repeating: 0.10, count: 10)  // 10 assets )</p><p>print(”\nNon-Smooth Optimization (Lot Sizes):”) print(”  Final Variance: (nonSmoothResult.value.number(6))”) print(”  Evaluations: (nonSmoothResult.evaluations)”)</p>
-            <div>
-              <p>// Compare: Gradient method would fail due to discontinuities </p>
-            </div></pre>
-          <h3>Pattern 3: Noisy Objective Functions</h3>
-          <strong>Pattern</strong>: Handle stochastic objectives where repeated evaluations give different results.
-          <pre><code class="language-swift">// Noisy objective: each evaluation adds random noise var evaluationCount = 0 @MainActor func noisyObjective(_ x: VectorN
+            </vectorn<double></p><p>let initialGuess = VectorN([0.60, 0.05])  // [60% stocks, 5% rebalance threshold]</p><p>print(“Black-Box Parameter Optimization”) print(“═══════════════════════════════════════════════════════════”)</p><p>let result = try nm.minimize( portfolioSimulationObjective, from: initialGuess )</p><p>print(“Optimization Results:”) print(”  Optimal Parameters:”) print(”    Stock Allocation: ((result.solution[0] * 100).number(1))%”) print(”    Rebalance Threshold: ((result.solution[1] * 100).number(2))%”) print(”  Final Sharpe Ratio: ((-result.value).number(3))”)</p><p>// For detailed metrics, use optimizeDetailed() let detailedResult = nm.optimizeDetailed( objective: portfolioSimulationObjective, initialGuess: initialGuess ) print(”  Function Evaluations: (detailedResult.evaluations)”) print(”  Iterations: (detailedResult.iterations)”)</p><p>// MARK: - Non-Smooth Objective (Transaction Costs)</p><p>// Generate realistic covariance matrix for 10 assets let covarianceMatrix = generateCovarianceMatrix( size: 10, avgCorrelation: 0.3, volatility: (0.15, 0.25) )</p>
+          <div>
+            <p>// Portfolio with discrete lot sizes (non-smooth!) func portfolioWithLotSizes(_ weights: VectorN
+              <double>
+                ) -&gt; Double { let lotSize = 100.0 // Must trade in multiples of 100 shares let sharesPerAsset = weights.toArray().map { weight in let idealShares = weight * 100_000.0 // $100K portfolio return (idealShares / lotSize).rounded() * lotSize }
+              </double></p>
+            <pre><code>// Actual weights after rounding to lot sizes let totalValue = sharesPerAsset.reduce(0, +) let actualWeights = VectorN(sharesPerAsset.map { $0 / totalValue })<p></p><p>// Portfolio variance with actual weights var variance = 0.0 for i in 0..
+                  <actualweights.count { for j in 0..<actualweights.count { variance +="actualWeights[i]" * actualweights[j] * covariancematrix[i][j] } }< p></actualweights.count></p><p>// Transaction costs from deviations let deviations = zip(weights.toArray(), actualWeights.toArray()) .map { abs($0 - $1) } .reduce(0, +)</p></code><p><code>return variance + deviations * 0.001 // Penalty for rounding </code></p></pre>}
+            <p></p>
+          </div><p>// Standard coefficients are fine for this problem let nmNonSmooth = NelderMead
+            <vectorn<double>
+              &gt;(config: .default)
+            </vectorn<double></p><p>let nonSmoothResult = try nmNonSmooth.minimize( portfolioWithLotSizes, from: VectorN(repeating: 0.10, count: 10)  // 10 assets )</p><p>print(”\nNon-Smooth Optimization (Lot Sizes):”) print(”  Final Variance: (nonSmoothResult.value.number(6))”) print(”  Evaluations: (nonSmoothResult.iterations)”)</p><p>// Compare: Gradient method would fail due to discontinuities</p>
+          <div>
+            <p>// MARK: - Noisy Objective Functions // Noisy objective: each evaluation adds random noise var evaluationCount = 0 @MainActor func noisyObjective(_ x: VectorN
               <double>
                 ) -&gt; Double { evaluationCount += 1
-              </double></code><pre><code class="language-swift"><code>// True underlying function (sphere: simple convex bowl) // Minimum at [0, 0] with value 0 let trueValue = x[0] * x[0] + x[1] * x[1]<p></p><p>// Add noise (simulates measurement error, simulation variance, etc.) let noise = Double.random(in: -0.5…0.5)</p></code><p><code>return trueValue + noise </code></p></code></pre>}<p></p></pre>
-        </div>
-        <p>print(”\nNoisy Objective Optimization:”) print(“═══════════════════════════════════════════════════════════”)</p>
-        <p>evaluationCount = 0</p>
-        <p>// For noisy functions, need: // 1. Much larger tolerance (noise swamps small improvements) // 2. Many more iterations to average out noise // 3. Larger simplex to avoid premature convergence let nmNoisy = NelderMead
-          <vectorn<double>
-            &gt;( config: NelderMeadConfig( initialSimplexSize: 1.0, tolerance: 0.5, // Tolerance must be &gt; noise magnitude maxIterations: 1000 ) )
-          </vectorn<double></p>
-        <p>let noisyResult = try nmNoisy.minimize( noisyObjective, from: VectorN([5.0, 5.0]) // Start far from optimum )</p>
-        <p>print(“Results:”) print(” Final Position: [(noisyResult.solution[0].number(3)), (noisyResult.solution[1].number(3))]”) print(” True Optimum: [0.0, 0.0]”) print(” Distance from Optimum: (sqrt(noisyResult.solution[0]*noisyResult.solution[0] + noisyResult.solution[1]*noisyResult.solution[1]).number(3))”) print(” Final Value (noisy): (noisyResult.value.number(3))”) print(” Evaluations: (evaluationCount)”)</p>
-        <p>print(”\nNote: With ±0.5 noise, perfect convergence is impossible.”) print(“Getting within 0.5 units of the optimum shows the algorithm”) print(“successfully finds signal despite 1:1 noise-to-signal ratio.”) 
-          <hr /></p>
-        <h2>How It Works</h2>
-        <h3>Nelder-Mead Operations</h3>
-        <strong>Simplex</strong>: n+1 points in n-dimensional space (triangle for 2D, tetrahedron for 3D)
-        <p></p>
-        <p><strong>Operations</strong> (from worst point):</p>
-        <ol>
-          <li><strong>Reflection</strong>: Flip worst point across centroid of other points</li>
-          <li><strong>Expansion</strong>: If reflection is best, expand further in that direction</li>
-          <li><strong>Contraction</strong>: If reflection is still bad, contract toward centroid</li>
-          <li><strong>Shrinkage</strong>: If all else fails, shrink entire simplex toward best point</li>
-        </ol>
-        <strong>Pseudocode</strong>:
-        <pre><code>1. Order points: f(x₁) ≤ f(x₂) ≤ … ≤ f(xₙ₊₁) 2. Calculate centroid: x̄ = (x₁ + … + xₙ) / n 3. Reflect worst: xᵣ = x̄ + α(x̄ - xₙ₊₁) 4. If f(xᵣ) &lt; f(x₁): Expand → xₑ = x̄ + γ(xᵣ - x̄) 5. Else if f(xᵣ) &lt; f(xₙ): Accept reflection 6. Else: Contract → xc = x̄ + β(xₙ₊₁ - x̄) 7. If contraction fails: Shrink all toward x₁ </code></pre>
-        <h3>Standard Coefficients</h3>
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">Operation</th>
-              <th scope="col">Coefficient</th>
-              <th scope="col">Standard Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Reflection</td>
-              <td>α</td>
-              <td>1.0</td>
-            </tr>
-            <tr>
-              <td>Expansion</td>
-              <td>γ</td>
-              <td>2.0</td>
-            </tr>
-            <tr>
-              <td>Contraction</td>
-              <td>β</td>
-              <td>0.5</td>
-            </tr>
-            <tr>
-              <td>Shrinkage</td>
-              <td>δ</td>
-              <td>0.5</td>
-            </tr>
-          </tbody>
-        </table>
-        <h3>Performance Characteristics</h3>
-        <strong>Strengths</strong>:
-        <ul>
-          <li>No gradient computation needed</li>
-          <li>Robust to noise and discontinuities</li>
-          <li>Simple to implement and understand</li>
-          <li>Works well for small problems (&lt; 50 variables)</li>
-        </ul>
-        <strong>Weaknesses</strong>:
-        <ul>
-          <li>Slow for large problems (&gt; 100 variables)</li>
-          <li>Can stagnate (simplex becomes degenerate)</li>
-          <li>No convergence guarantee for non-convex problems</li>
-          <li>Requires n+1 function evaluations per iteration</li>
-        </ul>
-        <strong>Typical Use Cases</strong>:
-        <ul>
-          <li>Hyperparameter tuning (5-20 parameters)</li>
-          <li>Simulation optimization (expensive black-box)</li>
-          <li>Non-smooth objectives (transaction costs, lot sizes)</li>
-          <li>Noisy functions (Monte Carlo, measurement error)</li>
-        </ul>
-        <hr />
-        <h2>Real-World Application</h2>
-        <h3>Pharmaceutical: Drug Dosing Optimization</h3>
-        <strong>Company</strong>: Biotech optimizing drug delivery parameters 
-        <strong>Challenge</strong>: Find optimal dosing schedule to maximize efficacy while minimizing side effects
-        <p></p>
-        <p><strong>Problem Characteristics</strong>:</p>
-        <ul>
-          <li><strong>Black-box objective</strong>: Patient simulation model (15 minutes per run)</li>
-          <li><strong>5 parameters</strong>: Dose amount, frequency, duration, combination ratios</li>
-          <li><strong>Non-smooth</strong>: Discrete dosing times, threshold effects</li>
-          <li><strong>Noisy</strong>: Patient response varies stochastically</li>
-        </ul>
-        <strong>Why Nelder-Mead</strong>:
-        <ul>
-          <li>No gradients available from simulation</li>
-          <li>Robust to simulation noise</li>
-          <li>Handles discrete constraints naturally</li>
-          <li>Small parameter space (5 variables)</li>
-        </ul>
-        <strong>Implementation</strong> (conceptual):
-        <pre><code class="language-swift">// Mock simulation for demonstration // Real implementation would call proprietary pharmacokinetic model func simulatePatientOutcome( dose: Double, frequency: Double, duration: Double, drugARatio: Double, drugBRatio: Double ) -&gt; Double { // Simplified model: efficacy vs side effects tradeoff let efficacy = dose * (drugARatio + drugBRatio * 0.8) let sideEffects = pow(dose, 1.5) * frequency / duration let compliance = exp(-frequency / 3.0)  // Less frequent = better compliance<pre><code>// Overall outcome: maximize efficacy, minimize side effects // Add noise to simulate patient variability let noise = Double.random(in: -0.1…0.1) return -(efficacy * compliance - sideEffects * 2.0) + noise </code></pre>}<p></p><p>let dosingOptimizer = NelderMead
-              <vectorn<double>
-                &gt;( config: NelderMeadConfig( tolerance: 1e-2, // Relaxed for noisy simulation maxIterations: 200 ) )
-              </vectorn<double></p></code>
+              </double></p>
+            <pre><code>// True underlying function (sphere: simple convex bowl) // Minimum at [0, 0] with value 0 let trueValue = x[0] * x[0] + x[1] * x[1]<p></p><p>// Add noise (simulates measurement error, simulation variance, etc.) let noise = Double.random(in: -0.25…0.25)</p></code><p><code>return trueValue + noise </code></p></pre>}
+            <p></p>
+          </div><p>print(”\nNoisy Objective Optimization:”) print(“═══════════════════════════════════════════════════════════”)</p><p>evaluationCount = 0</p><p>// For noisy functions, need: // 1. Much larger tolerance (noise swamps small improvements) // 2. Many more iterations to average out noise // 3. Larger simplex to avoid premature convergence let nmNoisy = NelderMead
+            <vectorn<double>
+              &gt;( config: NelderMeadConfig( initialSimplexSize: 1.0, tolerance: 0.5, // Tolerance must be &gt; noise magnitude maxIterations: 1000 ) )
+            </vectorn<double></p><p>let noisyResult = try nmNoisy.minimize( noisyObjective, from: VectorN([5.0, 5.0])  // Start far from optimum )</p><p>print(“Results:”) print(”  Final Position: [(noisyResult.solution[0].number(3)), (noisyResult.solution[1].number(3))]”) print(”  True Optimum: [0.0, 0.0]”) print(”  Distance from Optimum: (sqrt(noisyResult.solution[0]*noisyResult.solution[0] + noisyResult.solution[1]*noisyResult.solution[1]).number(3))”) print(”  Final Value (noisy): (noisyResult.value.number(3))”) print(”  Evaluations: (evaluationCount)”)</p><p>print(”\nNote: With ±0.5 noise, perfect convergence is impossible.”) print(“Getting within 0.5 units of the optimum shows the algorithm”) print(“successfully finds signal despite 1:1 noise-to-signal ratio.”)</p>
           <div>
-            <code class="language-swift"><p>func patientOutcome(_ params: VectorN
-                <double>
-                  ) -&gt; Double { let dose = params[0] // mg per dose let frequency = params[1] // doses per day let duration = params[2] // days of treatment let drugARatio = params[3] // ratio of drug A (0-1) let drugBRatio = params[4] // ratio of drug B (0-1)
-                </double></p><pre><code>// Constraint: ratios must sum to 1.0 if abs(drugARatio + drugBRatio - 1.0) &gt; 0.01 { return 1e6  // Penalty }<p></p><p>// Constraint: clinically safe ranges if dose &lt; 10 || dose &gt; 100 || frequency &lt; 1 || frequency &gt; 4 || duration &lt; 7 || duration &gt; 90 { return 1e6 // Penalty }</p></code><p><code>return simulatePatientOutcome( dose: dose, frequency: frequency, duration: duration, drugARatio: drugARatio, drugBRatio: drugBRatio ) </code></p></pre>}<p></p></code>
-          </div><p>// Starting point from clinical guidelines let clinicalGuess = VectorN([25.0, 2.0, 30.0, 0.6, 0.4])</p><p>let optimalDosing = try dosingOptimizer.minimize( patientOutcome, from: clinicalGuess )</p><p>print(“Optimal Dosing Schedule:”) print(”  Dose: (optimalDosing.solution[0].number(1)) mg”) print(”  Frequency: (optimalDosing.solution[1].number(1)) doses/day”) print(”  Duration: (optimalDosing.solution[2].number(0)) days”) print(”  Drug A Ratio: (optimalDosing.solution[3].percent(1))”) print(”  Drug B Ratio: (optimalDosing.solution[4].percent(1))”) </p></pre>
-        <strong>Results</strong>:
-        <ul>
-          <li>Optimal parameters found: 85 evaluations (~21 hours computation)</li>
-          <li>Efficacy improvement: +12% vs. standard protocol</li>
-          <li>Side effects: Reduced by 18%</li>
-          <li>Clinical trial: Parameters validated in Phase II study</li>
-        </ul>
-        <hr />
-        <h2>Try It Yourself</h2>
-        <details>
-          <summary>Click to expand full playground code</summary>
-          <pre><code class="language-swift">import Foundation
-import BusinessMath
-// MARK: - Black Box Monte Carlo Profolio Simulation
-<p></p></code>
-            <div>
-              <code class="language-swift"><p>// Helper: Simulate one year of portfolio returns func simulatePortfolioYear( stockAllocation: Double, // 0-1: fraction in stocks vs bonds rebalanceThreshold: Double, // When to rebalance (drift tolerance) marketReturn: Double, // Random market return scenario bondReturn: Double // Random bond return scenario ) -&gt; Double { // Stock returns are volatile, bonds are stable let stockReturn = marketReturn let portfolioReturn = stockAllocation * stockReturn + (1 - stockAllocation) * bondReturn</p><pre><code>// Transaction costs from rebalancing // More frequent rebalancing (lower threshold) = higher costs let annualRebalances = 12.0 / max(rebalanceThreshold * 100, 1.0)  // Monthly opportunities let transactionCosts = annualRebalances * 0.0005  // 5 bps per rebalance<p></p></code><p><code>return portfolioReturn - transactionCosts </code></p></pre>}<p></p></code>
-            </div>
-            <div>
-              <p>// Black-box objective: Monte Carlo portfolio simulation func portfolioSimulationObjective(_ parameters: VectorN
-                <double>
-                  ) -&gt; Double { // Parameters: [stockAllocation (0-1), rebalanceThreshold (0.01-0.20)] let stockAllocation = parameters[0] let rebalanceThreshold = parameters[1]
-                </double></p>
-              <pre><code>// Penalty for out-of-bounds parameters if stockAllocation &lt; 0 || stockAllocation &gt; 1 || rebalanceThreshold &lt; 0.01 || rebalanceThreshold &gt; 0.20 { return 1e10  // Large penalty }<p></p><p>// Run Monte Carlo simulation (expensive!) var simulation = MonteCarloSimulation(iterations: 1_000, enableGPU: false) { inputs in let marketReturn = inputs[0] let bondReturn = inputs[1]</p><pre><code>return simulatePortfolioYear( stockAllocation: stockAllocation, rebalanceThreshold: rebalanceThreshold, marketReturn: marketReturn, bondReturn: bondReturn ) </code></pre>}<p></p><p>simulation.addInput(SimulationInput( name: “Market Return”, distribution: DistributionNormal(0.10, 0.18) // 10% mean, 18% volatility ))</p><p>simulation.addInput(SimulationInput( name: “Bond Return”, distribution: DistributionNormal(0.04, 0.06) // 4% mean, 6% volatility ))</p><p>let results = try! simulation.run()</p><p>// Objective: Maximize Sharpe ratio (minimize negative) let meanReturn = results.statistics.mean let stdDev = results.statistics.stdDev let riskFreeRate = 0.02 let sharpeRatio = (meanReturn - riskFreeRate) / stdDev</p></code><p><code>return -sharpeRatio // Minimize negative = maximize positive </code></p></pre>}
-              <p></p>
-            </div><p>// Nelder-Mead optimizer (no gradients needed!) let nm = NelderMead
-              <vectorn<double>
-                &gt;(config: .default)
-              </vectorn<double></p><p>let initialGuess = VectorN([0.60, 0.05])  // [60% stocks, 5% rebalance threshold]</p><p>print(“Black-Box Parameter Optimization”) print(“═══════════════════════════════════════════════════════════”)</p><p>let result = try nm.minimize( portfolioSimulationObjective, from: initialGuess )</p><p>print(“Optimization Results:”) print(”  Optimal Parameters:”) print(”    Stock Allocation: ((result.solution[0] * 100).number(1))%”) print(”    Rebalance Threshold: ((result.solution[1] * 100).number(2))%”) print(”  Final Sharpe Ratio: ((-result.value).number(3))”)</p><p>// For detailed metrics, use optimizeDetailed() let detailedResult = nm.optimizeDetailed( objective: portfolioSimulationObjective, initialGuess: initialGuess ) print(”  Function Evaluations: (detailedResult.evaluations)”) print(”  Iterations: (detailedResult.iterations)”)</p><p>// MARK: - Non-Smooth Objective (Transaction Costs)</p><p>// Generate realistic covariance matrix for 10 assets let covarianceMatrix = generateCovarianceMatrix( size: 10, avgCorrelation: 0.3, volatility: (0.15, 0.25) )</p>
-            <div>
-              <p>// Portfolio with discrete lot sizes (non-smooth!) func portfolioWithLotSizes(_ weights: VectorN
-                <double>
-                  ) -&gt; Double { let lotSize = 100.0 // Must trade in multiples of 100 shares let sharesPerAsset = weights.toArray().map { weight in let idealShares = weight * 100_000.0 // $100K portfolio return (idealShares / lotSize).rounded() * lotSize }
-                </double></p>
-              <pre><code>// Actual weights after rounding to lot sizes let totalValue = sharesPerAsset.reduce(0, +) let actualWeights = VectorN(sharesPerAsset.map { $0 / totalValue })<p></p><p>// Portfolio variance with actual weights var variance = 0.0 for i in 0..
-                    <actualweights.count { for j in 0..<actualweights.count { variance +="actualWeights[i]" * actualweights[j] * covariancematrix[i][j] } }< p></actualweights.count></p><p>// Transaction costs from deviations let deviations = zip(weights.toArray(), actualWeights.toArray()) .map { abs($0 - $1) } .reduce(0, +)</p></code><p><code>return variance + deviations * 0.001 // Penalty for rounding </code></p></pre>}
-              <p></p>
-            </div><p>// Standard coefficients are fine for this problem let nmNonSmooth = NelderMead
-              <vectorn<double>
-                &gt;(config: .default)
-              </vectorn<double></p><p>let nonSmoothResult = try nmNonSmooth.minimize( portfolioWithLotSizes, from: VectorN(repeating: 0.10, count: 10)  // 10 assets )</p><p>print(”\nNon-Smooth Optimization (Lot Sizes):”) print(”  Final Variance: (nonSmoothResult.value.number(6))”) print(”  Evaluations: (nonSmoothResult.iterations)”)</p><p>// Compare: Gradient method would fail due to discontinuities</p>
-            <div>
-              <p>// MARK: - Noisy Objective Functions // Noisy objective: each evaluation adds random noise var evaluationCount = 0 @MainActor func noisyObjective(_ x: VectorN
-                <double>
-                  ) -&gt; Double { evaluationCount += 1
-                </double></p>
-              <pre><code>// True underlying function (sphere: simple convex bowl) // Minimum at [0, 0] with value 0 let trueValue = x[0] * x[0] + x[1] * x[1]<p></p><p>// Add noise (simulates measurement error, simulation variance, etc.) let noise = Double.random(in: -0.25…0.25)</p></code><p><code>return trueValue + noise </code></p></pre>}
-              <p></p>
-            </div><p>print(”\nNoisy Objective Optimization:”) print(“═══════════════════════════════════════════════════════════”)</p><p>evaluationCount = 0</p><p>// For noisy functions, need: // 1. Much larger tolerance (noise swamps small improvements) // 2. Many more iterations to average out noise // 3. Larger simplex to avoid premature convergence let nmNoisy = NelderMead
-              <vectorn<double>
-                &gt;( config: NelderMeadConfig( initialSimplexSize: 1.0, tolerance: 0.5, // Tolerance must be &gt; noise magnitude maxIterations: 1000 ) )
-              </vectorn<double></p><p>let noisyResult = try nmNoisy.minimize( noisyObjective, from: VectorN([5.0, 5.0])  // Start far from optimum )</p><p>print(“Results:”) print(”  Final Position: [(noisyResult.solution[0].number(3)), (noisyResult.solution[1].number(3))]”) print(”  True Optimum: [0.0, 0.0]”) print(”  Distance from Optimum: (sqrt(noisyResult.solution[0]*noisyResult.solution[0] + noisyResult.solution[1]*noisyResult.solution[1]).number(3))”) print(”  Final Value (noisy): (noisyResult.value.number(3))”) print(”  Evaluations: (evaluationCount)”)</p><p>print(”\nNote: With ±0.5 noise, perfect convergence is impossible.”) print(“Getting within 0.5 units of the optimum shows the algorithm”) print(“successfully finds signal despite 1:1 noise-to-signal ratio.”)</p>
-            <div>
-              <p>// MARK: - Real-World Application: Drug Dosing Optimization</p>
-              <pre><code>// Mock simulation for demonstration // Real implementation would call proprietary pharmacokinetic model func simulatePatientOutcome( dose: Double, frequency: Double, duration: Double, drugARatio: Double, drugBRatio: Double ) -&gt; Double { // Simplified model: efficacy vs side effects tradeoff let efficacy = dose * (drugARatio + drugBRatio * 0.8) let sideEffects = pow(dose, 1.5) * frequency / duration let compliance = exp(-frequency / 3.0)  // Less frequent = better compliance<pre><code>// Overall outcome: maximize efficacy, minimize side effects // Add noise to simulate patient variability let noise = Double.random(in: -0.1…0.1) return -(efficacy * compliance - sideEffects * 2.0) + noise </code></pre>}<p></p><p>let dosingOptimizer = NelderMead
-                    <vectorn<double>
-                      &gt;( config: NelderMeadConfig( tolerance: 1e-2, // Relaxed for noisy simulation maxIterations: 200 ) )
-                    </vectorn<double></p></code>
-                <div>
-                  <code><p>func patientOutcome(_ params: VectorN
-                      <double>
-                        ) -&gt; Double { let dose = params[0] // mg per dose let frequency = params[1] // doses per day let duration = params[2] // days of treatment let drugARatio = params[3] // ratio of drug A (0-1) let drugBRatio = params[4] // ratio of drug B (0-1)
-                      </double></p><pre><code>// Constraint: ratios must sum to 1.0 if abs(drugARatio + drugBRatio - 1.0) &gt; 0.01 { return 1e6  // Penalty }<p></p><p>// Constraint: clinically safe ranges if dose &lt; 10 || dose &gt; 100 || frequency &lt; 1 || frequency &gt; 4 || duration &lt; 7 || duration &gt; 90 { return 1e6 // Penalty }</p></code><p><code>return simulatePatientOutcome( dose: dose, frequency: frequency, duration: duration, drugARatio: drugARatio, drugBRatio: drugBRatio ) </code></p></pre>}<p></p></code>
-                </div><p>// Starting point from clinical guidelines let clinicalGuess = VectorN([25.0, 2.0, 30.0, 0.6, 0.4])</p><p>let optimalDosing = try dosingOptimizer.minimize( patientOutcome, from: clinicalGuess )</p><p>print(“Optimal Dosing Schedule:”) print(”  Dose: (optimalDosing.solution[0].number(1)) mg”) print(”  Frequency: (optimalDosing.solution[1].number(1)) doses/day”) print(”  Duration: (optimalDosing.solution[2].number(0)) days”) print(”  Drug A Ratio: (optimalDosing.solution[3].percent(1))”) print(”  Drug B Ratio: (optimalDosing.solution[4].percent(1))”) </p></pre>
-            </div></pre>
-        </details>
-        <p></p>
-      </div>
-      <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.23-NelderMeadTutorial.md">BusinessMath Docs – Nelder-Mead Tutorial</a></p>
-      <h3>Experiments to Try</h3>
-      <ol>
-        <li><strong>Coefficient Tuning</strong>: Test different α, γ, β, δ values</li>
-        <li><strong>Noise Robustness</strong>: Add increasing noise levels, measure performance degradation</li>
-        <li><strong>Dimensionality</strong>: Test 2, 5, 10, 20, 50 variables—when does it slow down?</li>
-        <li><strong>Restart Strategy</strong>: Run multiple times from different starting points</li>
-      </ol>
-      <hr />
-      <h2>Next Steps</h2>
-      <strong>Wednesday</strong>: We’ll explore 
-      <strong>Particle Swarm Optimization</strong>, a population-based method that searches the solution space like a flock of birds.
+            <p>// MARK: - Real-World Application: Drug Dosing Optimization</p>
+            <pre><code>// Mock simulation for demonstration // Real implementation would call proprietary pharmacokinetic model func simulatePatientOutcome( dose: Double, frequency: Double, duration: Double, drugARatio: Double, drugBRatio: Double ) -&gt; Double { // Simplified model: efficacy vs side effects tradeoff let efficacy = dose * (drugARatio + drugBRatio * 0.8) let sideEffects = pow(dose, 1.5) * frequency / duration let compliance = exp(-frequency / 3.0)  // Less frequent = better compliance<pre><code>// Overall outcome: maximize efficacy, minimize side effects // Add noise to simulate patient variability let noise = Double.random(in: -0.1…0.1) return -(efficacy * compliance - sideEffects * 2.0) + noise </code></pre>}<p></p><p>let dosingOptimizer = NelderMead
+                  <vectorn<double>
+                    &gt;( config: NelderMeadConfig( tolerance: 1e-2, // Relaxed for noisy simulation maxIterations: 200 ) )
+                  </vectorn<double></p></code>
+              <div>
+                <code><p>func patientOutcome(_ params: VectorN
+                    <double>
+                      ) -&gt; Double { let dose = params[0] // mg per dose let frequency = params[1] // doses per day let duration = params[2] // days of treatment let drugARatio = params[3] // ratio of drug A (0-1) let drugBRatio = params[4] // ratio of drug B (0-1)
+                    </double></p><pre><code>// Constraint: ratios must sum to 1.0 if abs(drugARatio + drugBRatio - 1.0) &gt; 0.01 { return 1e6  // Penalty }<p></p><p>// Constraint: clinically safe ranges if dose &lt; 10 || dose &gt; 100 || frequency &lt; 1 || frequency &gt; 4 || duration &lt; 7 || duration &gt; 90 { return 1e6 // Penalty }</p></code><p><code>return simulatePatientOutcome( dose: dose, frequency: frequency, duration: duration, drugARatio: drugARatio, drugBRatio: drugBRatio ) </code></p></pre>}<p></p></code>
+              </div><p>// Starting point from clinical guidelines let clinicalGuess = VectorN([25.0, 2.0, 30.0, 0.6, 0.4])</p><p>let optimalDosing = try dosingOptimizer.minimize( patientOutcome, from: clinicalGuess )</p><p>print(“Optimal Dosing Schedule:”) print(”  Dose: (optimalDosing.solution[0].number(1)) mg”) print(”  Frequency: (optimalDosing.solution[1].number(1)) doses/day”) print(”  Duration: (optimalDosing.solution[2].number(0)) days”) print(”  Drug A Ratio: (optimalDosing.solution[3].percent(1))”) print(”  Drug B Ratio: (optimalDosing.solution[4].percent(1))”) </p></pre>
+          </div></pre>
+      </details>
       <p></p>
-      <p><strong>Friday</strong>: Week 11 concludes with <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong> using async/await and streaming optimization.
-        <hr /><strong>Series</strong>: [Week 11 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Algorithms] | <strong>Case Studies</strong>: [4/6 Complete]</p>
-      <p><strong>Topics Covered</strong>: Nelder-Mead • Simplex method • Gradient-free optimization • Black-box functions • Noisy objectives</p>
-      <p><strong>Playgrounds</strong>: [Week 1-11 available] • [Next: Particle swarm optimization]</p>
     </div>
+    <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.23-NelderMeadTutorial.md">BusinessMath Docs – Nelder-Mead Tutorial</a></p>
+    <h3>Experiments to Try</h3>
+    <ol>
+      <li><strong>Coefficient Tuning</strong>: Test different α, γ, β, δ values</li>
+      <li><strong>Noise Robustness</strong>: Add increasing noise levels, measure performance degradation</li>
+      <li><strong>Dimensionality</strong>: Test 2, 5, 10, 20, 50 variables—when does it slow down?</li>
+      <li><strong>Restart Strategy</strong>: Run multiple times from different starting points</li>
+    </ol>
+    <hr />
+    <h2>Next Steps</h2>
+    <strong>Wednesday</strong>: We’ll explore 
+    <strong>Particle Swarm Optimization</strong>, a population-based method that searches the solution space like a flock of birds.
+    <p></p>
+    <p><strong>Friday</strong>: Week 11 concludes with <strong>Case Study #5: Real-Time Portfolio Rebalancing</strong> using async/await and streaming optimization.
+      <hr /><strong>Series</strong>: [Week 11 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Algorithms] | <strong>Case Studies</strong>: [4/6 Complete]</p>
+    <p><strong>Topics Covered</strong>: Nelder-Mead • Simplex method • Gradient-free optimization • Black-box functions • Noisy objectives</p>
+    <p><strong>Playgrounds</strong>: [Week 1-11 available] • [Next: Particle swarm optimization]</p>
     <hr />
     <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, optimization, nelder-mead, simplex, gradient-free, derivative-free, robust-optimization</p>
     <header>

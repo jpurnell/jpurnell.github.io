@@ -162,219 +162,217 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Documentation as Design</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Development Journey</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Development Journey Series</strong>
-            <hr /></p>
-          <h2>The Context</h2>We were implementing IRR (Internal Rate of Return) calculation for BusinessMath. IRR is conceptually simple—find the discount rate where NPV equals zero—but the implementation requires iterative solving with Newton-Raphson method.
-          <p></p>
-          <p>I had a working implementation. The tests passed. The calculations were correct.</p>
-          <p><strong>But I couldn’t document it.</strong></p>
-          <p>When I tried to write the DocC documentation, I struggled to explain what the parameters meant, when the function would throw errors, and what users should expect. The act of documentation revealed design flaws in the API itself.</p>
-          <p>That’s when we discovered: <strong>If you can’t document it clearly, the API design is wrong.</strong>
-            <hr /></p>
-          <h2>The Challenge</h2>The traditional workflow puts documentation last:
-          <ol>
-            <li>Design API (maybe)</li>
-            <li>Implement code</li>
-            <li>Write tests</li>
-            <li><strong>Finally</strong>: Document what you built</li>
-          </ol>
-          <strong>The problem</strong>: By step 4, you’ve invested heavily in the implementation. Changing the API now feels expensive. So you write convoluted documentation to explain a poorly designed API instead of fixing the root cause.
-          <p></p>
-          <p>With AI generating code quickly, this problem accelerates. AI happily implements whatever you ask for, but it doesn’t push back on bad API design. You get working code with terrible interfaces.</p>
-          <p><strong>We needed to front-load the design validation.</strong>
-            <hr /></p>
-          <h2>The Solution</h2>
-          <strong>Write complete DocC documentation BEFORE implementing anything.</strong>
-          <h3>The Documentation-First Workflow</h3>
-          <strong>1. Write the DocC Tutorial First</strong>
-          <p></p>
-          <p>Before writing any implementation code, write the complete DocC article including:</p>
-          <ul>
-            <li>Overview of what the function does</li>
-            <li>Parameter descriptions</li>
-            <li>Return value explanation</li>
-            <li>Error cases</li>
-            <li>Usage examples (that won’t compile yet—that’s okay!)</li>
-            <li>See Also references</li>
-          </ul>
-          <strong>2. If Documentation Is Hard to Write, Redesign the API</strong>
-          <p></p>
-          <p>Struggling to document? That’s a signal. The API is confusing. Fix it now while it’s cheap.</p>
-          <p><strong>3. Use Documentation as AI Specification</strong></p>
-          <p>Once the documentation reads clearly, give it to AI as the implementation spec. The clearer your docs, the better AI’s implementation.
-            <hr /></p>
-          <h2>The Results</h2>
-          <h3>Before: Hard to Document</h3>Here’s what AI generated on the first attempt:
-          <pre><code class="language-swift">// BEFORE: Hard to document public func calc(_ a: [Double], _ b: Double, _ c: Int) -&gt; Double? </code></pre>
-          <strong>Trying to document this</strong>:
-          <pre><code class="language-swift">/// Calculates… something? /// /// - Parameter a: An array of… values? Cash flows? /// - Parameter b: A rate? Or is it a guess? /// - Parameter c: Maximum… iterations? Or is it periods? /// - Returns: The result, or nil if… it fails? </code></pre>Even writing this, I had to guess what the parameters meant. That’s a sign of bad API design.
-          <hr />
-          <h3>After: Easy to Document</h3>After redesigning the API with documentation in mind:
-          <pre><code class="language-swift">// AFTER: Easy to document /// Calculates the internal rate of return for a series of cash flows. /// /// The IRR is the discount rate that makes NPV equal to zero. /// Uses Newton-Raphson method for iterative solving. /// /// ## Usage Example /// /// let cashFlows = [-1000, 300, 400, 500] /// let irr = try calculateIRR(cashFlows: cashFlows) /// print(irr.percent(1)) // “12.5%” /// /// - Parameter cashFlows: Array of cash flows, starting with initial investment /// - Returns: IRR as Double (0.125 = 12.5%) /// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge public func calculateIRR(cashFlows: [Double]) throws -&gt; Double </code></pre>
-          <strong>Notice the difference</strong>:
-          <ul>
-            <li>Function name is clear: <code>calculateIRR</code> (not <code>calc</code>)</li>
-            <li>Parameters are self-documenting: <code>cashFlows</code> (not <code>a</code>)</li>
-            <li>Return type is obvious: <code>Double</code> (not <code>Double?</code>)</li>
-            <li>Errors are explicit: <code>throws</code> (not returning <code>nil</code>)</li>
-            <li>Example is compilable and clear</li>
-          </ul>
-          <hr />
-          <h2>What Worked</h2>
-          <h3>1. Documentation Revealed IRR Needed Error Handling</h3>The first attempt returned 
-          <code>Double?</code> (optional). But when I tried to document this:
-          <pre><code class="language-swift">/// - Returns: The IRR, or nil if… </code></pre>I couldn’t finish the sentence. 
-          <strong>What does nil mean?</strong>
-          <ul>
-            <li>Didn’t converge after max iterations?</li>
-            <li>Invalid cash flows (all positive)?</li>
-            <li>Something else?</li>
-          </ul>The documentation revealed the design flaw: we needed typed errors, not ambiguous nil.
-          <p></p>
-          <p><strong>Fix</strong>:</p>
-          <pre><code class="language-swift">enum FinancialError: Error { case convergenceFailure case invalidCashFlows } public func calculateIRR(cashFlows: [Double]) throws -&gt; Double </code></pre>Now the documentation writes itself:
-          <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge after 100 iterations ///          <code>FinancialError.invalidCashFlows</code> if all cash flows are positive </code></pre>
-          <hr />
-          <h3>2. Example Showed We Needed Better Formatting</h3>When writing the usage example, I wrote:
-          <pre><code class="language-swift">let irr = try calculateIRR(cashFlows: cashFlows) print(irr)  // Prints: 0.12456789 </code></pre>Looking at that output, I realized: 
-          <strong>Users will want percentages, not decimals.</strong>
-          <p></p>
-          <p>This led to adding format guidance in the documentation:</p>
-          <pre><code class="language-swift">print(irr.percent(1))  // “12.5%” </code></pre>
-          <strong>Without writing the example first</strong>, I wouldn’t have caught this usability issue.
-          <hr />
-          <h3>3. AI Implementation Matched Documentation Perfectly</h3>Once the documentation was clear, I gave it to AI with this prompt:
-          <blockquote>
-            “Implement 
-            <code>calculateIRR</code> to match this documentation exactly. Use Newton-Raphson method. The function signature must match what’s documented.”
-          </blockquote>AI’s implementation:
-          <ul>
-            <li>✅ Matched the documented signature exactly</li>
-            <li>✅ Threw the documented errors</li>
-            <li>✅ Handled all edge cases mentioned in docs</li>
-            <li>✅ Passed the example from documentation</li>
-          </ul>
-          <strong>No back-and-forth</strong>. No debugging. The documentation was the specification, and AI executed it perfectly.
-          <hr />
-          <h2>What Didn’t Work</h2>
-          <h3>1. First Attempt at Documentation Was Too Vague</h3>My initial documentation attempt:
-          <pre><code class="language-swift">/// Calculates IRR for cash flows. /// /// - Parameter cashFlows: The cash flows /// - Returns: The IRR </code></pre>This tells you nothing. What’s the format? What are the units? What can go wrong?
-          <p></p>
-          <p><strong>AI implemented it</strong>, but not the way I wanted. It made assumptions about default values, convergence tolerance, and error handling that didn’t match my intent.</p>
-          <p><strong>Fix</strong>: Be specific. Include units, formats, edge cases, and examples.
-            <hr /></p>
-          <h3>2. Example Initially Didn’t Compile</h3>I wrote the example before implementing the function (good!), but I made a mistake:
-          <pre><code class="language-swift">// Wrong: let irr = calculateIRR([-1000, 300, 400, 500])  // Missing label! </code></pre>When I tried to build the documentation, it failed.
-          <p></p>
-          <p><strong>This is actually good!</strong> I caught the error in documentation, not in user code. Fixed it immediately:</p>
-          <pre><code class="language-swift">// Correct: let irr = try calculateIRR(cashFlows: [-1000, 300, 400, 500]) </code></pre>
-          <strong>Lesson</strong>: Documentation examples should compile. If they don’t, fix the API before implementing.
-          <hr />
-          <h2>The Insight</h2>
-          <strong>If you can’t document it clearly, the API design is wrong. Fix it while it’s cheap.</strong>
-          <p></p>
-          <p>Documentation-first development creates a forcing function:</p>
-          <ul>
-            <li><strong>Vague function names</strong> become obvious when you try to document them</li>
-            <li><strong>Ambiguous parameters</strong> can’t be described clearly</li>
-            <li><strong>Missing error handling</strong> leaves gaps in documentation</li>
-            <li><strong>Poor usability</strong> shows up in examples</li>
-          </ul>By writing documentation first, you catch these issues 
-          <strong>before investing in implementation</strong>. Redesigning the API takes 5 minutes. Redesigning after implementation, tests, and integration takes hours.
-          <blockquote>
-            <strong>Key Takeaway</strong>: Write DocC before implementation. If the docs are hard to write, the API is wrong. Fix it now, while it’s cheap.
-          </blockquote>
-          <hr />
-          <h2>How to Apply This</h2>
-          <strong>For your next feature</strong>:
-          <p></p>
-          <p><strong>1. Write Complete DocC First</strong></p>
-          <ul>
-            <li>Overview paragraph</li>
-            <li>All parameters documented</li>
-            <li>Return value explained</li>
-            <li>Error cases listed</li>
-            <li>Example that shows realistic usage</li>
-          </ul>
-          <strong>2. Check for Red Flags</strong>
-          <ul>
-            <li>Struggling to name parameters clearly?</li>
-            <li>Can’t explain what nil means?</li>
-            <li>Example is confusing or complex?</li>
-            <li>Using words like “various” or “certain cases”?</li>
-          </ul>
-          <strong>3. Redesign if Needed</strong>
-          <ul>
-            <li>Rename parameters for clarity</li>
-            <li>Add or remove parameters</li>
-            <li>Change return type (optional → throws)</li>
-            <li>Simplify the API</li>
-          </ul>
-          <strong>4. Give Documentation to AI</strong>
-          <ul>
-            <li>“Implement this function to match the documentation exactly”</li>
-            <li>Paste the complete DocC block</li>
-            <li>AI will generate code that matches the spec</li>
-          </ul>
-          <strong>5. Verify Example Compiles</strong>
-          <ul>
-            <li>Build documentation in Xcode</li>
-            <li>Fix any compile errors</li>
-            <li>If examples don’t compile, API might still be wrong</li>
-          </ul>
-          <hr />
-          <h2>See It In Action</h2>This practice is demonstrated throughout the BusinessMath library:
-          <p></p>
-          <p><strong>Technical Examples</strong>:</p>
-          <ul>
-            <li><a href="../01-mon-data-tables"><strong>Data Table Analysis</strong> (Monday)</a>: Clear parameter names, typed inputs/outputs</li>
-            <li><a href="../03-wed-financial-ratios"><strong>Financial Ratios</strong> (Wednesday)</a>: Descriptive function names, documented return types</li>
-            <li><a href="../04-fri-risk-analytics"><strong>Risk Analytics</strong> (Friday)</a>: Error cases explicitly documented</li>
-          </ul>
-          <strong>Related Practices</strong>:
-          <ul>
-            <li><a href="../../week-01/02-tue-test-first-development"><strong>Test-First Development</strong> (Week 1 Tuesday)</a>: Tests validate documented behavior</li>
-            <li><strong>Coding Standards</strong> (Week 5): Forbidden patterns include undocumented public APIs</li>
-          </ul>
-          <hr />
-          <h2>Common Pitfalls</h2>
-          <h3>❌ Pitfall 1: Writing minimal documentation</h3>
-          <strong>Problem</strong>: “I’ll fill in details later” → Never happens 
-          <strong>Solution</strong>: Write complete docs now. It takes 10 minutes and saves hours.
-          <h3>❌ Pitfall 2: Documenting after implementation</h3>
-          <strong>Problem</strong>: You’ll rationalize the existing API instead of improving it 
-          <strong>Solution</strong>: Docs first, always. Don’t compromise.
-          <h3>❌ Pitfall 3: Examples that don’t compile</h3>
-          <strong>Problem</strong>: Users copy broken examples and get frustrated 
-          <strong>Solution</strong>: Build documentation in Xcode, fix compile errors immediately
-          <hr />
-          <h2>Discussion</h2>
-          <strong>Questions to consider</strong>:
-          <ol>
-            <li>How much documentation is “enough” before implementing?</li>
-            <li>Should every function have an example, or just complex ones?</li>
-            <li>How do you balance documentation thoroughness with velocity?</li>
-          </ol>
-          <!--**Share your experience**: Have you tried documentation-first development? What did you learn?-->
-          <hr />
-          <strong>Series Progress</strong>:
-          <ul>
-            <li>Week: 2/12</li>
-            <li>Posts Published: 6/~48</li>
-            <li>Methodology Posts: 2/12</li>
-            <li>Practices Covered: Test-First, Documentation as Design</li>
-          </ul>
-          <p></p>
-        </div>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Documentation as Design</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Development Journey</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Development Journey Series</strong>
+          <hr /></p>
+        <h2>The Context</h2>We were implementing IRR (Internal Rate of Return) calculation for BusinessMath. IRR is conceptually simple—find the discount rate where NPV equals zero—but the implementation requires iterative solving with Newton-Raphson method.
+        <p></p>
+        <p>I had a working implementation. The tests passed. The calculations were correct.</p>
+        <p><strong>But I couldn’t document it.</strong></p>
+        <p>When I tried to write the DocC documentation, I struggled to explain what the parameters meant, when the function would throw errors, and what users should expect. The act of documentation revealed design flaws in the API itself.</p>
+        <p>That’s when we discovered: <strong>If you can’t document it clearly, the API design is wrong.</strong>
+          <hr /></p>
+        <h2>The Challenge</h2>The traditional workflow puts documentation last:
+        <ol>
+          <li>Design API (maybe)</li>
+          <li>Implement code</li>
+          <li>Write tests</li>
+          <li><strong>Finally</strong>: Document what you built</li>
+        </ol>
+        <strong>The problem</strong>: By step 4, you’ve invested heavily in the implementation. Changing the API now feels expensive. So you write convoluted documentation to explain a poorly designed API instead of fixing the root cause.
+        <p></p>
+        <p>With AI generating code quickly, this problem accelerates. AI happily implements whatever you ask for, but it doesn’t push back on bad API design. You get working code with terrible interfaces.</p>
+        <p><strong>We needed to front-load the design validation.</strong>
+          <hr /></p>
+        <h2>The Solution</h2>
+        <strong>Write complete DocC documentation BEFORE implementing anything.</strong>
+        <h3>The Documentation-First Workflow</h3>
+        <strong>1. Write the DocC Tutorial First</strong>
+        <p></p>
+        <p>Before writing any implementation code, write the complete DocC article including:</p>
+        <ul>
+          <li>Overview of what the function does</li>
+          <li>Parameter descriptions</li>
+          <li>Return value explanation</li>
+          <li>Error cases</li>
+          <li>Usage examples (that won’t compile yet—that’s okay!)</li>
+          <li>See Also references</li>
+        </ul>
+        <strong>2. If Documentation Is Hard to Write, Redesign the API</strong>
+        <p></p>
+        <p>Struggling to document? That’s a signal. The API is confusing. Fix it now while it’s cheap.</p>
+        <p><strong>3. Use Documentation as AI Specification</strong></p>
+        <p>Once the documentation reads clearly, give it to AI as the implementation spec. The clearer your docs, the better AI’s implementation.
+          <hr /></p>
+        <h2>The Results</h2>
+        <h3>Before: Hard to Document</h3>Here’s what AI generated on the first attempt:
+        <pre><code class="language-swift">// BEFORE: Hard to document public func calc(_ a: [Double], _ b: Double, _ c: Int) -&gt; Double? </code></pre>
+        <strong>Trying to document this</strong>:
+        <pre><code class="language-swift">/// Calculates… something? /// /// - Parameter a: An array of… values? Cash flows? /// - Parameter b: A rate? Or is it a guess? /// - Parameter c: Maximum… iterations? Or is it periods? /// - Returns: The result, or nil if… it fails? </code></pre>Even writing this, I had to guess what the parameters meant. That’s a sign of bad API design.
         <hr />
-        <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: ai-collaboration, documentation, api-design, docc, development journey</p>
+        <h3>After: Easy to Document</h3>After redesigning the API with documentation in mind:
+        <pre><code class="language-swift">// AFTER: Easy to document /// Calculates the internal rate of return for a series of cash flows. /// /// The IRR is the discount rate that makes NPV equal to zero. /// Uses Newton-Raphson method for iterative solving. /// /// ## Usage Example /// /// let cashFlows = [-1000, 300, 400, 500] /// let irr = try calculateIRR(cashFlows: cashFlows) /// print(irr.percent(1)) // “12.5%” /// /// - Parameter cashFlows: Array of cash flows, starting with initial investment /// - Returns: IRR as Double (0.125 = 12.5%) /// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge public func calculateIRR(cashFlows: [Double]) throws -&gt; Double </code></pre>
+        <strong>Notice the difference</strong>:
+        <ul>
+          <li>Function name is clear: <code>calculateIRR</code> (not <code>calc</code>)</li>
+          <li>Parameters are self-documenting: <code>cashFlows</code> (not <code>a</code>)</li>
+          <li>Return type is obvious: <code>Double</code> (not <code>Double?</code>)</li>
+          <li>Errors are explicit: <code>throws</code> (not returning <code>nil</code>)</li>
+          <li>Example is compilable and clear</li>
+        </ul>
+        <hr />
+        <h2>What Worked</h2>
+        <h3>1. Documentation Revealed IRR Needed Error Handling</h3>The first attempt returned 
+        <code>Double?</code> (optional). But when I tried to document this:
+        <pre><code class="language-swift">/// - Returns: The IRR, or nil if… </code></pre>I couldn’t finish the sentence. 
+        <strong>What does nil mean?</strong>
+        <ul>
+          <li>Didn’t converge after max iterations?</li>
+          <li>Invalid cash flows (all positive)?</li>
+          <li>Something else?</li>
+        </ul>The documentation revealed the design flaw: we needed typed errors, not ambiguous nil.
+        <p></p>
+        <p><strong>Fix</strong>:</p>
+        <pre><code class="language-swift">enum FinancialError: Error { case convergenceFailure case invalidCashFlows } public func calculateIRR(cashFlows: [Double]) throws -&gt; Double </code></pre>Now the documentation writes itself:
+        <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge after 100 iterations ///          <code>FinancialError.invalidCashFlows</code> if all cash flows are positive </code></pre>
+        <hr />
+        <h3>2. Example Showed We Needed Better Formatting</h3>When writing the usage example, I wrote:
+        <pre><code class="language-swift">let irr = try calculateIRR(cashFlows: cashFlows) print(irr)  // Prints: 0.12456789 </code></pre>Looking at that output, I realized: 
+        <strong>Users will want percentages, not decimals.</strong>
+        <p></p>
+        <p>This led to adding format guidance in the documentation:</p>
+        <pre><code class="language-swift">print(irr.percent(1))  // “12.5%” </code></pre>
+        <strong>Without writing the example first</strong>, I wouldn’t have caught this usability issue.
+        <hr />
+        <h3>3. AI Implementation Matched Documentation Perfectly</h3>Once the documentation was clear, I gave it to AI with this prompt:
+        <blockquote>
+          “Implement 
+          <code>calculateIRR</code> to match this documentation exactly. Use Newton-Raphson method. The function signature must match what’s documented.”
+        </blockquote>AI’s implementation:
+        <ul>
+          <li>✅ Matched the documented signature exactly</li>
+          <li>✅ Threw the documented errors</li>
+          <li>✅ Handled all edge cases mentioned in docs</li>
+          <li>✅ Passed the example from documentation</li>
+        </ul>
+        <strong>No back-and-forth</strong>. No debugging. The documentation was the specification, and AI executed it perfectly.
+        <hr />
+        <h2>What Didn’t Work</h2>
+        <h3>1. First Attempt at Documentation Was Too Vague</h3>My initial documentation attempt:
+        <pre><code class="language-swift">/// Calculates IRR for cash flows. /// /// - Parameter cashFlows: The cash flows /// - Returns: The IRR </code></pre>This tells you nothing. What’s the format? What are the units? What can go wrong?
+        <p></p>
+        <p><strong>AI implemented it</strong>, but not the way I wanted. It made assumptions about default values, convergence tolerance, and error handling that didn’t match my intent.</p>
+        <p><strong>Fix</strong>: Be specific. Include units, formats, edge cases, and examples.
+          <hr /></p>
+        <h3>2. Example Initially Didn’t Compile</h3>I wrote the example before implementing the function (good!), but I made a mistake:
+        <pre><code class="language-swift">// Wrong: let irr = calculateIRR([-1000, 300, 400, 500])  // Missing label! </code></pre>When I tried to build the documentation, it failed.
+        <p></p>
+        <p><strong>This is actually good!</strong> I caught the error in documentation, not in user code. Fixed it immediately:</p>
+        <pre><code class="language-swift">// Correct: let irr = try calculateIRR(cashFlows: [-1000, 300, 400, 500]) </code></pre>
+        <strong>Lesson</strong>: Documentation examples should compile. If they don’t, fix the API before implementing.
+        <hr />
+        <h2>The Insight</h2>
+        <strong>If you can’t document it clearly, the API design is wrong. Fix it while it’s cheap.</strong>
+        <p></p>
+        <p>Documentation-first development creates a forcing function:</p>
+        <ul>
+          <li><strong>Vague function names</strong> become obvious when you try to document them</li>
+          <li><strong>Ambiguous parameters</strong> can’t be described clearly</li>
+          <li><strong>Missing error handling</strong> leaves gaps in documentation</li>
+          <li><strong>Poor usability</strong> shows up in examples</li>
+        </ul>By writing documentation first, you catch these issues 
+        <strong>before investing in implementation</strong>. Redesigning the API takes 5 minutes. Redesigning after implementation, tests, and integration takes hours.
+        <blockquote>
+          <strong>Key Takeaway</strong>: Write DocC before implementation. If the docs are hard to write, the API is wrong. Fix it now, while it’s cheap.
+        </blockquote>
+        <hr />
+        <h2>How to Apply This</h2>
+        <strong>For your next feature</strong>:
+        <p></p>
+        <p><strong>1. Write Complete DocC First</strong></p>
+        <ul>
+          <li>Overview paragraph</li>
+          <li>All parameters documented</li>
+          <li>Return value explained</li>
+          <li>Error cases listed</li>
+          <li>Example that shows realistic usage</li>
+        </ul>
+        <strong>2. Check for Red Flags</strong>
+        <ul>
+          <li>Struggling to name parameters clearly?</li>
+          <li>Can’t explain what nil means?</li>
+          <li>Example is confusing or complex?</li>
+          <li>Using words like “various” or “certain cases”?</li>
+        </ul>
+        <strong>3. Redesign if Needed</strong>
+        <ul>
+          <li>Rename parameters for clarity</li>
+          <li>Add or remove parameters</li>
+          <li>Change return type (optional → throws)</li>
+          <li>Simplify the API</li>
+        </ul>
+        <strong>4. Give Documentation to AI</strong>
+        <ul>
+          <li>“Implement this function to match the documentation exactly”</li>
+          <li>Paste the complete DocC block</li>
+          <li>AI will generate code that matches the spec</li>
+        </ul>
+        <strong>5. Verify Example Compiles</strong>
+        <ul>
+          <li>Build documentation in Xcode</li>
+          <li>Fix any compile errors</li>
+          <li>If examples don’t compile, API might still be wrong</li>
+        </ul>
+        <hr />
+        <h2>See It In Action</h2>This practice is demonstrated throughout the BusinessMath library:
+        <p></p>
+        <p><strong>Technical Examples</strong>:</p>
+        <ul>
+          <li><a href="../01-mon-data-tables"><strong>Data Table Analysis</strong> (Monday)</a>: Clear parameter names, typed inputs/outputs</li>
+          <li><a href="../03-wed-financial-ratios"><strong>Financial Ratios</strong> (Wednesday)</a>: Descriptive function names, documented return types</li>
+          <li><a href="../04-fri-risk-analytics"><strong>Risk Analytics</strong> (Friday)</a>: Error cases explicitly documented</li>
+        </ul>
+        <strong>Related Practices</strong>:
+        <ul>
+          <li><a href="../../week-01/02-tue-test-first-development"><strong>Test-First Development</strong> (Week 1 Tuesday)</a>: Tests validate documented behavior</li>
+          <li><strong>Coding Standards</strong> (Week 5): Forbidden patterns include undocumented public APIs</li>
+        </ul>
+        <hr />
+        <h2>Common Pitfalls</h2>
+        <h3>❌ Pitfall 1: Writing minimal documentation</h3>
+        <strong>Problem</strong>: “I’ll fill in details later” → Never happens 
+        <strong>Solution</strong>: Write complete docs now. It takes 10 minutes and saves hours.
+        <h3>❌ Pitfall 2: Documenting after implementation</h3>
+        <strong>Problem</strong>: You’ll rationalize the existing API instead of improving it 
+        <strong>Solution</strong>: Docs first, always. Don’t compromise.
+        <h3>❌ Pitfall 3: Examples that don’t compile</h3>
+        <strong>Problem</strong>: Users copy broken examples and get frustrated 
+        <strong>Solution</strong>: Build documentation in Xcode, fix compile errors immediately
+        <hr />
+        <h2>Discussion</h2>
+        <strong>Questions to consider</strong>:
+        <ol>
+          <li>How much documentation is “enough” before implementing?</li>
+          <li>Should every function have an example, or just complex ones?</li>
+          <li>How do you balance documentation thoroughness with velocity?</li>
+        </ol>
+        <!--**Share your experience**: Have you tried documentation-first development? What did you learn?-->
+        <hr />
+        <strong>Series Progress</strong>:
+        <ul>
+          <li>Week: 2/12</li>
+          <li>Posts Published: 6/~48</li>
+          <li>Methodology Posts: 2/12</li>
+          <li>Practices Covered: Test-First, Documentation as Design</li>
+        </ul>
+        <p></p>
       </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: ai-collaboration, documentation, api-design, docc, development journey</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">

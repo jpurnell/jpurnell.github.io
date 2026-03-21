@@ -162,231 +162,229 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-9223372036854775807">
-      <div class="ig-main-content">
-        <h1 class="mainTitle">Equity Valuation: From Dividends to Residual Income</h1>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-        <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">16 min read</p>
-        <div class="blurb" style="width: 70.0%; max-width: 800px">
-          <p><strong>Part 18 of 12-Week BusinessMath Series</strong>
-            <hr /></p>
-          <h2>What You’ll Learn</h2>
-          <ul>
-            <li>Valuing dividend-paying stocks with Gordon Growth Model</li>
-            <li>Using two-stage and H-models for growth transitions</li>
-            <li>Applying Free Cash Flow to Equity (FCFE) for non-dividend payers</li>
-            <li>Bridging from Enterprise Value to Equity Value</li>
-            <li>Using Residual Income Models for financial institutions</li>
-            <li>Comparing valuations across multiple methods</li>
-            <li>Triangulating to a fair value range</li>
-          </ul>
-          <hr />
-          <h2>The Problem</h2>Stock valuation is both art and science. 
-          <strong>How much is a share of Apple worth? Tesla? Your local bank?</strong> Getting it wrong is expensive:
-          <ul>
-            <li><strong>Which model should you use?</strong> Dividends? Cash flows? Book value?</li>
-            <li><strong>How do you value growth companies that don’t pay dividends?</strong> Traditional dividend models don’t work.</li>
-            <li><strong>What about companies transitioning from high growth to maturity?</strong> Single-stage models are too simplistic.</li>
-            <li><strong>How do you handle complex capital structures?</strong> Debt, preferred stock, minority interests…</li>
-          </ul>
-          <strong>Spreadsheet valuation is tedious and error-prone when modeling multiple scenarios and methods.</strong>
-          <hr />
-          <h2>The Solution</h2>BusinessMath provides five complementary equity valuation approaches: Gordon Growth DDM, Two-Stage DDM, H-Model, FCFE, Enterprise Value Bridge, and Residual Income. Use multiple methods and triangulate to a range.
-          <h3>Gordon Growth Model (DDM)</h3>Start with the simplest model for stable, dividend-paying companies:
-          <pre><code class="language-swift">import BusinessMath import Foundation // Mature utility company // - Current dividend: $2.50/share // - Growth: 4% annually (stable) // - Required return: 9% (cost of equity)<p></p><p>let utilityStock = GordonGrowthModel( dividendPerShare: 2.50, growthRate: 0.04, requiredReturn: 0.09 )</p><p>let intrinsicValue = utilityStock.valuePerShare()</p><p>print(“Gordon Growth Model Valuation”) print(”==============================”) print(“Current Dividend: $2.50”) print(“Growth Rate: 4.0%”) print(“Required Return: 9.0%”) print(“Intrinsic Value: (intrinsicValue.currency(2))”)</p><p>// Compare to market price let marketPrice = 48.00 let assessment = intrinsicValue &gt; marketPrice ? “UNDERVALUED” : “OVERVALUED” let difference = abs((intrinsicValue / marketPrice) - 1.0)</p><p>Current Dividend: $2.50 Growth Rate: 4.0% Required Return: 9.0% Intrinsic Value: $50.00</p></code><p><code class="language-swift">Market Price: $48.00 Assessment: UNDERVALUED by 4.2% </code></p></pre>
-          <strong>The formula</strong>: Value = D₁ / (r - g) where D₁ = next dividend, r = required return, g = growth rate.
-          <p></p>
-          <p><strong>The limitation</strong>: Only works for stable, mature companies with predictable dividend growth. Not suitable for growth stocks.
-            <hr /></p>
-          <h3>Two-Stage Growth Model</h3>For companies transitioning from high growth to maturity:
-          <pre><code class="language-swift">// Technology company: High growth → Maturity // - Current dividend: $1.00/share // - High growth: 20% for 5 years // - Stable growth: 5% thereafter // - Required return: 12% (higher risk)<p></p><p>let techStock = TwoStageDDM( currentDividend: 1.00, highGrowthRate: 0.20, highGrowthPeriods: 5, stableGrowthRate: 0.05, requiredReturn: 0.12 )</p><p>let techValue = techStock.valuePerShare()</p><p>print(”\nTwo-Stage DDM Valuation”) print(”========================”) print(“Current Dividend: $1.00”) print(“High Growth: 20% for 5 years”) print(“Stable Growth: 5% thereafter”) print(“Required Return: 12%”) print(“Intrinsic Value: (techValue.currency(2))”)</p><p>// Break down components let highGrowthValue = techStock.highGrowthPhaseValue() let terminalValue = techStock.terminalValue()</p></code><h1><code class="language-swift">print(”\nValue Decomposition:”) print(” High Growth Phase: (highGrowthValue.currency())”) print(” Terminal Value (PV): (terminalValue.currency())”) print(” Total: ((highGrowthValue + terminalValue).currency())”) </code></h1></pre>
-          <strong>Output:</strong>
-          <pre><code>Two-Stage DDM ValuationCurrent Dividend: $1.00 High Growth: 20% for 5 years Stable Growth: 5% thereafter Required Return: 12% Intrinsic Value: $27.36<p></p></code><p><code>Value Decomposition: High Growth Phase: $6.18 Terminal Value (PV): $21.18 Total: $27.36 </code></p></pre>
-          <strong>The insight</strong>: 
-          <strong>77% of value comes from the terminal phase</strong>, not the high-growth years! This is common in two-stage models—most value is in perpetuity.
-          <hr />
-          <h3>H-Model (Declining Growth)</h3>When growth declines linearly (not abruptly):
-          <pre><code class="language-swift">// Emerging market company // - Current dividend: $2.00 // - Initial growth: 15% (current) // - Terminal growth: 5% (mature) // - Half-life: 8 years (time to decline) // - Required return: 11%<p></p><p>let emergingStock = HModel( currentDividend: 2.00, initialGrowthRate: 0.15, terminalGrowthRate: 0.05, halfLife: 8, requiredReturn: 0.11 )</p><p>let emergingValue = emergingStock.valuePerShare()</p></code><h1><code class="language-swift">print(”\nH-Model Valuation”) print(”==================”) print(“Current Dividend: $2.00”) print(“Growth: 15% declining to 5% over 8 years”) print(“Required Return: 11%”) print(“Intrinsic Value: (emergingValue.currency(2))”) </code></h1></pre>
-          <strong>Output:</strong>
-          <pre><code>H-Model ValuationCurrent Dividend: $2.00 Growth: 15% declining to 5% over 8 years Required Return: 11% Intrinsic Value: $61.67 </code></pre>
-          <strong>The formula</strong>: Value = [D₀ × (1 + gₗ)] / (r - gₗ) + [D₀ × H × (gₛ - gₗ)] / (r - gₗ)
-          <p></p>
-          <p><strong>The use case</strong>: More realistic than two-stage for companies where growth fades gradually (most real-world scenarios).
-            <hr /></p>
-          <h3>Free Cash Flow to Equity (FCFE)</h3>For companies that don’t pay dividends (like growth tech companies):
-          <pre><code class="language-swift">// High-growth tech company (no dividends)<p></p><p>let periods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Operating cash flow (growing 20%) let operatingCF = TimeSeries( periods: periods, values: [500.0, 600.0, 720.0] // Millions )</p><p>// Capital expenditures (also growing 20%) let capEx = TimeSeries( periods: periods, values: [100.0, 120.0, 144.0] // Millions )</p><p>let fcfeModel = FCFEModel( operatingCashFlow: operatingCF, capitalExpenditures: capEx, netBorrowing: nil, // No debt changes costOfEquity: 0.12, terminalGrowthRate: 0.05 )</p><p>// Total equity value let totalEquityValue = fcfeModel.equityValue()</p><p>// Value per share (100M shares outstanding) let sharesOutstanding = 100.0 let fcfeSharePrice = fcfeModel.valuePerShare(sharesOutstanding: sharesOutstanding)</p><p>print(”\nFCFE Model Valuation”) print(”====================”) print(“Total Equity Value: (totalEquityValue.currency(0))M”) print(“Shares Outstanding: (sharesOutstanding.number(0))M”) print(“Value Per Share: (fcfeSharePrice.currency(2))”)</p></code><h1><code class="language-swift">// Show FCFE breakdown let fcfeValues = fcfeModel.fcfe() print(”\nProjected FCFE:”) for (period, value) in zip(fcfeValues.periods, fcfeValues.valuesArray) { print(” (period.label): (value.currency(0))M”) } </code></h1></pre>
-          <strong>Output:</strong>
-          <pre><code>FCFE Model ValuationTotal Equity Value: $7,300M Shares Outstanding: 100M Value Per Share: $73.00<p></p></code><p><code>Projected FCFE: 2024: $400M 2025: $480M 2026: $576M </code></p></pre>
-          <strong>The power</strong>: FCFE captures 
-          <strong>all cash available to equity holders</strong>, regardless of dividend policy. Superior to DDM for growth companies.
-          <hr />
-          <h3>Enterprise Value Bridge</h3>When you start with firm-wide cash flows (FCFF), bridge to equity value:
-          <pre><code class="language-swift">// Step 1: Calculate Enterprise Value from FCFF<p></p><p>let fcffPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>let fcff = TimeSeries( periods: fcffPeriods, values: [150.0, 165.0, 181.5] // Growing 10% (millions) )</p><p>let enterpriseValue = enterpriseValueFromFCFF( freeCashFlowToFirm: fcff, wacc: 0.09, terminalGrowthRate: 0.03 )</p><p>print(”\nEnterprise Value Bridge”) print(”========================”) print(“Enterprise Value: (enterpriseValue.currency(0))M”)</p><p>// Step 2: Bridge to Equity Value let bridge = EnterpriseValueBridge( enterpriseValue: enterpriseValue, totalDebt: 500.0, // Total debt outstanding cash: 100.0, // Cash and equivalents nonOperatingAssets: 50.0, // Marketable securities minorityInterest: 20.0, // Minority shareholders preferredStock: 30.0 // Preferred equity )</p><p>let breakdown = bridge.breakdown()</p><p>print(”\nBridge to Equity:”) print(” Enterprise Value: (breakdown.enterpriseValue.currency(0))M”) print(” - Net Debt: (breakdown.netDebt.currency(0))M”) print(” + Non-Op Assets: (breakdown.nonOperatingAssets.currency(0))M”) print(” - Minority Interest: (breakdown.minorityInterest.currency(0))M”) print(” - Preferred Stock: (breakdown.preferredStock.currency(0))M”) print(” “ + String(repeating: “=”, count: 30)) print(” Common Equity Value: (breakdown.equityValue.currency(0))M”)</p></code><h1><code class="language-swift">let bridgeSharePrice = bridge.valuePerShare(sharesOutstanding: 100.0) print(”\nValue Per Share: (bridgeSharePrice.currency(2))”) </code></h1></pre>
-          <strong>Output:</strong>
-          <pre><code>Enterprise Value BridgeEnterprise Value: $2,823M<p></p><p>Bridge to Equity: Enterprise Value: $2,823M</p>
-              <ul>
-                <li>Net Debt: $400M</li>
-              </ul>
-              <ul>
-                <li>Non-Op Assets: $50M</li>
-              </ul>
-              <ul>
-                <li>Minority Interest: $20M</li>
-                <li>Preferred Stock: $30M ============================== Common Equity Value: $2,423M</li>
-              </ul>Value Per Share: $24.23 </code></pre>
-          <strong>The process</strong>: 
-          <strong>EV → Subtract debt → Add non-op assets → Subtract other claims = Equity Value</strong>
-          <p></p>
-          <p><strong>The critical insight</strong>: Enterprise Value is what an acquirer pays to buy the <strong>whole company</strong>. Equity value is what <strong>common shareholders</strong> receive.
-            <hr /></p>
-          <h3>Residual Income Model</h3>For banks and financial institutions where book value is meaningful:
-          <pre><code class="language-swift">// Regional bank<p></p><p>let riPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Projected earnings (5% growth) let netIncome = TimeSeries( periods: riPeriods, values: [120.0, 126.0, 132.3] // Millions )</p><p>// Book value of equity (grows with retained earnings) let bookValue = TimeSeries( periods: riPeriods, values: [1000.0, 1050.0, 1102.5] // Millions )</p><p>let riModel = ResidualIncomeModel( currentBookValue: 1000.0, netIncome: netIncome, bookValue: bookValue, costOfEquity: 0.10, terminalGrowthRate: 0.03 )</p><p>let riEquityValue = riModel.equityValue() let riSharePrice = riModel.valuePerShare(sharesOutstanding: 100.0)</p><p>print(”\nResidual Income Model”) print(”======================”) print(“Current Book Value: (riModel.currentBookValue.currency(0))M”) print(“Equity Value: (riEquityValue.currency(0))M”) print(“Value Per Share: (riSharePrice.currency(2))”) print(“Book Value Per Share: ((riModel.currentBookValue / 100.0).currency(2))”)</p><p>let priceToBooksRatio = riSharePrice / (riModel.currentBookValue / 100.0) print(”\nPrice-to-Book Ratio: (priceToBooksRatio.number(2))x”)</p><p>// Show residual income (economic profit) let residualIncome = riModel.residualIncome() print(”\nResidual Income (Economic Profit):”) for (period, ri) in zip(residualIncome.periods, residualIncome.valuesArray) { let verdict = ri &gt; 0 ? “creating value” : “destroying value” print(” (period.label): (ri.currency(1))M ((verdict))”) }</p></code><h1><code class="language-swift">// ROE analysis let roe = riModel.returnOnEquity() print(”\nReturn on Equity (ROE):”) for (period, roeValue) in zip(roe.periods, roe.valuesArray) { let spread = roeValue - riModel.costOfEquity print(” (period.label): (roeValue.percent(1)) (spread over cost of equity: (spread.percent(1)))”) } </code></h1></pre>
-          <strong>Output:</strong>
-          <pre><code>Residual Income ModelCurrent Book Value: $1,000M Equity Value: $1,296M Value Per Share: $12.96 Book Value Per Share: $10.00<p></p><p>Price-to-Book Ratio: 1.30x</p><p>Residual Income (Economic Profit): 2024: $20.0M (creating value) 2025: $21.0M (creating value) 2026: $22.1M (creating value)</p></code><p><code>Return on Equity (ROE): 2024: 12.0% (spread over cost of equity: 2.0%) 2025: 12.0% (spread over cost of equity: 2.0%) 2026: 12.0% (spread over cost of equity: 2.0%) </code></p></pre>
-          <strong>The formula</strong>: Equity Value = Book Value + PV(Residual Income)
-          <p></p>
-          <p><strong>Residual Income</strong> = Net Income - (Cost of Equity × Beginning Book Value)</p>
-          <p><strong>The insight</strong>: The bank trades at <strong>1.25x book</strong> because ROE (12%) exceeds cost of equity (10%). The 2% spread creates positive residual income and a premium valuation.
-            <hr /></p>
-          <h3>Multi-Model Valuation Summary</h3>In practice, use multiple methods and triangulate:
-          <pre><code class="language-swift">print(”\n” + String(repeating: “=”, count: 50)) print(“COMPREHENSIVE VALUATION SUMMARY”) print(String(repeating: “=”, count: 50))<p></p><p>struct ValuationSummary { let method: String let value: Double let confidence: String let bestFor: String }</p><p>let valuations = [ ValuationSummary( method: “Gordon Growth DDM”, value: 50.00, confidence: “High”, bestFor: “Mature dividend payers” ), ValuationSummary( method: “Two-Stage DDM”, value: 27.36, confidence: “Medium”, bestFor: “Growth-to-maturity transition” ), ValuationSummary( method: “H-Model”, value: 48.33, confidence: “Medium”, bestFor: “Declining growth scenarios” ), ValuationSummary( method: “FCFE Model”, value: 74.56, confidence: “High”, bestFor: “All companies with CF data” ), ValuationSummary( method: “EV Bridge”, value: 21.00, confidence: “High”, bestFor: “Firm-level DCF to equity” ), ValuationSummary( method: “Residual Income”, value: 12.45, confidence: “High”, bestFor: “Financial institutions” ) ]</p><p>print(”\nMethod | Value | Confidence | Best For”) print(”–––––––––––|–––––|————|————————”)</p><p>for v in valuations { print(”(v.method.padding(toLength: 21, withPad: “ “, startingAt: 0)) | (v.value.currency(2).padding(toLength: 8, withPad: “ “, startingAt: 0)) | (v.confidence.padding(toLength: 10, withPad: “ “, startingAt: 0)) | (v.bestFor)”) }</p><p>// Calculate valuation range let values = valuations.map { $0.value } let minValue = values.min()! let maxValue = values.max()! let medianValue = values.sorted()[values.count / 2]</p></code><h1><code class="language-swift">print(”\nValuation Range:”) print(” Low: (minValue.currency(2))”) print(” Median: (medianValue.currency(2))”) print(” High: (maxValue.currency(2))”) print(” Spread: ((maxValue - minValue).currency(2)) ((((maxValue - minValue) / medianValue).percent()))”) </code></h1></pre>
-          <strong>Output:</strong>
-          <pre><code>================================================== COMPREHENSIVE VALUATION SUMMARY
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Method</th>
-                    <th scope="col">Value</th>
-                    <th scope="col">Confidence</th>
-                    <th scope="col">Best For</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Gordon Growth DDM</td>
-                    <td>$50.00</td>
-                    <td>High</td>
-                    <td>Mature dividend payers</td>
-                  </tr>
-                  <tr>
-                    <td>Two-Stage DDM</td>
-                    <td>$27.36</td>
-                    <td>Medium</td>
-                    <td>Growth-to-maturity transition</td>
-                  </tr>
-                  <tr>
-                    <td>H-Model</td>
-                    <td>$48.33</td>
-                    <td>Medium</td>
-                    <td>Declining growth scenarios</td>
-                  </tr>
-                  <tr>
-                    <td>FCFE Model</td>
-                    <td>$74.56</td>
-                    <td>High</td>
-                    <td>All companies with CF data</td>
-                  </tr>
-                  <tr>
-                    <td>EV Bridge</td>
-                    <td>$21.00</td>
-                    <td>High</td>
-                    <td>Firm-level DCF to equity</td>
-                  </tr>
-                  <tr>
-                    <td>Residual Income</td>
-                    <td>$12.45</td>
-                    <td>High</td>
-                    <td>Financial institutions</td>
-                  </tr>
-                </tbody>
-              </table>Valuation Range: Low:    $12.45 Median: $48.33 High:   $74.56 Spread: $62.11 (128.51%) </code></pre>
-          <strong>The reality</strong>: Different models give 
-          <strong>vastly different values</strong> depending on company type and assumptions. This is why equity valuation is 
-          <strong>art + science</strong>.
-          <p></p>
-          <p><strong>The approach</strong>: Weight models based on company characteristics, cross-check assumptions, establish a range.
-            <hr /></p>
-          <h2>Try It Yourself</h2>
-          <details>
-            <summary>Click to expand full playground code</summary>
-            <pre><code class="language-swift">import BusinessMath
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Equity Valuation: From Dividends to Residual Income</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">16 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 18 of 12-Week BusinessMath Series</strong>
+          <hr /></p>
+        <h2>What You’ll Learn</h2>
+        <ul>
+          <li>Valuing dividend-paying stocks with Gordon Growth Model</li>
+          <li>Using two-stage and H-models for growth transitions</li>
+          <li>Applying Free Cash Flow to Equity (FCFE) for non-dividend payers</li>
+          <li>Bridging from Enterprise Value to Equity Value</li>
+          <li>Using Residual Income Models for financial institutions</li>
+          <li>Comparing valuations across multiple methods</li>
+          <li>Triangulating to a fair value range</li>
+        </ul>
+        <hr />
+        <h2>The Problem</h2>Stock valuation is both art and science. 
+        <strong>How much is a share of Apple worth? Tesla? Your local bank?</strong> Getting it wrong is expensive:
+        <ul>
+          <li><strong>Which model should you use?</strong> Dividends? Cash flows? Book value?</li>
+          <li><strong>How do you value growth companies that don’t pay dividends?</strong> Traditional dividend models don’t work.</li>
+          <li><strong>What about companies transitioning from high growth to maturity?</strong> Single-stage models are too simplistic.</li>
+          <li><strong>How do you handle complex capital structures?</strong> Debt, preferred stock, minority interests…</li>
+        </ul>
+        <strong>Spreadsheet valuation is tedious and error-prone when modeling multiple scenarios and methods.</strong>
+        <hr />
+        <h2>The Solution</h2>BusinessMath provides five complementary equity valuation approaches: Gordon Growth DDM, Two-Stage DDM, H-Model, FCFE, Enterprise Value Bridge, and Residual Income. Use multiple methods and triangulate to a range.
+        <h3>Gordon Growth Model (DDM)</h3>Start with the simplest model for stable, dividend-paying companies:
+        <pre><code class="language-swift">import BusinessMath import Foundation // Mature utility company // - Current dividend: $2.50/share // - Growth: 4% annually (stable) // - Required return: 9% (cost of equity)<p></p><p>let utilityStock = GordonGrowthModel( dividendPerShare: 2.50, growthRate: 0.04, requiredReturn: 0.09 )</p><p>let intrinsicValue = utilityStock.valuePerShare()</p><p>print(“Gordon Growth Model Valuation”) print(”==============================”) print(“Current Dividend: $2.50”) print(“Growth Rate: 4.0%”) print(“Required Return: 9.0%”) print(“Intrinsic Value: (intrinsicValue.currency(2))”)</p><p>// Compare to market price let marketPrice = 48.00 let assessment = intrinsicValue &gt; marketPrice ? “UNDERVALUED” : “OVERVALUED” let difference = abs((intrinsicValue / marketPrice) - 1.0)</p><p>Current Dividend: $2.50 Growth Rate: 4.0% Required Return: 9.0% Intrinsic Value: $50.00</p></code><p><code class="language-swift">Market Price: $48.00 Assessment: UNDERVALUED by 4.2% </code></p></pre>
+        <strong>The formula</strong>: Value = D₁ / (r - g) where D₁ = next dividend, r = required return, g = growth rate.
+        <p></p>
+        <p><strong>The limitation</strong>: Only works for stable, mature companies with predictable dividend growth. Not suitable for growth stocks.
+          <hr /></p>
+        <h3>Two-Stage Growth Model</h3>For companies transitioning from high growth to maturity:
+        <pre><code class="language-swift">// Technology company: High growth → Maturity // - Current dividend: $1.00/share // - High growth: 20% for 5 years // - Stable growth: 5% thereafter // - Required return: 12% (higher risk)<p></p><p>let techStock = TwoStageDDM( currentDividend: 1.00, highGrowthRate: 0.20, highGrowthPeriods: 5, stableGrowthRate: 0.05, requiredReturn: 0.12 )</p><p>let techValue = techStock.valuePerShare()</p><p>print(”\nTwo-Stage DDM Valuation”) print(”========================”) print(“Current Dividend: $1.00”) print(“High Growth: 20% for 5 years”) print(“Stable Growth: 5% thereafter”) print(“Required Return: 12%”) print(“Intrinsic Value: (techValue.currency(2))”)</p><p>// Break down components let highGrowthValue = techStock.highGrowthPhaseValue() let terminalValue = techStock.terminalValue()</p></code><h1><code class="language-swift">print(”\nValue Decomposition:”) print(” High Growth Phase: (highGrowthValue.currency())”) print(” Terminal Value (PV): (terminalValue.currency())”) print(” Total: ((highGrowthValue + terminalValue).currency())”) </code></h1></pre>
+        <strong>Output:</strong>
+        <pre><code>Two-Stage DDM ValuationCurrent Dividend: $1.00 High Growth: 20% for 5 years Stable Growth: 5% thereafter Required Return: 12% Intrinsic Value: $27.36<p></p></code><p><code>Value Decomposition: High Growth Phase: $6.18 Terminal Value (PV): $21.18 Total: $27.36 </code></p></pre>
+        <strong>The insight</strong>: 
+        <strong>77% of value comes from the terminal phase</strong>, not the high-growth years! This is common in two-stage models—most value is in perpetuity.
+        <hr />
+        <h3>H-Model (Declining Growth)</h3>When growth declines linearly (not abruptly):
+        <pre><code class="language-swift">// Emerging market company // - Current dividend: $2.00 // - Initial growth: 15% (current) // - Terminal growth: 5% (mature) // - Half-life: 8 years (time to decline) // - Required return: 11%<p></p><p>let emergingStock = HModel( currentDividend: 2.00, initialGrowthRate: 0.15, terminalGrowthRate: 0.05, halfLife: 8, requiredReturn: 0.11 )</p><p>let emergingValue = emergingStock.valuePerShare()</p></code><h1><code class="language-swift">print(”\nH-Model Valuation”) print(”==================”) print(“Current Dividend: $2.00”) print(“Growth: 15% declining to 5% over 8 years”) print(“Required Return: 11%”) print(“Intrinsic Value: (emergingValue.currency(2))”) </code></h1></pre>
+        <strong>Output:</strong>
+        <pre><code>H-Model ValuationCurrent Dividend: $2.00 Growth: 15% declining to 5% over 8 years Required Return: 11% Intrinsic Value: $61.67 </code></pre>
+        <strong>The formula</strong>: Value = [D₀ × (1 + gₗ)] / (r - gₗ) + [D₀ × H × (gₛ - gₗ)] / (r - gₗ)
+        <p></p>
+        <p><strong>The use case</strong>: More realistic than two-stage for companies where growth fades gradually (most real-world scenarios).
+          <hr /></p>
+        <h3>Free Cash Flow to Equity (FCFE)</h3>For companies that don’t pay dividends (like growth tech companies):
+        <pre><code class="language-swift">// High-growth tech company (no dividends)<p></p><p>let periods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Operating cash flow (growing 20%) let operatingCF = TimeSeries( periods: periods, values: [500.0, 600.0, 720.0] // Millions )</p><p>// Capital expenditures (also growing 20%) let capEx = TimeSeries( periods: periods, values: [100.0, 120.0, 144.0] // Millions )</p><p>let fcfeModel = FCFEModel( operatingCashFlow: operatingCF, capitalExpenditures: capEx, netBorrowing: nil, // No debt changes costOfEquity: 0.12, terminalGrowthRate: 0.05 )</p><p>// Total equity value let totalEquityValue = fcfeModel.equityValue()</p><p>// Value per share (100M shares outstanding) let sharesOutstanding = 100.0 let fcfeSharePrice = fcfeModel.valuePerShare(sharesOutstanding: sharesOutstanding)</p><p>print(”\nFCFE Model Valuation”) print(”====================”) print(“Total Equity Value: (totalEquityValue.currency(0))M”) print(“Shares Outstanding: (sharesOutstanding.number(0))M”) print(“Value Per Share: (fcfeSharePrice.currency(2))”)</p></code><h1><code class="language-swift">// Show FCFE breakdown let fcfeValues = fcfeModel.fcfe() print(”\nProjected FCFE:”) for (period, value) in zip(fcfeValues.periods, fcfeValues.valuesArray) { print(” (period.label): (value.currency(0))M”) } </code></h1></pre>
+        <strong>Output:</strong>
+        <pre><code>FCFE Model ValuationTotal Equity Value: $7,300M Shares Outstanding: 100M Value Per Share: $73.00<p></p></code><p><code>Projected FCFE: 2024: $400M 2025: $480M 2026: $576M </code></p></pre>
+        <strong>The power</strong>: FCFE captures 
+        <strong>all cash available to equity holders</strong>, regardless of dividend policy. Superior to DDM for growth companies.
+        <hr />
+        <h3>Enterprise Value Bridge</h3>When you start with firm-wide cash flows (FCFF), bridge to equity value:
+        <pre><code class="language-swift">// Step 1: Calculate Enterprise Value from FCFF<p></p><p>let fcffPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>let fcff = TimeSeries( periods: fcffPeriods, values: [150.0, 165.0, 181.5] // Growing 10% (millions) )</p><p>let enterpriseValue = enterpriseValueFromFCFF( freeCashFlowToFirm: fcff, wacc: 0.09, terminalGrowthRate: 0.03 )</p><p>print(”\nEnterprise Value Bridge”) print(”========================”) print(“Enterprise Value: (enterpriseValue.currency(0))M”)</p><p>// Step 2: Bridge to Equity Value let bridge = EnterpriseValueBridge( enterpriseValue: enterpriseValue, totalDebt: 500.0, // Total debt outstanding cash: 100.0, // Cash and equivalents nonOperatingAssets: 50.0, // Marketable securities minorityInterest: 20.0, // Minority shareholders preferredStock: 30.0 // Preferred equity )</p><p>let breakdown = bridge.breakdown()</p><p>print(”\nBridge to Equity:”) print(” Enterprise Value: (breakdown.enterpriseValue.currency(0))M”) print(” - Net Debt: (breakdown.netDebt.currency(0))M”) print(” + Non-Op Assets: (breakdown.nonOperatingAssets.currency(0))M”) print(” - Minority Interest: (breakdown.minorityInterest.currency(0))M”) print(” - Preferred Stock: (breakdown.preferredStock.currency(0))M”) print(” “ + String(repeating: “=”, count: 30)) print(” Common Equity Value: (breakdown.equityValue.currency(0))M”)</p></code><h1><code class="language-swift">let bridgeSharePrice = bridge.valuePerShare(sharesOutstanding: 100.0) print(”\nValue Per Share: (bridgeSharePrice.currency(2))”) </code></h1></pre>
+        <strong>Output:</strong>
+        <pre><code>Enterprise Value BridgeEnterprise Value: $2,823M<p></p><p>Bridge to Equity: Enterprise Value: $2,823M</p>
+            <ul>
+              <li>Net Debt: $400M</li>
+            </ul>
+            <ul>
+              <li>Non-Op Assets: $50M</li>
+            </ul>
+            <ul>
+              <li>Minority Interest: $20M</li>
+              <li>Preferred Stock: $30M ============================== Common Equity Value: $2,423M</li>
+            </ul>Value Per Share: $24.23 </code></pre>
+        <strong>The process</strong>: 
+        <strong>EV → Subtract debt → Add non-op assets → Subtract other claims = Equity Value</strong>
+        <p></p>
+        <p><strong>The critical insight</strong>: Enterprise Value is what an acquirer pays to buy the <strong>whole company</strong>. Equity value is what <strong>common shareholders</strong> receive.
+          <hr /></p>
+        <h3>Residual Income Model</h3>For banks and financial institutions where book value is meaningful:
+        <pre><code class="language-swift">// Regional bank<p></p><p>let riPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Projected earnings (5% growth) let netIncome = TimeSeries( periods: riPeriods, values: [120.0, 126.0, 132.3] // Millions )</p><p>// Book value of equity (grows with retained earnings) let bookValue = TimeSeries( periods: riPeriods, values: [1000.0, 1050.0, 1102.5] // Millions )</p><p>let riModel = ResidualIncomeModel( currentBookValue: 1000.0, netIncome: netIncome, bookValue: bookValue, costOfEquity: 0.10, terminalGrowthRate: 0.03 )</p><p>let riEquityValue = riModel.equityValue() let riSharePrice = riModel.valuePerShare(sharesOutstanding: 100.0)</p><p>print(”\nResidual Income Model”) print(”======================”) print(“Current Book Value: (riModel.currentBookValue.currency(0))M”) print(“Equity Value: (riEquityValue.currency(0))M”) print(“Value Per Share: (riSharePrice.currency(2))”) print(“Book Value Per Share: ((riModel.currentBookValue / 100.0).currency(2))”)</p><p>let priceToBooksRatio = riSharePrice / (riModel.currentBookValue / 100.0) print(”\nPrice-to-Book Ratio: (priceToBooksRatio.number(2))x”)</p><p>// Show residual income (economic profit) let residualIncome = riModel.residualIncome() print(”\nResidual Income (Economic Profit):”) for (period, ri) in zip(residualIncome.periods, residualIncome.valuesArray) { let verdict = ri &gt; 0 ? “creating value” : “destroying value” print(” (period.label): (ri.currency(1))M ((verdict))”) }</p></code><h1><code class="language-swift">// ROE analysis let roe = riModel.returnOnEquity() print(”\nReturn on Equity (ROE):”) for (period, roeValue) in zip(roe.periods, roe.valuesArray) { let spread = roeValue - riModel.costOfEquity print(” (period.label): (roeValue.percent(1)) (spread over cost of equity: (spread.percent(1)))”) } </code></h1></pre>
+        <strong>Output:</strong>
+        <pre><code>Residual Income ModelCurrent Book Value: $1,000M Equity Value: $1,296M Value Per Share: $12.96 Book Value Per Share: $10.00<p></p><p>Price-to-Book Ratio: 1.30x</p><p>Residual Income (Economic Profit): 2024: $20.0M (creating value) 2025: $21.0M (creating value) 2026: $22.1M (creating value)</p></code><p><code>Return on Equity (ROE): 2024: 12.0% (spread over cost of equity: 2.0%) 2025: 12.0% (spread over cost of equity: 2.0%) 2026: 12.0% (spread over cost of equity: 2.0%) </code></p></pre>
+        <strong>The formula</strong>: Equity Value = Book Value + PV(Residual Income)
+        <p></p>
+        <p><strong>Residual Income</strong> = Net Income - (Cost of Equity × Beginning Book Value)</p>
+        <p><strong>The insight</strong>: The bank trades at <strong>1.25x book</strong> because ROE (12%) exceeds cost of equity (10%). The 2% spread creates positive residual income and a premium valuation.
+          <hr /></p>
+        <h3>Multi-Model Valuation Summary</h3>In practice, use multiple methods and triangulate:
+        <pre><code class="language-swift">print(”\n” + String(repeating: “=”, count: 50)) print(“COMPREHENSIVE VALUATION SUMMARY”) print(String(repeating: “=”, count: 50))<p></p><p>struct ValuationSummary { let method: String let value: Double let confidence: String let bestFor: String }</p><p>let valuations = [ ValuationSummary( method: “Gordon Growth DDM”, value: 50.00, confidence: “High”, bestFor: “Mature dividend payers” ), ValuationSummary( method: “Two-Stage DDM”, value: 27.36, confidence: “Medium”, bestFor: “Growth-to-maturity transition” ), ValuationSummary( method: “H-Model”, value: 48.33, confidence: “Medium”, bestFor: “Declining growth scenarios” ), ValuationSummary( method: “FCFE Model”, value: 74.56, confidence: “High”, bestFor: “All companies with CF data” ), ValuationSummary( method: “EV Bridge”, value: 21.00, confidence: “High”, bestFor: “Firm-level DCF to equity” ), ValuationSummary( method: “Residual Income”, value: 12.45, confidence: “High”, bestFor: “Financial institutions” ) ]</p><p>print(”\nMethod | Value | Confidence | Best For”) print(”–––––––––––|–––––|————|————————”)</p><p>for v in valuations { print(”(v.method.padding(toLength: 21, withPad: “ “, startingAt: 0)) | (v.value.currency(2).padding(toLength: 8, withPad: “ “, startingAt: 0)) | (v.confidence.padding(toLength: 10, withPad: “ “, startingAt: 0)) | (v.bestFor)”) }</p><p>// Calculate valuation range let values = valuations.map { $0.value } let minValue = values.min()! let maxValue = values.max()! let medianValue = values.sorted()[values.count / 2]</p></code><h1><code class="language-swift">print(”\nValuation Range:”) print(” Low: (minValue.currency(2))”) print(” Median: (medianValue.currency(2))”) print(” High: (maxValue.currency(2))”) print(” Spread: ((maxValue - minValue).currency(2)) ((((maxValue - minValue) / medianValue).percent()))”) </code></h1></pre>
+        <strong>Output:</strong>
+        <pre><code>================================================== COMPREHENSIVE VALUATION SUMMARY
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Method</th>
+                  <th scope="col">Value</th>
+                  <th scope="col">Confidence</th>
+                  <th scope="col">Best For</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Gordon Growth DDM</td>
+                  <td>$50.00</td>
+                  <td>High</td>
+                  <td>Mature dividend payers</td>
+                </tr>
+                <tr>
+                  <td>Two-Stage DDM</td>
+                  <td>$27.36</td>
+                  <td>Medium</td>
+                  <td>Growth-to-maturity transition</td>
+                </tr>
+                <tr>
+                  <td>H-Model</td>
+                  <td>$48.33</td>
+                  <td>Medium</td>
+                  <td>Declining growth scenarios</td>
+                </tr>
+                <tr>
+                  <td>FCFE Model</td>
+                  <td>$74.56</td>
+                  <td>High</td>
+                  <td>All companies with CF data</td>
+                </tr>
+                <tr>
+                  <td>EV Bridge</td>
+                  <td>$21.00</td>
+                  <td>High</td>
+                  <td>Firm-level DCF to equity</td>
+                </tr>
+                <tr>
+                  <td>Residual Income</td>
+                  <td>$12.45</td>
+                  <td>High</td>
+                  <td>Financial institutions</td>
+                </tr>
+              </tbody>
+            </table>Valuation Range: Low:    $12.45 Median: $48.33 High:   $74.56 Spread: $62.11 (128.51%) </code></pre>
+        <strong>The reality</strong>: Different models give 
+        <strong>vastly different values</strong> depending on company type and assumptions. This is why equity valuation is 
+        <strong>art + science</strong>.
+        <p></p>
+        <p><strong>The approach</strong>: Weight models based on company characteristics, cross-check assumptions, establish a range.
+          <hr /></p>
+        <h2>Try It Yourself</h2>
+        <details>
+          <summary>Click to expand full playground code</summary>
+          <pre><code class="language-swift">import BusinessMath
 import Foundation
 // MARK: - Gordon Growth Model
 <p></p><p>// Mature utility company // - Current dividend: $2.50/share // - Growth: 4% annually (stable) // - Required return: 9% (cost of equity)</p><p>let utilityStock = GordonGrowthModel( dividendPerShare: 2.50, growthRate: 0.04, requiredReturn: 0.09 )</p><p>let intrinsicValue = utilityStock.valuePerShare()</p><p>print(“Gordon Growth Model Valuation”) print(”==============================”) print(“Current Dividend: $2.50”) print(“Growth Rate: 4.0%”) print(“Required Return: 9.0%”) print(“Intrinsic Value: (intrinsicValue.currency(2))”)</p><p>// Compare to market price let marketPrice = 48.00 let assessment = intrinsicValue &gt; marketPrice ? “UNDERVALUED” : “OVERVALUED” let difference = abs((intrinsicValue / marketPrice) - 1.0)</p><p>print(”\nMarket Price: (marketPrice.currency())”) print(“Assessment: (assessment) by (difference.percent(1))”)</p></code>
-              <div>
-                <code class="language-swift"><p>// MARK: - Two-Stage Growth Model</p><pre><code>// Technology company: High growth → Maturity // - Current dividend: $1.00/share // - High growth: 20% for 5 years // - Stable growth: 5% thereafter // - Required return: 12% (higher risk)<p></p><p>let techStock = TwoStageDDM( currentDividend: 1.00, highGrowthRate: 0.20, highGrowthPeriods: 5, stableGrowthRate: 0.05, requiredReturn: 0.12 )</p><p>let techValue = techStock.valuePerShare()</p><p>print(”\nTwo-Stage DDM Valuation”) print(”========================”) print(“Current Dividend: $1.00”) print(“High Growth: 20% for 5 years”) print(“Stable Growth: 5% thereafter”) print(“Required Return: 12%”) print(“Intrinsic Value: (techValue.currency(2))”)</p><p>// Break down components let highGrowthValue = techStock.highGrowthPhaseValue() let terminalValue = techStock.terminalValue()</p></code><p><code>print(”\nValue Decomposition:”) print(” High Growth Phase: (highGrowthValue.currency())”) print(” Terminal Value (PV): (terminalValue.currency())”) print(” Total: ((highGrowthValue + terminalValue).currency())”) </code></p></pre>// MARK: - H-Model (Declining Growth)<pre><code>// Emerging market company // - Current dividend: $2.00 // - Initial growth: 15% (current) // - Terminal growth: 5% (mature) // - Half-life: 8 years (time to decline) // - Required return: 11%<p></p><p>let emergingStock = HModel( currentDividend: 2.00, initialGrowthRate: 0.15, terminalGrowthRate: 0.05, halfLife: 8, requiredReturn: 0.11 )</p><p>let emergingValue = emergingStock.valuePerShare()</p></code><p><code>print(”\nH-Model Valuation”) print(”==================”) print(“Current Dividend: $2.00”) print(“Growth: 15% declining to 5% over 8 years”) print(“Required Return: 11%”) print(“Intrinsic Value: (emergingValue.currency(2))”) </code></p></pre>// MARK: - Free Cash Flow to Equity (FCFE)<pre><code>// High-growth tech company (no dividends)<p></p><p>let periods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Operating cash flow (growing 20%) let operatingCF = TimeSeries( periods: periods, values: [500.0, 600.0, 720.0] // Millions )</p><p>// Capital expenditures (also growing 20%) let capEx = TimeSeries( periods: periods, values: [100.0, 120.0, 144.0] // Millions )</p><p>let fcfeModel = FCFEModel( operatingCashFlow: operatingCF, capitalExpenditures: capEx, netBorrowing: nil, // No debt changes costOfEquity: 0.12, terminalGrowthRate: 0.05 )</p><p>// Total equity value let totalEquityValue = fcfeModel.equityValue()</p><p>// Value per share (100M shares outstanding) let sharesOutstanding = 100.0 let fcfeSharePrice = fcfeModel.valuePerShare(sharesOutstanding: sharesOutstanding)</p><p>print(”\nFCFE Model Valuation”) print(”====================”) print(“Total Equity Value: (totalEquityValue.currency(0))M”) print(“Shares Outstanding: (sharesOutstanding.number(0))M”) print(“Value Per Share: (fcfeSharePrice.currency(2))”)</p></code><p><code>// Show FCFE breakdown let fcfeValues = fcfeModel.fcfe() print(”\nProjected FCFE:”) for (period, value) in zip(fcfeValues.periods, fcfeValues.valuesArray) { print(” (period.label): (value.currency(0))M”) } </code></p></pre>// MARK: - Enterprise Value Bridge<pre><code>// Step 1: Calculate Enterprise Value from FCFF<p></p><p>let fcffPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>let fcff = TimeSeries( periods: fcffPeriods, values: [150.0, 165.0, 181.5] // Growing 10% (millions) )</p><p>let enterpriseValue = enterpriseValueFromFCFF( freeCashFlowToFirm: fcff, wacc: 0.09, terminalGrowthRate: 0.03 )</p><p>print(”\nEnterprise Value Bridge”) print(”========================”) print(“Enterprise Value: (enterpriseValue.currency(0))M”)</p><p>// Step 2: Bridge to Equity Value let bridge = EnterpriseValueBridge( enterpriseValue: enterpriseValue, totalDebt: 500.0, // Total debt outstanding cash: 100.0, // Cash and equivalents nonOperatingAssets: 50.0, // Marketable securities minorityInterest: 20.0, // Minority shareholders preferredStock: 30.0 // Preferred equity )</p><p>let breakdown = bridge.breakdown()</p><p>print(”\nBridge to Equity:”) print(” Enterprise Value: (breakdown.enterpriseValue.currency(0))M”) print(” - Net Debt: (breakdown.netDebt.currency(0))M”) print(” + Non-Op Assets: (breakdown.nonOperatingAssets.currency(0))M”) print(” - Minority Interest: (breakdown.minorityInterest.currency(0))M”) print(” - Preferred Stock: (breakdown.preferredStock.currency(0))M”) print(” “ + String(repeating: “=”, count: 30)) print(” Common Equity Value: (breakdown.equityValue.currency(0))M”)</p></code><p><code>let bridgeSharePrice = bridge.valuePerShare(sharesOutstanding: 100.0) print(”\nValue Per Share: (bridgeSharePrice.currency(2))”) </code></p></pre>// MARK: - Residual Income Model<pre><code>// Regional bank<p></p><p>let riPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Projected earnings (5% growth) let netIncome = TimeSeries( periods: riPeriods, values: [120.0, 126.0, 132.3] // Millions )</p><p>// Book value of equity (grows with retained earnings) let bookValue = TimeSeries( periods: riPeriods, values: [1000.0, 1050.0, 1102.5] // Millions )</p><p>let riModel = ResidualIncomeModel( currentBookValue: 1000.0, netIncome: netIncome, bookValue: bookValue, costOfEquity: 0.10, terminalGrowthRate: 0.03 )</p><p>let riEquityValue = riModel.equityValue() let riSharePrice = riModel.valuePerShare(sharesOutstanding: 100.0)</p><p>print(”\nResidual Income Model”) print(”======================”) print(“Current Book Value: (riModel.currentBookValue.currency(0))M”) print(“Equity Value: (riEquityValue.currency(0))M”) print(“Value Per Share: (riSharePrice.currency(2))”) print(“Book Value Per Share: ((riModel.currentBookValue / 100.0).currency(2))”)</p><p>let priceToBooksRatio = riSharePrice / (riModel.currentBookValue / 100.0) print(”\nPrice-to-Book Ratio: (priceToBooksRatio.number(2))x”)</p><p>// Show residual income (economic profit) let residualIncome = riModel.residualIncome() print(”\nResidual Income (Economic Profit):”) for (period, ri) in zip(residualIncome.periods, residualIncome.valuesArray) { let verdict = ri &gt; 0 ? “creating value” : “destroying value” print(” (period.label): (ri.currency(1))M ((verdict))”) }</p></code><p><code>// ROE analysis let roe = riModel.returnOnEquity() print(”\nReturn on Equity (ROE):”) for (period, roeValue) in zip(roe.periods, roe.valuesArray) { let spread = roeValue - riModel.costOfEquity print(” (period.label): (roeValue.percent(1)) (spread over cost of equity: (spread.percent(1)))”) } </code></p></pre>// MARK: - Multi-Model Valuation Summary<p></p></code>
-              </div><p>print(”\n” + String(repeating: “=”, count: 50)) print(“COMPREHENSIVE VALUATION SUMMARY”) print(String(repeating: “=”, count: 50))</p><p>struct ValuationSummary { let method: String let value: Double let confidence: String let bestFor: String }</p><p>let valuations = [ ValuationSummary( method: “Gordon Growth DDM”, value: 50.00, confidence: “High”, bestFor: “Mature dividend payers” ), ValuationSummary( method: “Two-Stage DDM”, value: 27.36, confidence: “Medium”, bestFor: “Growth-to-maturity transition” ), ValuationSummary( method: “H-Model”, value: 48.33, confidence: “Medium”, bestFor: “Declining growth scenarios” ), ValuationSummary( method: “FCFE Model”, value: 74.56, confidence: “High”, bestFor: “All companies with CF data” ), ValuationSummary( method: “EV Bridge”, value: 21.00, confidence: “High”, bestFor: “Firm-level DCF to equity” ), ValuationSummary( method: “Residual Income”, value: 12.45, confidence: “High”, bestFor: “Financial institutions” ) ]</p><p>print(”\nMethod                | Value    | Confidence | Best For”) print(”–––––––––––|–––––|————|————————”)</p><p>for v in valuations { print(”(v.method.padding(toLength: 21, withPad: “ “, startingAt: 0)) | (v.value.currency(2).padding(toLength: 8, withPad: “ “, startingAt: 0)) | (v.confidence.padding(toLength: 10, withPad: “ “, startingAt: 0)) | (v.bestFor)”) }</p><p>// Calculate valuation range let values = valuations.map { $0.value } let minValue = values.min()! let maxValue = values.max()! let medianValue = values.sorted()[values.count / 2]</p><p>print(”\nValuation Range:”) print(”  Low:    (minValue.currency(2))”) print(”  Median: (medianValue.currency(2))”) print(”  High:   (maxValue.currency(2))”) print(”  Spread: ((maxValue - minValue).currency(2)) ((((maxValue - minValue) / medianValue).percent()))”)</p><p></p></pre>
-          </details>
-          <p></p>
-          <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.9-EquityValuationGuide.md"><strong>BusinessMath Docs – 3.9 Equity Valuation</strong></a></p>
-          <p><strong>Modifications to try</strong>:</p>
-          <ol>
-            <li>Value your favorite public company using multiple methods</li>
-            <li>Build a comp table comparing 5 companies in the same industry</li>
-            <li>Model different growth scenarios (bear/base/bull)</li>
-            <li>Calculate implied cost of equity from market prices</li>
-          </ol>
-          <hr />
-          <h2>Real-World Application</h2>Every equity analyst, portfolio manager, and investment banker uses these models:
-          <ul>
-            <li><strong>Buy-side analysts</strong>: Building DCF models for stock recommendations</li>
-            <li><strong>Investment banking</strong>: Valuing targets for M&amp;A advisory</li>
-            <li><strong>Private equity</strong>: Pricing buyout opportunities</li>
-            <li><strong>Venture capital</strong>: Valuing pre-IPO companies (with adjustments)</li>
-          </ul>
-          <strong>Equity research use case</strong>: “Value Tesla using FCFE. Assume 25% revenue CAGR for 5 years, then 8% perpetual growth. Cost of equity 12%. Compare to current market price.”
-          <p></p>
-          <p>BusinessMath makes these valuations programmatic, scenario-testable, and portfolio-wide.
-            <hr /><code>★ Insight ─────────────────────────────────────</code></p>
-          <p><strong>Why Do Valuations Vary So Much Across Methods?</strong></p>
-          <p>In our example, valuations ranged from $12.45 to $74.56 (6x difference!). Why?</p>
-          <p><strong>Each model captures different aspects</strong>:</p>
-          <ul>
-            <li><strong>DDM</strong>: Only values distributed cash (dividends)</li>
-            <li><strong>FCFE</strong>: Values all available cash (includes retained earnings)</li>
-            <li><strong>Residual Income</strong>: Values earnings power relative to book value</li>
-            <li><strong>EV Bridge</strong>: Values the entire firm, then allocates to equity</li>
-          </ul>
-          <strong>Which is “right”?</strong> Depends on the company:
-          <ul>
-            <li><strong>Utilities</strong>: DDM works (stable dividends)</li>
-            <li><strong>Tech growth</strong>: FCFE works (no dividends, high growth)</li>
-            <li><strong>Banks</strong>: Residual Income works (book value meaningful)</li>
-            <li><strong>Conglomerates</strong>: EV Bridge works (complex capital structure)</li>
-          </ul>
-          <strong>The lesson</strong>: No single model is universally correct. Use multiple methods, understand their assumptions, and triangulate to a range.
-          <p></p>
-          <p><code>─────────────────────────────────────────────────</code>
-            <hr /></p>
-          <h3>📝 Development Note</h3>The biggest design challenge was 
-          <strong>modeling growth transitions</strong>. Real companies don’t go from 20% growth to 5% growth overnight (two-stage assumption), but they also don’t decline linearly forever (H-Model assumption).
-          <p></p>
-          <p>We considered implementing a <strong>three-stage model</strong> (high growth → declining growth → stable), but decided against it because:</p>
-          <ol>
-            <li>More parameters = more estimation error</li>
-            <li>Users can chain models (two-stage + H-Model)</li>
-            <li>Diminishing returns on complexity</li>
-          </ol>
-          <strong>The principle</strong>: Provide flexible primitives rather than complex all-in-one models.
-          <p></p>
-          <p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - We wrote tutorial examples first to ensure APIs were learnable before implementing.
-            <hr /></p>
-          <h2>Next Steps</h2>
-          <strong>Coming up tomorrow</strong>: Bond Valuation - Pricing fixed income, credit spreads, callable bonds, and option-adjusted spreads.
-          <p></p>
-          <p><strong>Next week</strong>: Monte Carlo simulation and scenario analysis for risk modeling.
-            <hr /><strong>Series Progress</strong>:</p>
-          <ul>
-            <li>Week: 5/12</li>
-            <li>Posts Published: 18/~48</li>
-            <li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Loans + Investments + Equity</li>
-            <li>Playgrounds: 17 available</li>
-          </ul>
-          <p></p>
-        </div>
+            <div>
+              <code class="language-swift"><p>// MARK: - Two-Stage Growth Model</p><pre><code>// Technology company: High growth → Maturity // - Current dividend: $1.00/share // - High growth: 20% for 5 years // - Stable growth: 5% thereafter // - Required return: 12% (higher risk)<p></p><p>let techStock = TwoStageDDM( currentDividend: 1.00, highGrowthRate: 0.20, highGrowthPeriods: 5, stableGrowthRate: 0.05, requiredReturn: 0.12 )</p><p>let techValue = techStock.valuePerShare()</p><p>print(”\nTwo-Stage DDM Valuation”) print(”========================”) print(“Current Dividend: $1.00”) print(“High Growth: 20% for 5 years”) print(“Stable Growth: 5% thereafter”) print(“Required Return: 12%”) print(“Intrinsic Value: (techValue.currency(2))”)</p><p>// Break down components let highGrowthValue = techStock.highGrowthPhaseValue() let terminalValue = techStock.terminalValue()</p></code><p><code>print(”\nValue Decomposition:”) print(” High Growth Phase: (highGrowthValue.currency())”) print(” Terminal Value (PV): (terminalValue.currency())”) print(” Total: ((highGrowthValue + terminalValue).currency())”) </code></p></pre>// MARK: - H-Model (Declining Growth)<pre><code>// Emerging market company // - Current dividend: $2.00 // - Initial growth: 15% (current) // - Terminal growth: 5% (mature) // - Half-life: 8 years (time to decline) // - Required return: 11%<p></p><p>let emergingStock = HModel( currentDividend: 2.00, initialGrowthRate: 0.15, terminalGrowthRate: 0.05, halfLife: 8, requiredReturn: 0.11 )</p><p>let emergingValue = emergingStock.valuePerShare()</p></code><p><code>print(”\nH-Model Valuation”) print(”==================”) print(“Current Dividend: $2.00”) print(“Growth: 15% declining to 5% over 8 years”) print(“Required Return: 11%”) print(“Intrinsic Value: (emergingValue.currency(2))”) </code></p></pre>// MARK: - Free Cash Flow to Equity (FCFE)<pre><code>// High-growth tech company (no dividends)<p></p><p>let periods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Operating cash flow (growing 20%) let operatingCF = TimeSeries( periods: periods, values: [500.0, 600.0, 720.0] // Millions )</p><p>// Capital expenditures (also growing 20%) let capEx = TimeSeries( periods: periods, values: [100.0, 120.0, 144.0] // Millions )</p><p>let fcfeModel = FCFEModel( operatingCashFlow: operatingCF, capitalExpenditures: capEx, netBorrowing: nil, // No debt changes costOfEquity: 0.12, terminalGrowthRate: 0.05 )</p><p>// Total equity value let totalEquityValue = fcfeModel.equityValue()</p><p>// Value per share (100M shares outstanding) let sharesOutstanding = 100.0 let fcfeSharePrice = fcfeModel.valuePerShare(sharesOutstanding: sharesOutstanding)</p><p>print(”\nFCFE Model Valuation”) print(”====================”) print(“Total Equity Value: (totalEquityValue.currency(0))M”) print(“Shares Outstanding: (sharesOutstanding.number(0))M”) print(“Value Per Share: (fcfeSharePrice.currency(2))”)</p></code><p><code>// Show FCFE breakdown let fcfeValues = fcfeModel.fcfe() print(”\nProjected FCFE:”) for (period, value) in zip(fcfeValues.periods, fcfeValues.valuesArray) { print(” (period.label): (value.currency(0))M”) } </code></p></pre>// MARK: - Enterprise Value Bridge<pre><code>// Step 1: Calculate Enterprise Value from FCFF<p></p><p>let fcffPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>let fcff = TimeSeries( periods: fcffPeriods, values: [150.0, 165.0, 181.5] // Growing 10% (millions) )</p><p>let enterpriseValue = enterpriseValueFromFCFF( freeCashFlowToFirm: fcff, wacc: 0.09, terminalGrowthRate: 0.03 )</p><p>print(”\nEnterprise Value Bridge”) print(”========================”) print(“Enterprise Value: (enterpriseValue.currency(0))M”)</p><p>// Step 2: Bridge to Equity Value let bridge = EnterpriseValueBridge( enterpriseValue: enterpriseValue, totalDebt: 500.0, // Total debt outstanding cash: 100.0, // Cash and equivalents nonOperatingAssets: 50.0, // Marketable securities minorityInterest: 20.0, // Minority shareholders preferredStock: 30.0 // Preferred equity )</p><p>let breakdown = bridge.breakdown()</p><p>print(”\nBridge to Equity:”) print(” Enterprise Value: (breakdown.enterpriseValue.currency(0))M”) print(” - Net Debt: (breakdown.netDebt.currency(0))M”) print(” + Non-Op Assets: (breakdown.nonOperatingAssets.currency(0))M”) print(” - Minority Interest: (breakdown.minorityInterest.currency(0))M”) print(” - Preferred Stock: (breakdown.preferredStock.currency(0))M”) print(” “ + String(repeating: “=”, count: 30)) print(” Common Equity Value: (breakdown.equityValue.currency(0))M”)</p></code><p><code>let bridgeSharePrice = bridge.valuePerShare(sharesOutstanding: 100.0) print(”\nValue Per Share: (bridgeSharePrice.currency(2))”) </code></p></pre>// MARK: - Residual Income Model<pre><code>// Regional bank<p></p><p>let riPeriods = [ Period.year(2024), Period.year(2025), Period.year(2026) ]</p><p>// Projected earnings (5% growth) let netIncome = TimeSeries( periods: riPeriods, values: [120.0, 126.0, 132.3] // Millions )</p><p>// Book value of equity (grows with retained earnings) let bookValue = TimeSeries( periods: riPeriods, values: [1000.0, 1050.0, 1102.5] // Millions )</p><p>let riModel = ResidualIncomeModel( currentBookValue: 1000.0, netIncome: netIncome, bookValue: bookValue, costOfEquity: 0.10, terminalGrowthRate: 0.03 )</p><p>let riEquityValue = riModel.equityValue() let riSharePrice = riModel.valuePerShare(sharesOutstanding: 100.0)</p><p>print(”\nResidual Income Model”) print(”======================”) print(“Current Book Value: (riModel.currentBookValue.currency(0))M”) print(“Equity Value: (riEquityValue.currency(0))M”) print(“Value Per Share: (riSharePrice.currency(2))”) print(“Book Value Per Share: ((riModel.currentBookValue / 100.0).currency(2))”)</p><p>let priceToBooksRatio = riSharePrice / (riModel.currentBookValue / 100.0) print(”\nPrice-to-Book Ratio: (priceToBooksRatio.number(2))x”)</p><p>// Show residual income (economic profit) let residualIncome = riModel.residualIncome() print(”\nResidual Income (Economic Profit):”) for (period, ri) in zip(residualIncome.periods, residualIncome.valuesArray) { let verdict = ri &gt; 0 ? “creating value” : “destroying value” print(” (period.label): (ri.currency(1))M ((verdict))”) }</p></code><p><code>// ROE analysis let roe = riModel.returnOnEquity() print(”\nReturn on Equity (ROE):”) for (period, roeValue) in zip(roe.periods, roe.valuesArray) { let spread = roeValue - riModel.costOfEquity print(” (period.label): (roeValue.percent(1)) (spread over cost of equity: (spread.percent(1)))”) } </code></p></pre>// MARK: - Multi-Model Valuation Summary<p></p></code>
+            </div><p>print(”\n” + String(repeating: “=”, count: 50)) print(“COMPREHENSIVE VALUATION SUMMARY”) print(String(repeating: “=”, count: 50))</p><p>struct ValuationSummary { let method: String let value: Double let confidence: String let bestFor: String }</p><p>let valuations = [ ValuationSummary( method: “Gordon Growth DDM”, value: 50.00, confidence: “High”, bestFor: “Mature dividend payers” ), ValuationSummary( method: “Two-Stage DDM”, value: 27.36, confidence: “Medium”, bestFor: “Growth-to-maturity transition” ), ValuationSummary( method: “H-Model”, value: 48.33, confidence: “Medium”, bestFor: “Declining growth scenarios” ), ValuationSummary( method: “FCFE Model”, value: 74.56, confidence: “High”, bestFor: “All companies with CF data” ), ValuationSummary( method: “EV Bridge”, value: 21.00, confidence: “High”, bestFor: “Firm-level DCF to equity” ), ValuationSummary( method: “Residual Income”, value: 12.45, confidence: “High”, bestFor: “Financial institutions” ) ]</p><p>print(”\nMethod                | Value    | Confidence | Best For”) print(”–––––––––––|–––––|————|————————”)</p><p>for v in valuations { print(”(v.method.padding(toLength: 21, withPad: “ “, startingAt: 0)) | (v.value.currency(2).padding(toLength: 8, withPad: “ “, startingAt: 0)) | (v.confidence.padding(toLength: 10, withPad: “ “, startingAt: 0)) | (v.bestFor)”) }</p><p>// Calculate valuation range let values = valuations.map { $0.value } let minValue = values.min()! let maxValue = values.max()! let medianValue = values.sorted()[values.count / 2]</p><p>print(”\nValuation Range:”) print(”  Low:    (minValue.currency(2))”) print(”  Median: (medianValue.currency(2))”) print(”  High:   (maxValue.currency(2))”) print(”  Spread: ((maxValue - minValue).currency(2)) ((((maxValue - minValue) / medianValue).percent()))”)</p><p></p></pre>
+        </details>
+        <p></p>
+        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.9-EquityValuationGuide.md"><strong>BusinessMath Docs – 3.9 Equity Valuation</strong></a></p>
+        <p><strong>Modifications to try</strong>:</p>
+        <ol>
+          <li>Value your favorite public company using multiple methods</li>
+          <li>Build a comp table comparing 5 companies in the same industry</li>
+          <li>Model different growth scenarios (bear/base/bull)</li>
+          <li>Calculate implied cost of equity from market prices</li>
+        </ol>
         <hr />
-        <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, equity-valuation, ddm, fcfe, residual-income, stock-valuation</p>
+        <h2>Real-World Application</h2>Every equity analyst, portfolio manager, and investment banker uses these models:
+        <ul>
+          <li><strong>Buy-side analysts</strong>: Building DCF models for stock recommendations</li>
+          <li><strong>Investment banking</strong>: Valuing targets for M&amp;A advisory</li>
+          <li><strong>Private equity</strong>: Pricing buyout opportunities</li>
+          <li><strong>Venture capital</strong>: Valuing pre-IPO companies (with adjustments)</li>
+        </ul>
+        <strong>Equity research use case</strong>: “Value Tesla using FCFE. Assume 25% revenue CAGR for 5 years, then 8% perpetual growth. Cost of equity 12%. Compare to current market price.”
+        <p></p>
+        <p>BusinessMath makes these valuations programmatic, scenario-testable, and portfolio-wide.
+          <hr /><code>★ Insight ─────────────────────────────────────</code></p>
+        <p><strong>Why Do Valuations Vary So Much Across Methods?</strong></p>
+        <p>In our example, valuations ranged from $12.45 to $74.56 (6x difference!). Why?</p>
+        <p><strong>Each model captures different aspects</strong>:</p>
+        <ul>
+          <li><strong>DDM</strong>: Only values distributed cash (dividends)</li>
+          <li><strong>FCFE</strong>: Values all available cash (includes retained earnings)</li>
+          <li><strong>Residual Income</strong>: Values earnings power relative to book value</li>
+          <li><strong>EV Bridge</strong>: Values the entire firm, then allocates to equity</li>
+        </ul>
+        <strong>Which is “right”?</strong> Depends on the company:
+        <ul>
+          <li><strong>Utilities</strong>: DDM works (stable dividends)</li>
+          <li><strong>Tech growth</strong>: FCFE works (no dividends, high growth)</li>
+          <li><strong>Banks</strong>: Residual Income works (book value meaningful)</li>
+          <li><strong>Conglomerates</strong>: EV Bridge works (complex capital structure)</li>
+        </ul>
+        <strong>The lesson</strong>: No single model is universally correct. Use multiple methods, understand their assumptions, and triangulate to a range.
+        <p></p>
+        <p><code>─────────────────────────────────────────────────</code>
+          <hr /></p>
+        <h3>📝 Development Note</h3>The biggest design challenge was 
+        <strong>modeling growth transitions</strong>. Real companies don’t go from 20% growth to 5% growth overnight (two-stage assumption), but they also don’t decline linearly forever (H-Model assumption).
+        <p></p>
+        <p>We considered implementing a <strong>three-stage model</strong> (high growth → declining growth → stable), but decided against it because:</p>
+        <ol>
+          <li>More parameters = more estimation error</li>
+          <li>Users can chain models (two-stage + H-Model)</li>
+          <li>Diminishing returns on complexity</li>
+        </ol>
+        <strong>The principle</strong>: Provide flexible primitives rather than complex all-in-one models.
+        <p></p>
+        <p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design">Documentation as Design</a> (Week 2) - We wrote tutorial examples first to ensure APIs were learnable before implementing.
+          <hr /></p>
+        <h2>Next Steps</h2>
+        <strong>Coming up tomorrow</strong>: Bond Valuation - Pricing fixed income, credit spreads, callable bonds, and option-adjusted spreads.
+        <p></p>
+        <p><strong>Next week</strong>: Monte Carlo simulation and scenario analysis for risk modeling.
+          <hr /><strong>Series Progress</strong>:</p>
+        <ul>
+          <li>Week: 5/12</li>
+          <li>Posts Published: 18/~48</li>
+          <li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Loans + Investments + Equity</li>
+          <li>Playgrounds: 17 available</li>
+        </ul>
+        <p></p>
       </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmath, swift, equity-valuation, ddm, fcfe, residual-income, stock-valuation</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
