@@ -1,6 +1,6 @@
 ---
 title: Particle Swarm Optimization: Collective Intelligence for Global Search
-date: 2026-03-19 13:00
+date: 2026-03-18 13:00
 series: BusinessMath Quarterly Series
 week: 11
 post: 2

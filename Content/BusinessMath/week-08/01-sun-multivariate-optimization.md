@@ -1,6 +1,6 @@
 ---
 title: Multivariate Optimization: Gradient Descent to Newton-Raphson
-date: 2026-02-23 16:54
+date: 2026-02-22 16:54
 series: BusinessMath Quarterly Series
 week: 8
 post: 1

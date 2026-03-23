@@ -1,6 +1,6 @@
 ---
 title: Integer Programming: Optimal Decisions with Whole Numbers
-date: 2026-03-04 13:00
+date: 2026-03-03 13:00
 series: BusinessMath Quarterly Series
 week: 9
 post: 2

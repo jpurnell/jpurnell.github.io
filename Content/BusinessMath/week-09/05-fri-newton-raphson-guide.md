@@ -1,6 +1,6 @@
 ---
 title: "Newton-Raphson: When Fast Convergence Becomes a Liability"
-date: 2026-03-07 13:00
+date: 2026-03-06 13:00
 series: BusinessMath Quarterly Series
 week: 9
 post: 5

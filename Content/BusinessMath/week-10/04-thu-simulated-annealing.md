@@ -1,6 +1,6 @@
 ---
 title: Simulated Annealing: Global Optimization Without Gradients
-date: 2026-03-13 13:00
+date: 2026-03-12 13:00
 series: BusinessMath Quarterly Series
 week: 10
 post: 4

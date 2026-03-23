@@ -1,6 +1,6 @@
 ---
 title: Case Study: Real-Time Portfolio Rebalancing with Async Optimization
-date: 2026-03-21 13:00
+date: 2026-03-20 13:00
 series: BusinessMath Quarterly Series
 week: 11
 post: 3

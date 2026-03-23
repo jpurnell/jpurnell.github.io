@@ -1,6 +1,6 @@
 ---
 title: L-BFGS Optimization: Memory-Efficient Large-Scale Optimization
-date: 2026-03-11 07:30
+date: 2026-03-10 07:30
 series: BusinessMath Quarterly Series
 week: 10
 post: 2

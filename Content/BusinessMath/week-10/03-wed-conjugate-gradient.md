@@ -1,6 +1,6 @@
 ---
 title: Conjugate Gradient: Efficient Optimization Without Hessians
-date: 2026-03-12 13:00
+date: 2026-03-11 13:00
 series: BusinessMath Quarterly Series
 week: 10
 post: 3

@@ -1,6 +1,6 @@
 ---
 title: Parallel Multi-Start Optimization: Finding Global Optima
-date: 2026-03-06 13:00
+date: 2026-03-05 13:00
 series: BusinessMath Quarterly Series
 week: 9
 post: 4

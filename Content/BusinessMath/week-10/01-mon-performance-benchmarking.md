@@ -1,6 +1,6 @@
 ---
 title: Performance Benchmarking: Measure, Compare, Optimize
-date: 2026-03-10 17:32
+date: 2026-03-09 17:32
 series: BusinessMath Quarterly Series
 week: 10
 post: 1

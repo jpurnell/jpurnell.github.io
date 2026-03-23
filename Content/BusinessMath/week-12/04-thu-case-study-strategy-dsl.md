@@ -1,6 +1,6 @@
 ---
 title: Case Study: Investment Strategy DSL with Result Builders
-date: 2026-03-27 13:00
+date: 2026-03-26 13:00
 series: BusinessMath Quarterly Series
 week: 12
 post: 4

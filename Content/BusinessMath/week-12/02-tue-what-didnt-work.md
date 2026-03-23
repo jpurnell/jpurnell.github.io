@@ -1,6 +1,6 @@
 ---
 title: What Didn't Work: Lessons from Failures and Dead Ends
-date: 2026-03-25 13:00
+date: 2026-03-24 13:00
 series: BusinessMath Quarterly Series
 week: 12
 post: 2

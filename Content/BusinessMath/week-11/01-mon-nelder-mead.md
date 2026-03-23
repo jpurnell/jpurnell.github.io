@@ -1,6 +1,6 @@
 ---
 title: Nelder-Mead Simplex: Robust Gradient-Free Optimization
-date: 2026-03-17 13:00
+date: 2026-03-16 13:00
 series: BusinessMath Quarterly Series
 week: 11
 post: 1

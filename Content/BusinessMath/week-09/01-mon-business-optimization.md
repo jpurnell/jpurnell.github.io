@@ -1,6 +1,6 @@
 ---
 title: Business Optimization Patterns: From Theory to Practice
-date: 2026-03-03 13:00
+date: 2026-03-02 13:00
 series: BusinessMath Quarterly Series
 week: 9
 post: 1

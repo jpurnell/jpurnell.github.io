@@ -1,12 +1,12 @@
 ---
 title: What Worked: Practices That Delivered Results
-date: 2026-03-24 13:00
+date: 2026-03-23 09:30
 series: BusinessMath Quarterly Series
 week: 12
 post: 1
 tags: development-process
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # What Worked: Practices That Delivered Results

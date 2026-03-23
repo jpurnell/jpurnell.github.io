@@ -1,6 +1,6 @@
 ---
 title: Adaptive Selection: Let BusinessMath Choose the Best Algorithm
-date: 2026-03-05 13:00
+date: 2026-03-04 13:00
 series: BusinessMath Quarterly Series
 week: 9
 post: 3
