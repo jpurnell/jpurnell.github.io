@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 41 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Final Statistics: By the Numbers | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-12/03-wed-final-statistics" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Final Statistics: By the Numbers" />
+    <meta name="twitter:title" content="Final Statistics: By the Numbers" />
+    <meta property="og:description" content="Part 41 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 41 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-12/03-wed-final-statistics" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
+    }
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-12/03-wed-final-statistics",
+      "name" : "Final Statistics: By the Numbers",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Final Statistics: By the Numbers</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 41 of 12-Week BusinessMath Series</strong>
+          <hr />After 12 weeks of building, testing, and documenting BusinessMath, here’s what we shipped—measured, benchmarked, and validated.
+          <hr /></p>
+        <h2>Test Coverage</h2>
+        <h3>Overall Test Statistics</h3>
+        <pre><code>═══════════════════════════════════════════════════════════ Test Suites:     353 Total Tests:     4,612 Source Files:    375 (production) + 288 (test) Public APIs:     4,712 (100% documented) ═══════════════════════════════════════════════════════════ </code></pre>
+        <h3>Tests by Module</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Module</th>
+              <th scope="col">Tests</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Financial Statements</strong></td>
+              <td>859</td>
+            </tr>
+            <tr>
+              <td><strong>Monte Carlo &amp; Simulation</strong></td>
+              <td>715</td>
+            </tr>
+            <tr>
+              <td><strong>Statistical Analysis</strong></td>
+              <td>706</td>
+            </tr>
+            <tr>
+              <td><strong>Portfolio &amp; Optimization</strong></td>
+              <td>652</td>
+            </tr>
+            <tr>
+              <td><strong>Time Series</strong></td>
+              <td>559</td>
+            </tr>
+            <tr>
+              <td><strong>Securities &amp; Valuation</strong></td>
+              <td>305</td>
+            </tr>
+            <tr>
+              <td><strong>Time Value of Money</strong></td>
+              <td>262</td>
+            </tr>
+            <tr>
+              <td><strong>Result Builders / Fluent API</strong></td>
+              <td>228</td>
+            </tr>
+            <tr>
+              <td><strong>Data Structures</strong></td>
+              <td>134</td>
+            </tr>
+            <tr>
+              <td><strong>Streaming</strong></td>
+              <td>80</td>
+            </tr>
+            <tr>
+              <td><strong>Async</strong></td>
+              <td>49</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Edge Case Coverage</h3>
+        <strong>Validated against</strong>:
+        <ul>
+          <li>Zero cash flows</li>
+          <li>Single-period calculations</li>
+          <li>Negative interest rates</li>
+          <li>Empty time series</li>
+          <li>Degenerate matrices</li>
+          <li>Ill-conditioned problems</li>
+          <li>Integer overflow scenarios</li>
+          <li>Floating-point precision limits</li>
+        </ul>
+        <strong>Result</strong>: 4,612 tests across 353 suites covering all edge case categories above.
+        <hr />
+        <h2>Performance Benchmarks</h2>
+        <h3>Time Value of Money (10,000 iterations)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Function</th>
+              <th scope="col">Time (ms)</th>
+              <th scope="col">Ops/sec</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>npv</code> (10 periods)</td>
+              <td>120</td>
+              <td>83,333</td>
+            </tr>
+            <tr>
+              <td><code>irr</code> (10 periods)</td>
+              <td>450</td>
+              <td>22,222</td>
+            </tr>
+            <tr>
+              <td><code>xnpv</code> (irregular)</td>
+              <td>280</td>
+              <td>35,714</td>
+            </tr>
+            <tr>
+              <td><code>mirr</code> (modified)</td>
+              <td>380</td>
+              <td>26,316</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Portfolio Optimization (100 assets)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Method</th>
+              <th scope="col">Time (s)</th>
+              <th scope="col">Quality Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Gradient Descent</td>
+              <td>2.8</td>
+              <td>0.0245</td>
+            </tr>
+            <tr>
+              <td>BFGS</td>
+              <td>4.2</td>
+              <td>0.0238</td>
+            </tr>
+            <tr>
+              <td>L-BFGS</td>
+              <td>2.1</td>
+              <td>0.0239</td>
+            </tr>
+            <tr>
+              <td>Genetic Algorithm (CPU)</td>
+              <td>12.5</td>
+              <td>0.0229</td>
+            </tr>
+            <tr>
+              <td>Genetic Algorithm (GPU)</td>
+              <td>1.8</td>
+              <td>0.0229</td>
+            </tr>
+            <tr>
+              <td>Simulated Annealing</td>
+              <td>8.9</td>
+              <td>0.0232</td>
+            </tr>
+            <tr>
+              <td>Particle Swarm</td>
+              <td>6.3</td>
+              <td>0.0230</td>
+            </tr>
+          </tbody>
+        </table>
+        <strong>GPU Speedup</strong> (M3 Max, 10,000 population):
+        <ul>
+          <li>1,000 population: 3× faster</li>
+          <li>10,000 population: 25× faster</li>
+          <li>100,000 population: 80× faster</li>
+        </ul>
+        <h3>Monte Carlo Simulation (10,000 iterations)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Scenario</th>
+              <th scope="col">Time (s)</th>
+              <th scope="col">Rate (iter/s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Single asset</td>
+              <td>0.82</td>
+              <td>12,195</td>
+            </tr>
+            <tr>
+              <td>Portfolio (10 assets)</td>
+              <td>2.34</td>
+              <td>4,274</td>
+            </tr>
+            <tr>
+              <td>Portfolio (50 assets)</td>
+              <td>8.12</td>
+              <td>1,232</td>
+            </tr>
+            <tr>
+              <td>With correlations</td>
+              <td>11.3</td>
+              <td>885</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Statistical Operations (1,000,000 data points)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Operation</th>
+              <th scope="col">Time (ms)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Mean</td>
+              <td>12</td>
+            </tr>
+            <tr>
+              <td>Median</td>
+              <td>185</td>
+            </tr>
+            <tr>
+              <td>Standard Deviation</td>
+              <td>18</td>
+            </tr>
+            <tr>
+              <td>Percentile (any)</td>
+              <td>192</td>
+            </tr>
+            <tr>
+              <td>Correlation Matrix (100×100)</td>
+              <td>450</td>
+            </tr>
+          </tbody>
+        </table>
+        <hr />
+        <h2>Code Metrics</h2>
+        <h3>Lines of Code</h3>
+        <pre><code>═══════════════════════════════════════════════════════════ Production Code:     107,801 lines Test Code:           115,036 lines Documentation:       48,490 lines Total:               271,327 lines ═══════════════════════════════════════════════════════════ </code></pre>
+        <h3>Module Breakdown</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Component</th>
+              <th scope="col">LOC</th>
+              <th scope="col">Files</th>
+              <th scope="col">Public APIs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Optimization</strong></td>
+              <td>28,291</td>
+              <td>64</td>
+              <td>1,107</td>
+            </tr>
+            <tr>
+              <td><strong>Financial Statements</strong></td>
+              <td>15,000</td>
+              <td>27</td>
+              <td>692</td>
+            </tr>
+            <tr>
+              <td><strong>Simulation</strong></td>
+              <td>8,779</td>
+              <td>38</td>
+              <td>360</td>
+            </tr>
+            <tr>
+              <td><strong>Statistics</strong></td>
+              <td>8,224</td>
+              <td>110</td>
+              <td>254</td>
+            </tr>
+            <tr>
+              <td><strong>Time Series</strong></td>
+              <td>7,704</td>
+              <td>16</td>
+              <td>198</td>
+            </tr>
+            <tr>
+              <td><strong>Fluent API</strong></td>
+              <td>7,680</td>
+              <td>12</td>
+              <td>568</td>
+            </tr>
+            <tr>
+              <td><strong>Streaming</strong></td>
+              <td>6,405</td>
+              <td>6</td>
+              <td>439</td>
+            </tr>
+            <tr>
+              <td><strong>Valuation</strong></td>
+              <td>6,167</td>
+              <td>13</td>
+              <td>237</td>
+            </tr>
+            <tr>
+              <td><strong>Scenario Analysis</strong></td>
+              <td>2,197</td>
+              <td>5</td>
+              <td>60</td>
+            </tr>
+            <tr>
+              <td><strong>Operational Drivers</strong></td>
+              <td>2,549</td>
+              <td>9</td>
+              <td>79</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Dependency Graph</h3>
+        <strong>External Dependencies</strong>: 3
+        <ul>
+          <li><code>swift-numerics</code> (Real protocol, generic math)</li>
+          <li><code>swift-collections</code> (specialized data structures)</li>
+          <li><code>swift-crypto</code> (Linux only — CryptoKit built-in on Apple platforms)</li>
+        </ul>
+        <strong>Internal Modules</strong>: 36 source directories (zero circular dependencies)
+        <hr />
+        <h2>Documentation Coverage</h2>
+        <h3>DocC Tutorials</h3>
+        <pre><code>═══════════════════════════════════════════════════════════ DocC Articles:       67 Total Lines:         48,490 (lines of documentation) Code Examples:       1,250 Swift code blocks Files with Examples: 65 Case Studies:        6 ═══════════════════════════════════════════════════════════ </code></pre>
+        <h3>Tutorial Categories</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col">Tutorials</th>
+              <th scope="col">Example Code Snippets</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Getting Started</strong></td>
+              <td>5</td>
+              <td>28</td>
+            </tr>
+            <tr>
+              <td><strong>Time Value of Money</strong></td>
+              <td>8</td>
+              <td>42</td>
+            </tr>
+            <tr>
+              <td><strong>Financial Analysis</strong></td>
+              <td>9</td>
+              <td>56</td>
+            </tr>
+            <tr>
+              <td><strong>Financial Modeling</strong></td>
+              <td>12</td>
+              <td>98</td>
+            </tr>
+            <tr>
+              <td><strong>Simulation</strong></td>
+              <td>6</td>
+              <td>35</td>
+            </tr>
+            <tr>
+              <td><strong>Optimization</strong></td>
+              <td>12</td>
+              <td>128</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>API Reference Coverage</h3>
+        <ul>
+          <li><strong>Public functions</strong>: 100% documented</li>
+          <li><strong>Public types</strong>: 100% documented</li>
+          <li><strong>Code examples</strong>: 1,250 Swift code blocks across 65 articles</li>
+        </ul>
+        <hr />
+        <h2>Release Statistics</h2>
+        <h3>Version History</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Version</th>
+              <th scope="col">Date</th>
+              <th scope="col">Changes</th>
+              <th scope="col">Breaking</th>
+              <th scope="col">Tests Added</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0.1.0</td>
+              <td>Oct 2025</td>
+              <td>Initial release</td>
+              <td>N/A</td>
+              <td>450</td>
+            </tr>
+            <tr>
+              <td>0.5.0</td>
+              <td>Nov 2025</td>
+              <td>Financial statements</td>
+              <td>Yes</td>
+              <td>412</td>
+            </tr>
+            <tr>
+              <td>1.0.0</td>
+              <td>Dec 2025</td>
+              <td>Optimization suite</td>
+              <td>No</td>
+              <td>502</td>
+            </tr>
+            <tr>
+              <td>1.5.0</td>
+              <td>Jan 2026</td>
+              <td>GPU acceleration</td>
+              <td>No</td>
+              <td>198</td>
+            </tr>
+            <tr>
+              <td>2.0.0-beta.1</td>
+              <td>Feb 2026</td>
+              <td>Role-based API</td>
+              <td>Yes</td>
+              <td>285</td>
+            </tr>
+            <tr>
+              <td><strong>2.0.0</strong></td>
+              <td>Mar 2026</td>
+              <td><strong>Stable release</strong></td>
+              <td>Yes</td>
+              <td><strong>1,705</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Migration Impact (v1.x → v2.0)</h3>
+        <strong>Breaking Changes</strong>:
+        <ul>
+          <li>Account role architecture (1,200 call sites updated)</li>
+          <li>Result builder syntax (85 call sites updated)</li>
+        </ul>
+        <strong>Migration Time</strong>:
+        <ul>
+          <li>Small projects (&lt;1,000 LOC): 2-4 hours</li>
+          <li>Medium projects (1,000-5,000 LOC): 1-2 days</li>
+          <li>Large projects (&gt;5,000 LOC): 3-5 days</li>
+        </ul>
+        <strong>Migration Guide</strong>: 15 pages with automated migration path
+        <hr />
+        <h2>Performance Regression Testing</h2>
+        <h3>Automated Performance Gates</h3>Every commit checks:
+        <pre><code class="language-swift">// NPV must complete in &lt; 1ms let start = Date() let result = npv(discountRate: 0.10, cashFlows: hundredCashFlows) let elapsed = Date().timeIntervalSince(start) XCTAssert(elapsed &lt; 0.001, “NPV performance regression!”) // Portfolio optimization must complete in &lt; 10s let optTime = measureTime { optimizer.minimize(objective, startingAt: initial) } XCTAssert(optTime &lt; 10.0, “Optimization performance regression!”) </code></pre>
+        <strong>Performance Regressions Caught</strong>: 12 (before reaching production)
+        <hr />
+        <h2>Community Metrics</h2>
+        <strong>Common Feature Requests</strong>:
+        <ol>
+          <li>More optimization algorithms (particle swarm, genetic) - ✅ Implemented in v2.0</li>
+          <li>GPU acceleration - ✅ Implemented in v1.5</li>
+          <li>More distributions for Monte Carlo - ✅ 15 distributions in v1.0</li>
+          <li>Better async support - ✅ Implemented in v2.0</li>
+          <li>JSON/CSV data ingestion - ✅ Implemented in v2.0</li>
+        </ol>
+        <hr />
+        <h2>Platform Support</h2>
+        <h3>Compatibility Matrix</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Platform</th>
+              <th scope="col">Min Version</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>macOS</td>
+              <td>14.0</td>
+              <td>✅ Fully supported</td>
+            </tr>
+            <tr>
+              <td>iOS</td>
+              <td>17.0</td>
+              <td>✅ Fully supported</td>
+            </tr>
+            <tr>
+              <td>tvOS</td>
+              <td>17.0</td>
+              <td>✅ Fully supported</td>
+            </tr>
+            <tr>
+              <td>watchOS</td>
+              <td>10.0</td>
+              <td>✅ Fully supported</td>
+            </tr>
+            <tr>
+              <td>visionOS</td>
+              <td>1.0</td>
+              <td>✅ Fully supported</td>
+            </tr>
+            <tr>
+              <td>Linux</td>
+              <td>Ubuntu 20.04+</td>
+              <td>✅ Fully supported</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Swift Version</h3>
+        <ul>
+          <li><strong>Minimum</strong>: Swift 5.9</li>
+          <li><strong>Recommended</strong>: Swift 6.0 (strict concurrency)</li>
+          <li><strong>Tested</strong>: Swift 5.9, 6.0, 6.2.3</li>
+        </ul>
+        <hr />
+        <h2>The Numbers Tell a Story</h2>
+        <strong>What we built</strong>:
+        <ul>
+          <li>271,327 lines of code, tests, and docs</li>
+          <li>4,612 tests across 353 suites</li>
+          <li>4,712 public APIs — 100% documented</li>
+          <li>67 DocC articles with 1,250 code examples</li>
+          <li>6 case studies demonstrating real-world usage</li>
+        </ul>
+        <strong>What it runs on</strong>:
+        <ul>
+          <li>6 platforms (macOS, iOS, tvOS, watchOS, visionOS, Linux)</li>
+          <li>CPU + GPU architectures</li>
+          <li>Scales from 10 variables to 10,000 variables</li>
+        </ul>
+        <strong>How it’s structured</strong>:
+        <ul>
+          <li>375 source files across 36 modules</li>
+          <li>3 external dependencies (zero circular internal dependencies)</li>
+          <li>478 commits across 70 releases</li>
+        </ul>
+        <hr />
+        <strong>Tomorrow</strong>: 
+        <strong>Case Study #6: Investment Strategy DSL</strong> — the final case study, combining result builders, type safety, and financial modeling into a domain-specific language for investment strategies.
+        <hr />
+        <strong>Series</strong>: [Week 12 of 12] | 
+        <strong>Topic</strong>: [Reflections] | 
+        <strong>Case Studies</strong>: [5/6 Complete]
+        <p></p>
+        <p><strong>Topics Covered</strong>: Test statistics • Performance benchmarks • Code metrics • Documentation coverage • Community metrics • Production usage</p>
+        <p><strong>Final Week</strong>: [1 post remaining] • [Final case study tomorrow!]</p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: development-process, performance</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
