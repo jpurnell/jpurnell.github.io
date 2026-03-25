@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Part 40 of 12-Week BusinessMath Series" />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>What Didn't Work: Lessons from Failures and Dead Ends | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/BusinessMath/week-12/02-tue-what-didnt-work" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="What Didn't Work: Lessons from Failures and Dead Ends" />
+    <meta name="twitter:title" content="What Didn't Work: Lessons from Failures and Dead Ends" />
+    <meta property="og:description" content="Part 40 of 12-Week BusinessMath Series" />
+    <meta name="twitter:description" content="Part 40 of 12-Week BusinessMath Series" />
+    <meta property="og:url" content="https://www.justinpurnell.com/BusinessMath/week-12/02-tue-what-didnt-work" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth"
+    }
+  ],
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/BusinessMath/week-12/02-tue-what-didnt-work",
+      "name" : "What Didn't Work: Lessons from Failures and Dead Ends",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">What Didn't Work: Lessons from Failures and Dead Ends</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Part 40 of 12-Week BusinessMath Series</strong>
+          <hr />Not everything worked. Some ideas seemed brilliant on paper but failed in practice. Some approaches worked technically but created more problems than they solved. Here’s the honest assessment of what didn’t work, why it failed, and what I’d do differently.
+          <hr /></p>
+        <h2>1. Over-Engineered Type System (v0.1 Mistake)</h2>
+        <strong>What I Tried</strong>: Create elaborate type hierarchy for financial instruments.
+        <p></p>
+        <p><strong>The Code</strong>:</p>
+        <pre><code class="language-swift">// DON’T DO THIS protocol FinancialInstrument { associatedtype CashFlowType associatedtype ValuationType func cashFlows() -&gt; [CashFlowType] func value(discountRate: Double) -&gt; ValuationType } protocol FixedIncomeInstrument: FinancialInstrument where CashFlowType == FixedCashFlow { var couponRate: Double { get } var maturity: Date { get } }<p></p><p>protocol EquityInstrument: FinancialInstrument where CashFlowType == DividendCashFlow { var dividendPolicy: DividendPolicy { get } }</p></code><p><code class="language-swift">// This went on for 15 protocols… </code></p></pre>
+        <strong>Why It Failed</strong>:
+        <ul>
+          <li><strong>Complexity explosion</strong>: Users couldn’t figure out which protocol to conform to</li>
+          <li><strong>Rigid hierarchy</strong>: Real instruments don’t fit neat categories (convertible bonds are both equity and fixed income)</li>
+          <li><strong>PATs everywhere</strong>: Protocol with associated types made APIs painful</li>
+          <li><strong>Compile times</strong>: 45 seconds → 3 minutes</li>
+        </ul>
+        <strong>What I Learned</strong>: 
+        <strong>Start with structs. Add protocols only when you have 3+ implementations that share behavior.</strong>
+        <p></p>
+        <p><strong>The Fix</strong>:</p>
+        <pre><code class="language-swift">// DO THIS INSTEAD struct Bond { let faceValue: Double let couponRate: Double let maturity: Period<pre><code>func price(yield: Double) -&gt; Double { // Simple implementation, no protocol maze } </code></pre>}<p></p><p>struct Stock { let expectedReturn: Double let volatility: Double</p><pre><code>func expectedPrice(horizon: Period) -&gt; Double { // Different from Bond, that’s OK! } </code></pre>} </code></pre>
+        <strong>Lesson</strong>: YAGNI applies to type systems too. You probably don’t need that protocol.
+        <hr />
+        <h2>2. Premature GPU Optimization (Month 2 Fiasco)</h2>
+        <strong>What I Tried</strong>: “Everything should run on GPU for maximum performance!”
+        <p></p>
+        <div>
+          <p><strong>The Code</strong>:</p>
+          <pre><code class="language-swift">// Tried to GPU-accelerate even simple operations func npv(discountRate: Double, cashFlows: [Double]) -&gt; Double { // Copy to GPU let gpuBuffer = device.makeBuffer(bytes: cashFlows, length: cashFlows.count * 8)</code><pre><code class="language-swift"><code>// Run Metal compute shader let commandBuffer = commandQueue.makeCommandBuffer()! // … 50 lines of Metal boilerplate …<p></p></code><p><code>// Copy result back return result </code></p></code></pre>} </pre>
+          <strong>Why It Failed</strong>:
+          <ul>
+            <li><strong>Overhead</strong>: GPU setup took 5ms, calculation took 0.001ms → <strong>5,000× slower</strong></li>
+            <li><strong>Complexity</strong>: Metal code harder to test, debug, maintain</li>
+            <li><strong>Not portable</strong>: Linux support required CPU fallback anyway</li>
+            <li><strong>Diminishing returns</strong>: Only helped for huge problems (&gt;10,000 variables)</li>
+          </ul>
+          <strong>What I Learned</strong>: 
+          <strong>Optimize only after measuring. Profile first, then optimize the actual bottleneck.</strong>
+          <p></p>
+        </div>
+        <p><strong>The Fix</strong>:</p>
+        <pre><code class="language-swift">// Simple CPU version (fast enough for 99% of use cases) func npv
+            <t: real>
+              (discountRate: T, cashFlows: [T]) -&gt; T { cashFlows.enumerated().reduce(T.zero) { sum, pair in let (period, cashFlow) = pair return sum + cashFlow / T(1 + discountRate).pow(T(period + 1)) } }
+              <p></p>
+            </t:></code><p><code class="language-swift">// GPU version ONLY for specific use case (genetic algorithm with 10,000+ population) if populationSize &gt; 1_000 &amp;&amp; Metal.isAvailable { return gpuGeneticAlgorithm(…) } </code></p></pre>
+        <strong>Lesson</strong>: Default to simple. Add complexity only when profiling proves it’s needed.
+        <hr />
+        <h2>3. Magical Auto-Constraint Detection (Abandoned Feature)</h2>
+        <strong>What I Tried</strong>: Optimizer that automatically infers constraints from domain.
+        <p></p>
+        <p><strong>The Idea</strong>:</p>
+        <pre><code class="language-swift">// User writes this: let portfolio = Portfolio(assets: 50)<p></p><p>// Optimizer “magically” knows: // - Weights sum to 1 (it’s a portfolio!) // - No negative weights (you can’t short!) // - Max position size 20% (industry standard!)</p></code><p><code class="language-swift">let result = optimizer.optimize(portfolio) // No constraints specified </code></p></pre>
+        <strong>Why It Failed</strong>:
+        <ul>
+          <li><strong>Surprises</strong>: Users didn’t know what constraints were applied (“Why can’t I short?”)</li>
+          <li><strong>Inflexible</strong>: Couldn’t handle non-standard portfolios (long-short, leverage)</li>
+          <li><strong>Debug nightmares</strong>: “Is it using my constraints or auto-detected ones?”</li>
+          <li><strong>False confidence</strong>: Users assumed optimizer knew their domain—it didn’t</li>
+        </ul>
+        <strong>What I Learned</strong>: 
+        <strong>Explicit is better than implicit. Always. No matter how “obvious” it seems.</strong>
+        <p></p>
+        <p><strong>The Fix</strong>:</p>
+        <pre><code class="language-swift">// Make constraints explicit (even if verbose) let result = optimizer.minimize( objective, constraints: [ .sumToOne,      // User sees this is applied .longOnly,      // User sees this is applied .positionLimit(max: 0.20)  // User can change this ] ) </code></pre>
+        <strong>Lesson</strong>: Magic is good in demos, terrible in production. Be explicit.
+        <hr />
+        <h2>4. Over-Abstracted Optimization Framework (Month 4 Rewrite)</h2>
+        <strong>What I Tried</strong>: “Let’s make it so generic you can optimize ANYTHING!”
+        <p></p>
+        <p><strong>The Code</strong>:</p>
+        <pre><code class="language-swift">protocol OptimizationProblem { associatedtype Solution associatedtype Constraint: ConstraintProtocol func evaluate(_ solution: Solution) -&gt; Double func constraints() -&gt; [Constraint] }<p></p><p>protocol Optimizer { associatedtype Problem: OptimizationProblem func solve(_ problem: Problem) -&gt; Problem.Solution }</p></code><p><code class="language-swift">// Now users have to implement 2 protocols + 3 associated types just to optimize </code></p></pre>
+        <strong>Why It Failed</strong>:
+        <ul>
+          <li><strong>Cognitive load</strong>: Users spent 30 minutes reading docs before optimizing</li>
+          <li><strong>Boilerplate explosion</strong>: 50 lines of protocol conformance for 5 lines of actual logic</li>
+          <li><strong>Type system fights</strong>: Compiler errors like “Cannot convert value of type ‘Problem.Constraint’ to expected argument type…”</li>
+          <li><strong>Nobody asked for this</strong>: Solving a problem users didn’t have</li>
+        </ul>
+        <strong>What I Learned</strong>: 
+        <strong>Abstractions should reduce complexity, not create it.</strong>
+        <p></p>
+        <p><strong>The Fix</strong>:</p>
+        <pre><code class="language-swift">// Just use closures func minimize
+            <t>
+              ( _ objective: (T) -&gt; Double, startingAt initial: T, constraints: [(T) -&gt; Double] = [] ) -&gt; T { // Simple, understandable, works }
+              <p></p>
+            </t></code><p><code class="language-swift">// Usage is obvious let result = optimizer.minimize( { weights in portfolio.variance(weights) }, startingAt: equalWeights, constraints: [sumToOne, longOnly] ) </code></p></pre>
+        <strong>Lesson</strong>: The best abstraction is no abstraction. Closures are often enough.
+        <hr />
+        <h2>5. Documentation Generation from Tests (Cool But Useless)</h2>
+        <strong>What I Tried</strong>: Auto-generate docs from test assertions.
+        <p></p>
+        <p><strong>The Code</strong>:</p>
+        <pre><code class="language-swift">// Tests with special comments func testNPVPositiveReturns() { /// @example NPV with positive returns /// @expectedResult Positive NPV indicates good investment let npv = npv(discountRate: 0.10, cashFlows: [-100, 30, 40, 50]) XCTAssertGreaterThan(npv, 0)  /// @assert “NPV must be positive for profitable investment” }<p></p></code><p><code class="language-swift">// Tool parses comments → generates docs </code></p></pre>
+        <strong>Why It Failed</strong>:
+        <ul>
+          <li><strong>Docs were terrible</strong>: Reads like test code because it IS test code</li>
+          <li><strong>Maintenance hell</strong>: Change test → docs break, change docs → tool confused</li>
+          <li><strong>Nobody wanted it</strong>: Manual examples were clearer anyway</li>
+          <li><strong>Complexity</strong>: 500 lines of parsing code for marginal benefit</li>
+        </ul>
+        <strong>What I Learned</strong>: 
+        <strong>Just because you CAN automate something doesn’t mean you SHOULD.</strong>
+        <p></p>
+        <p><strong>The Fix</strong>:</p>
+        <pre><code class="language-swift">/// Calculate NPV for a series of cash flows. /// /// ## Example /// /// <code>swift /// let npv = npv(discountRate: 0.10, cashFlows: [-100, 30, 40, 50]) /// // → 8.77 (positive NPV = good investment) /// </code> public func npv
+            <t: real>
+              (discountRate: T, cashFlows: [T]) -&gt; T { // Manual docs, clear and concise } 
+            </t:></code></pre>
+        <strong>Lesson</strong>: Write docs manually. It’s faster and better.
+        <hr />
+        <h2>6. Trying to Support Every Financial Standard (Scope Creep)</h2>
+        <strong>What I Tried</strong>: “Let’s support GAAP, IFRS, Japanese GAAP, German HGB…”
+        <p></p>
+        <p><strong>Why It Failed</strong>:</p>
+        <ul>
+          <li><strong>Endless variations</strong>: Every country has accounting tweaks</li>
+          <li><strong>Domain expertise</strong>: Needed CPAs for each standard</li>
+          <li><strong>Maintenance burden</strong>: Standards change annually</li>
+          <li><strong>Users didn’t care</strong>: 95% just wanted US GAAP</li>
+        </ul>
+        <strong>What I Learned</strong>: 
+        <strong>Pick one standard, do it well. Add others only when users demand it.</strong>
+        <p></p>
+        <p><strong>The Fix</strong>:</p>
+        <ul>
+          <li>Support US GAAP thoroughly (what 95% of users need)</li>
+          <li>Document how to extend for other standards</li>
+          <li>Let users contribute IFRS/HGB if they need it</li>
+        </ul>
+        <strong>Lesson</strong>: You can’t be everything to everyone. Choose your battles.
+        <hr />
+        <h2>7. Type-Level Dimensional Analysis (Compile-Time Units)</h2>
+        <strong>What I Tried</strong>: Make units (dollars, percentages, basis points) compile-time checked.
+        <p></p>
+        <p><strong>The Code</strong>:</p>
+        <pre><code class="language-swift">struct USD: UnitType {} struct Percentage: UnitType {} struct BasisPoints: UnitType {}<p></p><p>struct Quantity
+              <unit: unittype>
+                 { let value: Double }
+              </unit:></p><p>// Compiler prevents mixing units! let price = Quantity
+              <usd>
+                (value: 100.0) let return = Quantity
+                <percentage>
+                  (value: 0.10)
+                </percentage>
+              </usd></p></code><p><code class="language-swift">let x = price + return // ✗ Compile error: can’t add USD + Percentage </code></p></pre>
+        <strong>Why It Failed</strong>:
+        <ul>
+          <li><strong>Conversion hell</strong>: Needed explicit conversions everywhere</li>
+          <li><strong>API complexity</strong>: Every function needed generic unit parameters</li>
+          <li><strong>User confusion</strong>: “Why can’t I just use <code>Double</code>?”</li>
+          <li><strong>Limited benefit</strong>: Caught maybe 2 bugs in 6 months of development</li>
+        </ul>
+        <strong>What I Learned</strong>: 
+        <strong>Type-level programming is fun but rarely worth the complexity tax.</strong>
+        <p></p>
+        <p><strong>The Fix</strong>: Use runtime validation for critical conversions, rely on clear naming for the rest.</p>
+        <pre><code class="language-swift">// Simple, clear, works func sharpeRatio(expectedReturn: Double, stdDev: Double) -&gt; Double { expectedReturn / stdDev  // Clear from names what units are } </code></pre>
+        <strong>Lesson</strong>: Types should clarify, not obscure. Fancy types are usually overkill.
+        <hr />
+        <h2>The Meta-Lesson</h2>
+        <strong>Most failures came from the same root cause: Over-engineering.</strong>
+        <p></p>
+        <p>I tried to be clever instead of simple. I tried to prevent every possible error instead of handling actual errors. I tried to support every use case instead of the common cases.</p>
+        <p><strong>The pattern</strong>:</p>
+        <ol>
+          <li>Identify problem</li>
+          <li>Design elaborate solution</li>
+          <li>Implement for 2 weeks</li>
+          <li>Realize it’s too complex</li>
+          <li>Delete it all</li>
+          <li>Write simple version in 2 hours</li>
+          <li>Simple version is better</li>
+        </ol>
+        <strong>The real lesson</strong>: When in doubt, do less.**
+        <hr />
+        <h2>Questions to Ask Before Adding Complexity</h2>
+        <ol>
+          <li><strong>Is this solving a real problem users have?</strong> (Not just “wouldn’t it be cool if…”)</li>
+          <li><strong>Can I solve this with existing features?</strong> (Closures &gt; protocols, runtime checks &gt; type gymnastics)</li>
+          <li><strong>Will this make the API simpler or harder?</strong> (If harder, probably skip it)</li>
+          <li><strong>Am I doing this because it’s fun or because it’s needed?</strong> (Be honest!)</li>
+        </ol>Most features fail question #1. Be ruthless.
+        <hr />
+        <strong>Tomorrow</strong>: “Final Statistics” — project metrics, test coverage, performance benchmarks, and what we actually shipped.
+        <hr />
+        <strong>Series</strong>: [Week 12 of 12] | 
+        <strong>Topic</strong>: [Reflections] | 
+        <strong>Case Studies</strong>: [5/6 Complete]
+        <p></p>
+        <p><strong>Topics Covered</strong>: Over-engineering • Premature optimization • Magic abstraction • Scope creep • Type complexity • Simplicity wins</p>
+        <p><strong>Final Week</strong>: [2 posts remaining] • [Final case study Thursday]</p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: development-process</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

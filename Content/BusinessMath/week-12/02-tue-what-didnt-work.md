@@ -6,7 +6,7 @@ week: 12
 post: 2
 tags: development-process
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # What Didn't Work: Lessons from Failures and Dead Ends
