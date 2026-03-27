@@ -1,7 +1,454 @@
 <?xml version="1.0" encoding="UTF-8" ?><rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Justin Purnell</title><description>Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton &apos;00, Tuck MBA.</description><link>https://www.justinpurnell.com</link><atom:link
     href="https://www.justinpurnell.com/feed.rss"
     rel="self" type="application/rss+xml"
-/><language>en</language><generator>Ignite v0.6.0</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-12/03-wed-final-statistics</guid><title>Final Statistics: By the Numbers</title><link>https://www.justinpurnell.com/BusinessMath/week-12/03-wed-final-statistics</link><description><![CDATA[Part 41 of 12-Week BusinessMath Series]]></description><pubDate>Wed, 25 Mar 2026 06:23:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[development-process]]></category><category><![CDATA[performance]]></category><content:encoded><![CDATA[<p><strong>Part 41 of 12-Week BusinessMath Series</strong></p><hr /><p>After 12 weeks of building, testing, and documenting BusinessMath, here’s what we shipped—measured, benchmarked, and validated.</p><hr /><h2>Test Coverage</h2><h3>Overall Test Statistics</h3><pre><code>═══════════════════════════════════════════════════════════
+/><language>en</language><generator>Ignite v0.6.0</generator><image><url>https://www.justinpurnell.com/images/logos/rss.png</url><title>Justin Purnell</title><link>https://www.justinpurnell.com</link><width>144</width><height>152</height></image><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-12/04-thu-case-study-strategy-dsl</guid><title>Case Study: Investment Strategy DSL with Result Builders</title><link>https://www.justinpurnell.com/BusinessMath/week-12/04-thu-case-study-strategy-dsl</link><description><![CDATA[Case Study #6 of 6 • Capstone for Result Builders + Complete Library]]></description><pubDate>Thu, 26 Mar 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[case-study]]></category><category><![CDATA[swift-patterns]]></category><content:encoded><![CDATA[<p><strong>Case Study #6 of 6 • Capstone for Result Builders + Complete Library</strong></p><hr /><h2>The Business Challenge</h2><p><strong>Company</strong>: Quantitative hedge fund with 15 investment strategies <strong>Portfolio</strong>: $2B across multiple asset classes <strong>Challenge</strong>: Encode investment strategies in code that portfolio managers can read, validate, and modify</p><p><strong>Current State (Python/Excel)</strong>:</p><pre><code class="language-python"># Strategy: Growth + Value + Momentum
+positions = []
+for stock in universe:
+    score = 0
+    # Growth scoring
+    if stock.revenue_growth > 0.15:
+        score += 2
+    elif stock.revenue_growth > 0.10:
+        score += 1
+
+    # Value scoring
+    if stock.pe_ratio < sector_median_pe * 0.8:
+        score += 2
+    elif stock.pe_ratio < sector_median_pe:
+        score += 1
+
+    # Momentum scoring
+    if stock.returns_6mo > 0.20:
+        score += 2
+    elif stock.returns_6mo > 0.10:
+        score += 1
+
+    if score >= 4:  # Buy threshold
+        weight = score / total_score
+        positions.append((stock, weight))
+</code></pre><p><strong>Problems</strong>:</p><ol><li><strong>Not type-safe</strong>: Typos (<code>pe_ratio</code> vs. <code>p_e_ratio</code>) fail at runtime</li><li><strong>Hard to validate</strong>: Portfolio managers can’t easily verify logic</li><li><strong>Testing burden</strong>: Each strategy needs 50+ test cases</li><li><strong>Duplication</strong>: Same scoring patterns repeated across 15 strategies</li><li><strong>No reusability</strong>: Can’t compose strategies from building blocks</li></ol><p><strong>The Ask</strong>: “Can we write strategies that read like English but execute like code?”</p><hr /><h2>The Solution: Investment Strategy DSL</h2><p>Using Swift result builders, we create a domain-specific language where strategies are declarative, type-safe, and composable.</p><h3>Part 1: Strategy DSL with Result Builders</h3><pre><code class="language-swift">import BusinessMath
+
+// Define a strategy using result builder syntax
+@InvestmentStrategyBuilder
+var growthValueMomentum: InvestmentStrategy {
+    // Strategy metadata
+    Name("Growth + Value + Momentum")
+    Description("Combines three quantitative factors with equal weighting")
+    RebalanceFrequency(.monthly)
+
+    // Universe selection
+    Universe {
+        Market(.us)
+        MinMarketCap(5_000_000_000)  // $5B minimum
+        ExcludeSectors([.financials, .utilities])  // Regulated sectors
+    }
+
+    // Scoring factors
+    ScoringModel {
+        // Growth factor
+        Factor("Revenue Growth") {
+            Metric(\.revenueGrowth)
+            Threshold(strong: 0.15, moderate: 0.10)
+            Weight(0.33)
+        }
+
+        // Value factor
+        Factor("Valuation") {
+            Metric(\.peRatio)
+            Comparison(.lessThan)
+            Benchmark(.sectorMedian)
+            Threshold(strong: 0.80, moderate: 1.00)
+            Weight(0.33)
+        }
+
+        // Momentum factor
+        Factor("Price Momentum") {
+            Metric(\.returns6Month)
+            Threshold(strong: 0.20, moderate: 0.10)
+            Weight(0.34)
+        }
+    }
+
+    // Selection and weighting
+    Selection {
+        ScoreThreshold(4.0)  // Minimum composite score
+        MaxPositions(50)
+        PositionWeighting(.equalWeight)  // Equal-weight top 50
+    }
+
+    // Risk controls
+    RiskLimits {
+        MaxPositionSize(0.05)  // 5% max per position
+        MaxSectorExposure(0.30)  // 30% max per sector
+        TargetVolatility(0.15)  // 15% annual volatility
+        MaxDrawdown(0.20)  // 20% max drawdown before defensive
+    }
+}
+
+// The DSL compiles to an executable strategy
+let holdings = growthValueMomentum.execute(universe: stockUniverse)
+
+print("Strategy: \(growthValueMomentum.name)")
+print("Selected \(holdings.count) positions:")
+for holding in holdings.prefix(10) {
+    print("  \(holding.ticker): \((holding.weight * 100).number())% (score: \(holding.score.number()))")
+}
+</code></pre><h3>Part 2: Result Builder Implementation</h3><p>The magic happens in the <code>@InvestmentStrategyBuilder</code>:</p><pre><code class="language-swift">@resultBuilder
+struct InvestmentStrategyBuilder {
+    // Build strategy from components
+    static func buildBlock(_ components: StrategyComponent...) -> InvestmentStrategy {
+        InvestmentStrategy(components: components)
+    }
+
+    // Support if/else conditionals
+    static func buildEither(first component: StrategyComponent) -> StrategyComponent {
+        component
+    }
+
+    static func buildEither(second component: StrategyComponent) -> StrategyComponent {
+        component
+    }
+
+    // Support optional components
+    static func buildOptional(_ component: StrategyComponent?) -> StrategyComponent {
+        component ?? EmptyComponent()
+    }
+
+    // Support for loops
+    static func buildArray(_ components: [StrategyComponent]) -> StrategyComponent {
+        CompositeComponent(components)
+    }
+}
+
+// Base protocol for all strategy components
+protocol StrategyComponent {
+    func apply(to strategy: inout InvestmentStrategy)
+}
+
+// Example component: Factor definition
+struct Factor: StrategyComponent {
+    let name: String
+    let metric: KeyPath<Stock, Double>
+    let threshold: (strong: Double, moderate: Double)
+    let weight: Double
+    let comparison: ComparisonType
+
+    init(
+        _ name: String,
+        @FactorBuilder builder: () -> FactorConfiguration
+    ) {
+        self.name = name
+        let config = builder()
+        self.metric = config.metric
+        self.threshold = config.threshold
+        self.weight = config.weight
+        self.comparison = config.comparison
+    }
+
+    func apply(to strategy: inout InvestmentStrategy) {
+        strategy.scoringFactors.append(
+            ScoringFactor(
+                name: name,
+                metric: metric,
+                threshold: threshold,
+                weight: weight,
+                comparison: comparison
+            )
+        )
+    }
+}
+
+// Nested result builder for factor configuration
+@resultBuilder
+struct FactorBuilder {
+    static func buildBlock(_ components: FactorConfigComponent...) -> FactorConfiguration {
+        var config = FactorConfiguration()
+        for component in components {
+            component.apply(to: &config)
+        }
+        return config
+    }
+}
+
+// Factor configuration components
+struct Metric<T>: FactorConfigComponent {
+    let keyPath: KeyPath<Stock, T>
+
+    init(_ keyPath: KeyPath<Stock, T>) {
+        self.keyPath = keyPath
+    }
+
+    func apply(to config: inout FactorConfiguration) {
+        config.metric = keyPath as! KeyPath<Stock, Double>
+    }
+}
+
+struct Threshold: FactorConfigComponent {
+    let strong: Double
+    let moderate: Double
+
+    func apply(to config: inout FactorConfiguration) {
+        config.threshold = (strong, moderate)
+    }
+}
+
+struct Weight: FactorConfigComponent {
+    let value: Double
+
+    init(_ value: Double) {
+        self.value = value
+    }
+
+    func apply(to config: inout FactorConfiguration) {
+        config.weight = value
+    }
+}
+</code></pre><h3>Part 3: Type-Safe Stock Data</h3><p>The DSL uses Swift key paths for type-safe metric access:</p><pre><code class="language-swift">struct Stock {
+    // Company identifiers
+    let ticker: String
+    let name: String
+    let sector: Sector
+
+    // Fundamentals
+    let marketCap: Double
+    let revenueGrowth: Double
+    let earningsGrowth: Double
+    let peRatio: Double
+    let pbRatio: Double
+    let debtToEquity: Double
+
+    // Price data
+    let price: Double
+    let returns1Month: Double
+    let returns6Month: Double
+    let returns12Month: Double
+    let volatility: Double
+
+    // Valuation
+    var relativeValuation: Double {
+        // Compare to sector median
+        peRatio / sector.medianPE
+    }
+}
+
+// Key paths provide type safety
+let revenueGrowthMetric: KeyPath<Stock, Double> = \.revenueGrowth
+let peRatioMetric: KeyPath<Stock, Double> = \.peRatio
+
+// Compiler prevents typos
+// let badMetric: KeyPath<Stock, Double> = \.reveueGrowth  // ✗ Compile error!
+</code></pre><h3>Part 4: Strategy Execution Engine</h3><p>The DSL compiles to executable code:</p><pre><code class="language-swift">struct InvestmentStrategy {
+    var name: String = ""
+    var description: String = ""
+    var rebalanceFrequency: RebalanceFrequency = .monthly
+
+    var universeFilters: [UniverseFilter] = []
+    var scoringFactors: [ScoringFactor] = []
+    var selectionRules: SelectionRules = SelectionRules()
+    var riskLimits: RiskLimits = RiskLimits()
+
+    // Execute strategy on stock universe
+    func execute(universe: [Stock]) -> [Holding] {
+        // 1. Apply universe filters
+        let filteredUniverse = universe.filter { stock in
+            universeFilters.allSatisfy { $0.passes(stock) }
+        }
+
+        // 2. Score each stock
+        let scoredStocks = filteredUniverse.map { stock in
+            (stock: stock, score: calculateScore(for: stock))
+        }
+
+        // 3. Select top stocks
+        let selectedStocks = scoredStocks
+            .filter { $0.score >= selectionRules.scoreThreshold }
+            .sorted { $0.score > $1.score }
+            .prefix(selectionRules.maxPositions)
+
+        // 4. Calculate weights
+        let holdings = calculateWeights(
+            selectedStocks: Array(selectedStocks),
+            method: selectionRules.weightingMethod
+        )
+
+        // 5. Apply risk limits
+        let constrainedHoldings = applyRiskLimits(holdings)
+
+        return constrainedHoldings
+    }
+
+    private func calculateScore(for stock: Stock) -> Double {
+        var totalScore = 0.0
+
+        for factor in scoringFactors {
+            let value = stock[keyPath: factor.metric]
+            let benchmark = factor.benchmark?.value(for: stock) ?? 0.0
+
+            let comparison = factor.comparison == .greaterThan ?
+                value > benchmark : value < benchmark
+
+            if comparison {
+                if factor.threshold.strong > 0 && value >= factor.threshold.strong {
+                    totalScore += 2.0 * factor.weight
+                } else if factor.threshold.moderate > 0 && value >= factor.threshold.moderate {
+                    totalScore += 1.0 * factor.weight
+                }
+            }
+        }
+
+        return totalScore
+    }
+
+    private func calculateWeights(
+        selectedStocks: [(stock: Stock, score: Double)],
+        method: WeightingMethod
+    ) -> [Holding] {
+        switch method {
+        case .equalWeight:
+            let weight = 1.0 / Double(selectedStocks.count)
+            return selectedStocks.map { Holding(stock: $0.stock, weight: weight, score: $0.score) }
+
+        case .scoreWeighted:
+            let totalScore = selectedStocks.map(\.score).reduce(0, +)
+            return selectedStocks.map {
+                Holding(stock: $0.stock, weight: $0.score / totalScore, score: $0.score)
+            }
+
+        case .marketCapWeighted:
+            let totalMarketCap = selectedStocks.map { $0.stock.marketCap }.reduce(0, +)
+            return selectedStocks.map {
+                Holding(stock: $0.stock, weight: $0.stock.marketCap / totalMarketCap, score: $0.score)
+            }
+        }
+    }
+
+    private func applyRiskLimits(_ holdings: [Holding]) -> [Holding] {
+        var adjusted = holdings
+
+        // Cap individual positions
+        adjusted = adjusted.map { holding in
+            var h = holding
+            h.weight = min(h.weight, riskLimits.maxPositionSize)
+            return h
+        }
+
+        // Renormalize to 100%
+        let totalWeight = adjusted.map(\.weight).reduce(0, +)
+        adjusted = adjusted.map { holding in
+            var h = holding
+            h.weight = h.weight / totalWeight
+            return h
+        }
+
+        return adjusted
+    }
+}
+
+struct Holding {
+    let stock: Stock
+    var weight: Double
+    let score: Double
+
+    var ticker: String { stock.ticker }
+}
+</code></pre><h3>Part 5: Strategy Composition</h3><p>Compose complex strategies from building blocks:</p><pre><code class="language-swift">// Reusable factor definitions
+let growthFactor = Factor("Revenue Growth") {
+    Metric(\.revenueGrowth)
+    Threshold(strong: 0.15, moderate: 0.10)
+    Weight(0.50)
+}
+
+let valueFactor = Factor("Valuation") {
+    Metric(\.peRatio)
+    Comparison(.lessThan)
+    Benchmark(.sectorMedian)
+    Threshold(strong: 0.80, moderate: 1.00)
+    Weight(0.50)
+}
+
+// Compose strategies
+@InvestmentStrategyBuilder
+var pureGrowth: InvestmentStrategy {
+    Name("Pure Growth")
+    ScoringModel {
+        growthFactor
+        // Single factor strategy
+    }
+}
+
+@InvestmentStrategyBuilder
+var growthAtReasonablePrice: InvestmentStrategy {
+    Name("Growth at Reasonable Price (GARP)")
+    ScoringModel {
+        growthFactor
+        valueFactor
+        // Combines two factors
+    }
+}
+
+// Conditional strategies
+@InvestmentStrategyBuilder
+var adaptiveStrategy: InvestmentStrategy {
+    Name("Adaptive Multi-Factor")
+
+    ScoringModel {
+        if marketCondition == .bull {
+            growthFactor  // Growth in bull markets
+        } else {
+            valueFactor   // Value in bear markets
+        }
+    }
+}
+</code></pre><hr /><h2>The Results</h2><h3>Code Comparison</h3><p><strong>Before (Python)</strong>:</p><pre><code class="language-python"># 150 lines of procedural code
+# Repeated logic across 15 strategies
+# Runtime errors common
+# Hard for PMs to validate
+</code></pre><p><strong>After (Swift DSL)</strong>:</p><pre><code class="language-swift">// 30 lines of declarative code
+// Reusable components
+// Compile-time type safety
+// PMs can read and modify
+</code></pre><p><strong>Code Reduction</strong>: 80% fewer lines per strategy</p><h3>Validation and Testing</h3><pre><code class="language-swift">// Strategies are testable!
+func testGrowthValueMomentumStrategy() {
+    let strategy = growthValueMomentum
+
+    // Test universe filtering
+    XCTAssertEqual(strategy.universeFilters.count, 3)
+
+    // Test scoring factors
+    XCTAssertEqual(strategy.scoringFactors.count, 3)
+    XCTAssertEqual(strategy.scoringFactors[0].name, "Revenue Growth")
+
+    // Test with mock data
+    let mockUniverse = createMockStocks()
+    let holdings = strategy.execute(universe: mockUniverse)
+
+    // Verify risk limits applied
+    XCTAssertTrue(holdings.allSatisfy { $0.weight <= 0.05 })
+}
+
+// Property-based testing
+func testStrategyInvariants() {
+    for _ in 0..<100 {
+        let randomUniverse = generateRandomStocks(count: 500)
+        let holdings = growthValueMomentum.execute(universe: randomUniverse)
+
+        // Invariants that MUST hold
+        let totalWeight = holdings.map(\.weight).reduce(0, +)
+        XCTAssertEqual(totalWeight, 1.0, accuracy: 1e-6, "Weights must sum to 100%")
+        XCTAssertLessOrEqual(holdings.count, 50, "Max 50 positions")
+        XCTAssertTrue(holdings.allSatisfy { $0.weight <= 0.05 }, "No position > 5%")
+    }
+}
+</code></pre><p><strong>Test Coverage</strong>: 15 strategies × 20 tests each = 300 automated tests</p><hr /><h2>Business Value</h2><p><strong>Before DSL</strong>:</p><ul><li>Time to code new strategy: 3-5 days (developer-led)</li><li>Strategy validation: 2 days (manual review)</li><li>Bugs per strategy: 8-12 (runtime errors, logic bugs)</li><li>PM involvement: Minimal (couldn’t read code)</li></ul><p><strong>After DSL</strong>:</p><ul><li>Time to code new strategy: 2-4 hours (PM can draft, developer refines)</li><li>Strategy validation: 30 minutes (DSL is self-documenting)</li><li>Bugs per strategy: 0-2 (type system catches most errors)</li><li>PM involvement: High (can read, modify, propose strategies)</li></ul><p><strong>Annual Impact</strong>:</p><ul><li>Strategy development speed: 6× faster</li><li>Bugs in production: 85% reduction</li><li>PM productivity: Can now propose 10 strategies/year vs. 2/year</li><li><strong>Estimated value: $4.2M/year</strong> (faster strategy deployment, fewer errors, more strategies tested)</li></ul><p><strong>Technology ROI</strong>:</p><ul><li>Development time: 6 engineer-weeks (~$45K)</li><li>Payback period: 12 days</li><li>5-year NPV: $18.4M</li></ul><hr /><h2>What Worked</h2><ol><li><strong>Domain Expert Empowerment</strong>: Portfolio managers can now write strategies (with light developer support)</li><li><strong>Type Safety</strong>: Compiler catches errors that were runtime failures in Python</li><li><strong>Composability</strong>: Reusable factor definitions across all 15 strategies</li><li><strong>Testability</strong>: Every strategy has 20+ automated tests</li><li><strong>Documentation</strong>: Strategies are self-documenting (“reads like English”)</li></ol><hr /><h2>What Didn’t Work</h2><ol><li><strong>Initial Learning Curve</strong>: PMs needed 2-day training on Swift basics</li><li><strong>Complex Nesting</strong>: Deeply nested result builders got confusing (limited to 2 levels)</li><li><strong>Error Messages</strong>: Result builder compile errors can be cryptic (improved with better type annotations)</li></ol><hr /><h2>The Insight</h2><p><strong>The best DSL doesn’t feel like code—it feels like structured English.</strong></p><p>When a portfolio manager looks at this:</p><pre><code class="language-swift">Factor("Revenue Growth") {
+    Metric(\.revenueGrowth)
+    Threshold(strong: 0.15, moderate: 0.10)
+    Weight(0.50)
+}
+</code></pre><p>They see: “Revenue growth factor, strong threshold 15%, moderate 10%, weight 50%.”</p><p><strong>Not</strong>: “Function call with closure parameter accepting lambda with key path and tuple.”</p><p>That’s the magic of result builders: Hide the machinery, expose the meaning.</p><p>And when they try to write:</p><pre><code class="language-swift">Metric(\.reveueGrowth)  // Typo
+</code></pre><p>The compiler says: <strong>“No such property ‘reveueGrowth’ on Stock”</strong></p><p><strong>That’s the magic of type safety: Catch errors at compile time, not in production.</strong></p><p>Combine these two—readable DSL + type safety—and you get something remarkable: <strong>Domain experts writing production code that actually works.</strong></p><hr /><h2>Try It Yourself</h2><p>Download the complete case study playground:</p><pre><code>→ Download: CaseStudies/InvestmentStrategyDSL.playground
+→ Includes: Full DSL implementation, 15 strategy examples, test suite
+→ Extensions: Add machine learning factors, real-time data feeds
+</code></pre><hr /><h2>Series Conclusion</h2><p>This is the final post in the 12-week BusinessMath blog series. We’ve covered:</p><p><strong>Weeks 1-2</strong>: Foundation (getting started, time series, TVM, ratios) <strong>Weeks 3-5</strong>: Financial Modeling (growth, forecasting, statements, loans, bonds) <strong>Week 6</strong>: Simulation (Monte Carlo, scenarios) <strong>Weeks 7-11</strong>: Optimization (gradient descent → BFGS → genetic → PSO → annealing) <strong>Week 12</strong>: Reflections and this final case study</p><p><strong>6 Case Studies</strong>:</p><ol><li>Retirement Planning (Week 1)</li><li>Capital Equipment (Week 3)</li><li>Option Pricing (Week 6)</li><li>Portfolio Optimization (Week 8)</li><li>Real-Time Rebalancing (Week 11)</li><li><strong>Investment Strategy DSL (Week 12)</strong> ← You are here</li></ol><p>Thank you for following along on this journey. From NPV calculations to GPU-accelerated optimization to type-safe investment strategies—we’ve built something powerful.</p><p><strong>Now go build something remarkable.</strong></p><hr /><p><strong>Series</strong>: [Week 12 of 12] <strong>COMPLETE</strong> | <strong>Case Study [6/6]</strong> <strong>COMPLETE</strong> | <strong>Topics Combined</strong>: Result Builders + Type Safety + Full Library</p><p><strong>The End</strong> 🎉</p>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-12/03-wed-final-statistics</guid><title>Final Statistics: By the Numbers</title><link>https://www.justinpurnell.com/BusinessMath/week-12/03-wed-final-statistics</link><description><![CDATA[Part 41 of 12-Week BusinessMath Series]]></description><pubDate>Wed, 25 Mar 2026 06:23:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[development-process]]></category><category><![CDATA[performance]]></category><content:encoded><![CDATA[<p><strong>Part 41 of 12-Week BusinessMath Series</strong></p><hr /><p>After 12 weeks of building, testing, and documenting BusinessMath, here’s what we shipped—measured, benchmarked, and validated.</p><hr /><h2>Test Coverage</h2><h3>Overall Test Statistics</h3><pre><code>═══════════════════════════════════════════════════════════
 Test Suites:     353
 Total Tests:     4,612
 Source Files:    375 (production) + 288 (test)
@@ -10390,407 +10837,4 @@ print("Converged: \(result_GS.converged)")
 print("Iterations: \(result_GS.iterations)")
 
 </code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.3-CoreOptimization.md">BusinessMath Docs – 5.3 Core Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Find the profit-maximizing price (use <code>minimize()</code> on negative profit)</li><li>Solve for multiple roots by trying different initial guesses</li><li>Build a breakeven calculator for a business with complex cost structure</li><li>Compare convergence speed: Newton-Raphson vs. bisection method</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Financial planning</strong>: Automate target-seeking for revenue, margin, ROI goals</li><li><strong>Pricing analysis</strong>: Find breakeven prices accounting for price elasticity</li><li><strong>Investment analysis</strong>: Calculate IRR for complex cash flow patterns</li><li><strong>Engineering</strong>: Solve implicit equations (e.g., pipe flow, heat transfer)</li></ul><p><strong>CFO use case</strong>: “We need to hit $5M EBITDA next quarter. What revenue do we need given our cost structure and operating leverage?”</p><p>Goal-seeking automates this calculation instantly.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Newton-Raphson Converges Quadratically</strong></p><p>Newton-Raphson doubles the number of correct digits with each iteration when close to the solution. This is called <strong>quadratic convergence</strong>.</p><p><strong>Example progression</strong> (finding √2):</p><ul><li>Iteration 1: 1.5 (1 digit correct)</li><li>Iteration 2: 1.416… (2 digits correct)</li><li>Iteration 3: 1.414215… (5 digits correct)</li><li>Iteration 4: 1.41421356237… (11 digits correct)</li></ul><p><strong>Why?</strong> Taylor series analysis shows the error decreases proportional to the square of the previous error: ε_{n+1} ∝ ε_n²</p><p><strong>Trade-off:</strong> Fast convergence requires good initial guess. Bad guesses may diverge or converge to wrong root.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part was <strong>making numerical differentiation robust</strong> across all <code>Real</code> types (Float, Double, Decimal, etc.).</p><p><strong>Challenge:</strong> The step size <code>h</code> for f’(x) ≈ (f(x+h) - f(x-h)) / (2h) must be:</p><ul><li>Large enough to avoid catastrophic cancellation (subtracting nearly equal numbers)</li><li>Small enough to approximate the true derivative</li></ul><p>We settled on <code>h = √ε × max(|x|, 1)</code> where ε is machine epsilon. This adapts to:</p><ul><li>Float vs. Double vs. Decimal precision</li><li>Magnitude of x (avoid tiny steps for large x)</li></ul><p><strong>Result:</strong> Goal-seeking works reliably across all numeric types without user tuning.</p><p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered catastrophic cancellation and condition numbers.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Thursday</strong>: Vector Operations - Understanding the VectorSpace protocol, Vector2D, Vector3D, and VectorN for multivariate optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 24/~48</li><li>Playgrounds: 21 available</li></ul>]]></content:encoded></item><item><guid isPermaLink="true">https://www.justinpurnell.com/BusinessMath/week-07/02-tue-portfolio-optimization</guid><title>Portfolio Optimization: Building Optimal Investment Portfolios</title><link>https://www.justinpurnell.com/BusinessMath/week-07/02-tue-portfolio-optimization</link><description><![CDATA[Part 23 of 12-Week BusinessMath Series]]></description><pubDate>Tue, 17 Feb 2026 13:00:00 +0000</pubDate><dc:creator><![CDATA[Justin Purnell]]></dc:creator><category><![CDATA[portfolio]]></category><category><![CDATA[optimization]]></category><content:encoded><![CDATA[<p><strong>Part 23 of 12-Week BusinessMath Series</strong></p><hr /><h2>What You’ll Learn</h2><ul><li>Building maximum Sharpe ratio portfolios (best risk-adjusted return)</li><li>Finding minimum variance portfolios (lowest risk)</li><li>Generating efficient frontiers (all optimal portfolios)</li><li>Implementing risk parity strategies (equal risk contribution)</li><li>Applying real-world constraints (long-only, leverage limits, position sizing)</li><li>Understanding the math behind Modern Portfolio Theory</li></ul><hr /><h2>The Problem</h2><p>Investment portfolio construction requires balancing multiple competing objectives:</p><ul><li><strong>Risk vs. Return</strong>: Higher returns usually mean higher risk, but by how much?</li><li><strong>Diversification</strong>: How do you optimally combine assets that move differently?</li><li><strong>Constraints</strong>: No short-selling, position limits, target returns, leverage restrictions</li><li><strong>Multiple Solutions</strong>: There are infinite ways to allocate capital—which is optimal?</li></ul><p><strong>Manual portfolio construction (guessing weights in a spreadsheet) doesn’t find mathematically optimal solutions.</strong></p><hr /><h2>The Solution</h2><p>Modern Portfolio Theory (MPT), developed by Harry Markowitz, provides a mathematical framework for optimal portfolio construction. BusinessMath implements MPT as part of Phase 3 multivariate optimization.</p><h3>Maximum Sharpe Ratio Portfolio</h3><p>Find the portfolio with the best risk-adjusted return:</p><pre><code class="language-swift">import BusinessMath
-
-// 4 assets: stocks (small, large), bonds, real estate
-let optimizer = PortfolioOptimizer()
-
-let expectedReturns = VectorN([0.12, 0.15, 0.18, 0.05])
-
-// Construct covariance from correlation matrix to ensure validity
-// High correlation between Asset 1 (12% return) and Asset 3 (18% return)
-// makes Asset 1 a candidate for shorting in 130/30 strategy
-let volatilities = [0.20, 0.30, 0.40, 0.10]  // 20%, 30%, 40%, 10%
-let correlations = [
-	[1.00, 0.30, 0.70, 0.10],  // Asset 1: high corr with Asset 3
-	[0.30, 1.00, 0.50, 0.15],  // Asset 2: moderate corr with Asset 3
-	[0.70, 0.50, 1.00, 0.05],  // Asset 3: highest return
-	[0.10, 0.15, 0.05, 1.00]   // Asset 4: bonds (low correlation)
-]
-
-// Convert correlation to covariance: cov[i][j] = corr[i][j] * vol[i] * vol[j]
-var covariance = [[Double]](repeating: [Double](repeating: 0, count: 4), count: 4)
-for i in 0..<4 {
-	for j in 0..<4 {
-		covariance[i][j] = correlations[i][j] * volatilities[i] * volatilities[j]
-	}
-}
-
-// Maximum Sharpe ratio (optimal risk-adjusted return)
-let maxSharpe = try optimizer.maximumSharpePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	constraintSet: .longOnly
-)
-
-print("Maximum Sharpe Portfolio:")
-print("  Sharpe Ratio: \(maxSharpe.sharpeRatio.number(2))")
-print("  Expected Return: \(maxSharpe.expectedReturn.percent(1))")
-print("  Volatility: \(maxSharpe.volatility.percent(1))")
-print("  Weights: \(maxSharpe.weights.toArray().map { $0.percent(1) })")
-</code></pre><p><strong>Output:</strong></p><pre><code>Maximum Sharpe Portfolio:
-  Sharpe Ratio: 0.62
-  Expected Return: 9.6%
-  Volatility: 12.2%
-  Weights: ["38.6%", "18.5%", "0.0%", "42.9%"]
-</code></pre><p><strong>The result</strong>: Despite bonds having the lowest return (5%), they get the highest allocation (43%) because they reduce portfolio risk while maintaining strong Sharpe ratio.</p><hr /><h3>Minimum Variance Portfolio</h3><p>Find the portfolio with the lowest possible risk:</p><pre><code class="language-swift">let minVar = try optimizer.minimumVariancePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	allowShortSelling: false
-)
-
-print("Minimum Variance Portfolio:")
-print("  Expected Return: \(minVar.expectedReturn.percent(1))")
-print("  Volatility: \(minVar.volatility.percent(1))")
-print("  Weights: \(minVar.weights.toArray().map { $0.percent(1) })")
-</code></pre><p><strong>Output:</strong></p><pre><code>Minimum Variance Portfolio:
-  Expected Return: 6.4%
-  Volatility: 9.3%
-  Weights: ["16.4%", "2.2%", "0.0%", "81.4%"]
-</code></pre><p><strong>The trade-off</strong>: Lowest risk (9.3% volatility) but also lowest return (6.4%). The optimizer heavily weights bonds and eliminates the high-volatility asset entirely.</p><hr /><h3>Efficient Frontier</h3><p>The efficient frontier shows all optimal portfolios—those with maximum return for each level of risk:</p><pre><code class="language-swift">// Generate 20 points along the efficient frontier
-let frontier = try optimizer.efficientFrontier(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	numberOfPoints: 20
-)
-
-print("Efficient Frontier:")
-print("Volatility | Return   | Sharpe")
-print("-----------|----------|-------")
-
-for portfolio in frontier.portfolios {
-	print("\(portfolio.volatility.percent(1).paddingLeft(toLength: 10)) | " +
-		  "\(portfolio.expectedReturn.percent(2).paddingLeft(toLength: 8)) | " +
-		  "\(portfolio.sharpeRatio.number(2))")
-}
-
-// Find portfolio closest to 12% target return
-let targetReturn = 0.12
-let targetPortfolio = frontier.portfolios.min(by: { p1, p2 in
-	abs(p1.expectedReturn - targetReturn) < abs(p2.expectedReturn - targetReturn)
-})!
-
-print("\nTarget \(targetReturn.percent(0)) Return Portfolio:")
-print("  Volatility: \(targetPortfolio.volatility.percent(1))")
-print("  Weights: \(targetPortfolio.weights.toArray().map { $0.percent(1) })")
-</code></pre><p><strong>Output:</strong></p><pre><code>Efficient Frontier:
-Volatility | Return   | Sharpe
------------|----------|-------
-      9.7% |    5.00% | 0.31
-      9.3% |    5.68% | 0.40
-      9.2% |    6.37% | 0.48
-      9.3% |    7.05% | 0.54
-      9.8% |    7.74% | 0.59
-     10.5% |    8.42% | 0.61
-     11.5% |    9.11% | 0.62
-     12.5% |    9.79% | 0.62
-     13.8% |   10.47% | 0.62
-     15.1% |   11.16% | 0.61
-     16.4% |   11.84% | 0.60
-     17.9% |   12.53% | 0.59
-     19.3% |   13.21% | 0.58
-     20.9% |   13.89% | 0.57
-     22.4% |   14.58% | 0.56
-     23.9% |   15.26% | 0.55
-     25.5% |   15.95% | 0.55
-     27.1% |   16.63% | 0.54
-     28.7% |   17.32% | 0.53
-     30.3% |   18.00% | 0.53
-
-Target 12% Return Portfolio:
-  Volatility: 16.4%
-  Weights: ["56.7%", "31.0%", "-1.7%", "14.1%"]
-</code></pre><p><strong>The insight</strong>: The efficient frontier curves—there’s no linear relationship between risk and return. The maximum Sharpe portfolio is where the line from the risk-free rate is tangent to the frontier.</p><hr /><h3>Risk Parity</h3><p>Risk parity allocates capital so each asset contributes equally to total portfolio risk:</p><pre><code class="language-swift">// Each asset contributes equally to total risk
-let riskParity = try optimizer.riskParityPortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	constraintSet: .longOnly
-)
-
-print("Risk Parity Portfolio:")
-for (i, weight) in riskParity.weights.toArray().enumerated() {
-	print("  Asset \(i + 1): \(weight.percent(1))")
-}
-print("Expected Return: \(riskParity.expectedReturn.percent(1))")
-print("Volatility: \(riskParity.volatility.percent(1))")
-print("Sharpe Ratio: \(riskParity.sharpeRatio.number(2))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Risk Parity Portfolio:
-  Asset 1: 20.9%
-  Asset 2: 14.6%
-  Asset 3: 9.9%
-  Asset 4: 54.7%
-Expected Return: 9.2%
-Volatility: 12.1%
-Sharpe Ratio: 0.76
-</code></pre><p><strong>The philosophy</strong>: Risk parity doesn’t maximize Sharpe ratio—it equalizes risk contribution. Use it when you’re skeptical of return forecasts but confident in risk estimates.</p><hr /><h3>Constrained Portfolios</h3><p>Real-world portfolios have constraints beyond full investment:</p><pre><code class="language-swift">// Long-Short with leverage limit (130/30 strategy)
-let longShort = try optimizer.maximumSharpePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	constraintSet: .longShort(maxLeverage: 1.3)
-)
-
-print("130/30 Portfolio:")
-print("  Sharpe: \(longShort.sharpeRatio.number(2))")
-print("  Weights: \(longShort.weights.toArray().map { $0.percent(1) })")
-
-// Box constraints (min/max per position)
-let boxConstrained = try optimizer.maximumSharpePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	constraintSet: .boxConstrained(min: 0.05, max: 0.40)
-)
-
-print("Box Constrained Portfolio (5%-40% per position):")
-print("  Sharpe: \(boxConstrained.sharpeRatio.number(2))")
-print("  Weights: \(boxConstrained.weights.toArray().map { $0.percent(1) })")
-</code></pre><p><strong>Output:</strong></p><pre><code>130/30 Portfolio:
-  Sharpe: 0.62
-  Weights: ["42.0%", "19.7%", "-3.2%", "41.5%"]
-
-Box Constrained Portfolio (5%-40% per position):
-  Sharpe: 0.61
-  Weights: ["36.5%", "18.5%", "5.0%", "40.0%"]
-</code></pre><p><strong>The trade-off</strong>: Constraints reduce the Sharpe ratio (1.18 vs. 1.35 unconstrained) but reflect real-world restrictions.</p><hr /><h2>Real-World Example: $1M Multi-Asset Portfolio</h2><pre><code class="language-swift">let assets_rwe = ["US Large Cap", "US Small Cap", "International", "Bonds", "Real Estate"]
-let expectedReturns_rwe = VectorN([0.10, 0.12, 0.11, 0.0375, 0.09])
-
-// More realistic covariance structure (constructed from correlations)
-let volatilities_rwe = [0.15, 0.18, 0.165, 0.075, 0.14]  // 15%, 18%, 17%, 7%, 14%
-let correlations_rwe = [
-	[1.00, 0.75, 0.65, 0.25, 0.50],  // US Large Cap
-	[0.75, 1.00, 0.70, 0.10, 0.55],  // US Small Cap (high corr with US stocks)
-	[0.65, 0.70, 1.00, 0.20, 0.45],  // International (corr with other stocks)
-	[0.25, 0.10, 0.20, 1.00, 0.15],  // Bonds (moderate diversifier)
-	[0.50, 0.55, 0.45, 0.15, 1.00]   // Real Estate (hybrid characteristics)
-]
-
-// Convert to covariance matrix
-var covariance_rwe = [[Double]](repeating: [Double](repeating: 0, count: 5), count: 5)
-for i in 0..<5 {
-	for j in 0..<5 {
-		covariance_rwe[i][j] = correlations_rwe[i][j] * volatilities_rwe[i] * volatilities_rwe[j]
-	}
-}
-
-let optimizer_rwe = PortfolioOptimizer()
-
-// Conservative investor
-let conservative_rwe = try optimizer_rwe.minimumVariancePortfolio(
-	expectedReturns: expectedReturns_rwe,
-	covariance: covariance_rwe,
-	allowShortSelling: false
-)
-
-print("Conservative Portfolio ($1M):")
-for (i, asset) in assets_rwe.enumerated() {
-	let weight = conservative_rwe.weights.toArray()[i]
-	if weight > 0.01 {
-		let allocation = 1_000_000 * weight
-		print("  \(asset): \(allocation.currency(0)) (\(weight.percent(1)))")
-	}
-}
-print("Expected Return: \(conservative_rwe.expectedReturn.percent(1))")
-print("Volatility: \(conservative_rwe.volatility.percent(1))")
-</code></pre><p><strong>Output:</strong></p><pre><code>Conservative Portfolio ($1M):
-  US Small Cap: $44,228 (4.4%)
-  International: $16,441 (1.6%)
-  Bonds: $797,952 (79.8%)
-  Real Estate: $141,379 (14.1%)
-Expected Return: 5.0%
-Volatility: 6.9%
-</code></pre><hr /><h2>Try It Yourself</h2><details>
-<summary>Click to expand full playground code</summary>
-<pre><code class="language-swift">import BusinessMath
-
-//do {
-// 4 assets: stocks (small, large), bonds, real estate
-let optimizer = PortfolioOptimizer()
-
-let expectedReturns = VectorN([0.12, 0.15, 0.18, 0.05])
-
-// Construct covariance from correlation matrix to ensure validity
-// High correlation between Asset 1 (12% return) and Asset 3 (18% return)
-// makes Asset 1 a candidate for shorting in 130/30 strategy
-let volatilities = [0.20, 0.30, 0.40, 0.10]  // 20%, 30%, 40%, 10%
-let correlations = [
-	[1.00, 0.30, 0.70, 0.10],  // Asset 1: high corr with Asset 3
-	[0.30, 1.00, 0.50, 0.15],  // Asset 2: moderate corr with Asset 3
-	[0.70, 0.50, 1.00, 0.05],  // Asset 3: highest return
-	[0.10, 0.15, 0.05, 1.00]   // Asset 4: bonds (low correlation)
-]
-
-// Convert correlation to covariance: cov[i][j] = corr[i][j] * vol[i] * vol[j]
-var covariance = [[Double]](repeating: [Double](repeating: 0, count: 4), count: 4)
-for i in 0..<4 {
-	for j in 0..<4 {
-		covariance[i][j] = correlations[i][j] * volatilities[i] * volatilities[j]
-	}
-}
-
-// MARK: - Maximum Sharpe Portfolio
-
-print("Running Maximum Sharpe Portfolio...")
-let maxSharpe = try optimizer.maximumSharpePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	constraintSet: .longOnly
-)
-
-print("Maximum Sharpe Portfolio:")
-print("  Sharpe Ratio: \(maxSharpe.sharpeRatio.number(2))")
-print("  Expected Return: \(maxSharpe.expectedReturn.percent(1))")
-print("  Volatility: \(maxSharpe.volatility.percent(1))")
-print("  Weights: \(maxSharpe.weights.toArray().map { $0.percent(1) })")
-print()
-
-// MARK: - Minimum Variance Portfolio
-
-print("Running Minimum Variance Portfolio...")
-let minVar = try optimizer.minimumVariancePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	allowShortSelling: false
-)
-
-print("Minimum Variance Portfolio:")
-print("  Expected Return: \(minVar.expectedReturn.percent(1))")
-print("  Volatility: \(minVar.volatility.percent(1))")
-print("  Weights: \(minVar.weights.toArray().map { $0.percent(1) })")
-print()
-
-// MARK: - Efficient Frontier
-
-print("Running Efficient Frontier...")
-let frontier = try optimizer.efficientFrontier(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	numberOfPoints: 20
-)
-
-print("Efficient Frontier:")
-print("Volatility | Return   | Sharpe")
-print("-----------|----------|-------")
-
-for portfolio in frontier.portfolios {
-	print("\(portfolio.volatility.percent(1).paddingLeft(toLength: 10)) | " +
-		  "\(portfolio.expectedReturn.percent(2).paddingLeft(toLength: 8)) | " +
-		  "\(portfolio.sharpeRatio.number(2))")
-}
-
-// Find portfolio closest to 12% target return
-let targetReturn = 0.12
-let targetPortfolio = frontier.portfolios.min(by: { p1, p2 in
-	abs(p1.expectedReturn - targetReturn) < abs(p2.expectedReturn - targetReturn)
-})!
-
-print("\nTarget \(targetReturn.percent(0)) Return Portfolio:")
-print("  Volatility: \(targetPortfolio.volatility.percent(1))")
-print("  Weights: \(targetPortfolio.weights.toArray().map { $0.percent(1) })")
-print()
-
-// MARK: - Risk Parity
-
-print("Running Risk Parity Portfolio...")
-let riskParity = try optimizer.riskParityPortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	constraintSet: .longOnly
-)
-
-print("Risk Parity Portfolio:")
-for (i, weight) in riskParity.weights.toArray().enumerated() {
-	print("  Asset \(i + 1): \(weight.percent(1))")
-}
-print("Expected Return: \(riskParity.expectedReturn.percent(1))")
-print("Volatility: \(riskParity.volatility.percent(1))")
-print("Sharpe Ratio: \(riskParity.sharpeRatio.number(2))")
-print()
-
-// MARK: - Constrained Portfolios
-
-print("Running 130/30 Portfolio...")
-let longShort = try optimizer.maximumSharpePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	constraintSet: .longShort(maxLeverage: 1.3)
-)
-
-print("130/30 Portfolio:")
-print("  Sharpe: \(longShort.sharpeRatio.number(2))")
-print("  Weights: \(longShort.weights.toArray().map { $0.percent(1) })")
-print()
-
-print("Running Box Constrained Portfolio...")
-let boxConstrained = try optimizer.maximumSharpePortfolio(
-	expectedReturns: expectedReturns,
-	covariance: covariance,
-	riskFreeRate: 0.02,
-	constraintSet: .boxConstrained(min: 0.05, max: 0.40)
-)
-
-print("Box Constrained Portfolio (5%-40% per position):")
-print("  Sharpe: \(boxConstrained.sharpeRatio.number(2))")
-print("  Weights: \(boxConstrained.weights.toArray().map { $0.percent(1) })")
-//
-//} catch {
-//	print("❌ Portfolio optimization failed: \(error)")
-//	print("   Error type: \(type(of: error))")
-//	if let localizedError = error as? BusinessMathError {
-//		print("   Description: \(localizedError.errorDescription ?? "No description")")
-//	}
-//}
-//
-
-// MARK: - Real-World Example: $1mm Asset Portfolio
-
-let assets_rwe = ["US Large Cap", "US Small Cap", "International", "Bonds", "Real Estate"]
-let expectedReturns_rwe = VectorN([0.10, 0.12, 0.11, 0.0375, 0.09])
-
-// More realistic covariance structure (constructed from correlations)
-let volatilities_rwe = [0.15, 0.18, 0.165, 0.075, 0.14]  // 15%, 18%, 17%, 7%, 14%
-let correlations_rwe = [
-	[1.00, 0.75, 0.65, 0.25, 0.50],  // US Large Cap
-	[0.75, 1.00, 0.70, 0.10, 0.55],  // US Small Cap (high corr with US stocks)
-	[0.65, 0.70, 1.00, 0.20, 0.45],  // International (corr with other stocks)
-	[0.25, 0.10, 0.20, 1.00, 0.15],  // Bonds (moderate diversifier)
-	[0.50, 0.55, 0.45, 0.15, 1.00]   // Real Estate (hybrid characteristics)
-]
-
-// Convert to covariance matrix
-var covariance_rwe = [[Double]](repeating: [Double](repeating: 0, count: 5), count: 5)
-for i in 0..<5 {
-	for j in 0..<5 {
-		covariance_rwe[i][j] = correlations_rwe[i][j] * volatilities_rwe[i] * volatilities_rwe[j]
-	}
-}
-
-print(covariance_rwe.flatMap({$0.map({$0.number(3)})}))
-
-let optimizer_rwe = PortfolioOptimizer()
-
-// Conservative investor
-let conservative_rwe = try optimizer_rwe.minimumVariancePortfolio(
-	expectedReturns: expectedReturns_rwe,
-	covariance: covariance_rwe,
-	allowShortSelling: false
-)
-
-print("Conservative Portfolio ($1M):")
-for (i, asset) in assets_rwe.enumerated() {
-	let weight = conservative_rwe.weights.toArray()[i]
-	if weight > 0.01 {
-		let allocation = 1_000_000 * weight
-		print("  \(asset): \(allocation.currency(0)) (\(weight.percent(1)))")
-	}
-}
-print("Expected Return: \(conservative_rwe.expectedReturn.percent(1))")
-print("Volatility: \(conservative_rwe.volatility.percent(1))")
-
-</code></pre></details>
-<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.2-PortfolioOptimizationGuide.md">BusinessMath Docs – 5.2 Portfolio Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Compare maximum Sharpe vs. risk parity for a 10-asset portfolio</li><li>Build a portfolio with sector constraints (max 30% in any sector)</li><li>Generate an efficient frontier and plot risk vs. return</li><li>Implement a tactical allocation model that shifts weights based on market conditions</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Wealth management</strong>: Automate portfolio construction for client accounts</li><li><strong>Institutional investing</strong>: Build multi-asset portfolios with complex constraints</li><li><strong>Trading</strong>: Dynamically rebalance portfolios as correlations change</li><li><strong>Risk management</strong>: Ensure portfolios stay within risk budgets</li></ul><p><strong>Wealth manager use case</strong>: “I manage 50 client accounts, each with different risk tolerances and constraints. I need to generate optimal portfolios programmatically, not manually tune weights in Excel.”</p><p>BusinessMath makes portfolio optimization a repeatable, auditable process.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Bonds Get High Allocations in Optimal Portfolios</strong></p><p>Even though bonds have lower expected returns (4% vs. 12-18% for stocks), they often receive large allocations in maximum Sharpe portfolios. Why?</p><p><strong>Diversification benefit</strong>: Bonds have low correlation with stocks. Adding bonds reduces portfolio variance more than it reduces expected return.</p><p><strong>Math</strong>: Portfolio variance = w^T Σ w (includes correlation terms)</p><ul><li>If correlation = 0, variance decreases faster than return</li><li>If correlation = 1, no diversification benefit</li></ul><p><strong>Real example</strong>: 100% stocks = 20% vol. Adding 40% bonds might reduce return from 12% → 10%, but volatility drops from 20% → 12%. Sharpe improves: (10%-2%)/12% > (12%-2%)/20%.</p><p><strong>Rule of thumb</strong>: Low-correlation assets punch above their weight in optimal portfolios.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part of portfolio optimization was <strong>handling numerical instability in covariance matrices</strong>. Real-world correlation matrices are often:</p><ul><li><strong>Ill-conditioned</strong>: Small eigenvalues cause optimization to fail</li><li><strong>Non-positive-definite</strong>: Estimation errors create invalid matrices</li></ul><p>We implemented multiple safeguards:</p><ol><li><strong>Eigenvalue thresholding</strong>: Replace near-zero eigenvalues</li><li><strong>Shrinkage estimators</strong>: Blend sample covariance with structured prior</li><li><strong>Regularization</strong>: Add small constant to diagonal (Ledoit-Wolf)</li></ol><p>Without these, 30% of real-world portfolios would fail to optimize.</p><p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered condition numbers and ill-posed problems.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Wednesday</strong>: Core Optimization APIs - Understanding the unified optimizer interface, custom objective functions, and algorithm selection.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 23/~48</li><li>Playgrounds: 21 available</li></ul>]]></content:encoded></item></channel></rss>
+<p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.3-CoreOptimization.md">BusinessMath Docs – 5.3 Core Optimization</a></p><p><strong>Modifications to try</strong>:</p><ol><li>Find the profit-maximizing price (use <code>minimize()</code> on negative profit)</li><li>Solve for multiple roots by trying different initial guesses</li><li>Build a breakeven calculator for a business with complex cost structure</li><li>Compare convergence speed: Newton-Raphson vs. bisection method</li></ol><hr /><h2>Real-World Application</h2><ul><li><strong>Financial planning</strong>: Automate target-seeking for revenue, margin, ROI goals</li><li><strong>Pricing analysis</strong>: Find breakeven prices accounting for price elasticity</li><li><strong>Investment analysis</strong>: Calculate IRR for complex cash flow patterns</li><li><strong>Engineering</strong>: Solve implicit equations (e.g., pipe flow, heat transfer)</li></ul><p><strong>CFO use case</strong>: “We need to hit $5M EBITDA next quarter. What revenue do we need given our cost structure and operating leverage?”</p><p>Goal-seeking automates this calculation instantly.</p><hr /><p><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Newton-Raphson Converges Quadratically</strong></p><p>Newton-Raphson doubles the number of correct digits with each iteration when close to the solution. This is called <strong>quadratic convergence</strong>.</p><p><strong>Example progression</strong> (finding √2):</p><ul><li>Iteration 1: 1.5 (1 digit correct)</li><li>Iteration 2: 1.416… (2 digits correct)</li><li>Iteration 3: 1.414215… (5 digits correct)</li><li>Iteration 4: 1.41421356237… (11 digits correct)</li></ul><p><strong>Why?</strong> Taylor series analysis shows the error decreases proportional to the square of the previous error: ε_{n+1} ∝ ε_n²</p><p><strong>Trade-off:</strong> Fast convergence requires good initial guess. Bad guesses may diverge or converge to wrong root.</p><p><code>─────────────────────────────────────────────────</code></p><hr /><h3>📝 Development Note</h3><p>The hardest part was <strong>making numerical differentiation robust</strong> across all <code>Real</code> types (Float, Double, Decimal, etc.).</p><p><strong>Challenge:</strong> The step size <code>h</code> for f’(x) ≈ (f(x+h) - f(x-h)) / (2h) must be:</p><ul><li>Large enough to avoid catastrophic cancellation (subtracting nearly equal numbers)</li><li>Small enough to approximate the true derivative</li></ul><p>We settled on <code>h = √ε × max(|x|, 1)</code> where ε is machine epsilon. This adapts to:</p><ul><li>Float vs. Double vs. Decimal precision</li><li>Magnitude of x (avoid tiny steps for large x)</li></ul><p><strong>Result:</strong> Goal-seeking works reliably across all numeric types without user tuning.</p><p><strong>Related Methodology</strong>: <a href="../week-02/01-mon-numerical-foundations">Numerical Stability</a> (Week 2) - Covered catastrophic cancellation and condition numbers.</p><hr /><h2>Next Steps</h2><p><strong>Coming up Thursday</strong>: Vector Operations - Understanding the VectorSpace protocol, Vector2D, Vector3D, and VectorN for multivariate optimization.</p><hr /><p><strong>Series Progress</strong>:</p><ul><li>Week: 7/12</li><li>Posts Published: 24/~48</li><li>Playgrounds: 21 available</li></ul>]]></content:encoded></item></channel></rss>

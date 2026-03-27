@@ -7,7 +7,7 @@ post: 4
 playground: CaseStudies/InvestmentStrategyDSL.playground
 tags: case-study, swift-patterns
 layout: BlogPostLayout
-published: false
+published: true
 ---
 
 # Case Study: Investment Strategy DSL with Result Builders
