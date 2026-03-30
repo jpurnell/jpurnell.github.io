@@ -139,6 +139,8 @@ public struct Employer: Codable {
     public let name: String
     /// Overall position title.
     public let position: String?
+    /// Schema.org `@type` for JSON-LD (e.g. "Organization", "Corporation"). Defaults to "Organization".
+    public var schemaType: String?
 }
 
 /// A published work, article, or media appearance.
@@ -155,6 +157,10 @@ public struct Publication: Codable {
     public let publisher: String?
     /// URL to the publication.
     public let url: String
+    /// Schema.org `@type` for JSON-LD (e.g. "Article", "SoftwareSourceCode", "TVEpisode"). Defaults to "Article".
+    public var schemaType: String?
+    /// Whether the CV owner is the author/creator (vs. being mentioned or featured). Defaults to `false`.
+    public var isAuthor: Bool?
 }
 
 /// A STAR-format story used for behavioral interview preparation.
@@ -255,6 +261,8 @@ public struct VolunteerRole: Codable {
     public let organization: String
     /// Individual positions held within this organization.
     public let positions: [Position]?
+    /// Schema.org `@type` for JSON-LD (e.g. "Organization", "EducationalOrganization"). Defaults to "Organization".
+    public var schemaType: String?
 
     /// Earliest start date across all positions, or `nil` if none.
     public var startDate: Date? {
