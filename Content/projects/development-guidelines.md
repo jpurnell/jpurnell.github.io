@@ -10,7 +10,7 @@ lastModified: 2026-04-01
 published: true
 ---
 
-# How We Stopped Losing Context and Started Shipping Faster with AI
+# How I Stopped Losing Context and Started Shipping Faster with AI
 
 **Building a reusable instruction set that turns AI assistants into reliable development partners.**
 
