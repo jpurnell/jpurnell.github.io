@@ -283,7 +283,7 @@
         <strong>1. RED - Write a Failing Test</strong>
         <p></p>
         <p>Before asking AI for any implementation, we wrote tests that specified exactly what wanted:</p>
-        <pre><code class="language-swift">@Test(“Future value compounds correctly”) func testFutureValue() throws { let fv = calculateFutureValue( presentValue: 100.0, rate: 0.05, periods: 10.0 ) // Expected: 100 * (1.05)^10 = 162.89 #expect(abs(fv - 162.89) &lt; 0.01) } </code></pre>This test will fail—the function doesn’t exist yet. 
+        <pre><code class="language-swift">@Test(“Future value compounds correctly”)<br />func testFutureValue() throws {<br />    let fv = calculateFutureValue(<br />        presentValue: 100.0,<br />        rate: 0.05,<br />        periods: 10.0<br />    )<br />    // Expected: 100 * (1.05)^10 = 162.89<br />    #expect(abs(fv - 162.89) &lt; 0.01)<br />}<br /></code></pre>This test will fail—the function doesn’t exist yet. 
         <strong>That’s the point.</strong>
         <p></p>
         <p><strong>2. GREEN - AI Implements from Specification</strong></p>
@@ -295,17 +295,35 @@
         </blockquote>AI generates:
         <pre><code class="language-swift">public func calculateFutureValue
             <t: real>
-              ( presentValue: T, rate: T, periods: T ) -&gt; T { return presentValue * T.pow((1 + rate), periods) } 
+              (
+              <br /> presentValue: T,
+              <br /> rate: T,
+              <br /> periods: T
+              <br />) -&gt; T {
+              <br /> return presentValue * T.pow((1 + rate), periods)
+              <br />}
+              <br />
             </t:></code></pre>Run the test. 
         <strong>It passes.</strong> Green!
         <p></p>
         <p><strong>3. REFACTOR - Improve with Safety Net</strong></p>
         <p>Now that tests pass, you can refactor fearlessly:</p>
-        <pre><code class="language-swift">// Extract reusable compound interest calculation private func compoundFactor
+        <pre><code class="language-swift">// Extract reusable compound interest calculation<br />private func compoundFactor
             <t: real>
-              (rate: T, periods: T) -&gt; T { return T.pow((1 + rate), periods) } public func calculateFutureValue
+              (rate: T, periods: T) -&gt; T {
+              <br /> return T.pow((1 + rate), periods)
+              <br />}
+              <br />
+              <br />public func calculateFutureValue
               <t: real>
-                ( presentValue: T, rate: T, periods: T ) -&gt; T { return presentValue * compoundFactor(rate: rate, periods: periods) } 
+                (
+                <br /> presentValue: T,
+                <br /> rate: T,
+                <br /> periods: T
+                <br />) -&gt; T {
+                <br /> return presentValue * compoundFactor(rate: rate, periods: periods)
+                <br />}
+                <br />
               </t:>
             </t:></code></pre>Tests still pass. Refactor succeeded.
         <hr />
@@ -329,7 +347,7 @@
         <p></p>
         <p>AI works best when given concrete, executable specifications. A failing test is the clearest possible spec.</p>
         <p><strong>Example</strong>: We wanted NPV calculation. Instead of saying “implement net present value,” we wrote:</p>
-        <pre><code class="language-swift">@Test(“NPV calculation matches known value”) func testNPV() throws { let cashFlows = [-100.0, 50.0, 50.0, 50.0] let npv = calculateNPV(rate: 0.10, cashFlows: cashFlows) // Manual calculation: -100 + 50/1.1 + 50/1.1^2 + 50/1.1^3 = 24.34 #expect(abs(npv - 24.34) &lt; 0.01) } </code></pre>AI immediately understood: discount each cash flow, sum them. Perfect implementation on first try.
+        <pre><code class="language-swift">@Test(“NPV calculation matches known value”)<br />func testNPV() throws {<br />    let cashFlows = [-100.0, 50.0, 50.0, 50.0]<br />    let npv = calculateNPV(rate: 0.10, cashFlows: cashFlows)<br />    // Manual calculation: -100 + 50/1.1 + 50/1.1^2 + 50/1.1^3 = 24.34<br />    #expect(abs(npv - 24.34) &lt; 0.01)<br />}<br /></code></pre>AI immediately understood: discount each cash flow, sum them. Perfect implementation on first try.
         <p></p>
         <p><strong>2. Tests Caught AI Errors Immediately</strong></p>
         <p>First AI attempt at <code>calculateFutureValue</code> used <strong>simple interest</strong>: <code>FV = PV * (1 + rate * periods)</code>.</p>
@@ -337,13 +355,13 @@
         <p><strong>Total debugging time</strong>: 30 seconds.</p>
         <p><strong>3. Generic Implementations Validated</strong></p>
         <p>We used the Swift Numerics as our only real dependency, but it allowed us to work generically over and “Real” number. Writing tests for multiple types ensured generics worked:</p>
-        <pre><code class="language-swift">@Test(“Future value works with Double”) func testFVDouble() { let fv: Double = calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: 10.0) #expect(abs(fv - 162.89) &lt; 0.01) }<p></p></code><p><code class="language-swift">@Test(“Future value works with Float”) func testFVFloat() { let fv: Float = calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: 10.0) #expect(abs(fv - 162.89) &lt; 0.1) // Looser tolerance for Float } </code></p></pre>Both passed. Generic implementation validated.
+        <pre><code class="language-swift">@Test(“Future value works with Double”)<br />func testFVDouble() {<br />    let fv: Double = calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: 10.0)<br />    #expect(abs(fv - 162.89) &lt; 0.01)<br />}<br /><br />@Test(“Future value works with Float”)<br />func testFVFloat() {<br />    let fv: Float = calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: 10.0)<br />    #expect(abs(fv - 162.89) &lt; 0.1)  // Looser tolerance for Float<br />}<br /></code></pre>Both passed. Generic implementation validated.
         <hr />
         <h2>What Didn’t Work</h2>
         <strong>1. Vague Tests</strong>
         <p></p>
         <p>A test has to be specific to be useful. A test-driven approach therefore works best when you have domain expertise and can give concrete guidance:</p>
-        <pre><code class="language-swift">@Test(“Present value works”) func testPV() { let pv = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0) #expect(pv &gt; 0)  // Too vague! } </code></pre>AI would generate code here that passes, but wouldn’t necessarily be write. Just specifying that the value be positive won’t ensure that it is the 
+        <pre><code class="language-swift">@Test(“Present value works”)<br />func testPV() {<br />    let pv = presentValue(futureValue: 1000.0, rate: 0.05, periods: 10.0)<br />    #expect(pv &gt; 0)  // Too vague!<br />}<br /></code></pre>AI would generate code here that passes, but wouldn’t necessarily be write. Just specifying that the value be positive won’t ensure that it is the 
         <em>correct</em> value.
         <p></p>
         <p><strong>Fix</strong>: Always test against known, calculated values.</p>
@@ -356,7 +374,7 @@
         </ul>AI would happily implement code that crashed or returned nonsense for these inputs.
         <p></p>
         <p><strong>Fix</strong>: Enumerate edge cases explicitly. Write tests for them all.</p>
-        <pre><code class="language-swift">@Test(“Future value with zero rate”) func testFVZeroRate() { let fv = calculateFutureValue(presentValue: 100.0, rate: 0.0, periods: 10.0) #expect(fv == 100.0)  // No growth }<p></p></code><p><code class="language-swift">@Test(“Future value with negative periods throws”) func testFVNegativePeriods() { #expect(throws: FinancialError.self) { try calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: -5.0) } } </code></p></pre>
+        <pre><code class="language-swift">@Test(“Future value with zero rate”)<br />func testFVZeroRate() {<br />    let fv = calculateFutureValue(presentValue: 100.0, rate: 0.0, periods: 10.0)<br />    #expect(fv == 100.0)  // No growth<br />}<br /><br />@Test(“Future value with negative periods throws”)<br />func testFVNegativePeriods() {<br />    #expect(throws: FinancialError.self) {<br />        try calculateFutureValue(presentValue: 100.0, rate: 0.05, periods: -5.0)<br />    }<br />}<br /></code></pre>
         <hr />
         <h2>Key Takeaway</h2>We’re not in a place to just trust AI to do what you’re thinking. But by specifying test-first development, you can use AI not as a code generator, but instead into a 
         <strong>specification executor</strong>.
@@ -389,10 +407,7 @@
           <li>If tests still pass, refactor succeeded</li>
         </ul>
         <strong>Starting template</strong>:
-        <pre><code># For each new function:</code>
-          <ol>
-            <code><li>Write failing test with expected value</li><li>Prompt AI: “Implement [function name] to make this test pass: [paste test]”</li><li>Run test, verify it passes</li><li>Add edge case tests</li><li>Refactor if needed </li></code>
-          </ol></pre>
+        <pre><code># For each new function:<br /><br />1. Write failing test with expected value<br />2. Prompt AI: “Implement [function name] to make this test pass: [paste test]”<br />3. Run test, verify it passes<br />4. Add edge case tests<br />5. Refactor if needed<br /></code></pre>
         <hr />
         <h2>See It In Action</h2>This practice is demonstrated in the following technical posts:
         <p></p>

@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">What Didn't Work: Lessons from Failures and Dead Ends</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">9 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 40 of 12-Week BusinessMath Series</strong>
           <hr />Not everything worked. Some ideas seemed brilliant on paper but failed in practice. Some approaches worked technically but created more problems than they solved. Here’s the honest assessment of what didn’t work, why it failed, and what I’d do differently.
@@ -267,7 +267,7 @@
         <strong>What I Tried</strong>: Create elaborate type hierarchy for financial instruments.
         <p></p>
         <p><strong>The Code</strong>:</p>
-        <pre><code class="language-swift">// DON’T DO THIS protocol FinancialInstrument { associatedtype CashFlowType associatedtype ValuationType func cashFlows() -&gt; [CashFlowType] func value(discountRate: Double) -&gt; ValuationType } protocol FixedIncomeInstrument: FinancialInstrument where CashFlowType == FixedCashFlow { var couponRate: Double { get } var maturity: Date { get } }<p></p><p>protocol EquityInstrument: FinancialInstrument where CashFlowType == DividendCashFlow { var dividendPolicy: DividendPolicy { get } }</p></code><p><code class="language-swift">// This went on for 15 protocols… </code></p></pre>
+        <pre><code class="language-swift">// DON’T DO THIS<br />protocol FinancialInstrument {<br />    associatedtype CashFlowType<br />    associatedtype ValuationType<br />    func cashFlows() -&gt; [CashFlowType]<br />    func value(discountRate: Double) -&gt; ValuationType<br />}<br /><br />protocol FixedIncomeInstrument: FinancialInstrument where CashFlowType == FixedCashFlow {<br />    var couponRate: Double { get }<br />    var maturity: Date { get }<br />}<br /><br />protocol EquityInstrument: FinancialInstrument where CashFlowType == DividendCashFlow {<br />    var dividendPolicy: DividendPolicy { get }<br />}<br /><br />// This went on for 15 protocols…<br /></code></pre>
         <strong>Why It Failed</strong>:
         <ul>
           <li><strong>Complexity explosion</strong>: Users couldn’t figure out which protocol to conform to</li>
@@ -279,39 +279,47 @@
         <strong>Start with structs. Add protocols only when you have 3+ implementations that share behavior.</strong>
         <p></p>
         <p><strong>The Fix</strong>:</p>
-        <pre><code class="language-swift">// DO THIS INSTEAD struct Bond { let faceValue: Double let couponRate: Double let maturity: Period<pre><code>func price(yield: Double) -&gt; Double { // Simple implementation, no protocol maze } </code></pre>}<p></p><p>struct Stock { let expectedReturn: Double let volatility: Double</p><pre><code>func expectedPrice(horizon: Period) -&gt; Double { // Different from Bond, that’s OK! } </code></pre>} </code></pre>
+        <pre><code class="language-swift">// DO THIS INSTEAD<br />struct Bond {<br />    let faceValue: Double<br />    let couponRate: Double<br />    let maturity: Period<br /><br />    func price(yield: Double) -&gt; Double {<br />        // Simple implementation, no protocol maze<br />    }<br />}<br /><br />struct Stock {<br />    let expectedReturn: Double<br />    let volatility: Double<br /><br />    func expectedPrice(horizon: Period) -&gt; Double {<br />        // Different from Bond, that’s OK!<br />    }<br />}<br /></code></pre>
         <strong>Lesson</strong>: YAGNI applies to type systems too. You probably don’t need that protocol.
         <hr />
         <h2>2. Premature GPU Optimization (Month 2 Fiasco)</h2>
         <strong>What I Tried</strong>: “Everything should run on GPU for maximum performance!”
         <p></p>
-        <div>
-          <p><strong>The Code</strong>:</p>
-          <pre><code class="language-swift">// Tried to GPU-accelerate even simple operations func npv(discountRate: Double, cashFlows: [Double]) -&gt; Double { // Copy to GPU let gpuBuffer = device.makeBuffer(bytes: cashFlows, length: cashFlows.count * 8)</code><pre><code class="language-swift"><code>// Run Metal compute shader let commandBuffer = commandQueue.makeCommandBuffer()! // … 50 lines of Metal boilerplate …<p></p></code><p><code>// Copy result back return result </code></p></code></pre>} </pre>
-          <strong>Why It Failed</strong>:
-          <ul>
-            <li><strong>Overhead</strong>: GPU setup took 5ms, calculation took 0.001ms → <strong>5,000× slower</strong></li>
-            <li><strong>Complexity</strong>: Metal code harder to test, debug, maintain</li>
-            <li><strong>Not portable</strong>: Linux support required CPU fallback anyway</li>
-            <li><strong>Diminishing returns</strong>: Only helped for huge problems (&gt;10,000 variables)</li>
-          </ul>
-          <strong>What I Learned</strong>: 
-          <strong>Optimize only after measuring. Profile first, then optimize the actual bottleneck.</strong>
-          <p></p>
-        </div>
+        <p><strong>The Code</strong>:</p>
+        <pre><code class="language-swift">// Tried to GPU-accelerate even simple operations<br />func npv(discountRate: Double, cashFlows: [Double]) -&gt; Double {<br />    // Copy to GPU<br />    let gpuBuffer = device.makeBuffer(bytes: cashFlows, length: cashFlows.count * 8)<br /><br />    // Run Metal compute shader<br />    let commandBuffer = commandQueue.makeCommandBuffer()!<br />    // … 50 lines of Metal boilerplate …<br /><br />    // Copy result back<br />    return result<br />}<br /></code></pre>
+        <strong>Why It Failed</strong>:
+        <ul>
+          <li><strong>Overhead</strong>: GPU setup took 5ms, calculation took 0.001ms → <strong>5,000× slower</strong></li>
+          <li><strong>Complexity</strong>: Metal code harder to test, debug, maintain</li>
+          <li><strong>Not portable</strong>: Linux support required CPU fallback anyway</li>
+          <li><strong>Diminishing returns</strong>: Only helped for huge problems (&gt;10,000 variables)</li>
+        </ul>
+        <strong>What I Learned</strong>: 
+        <strong>Optimize only after measuring. Profile first, then optimize the actual bottleneck.</strong>
+        <p></p>
         <p><strong>The Fix</strong>:</p>
-        <pre><code class="language-swift">// Simple CPU version (fast enough for 99% of use cases) func npv
+        <pre><code class="language-swift">// Simple CPU version (fast enough for 99% of use cases)<br />func npv
             <t: real>
-              (discountRate: T, cashFlows: [T]) -&gt; T { cashFlows.enumerated().reduce(T.zero) { sum, pair in let (period, cashFlow) = pair return sum + cashFlow / T(1 + discountRate).pow(T(period + 1)) } }
-              <p></p>
-            </t:></code><p><code class="language-swift">// GPU version ONLY for specific use case (genetic algorithm with 10,000+ population) if populationSize &gt; 1_000 &amp;&amp; Metal.isAvailable { return gpuGeneticAlgorithm(…) } </code></p></pre>
+              (discountRate: T, cashFlows: [T]) -&gt; T {
+              <br /> cashFlows.enumerated().reduce(T.zero) { sum, pair in
+              <br /> let (period, cashFlow) = pair
+              <br /> return sum + cashFlow / T(1 + discountRate).pow(T(period + 1))
+              <br /> }
+              <br />}
+              <br />
+              <br />// GPU version ONLY for specific use case (genetic algorithm with 10,000+ population)
+              <br />if populationSize &gt; 1_000 &amp;&amp; Metal.isAvailable {
+              <br /> return gpuGeneticAlgorithm(…)
+              <br />}
+              <br />
+            </t:></code></pre>
         <strong>Lesson</strong>: Default to simple. Add complexity only when profiling proves it’s needed.
         <hr />
         <h2>3. Magical Auto-Constraint Detection (Abandoned Feature)</h2>
         <strong>What I Tried</strong>: Optimizer that automatically infers constraints from domain.
         <p></p>
         <p><strong>The Idea</strong>:</p>
-        <pre><code class="language-swift">// User writes this: let portfolio = Portfolio(assets: 50)<p></p><p>// Optimizer “magically” knows: // - Weights sum to 1 (it’s a portfolio!) // - No negative weights (you can’t short!) // - Max position size 20% (industry standard!)</p></code><p><code class="language-swift">let result = optimizer.optimize(portfolio) // No constraints specified </code></p></pre>
+        <pre><code class="language-swift">// User writes this:<br />let portfolio = Portfolio(assets: 50)<br /><br />// Optimizer “magically” knows:<br />// - Weights sum to 1 (it’s a portfolio!)<br />// - No negative weights (you can’t short!)<br />// - Max position size 20% (industry standard!)<br /><br />let result = optimizer.optimize(portfolio)  // No constraints specified<br /></code></pre>
         <strong>Why It Failed</strong>:
         <ul>
           <li><strong>Surprises</strong>: Users didn’t know what constraints were applied (“Why can’t I short?”)</li>
@@ -323,14 +331,14 @@
         <strong>Explicit is better than implicit. Always. No matter how “obvious” it seems.</strong>
         <p></p>
         <p><strong>The Fix</strong>:</p>
-        <pre><code class="language-swift">// Make constraints explicit (even if verbose) let result = optimizer.minimize( objective, constraints: [ .sumToOne,      // User sees this is applied .longOnly,      // User sees this is applied .positionLimit(max: 0.20)  // User can change this ] ) </code></pre>
+        <pre><code class="language-swift">// Make constraints explicit (even if verbose)<br />let result = optimizer.minimize(<br />    objective,<br />    constraints: [<br />        .sumToOne,      // User sees this is applied<br />        .longOnly,      // User sees this is applied<br />        .positionLimit(max: 0.20)  // User can change this<br />    ]<br />)<br /></code></pre>
         <strong>Lesson</strong>: Magic is good in demos, terrible in production. Be explicit.
         <hr />
         <h2>4. Over-Abstracted Optimization Framework (Month 4 Rewrite)</h2>
         <strong>What I Tried</strong>: “Let’s make it so generic you can optimize ANYTHING!”
         <p></p>
         <p><strong>The Code</strong>:</p>
-        <pre><code class="language-swift">protocol OptimizationProblem { associatedtype Solution associatedtype Constraint: ConstraintProtocol func evaluate(_ solution: Solution) -&gt; Double func constraints() -&gt; [Constraint] }<p></p><p>protocol Optimizer { associatedtype Problem: OptimizationProblem func solve(_ problem: Problem) -&gt; Problem.Solution }</p></code><p><code class="language-swift">// Now users have to implement 2 protocols + 3 associated types just to optimize </code></p></pre>
+        <pre><code class="language-swift">protocol OptimizationProblem {<br />    associatedtype Solution<br />    associatedtype Constraint: ConstraintProtocol<br />    func evaluate(_ solution: Solution) -&gt; Double<br />    func constraints() -&gt; [Constraint]<br />}<br /><br />protocol Optimizer {<br />    associatedtype Problem: OptimizationProblem<br />    func solve(_ problem: Problem) -&gt; Problem.Solution<br />}<br /><br />// Now users have to implement 2 protocols + 3 associated types just to optimize<br /></code></pre>
         <strong>Why It Failed</strong>:
         <ul>
           <li><strong>Cognitive load</strong>: Users spent 30 minutes reading docs before optimizing</li>
@@ -342,18 +350,31 @@
         <strong>Abstractions should reduce complexity, not create it.</strong>
         <p></p>
         <p><strong>The Fix</strong>:</p>
-        <pre><code class="language-swift">// Just use closures func minimize
+        <pre><code class="language-swift">// Just use closures<br />func minimize
             <t>
-              ( _ objective: (T) -&gt; Double, startingAt initial: T, constraints: [(T) -&gt; Double] = [] ) -&gt; T { // Simple, understandable, works }
-              <p></p>
-            </t></code><p><code class="language-swift">// Usage is obvious let result = optimizer.minimize( { weights in portfolio.variance(weights) }, startingAt: equalWeights, constraints: [sumToOne, longOnly] ) </code></p></pre>
+              (
+              <br /> _ objective: (T) -&gt; Double,
+              <br /> startingAt initial: T,
+              <br /> constraints: [(T) -&gt; Double] = []
+              <br />) -&gt; T {
+              <br /> // Simple, understandable, works
+              <br />}
+              <br />
+              <br />// Usage is obvious
+              <br />let result = optimizer.minimize(
+              <br /> { weights in portfolio.variance(weights) },
+              <br /> startingAt: equalWeights,
+              <br /> constraints: [sumToOne, longOnly]
+              <br />)
+              <br />
+            </t></code></pre>
         <strong>Lesson</strong>: The best abstraction is no abstraction. Closures are often enough.
         <hr />
         <h2>5. Documentation Generation from Tests (Cool But Useless)</h2>
         <strong>What I Tried</strong>: Auto-generate docs from test assertions.
         <p></p>
         <p><strong>The Code</strong>:</p>
-        <pre><code class="language-swift">// Tests with special comments func testNPVPositiveReturns() { /// @example NPV with positive returns /// @expectedResult Positive NPV indicates good investment let npv = npv(discountRate: 0.10, cashFlows: [-100, 30, 40, 50]) XCTAssertGreaterThan(npv, 0)  /// @assert “NPV must be positive for profitable investment” }<p></p></code><p><code class="language-swift">// Tool parses comments → generates docs </code></p></pre>
+        <pre><code class="language-swift">// Tests with special comments<br />func testNPVPositiveReturns() {<br />    /// @example NPV with positive returns<br />    /// @expectedResult Positive NPV indicates good investment<br />    let npv = npv(discountRate: 0.10, cashFlows: [-100, 30, 40, 50])<br />    XCTAssertGreaterThan(npv, 0)  /// @assert “NPV must be positive for profitable investment”<br />}<br /><br />// Tool parses comments → generates docs<br /></code></pre>
         <strong>Why It Failed</strong>:
         <ul>
           <li><strong>Docs were terrible</strong>: Reads like test code because it IS test code</li>
@@ -365,9 +386,12 @@
         <strong>Just because you CAN automate something doesn’t mean you SHOULD.</strong>
         <p></p>
         <p><strong>The Fix</strong>:</p>
-        <pre><code class="language-swift">/// Calculate NPV for a series of cash flows. /// /// ## Example /// /// <code>swift /// let npv = npv(discountRate: 0.10, cashFlows: [-100, 30, 40, 50]) /// // → 8.77 (positive NPV = good investment) /// </code> public func npv
+        <pre><code class="language-swift">/// Calculate NPV for a series of cash flows.<br />///<br />/// ## Example<br />///<br />/// <code>swift<br />/// let npv = npv(discountRate: 0.10, cashFlows: [-100, 30, 40, 50])<br />/// // → 8.77 (positive NPV = good investment)<br />/// </code><br />public func npv
             <t: real>
-              (discountRate: T, cashFlows: [T]) -&gt; T { // Manual docs, clear and concise } 
+              (discountRate: T, cashFlows: [T]) -&gt; T {
+              <br /> // Manual docs, clear and concise
+              <br />}
+              <br />
             </t:></code></pre>
         <strong>Lesson</strong>: Write docs manually. It’s faster and better.
         <hr />
@@ -396,16 +420,25 @@
         <strong>What I Tried</strong>: Make units (dollars, percentages, basis points) compile-time checked.
         <p></p>
         <p><strong>The Code</strong>:</p>
-        <pre><code class="language-swift">struct USD: UnitType {} struct Percentage: UnitType {} struct BasisPoints: UnitType {}<p></p><p>struct Quantity
-              <unit: unittype>
-                 { let value: Double }
-              </unit:></p><p>// Compiler prevents mixing units! let price = Quantity
+        <pre><code class="language-swift">struct USD: UnitType {}<br />struct Percentage: UnitType {}<br />struct BasisPoints: UnitType {}<br /><br />struct Quantity
+            <unit: unittype>
+               {
+              <br /> let value: Double
+              <br />}
+              <br />
+              <br />// Compiler prevents mixing units!
+              <br />let price = Quantity
               <usd>
-                (value: 100.0) let return = Quantity
+                (value: 100.0)
+                <br />let return = Quantity
                 <percentage>
                   (value: 0.10)
+                  <br />
+                  <br />let x = price + return // ✗ Compile error: can’t add USD + Percentage
+                  <br />
                 </percentage>
-              </usd></p></code><p><code class="language-swift">let x = price + return // ✗ Compile error: can’t add USD + Percentage </code></p></pre>
+              </usd>
+            </unit:></code></pre>
         <strong>Why It Failed</strong>:
         <ul>
           <li><strong>Conversion hell</strong>: Needed explicit conversions everywhere</li>
@@ -417,7 +450,7 @@
         <strong>Type-level programming is fun but rarely worth the complexity tax.</strong>
         <p></p>
         <p><strong>The Fix</strong>: Use runtime validation for critical conversions, rely on clear naming for the rest.</p>
-        <pre><code class="language-swift">// Simple, clear, works func sharpeRatio(expectedReturn: Double, stdDev: Double) -&gt; Double { expectedReturn / stdDev  // Clear from names what units are } </code></pre>
+        <pre><code class="language-swift">// Simple, clear, works<br />func sharpeRatio(expectedReturn: Double, stdDev: Double) -&gt; Double {<br />    expectedReturn / stdDev  // Clear from names what units are<br />}<br /></code></pre>
         <strong>Lesson</strong>: Types should clarify, not obscure. Fancy types are usually overkill.
         <hr />
         <h2>The Meta-Lesson</h2>

@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Case Study: Investment Strategy DSL with Result Builders</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">10 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">11 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Case Study #6 of 6 • Capstone for Result Builders + Complete Library</strong>
           <hr /></p>
@@ -268,22 +268,7 @@
         <strong>Challenge</strong>: Encode investment strategies in code that portfolio managers can read, validate, and modify
         <p></p>
         <p><strong>Current State (Python/Excel)</strong>:</p>
-        <pre><code class="language-python"># Strategy: Growth + Value + Momentum positions = [] for stock in universe: score = 0 # Growth scoring if stock.revenue_growth &gt; 0.15: score += 2 elif stock.revenue_growth &gt; 0.10: score += 1<pre><code># Value scoring
-if stock.pe_ratio &lt; sector_median_pe * 0.8:
-    score += 2
-elif stock.pe_ratio &lt; sector_median_pe:
-    score += 1
-
-# Momentum scoring
-if stock.returns_6mo &gt; 0.20:
-    score += 2
-elif stock.returns_6mo &gt; 0.10:
-    score += 1
-
-if score &gt;= 4:  # Buy threshold
-    weight = score / total_score
-    positions.append((stock, weight))
-</code></pre></code></pre>
+        <pre><code class="language-python"># Strategy: Growth + Value + Momentum<br />positions = []<br />for stock in universe:<br />    score = 0<br />    # Growth scoring<br />    if stock.revenue_growth &gt; 0.15:<br />        score += 2<br />    elif stock.revenue_growth &gt; 0.10:<br />        score += 1<br /><br />    # Value scoring<br />    if stock.pe_ratio &lt; sector_median_pe * 0.8:<br />        score += 2<br />    elif stock.pe_ratio &lt; sector_median_pe:<br />        score += 1<br /><br />    # Momentum scoring<br />    if stock.returns_6mo &gt; 0.20:<br />        score += 2<br />    elif stock.returns_6mo &gt; 0.10:<br />        score += 1<br /><br />    if score &gt;= 4:  # Buy threshold<br />        weight = score / total_score<br />        positions.append((stock, weight))<br /></code></pre>
         <strong>Problems</strong>:
         <ol>
           <li><strong>Not type-safe</strong>: Typos (<code>pe_ratio</code> vs. <code>p_e_ratio</code>) fail at runtime</li>
@@ -296,192 +281,212 @@ if score &gt;= 4:  # Buy threshold
         <hr />
         <h2>The Solution: Investment Strategy DSL</h2>Using Swift result builders, we create a domain-specific language where strategies are declarative, type-safe, and composable.
         <h3>Part 1: Strategy DSL with Result Builders</h3>
-        <pre><code class="language-swift">import BusinessMath
-<p></p></code>
-          <div>
-            <code class="language-swift"><p>// Define a strategy using result builder syntax @InvestmentStrategyBuilder var growthValueMomentum: InvestmentStrategy { // Strategy metadata Name(“Growth + Value + Momentum”) Description(“Combines three quantitative factors with equal weighting”) RebalanceFrequency(.monthly)</p><pre><code>// Universe selection Universe { Market(.us) MinMarketCap(5_000_000_000)  // $5B minimum ExcludeSectors([.financials, .utilities])  // Regulated sectors }<p></p></code>
-                <div>
-                  <code><p>// Scoring factors ScoringModel { // Growth factor Factor(“Revenue Growth”) { Metric(.revenueGrowth) Threshold(strong: 0.15, moderate: 0.10) Weight(0.33) }</p><pre><code>// Value factor Factor(“Valuation”) { Metric(.peRatio) Comparison(.lessThan) Benchmark(.sectorMedian) Threshold(strong: 0.80, moderate: 1.00) Weight(0.33) }<p></p></code><p><code>// Momentum factor Factor(“Price Momentum”) { Metric(.returns6Month) Threshold(strong: 0.20, moderate: 0.10) Weight(0.34) } </code></p></pre>}<p></p></code>
-                </div><p>// Selection and weighting Selection { ScoreThreshold(4.0)  // Minimum composite score MaxPositions(50) PositionWeighting(.equalWeight)  // Equal-weight top 50 }</p><p>// Risk controls RiskLimits { MaxPositionSize(0.05)  // 5% max per position MaxSectorExposure(0.30)  // 30% max per sector TargetVolatility(0.15)  // 15% annual volatility MaxDrawdown(0.20)  // 20% max drawdown before defensive } </p></pre>}<p></p></code>
-          </div><p>// The DSL compiles to an executable strategy let holdings = growthValueMomentum.execute(universe: stockUniverse)</p>
-          <div>
-            <p>print(“Strategy: (growthValueMomentum.name)”) print(“Selected (holdings.count) positions:”) for holding in holdings.prefix(10) { print(” (holding.ticker): ((holding.weight * 100).number())% (score: (holding.score.number()))”) } </p>
-          </div></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Define a strategy using result builder syntax<br />@InvestmentStrategyBuilder<br />var growthValueMomentum: InvestmentStrategy {<br />    // Strategy metadata<br />    Name(“Growth + Value + Momentum”)<br />    Description(“Combines three quantitative factors with equal weighting”)<br />    RebalanceFrequency(.monthly)<br /><br />    // Universe selection<br />    Universe {<br />        Market(.us)<br />        MinMarketCap(5_000_000_000)  // $5B minimum<br />        ExcludeSectors([.financials, .utilities])  // Regulated sectors<br />    }<br /><br />    // Scoring factors<br />    ScoringModel {<br />        // Growth factor<br />        Factor(“Revenue Growth”) {<br />            Metric(.revenueGrowth)<br />            Threshold(strong: 0.15, moderate: 0.10)<br />            Weight(0.33)<br />        }<br /><br />        // Value factor<br />        Factor(“Valuation”) {<br />            Metric(.peRatio)<br />            Comparison(.lessThan)<br />            Benchmark(.sectorMedian)<br />            Threshold(strong: 0.80, moderate: 1.00)<br />            Weight(0.33)<br />        }<br /><br />        // Momentum factor<br />        Factor(“Price Momentum”) {<br />            Metric(.returns6Month)<br />            Threshold(strong: 0.20, moderate: 0.10)<br />            Weight(0.34)<br />        }<br />    }<br /><br />    // Selection and weighting<br />    Selection {<br />        ScoreThreshold(4.0)  // Minimum composite score<br />        MaxPositions(50)<br />        PositionWeighting(.equalWeight)  // Equal-weight top 50<br />    }<br /><br />    // Risk controls<br />    RiskLimits {<br />        MaxPositionSize(0.05)  // 5% max per position<br />        MaxSectorExposure(0.30)  // 30% max per sector<br />        TargetVolatility(0.15)  // 15% annual volatility<br />        MaxDrawdown(0.20)  // 20% max drawdown before defensive<br />    }<br />}<br /><br />// The DSL compiles to an executable strategy<br />let holdings = growthValueMomentum.execute(universe: stockUniverse)<br /><br />print(“Strategy: (growthValueMomentum.name)”)<br />print(“Selected (holdings.count) positions:”)<br />for holding in holdings.prefix(10) {<br />    print(”  (holding.ticker): ((holding.weight * 100).number())% (score: (holding.score.number()))”)<br />}<br /></code></pre>
         <h3>Part 2: Result Builder Implementation</h3>The magic happens in the 
         <code>@InvestmentStrategyBuilder</code>:
-        <pre><code class="language-swift">@resultBuilder struct InvestmentStrategyBuilder { // Build strategy from components static func buildBlock(_ components: StrategyComponent…) -&gt; InvestmentStrategy { InvestmentStrategy(components: components) }</code><pre><code class="language-swift"><code>// Support if/else conditionals static func buildEither(first component: StrategyComponent) -&gt; StrategyComponent { component }<p></p><p>static func buildEither(second component: StrategyComponent) -&gt; StrategyComponent { component }</p><p>// Support optional components static func buildOptional(_ component: StrategyComponent?) -&gt; StrategyComponent { component ?? EmptyComponent() }</p></code><p><code>// Support for loops static func buildArray(_ components: [StrategyComponent]) -&gt; StrategyComponent { CompositeComponent(components) } </code></p></code></pre>}<p></p></pre>
-      </div>
-      <p>// Base protocol for all strategy components protocol StrategyComponent { func apply(to strategy: inout InvestmentStrategy) }</p>
-      <div>
-        <p>// Example component: Factor definition struct Factor: StrategyComponent { let name: String let metric: KeyPath
-          <stock, double>
-             let threshold: (strong: Double, moderate: Double) let weight: Double let comparison: ComparisonType
-          </stock,></p>
-        <pre><code>init( _ name: String, @FactorBuilder builder: () -&gt; FactorConfiguration ) { self.name = name let config = builder() self.metric = config.metric self.threshold = config.threshold self.weight = config.weight self.comparison = config.comparison }<p></p></code><p><code>func apply(to strategy: inout InvestmentStrategy) { strategy.scoringFactors.append( ScoringFactor( name: name, metric: metric, threshold: threshold, weight: weight, comparison: comparison ) ) } </code></p></pre>}
-        <p></p>
-      </div>
-      <p>// Nested result builder for factor configuration @resultBuilder struct FactorBuilder { static func buildBlock(_ components: FactorConfigComponent…) -&gt; FactorConfiguration { var config = FactorConfiguration() for component in components { component.apply(to: &amp;config) } return config } }</p>
-      <div>
-        <p>// Factor configuration components struct Metric
-          <t>
-            : FactorConfigComponent { let keyPath: KeyPath
-            <stock, t></stock,>
-          </t></p>
-        <pre><code>init(_ keyPath: KeyPath
-            <stock, t>
-              ) { self.keyPath = keyPath }
-              <p></p>
-            </stock,></code><p><code>func apply(to config: inout FactorConfiguration) { config.metric = keyPath as! KeyPath
-              <stock, double>
-                 } 
-              </stock,></code></p></pre>}
-        <p></p>
-      </div>
-      <p>struct Threshold: FactorConfigComponent { let strong: Double let moderate: Double</p>
-      <pre><code>func apply(to config: inout FactorConfiguration) { config.threshold = (strong, moderate) } </code></pre>}
-      <p></p>
-      <div>
-        <p>struct Weight: FactorConfigComponent { let value: Double</p>
-        <pre><code>init(_ value: Double) { self.value = value }<p></p></code><p><code>func apply(to config: inout FactorConfiguration) { config.weight = value } </code></p></pre>} 
+        <pre><code class="language-swift">@resultBuilder<br />struct InvestmentStrategyBuilder {<br />    // Build strategy from components<br />    static func buildBlock(_ components: StrategyComponent…) -&gt; InvestmentStrategy {<br />        InvestmentStrategy(components: components)<br />    }<br /><br />    // Support if/else conditionals<br />    static func buildEither(first component: StrategyComponent) -&gt; StrategyComponent {<br />        component<br />    }<br /><br />    static func buildEither(second component: StrategyComponent) -&gt; StrategyComponent {<br />        component<br />    }<br /><br />    // Support optional components<br />    static func buildOptional(_ component: StrategyComponent?) -&gt; StrategyComponent {<br />        component ?? EmptyComponent()<br />    }<br /><br />    // Support for loops<br />    static func buildArray(_ components: [StrategyComponent]) -&gt; StrategyComponent {<br />        CompositeComponent(components)<br />    }<br />}<br /><br />// Base protocol for all strategy components<br />protocol StrategyComponent {<br />    func apply(to strategy: inout InvestmentStrategy)<br />}<br /><br />// Example component: Factor definition<br />struct Factor: StrategyComponent {<br />    let name: String<br />    let metric: KeyPath
+            <stock, double>
+              <br /> let threshold: (strong: Double, moderate: Double)
+              <br /> let weight: Double
+              <br /> let comparison: ComparisonType
+              <br />
+              <br /> init(
+              <br /> _ name: String,
+              <br /> @FactorBuilder builder: () -&gt; FactorConfiguration
+              <br /> ) {
+              <br /> self.name = name
+              <br /> let config = builder()
+              <br /> self.metric = config.metric
+              <br /> self.threshold = config.threshold
+              <br /> self.weight = config.weight
+              <br /> self.comparison = config.comparison
+              <br /> }
+              <br />
+              <br /> func apply(to strategy: inout InvestmentStrategy) {
+              <br /> strategy.scoringFactors.append(
+              <br /> ScoringFactor(
+              <br /> name: name,
+              <br /> metric: metric,
+              <br /> threshold: threshold,
+              <br /> weight: weight,
+              <br /> comparison: comparison
+              <br /> )
+              <br /> )
+              <br /> }
+              <br />}
+              <br />
+              <br />// Nested result builder for factor configuration
+              <br />@resultBuilder
+              <br />struct FactorBuilder {
+              <br /> static func buildBlock(_ components: FactorConfigComponent…) -&gt; FactorConfiguration {
+              <br /> var config = FactorConfiguration()
+              <br /> for component in components {
+              <br /> component.apply(to: &amp;config)
+              <br /> }
+              <br /> return config
+              <br /> }
+              <br />}
+              <br />
+              <br />// Factor configuration components
+              <br />struct Metric
+              <t>
+                : FactorConfigComponent {
+                <br /> let keyPath: KeyPath
+                <stock, t>
+                  <br />
+                  <br /> init(_ keyPath: KeyPath
+                  <stock, t>
+                    ) {
+                    <br /> self.keyPath = keyPath
+                    <br /> }
+                    <br />
+                    <br /> func apply(to config: inout FactorConfiguration) {
+                    <br /> config.metric = keyPath as! KeyPath
+                    <stock, double>
+                      <br /> }
+                      <br />}
+                      <br />
+                      <br />struct Threshold: FactorConfigComponent {
+                      <br /> let strong: Double
+                      <br /> let moderate: Double
+                      <br />
+                      <br /> func apply(to config: inout FactorConfiguration) {
+                      <br /> config.threshold = (strong, moderate)
+                      <br /> }
+                      <br />}
+                      <br />
+                      <br />struct Weight: FactorConfigComponent {
+                      <br /> let value: Double
+                      <br />
+                      <br /> init(_ value: Double) {
+                      <br /> self.value = value
+                      <br /> }
+                      <br />
+                      <br /> func apply(to config: inout FactorConfiguration) {
+                      <br /> config.weight = value
+                      <br /> }
+                      <br />}
+                      <br />
+                    </stock,>
+                  </stock,>
+                </stock,>
+              </t>
+            </stock,></code></pre>
         <h3>Part 3: Type-Safe Stock Data</h3>The DSL uses Swift key paths for type-safe metric access:
-        <pre><code class="language-swift">struct Stock { // Company identifiers let ticker: String let name: String let sector: Sector</code><pre><code class="language-swift"><code>// Fundamentals let marketCap: Double let revenueGrowth: Double let earningsGrowth: Double let peRatio: Double let pbRatio: Double let debtToEquity: Double<p></p><p>// Price data let price: Double let returns1Month: Double let returns6Month: Double let returns12Month: Double let volatility: Double</p></code><p><code>// Valuation var relativeValuation: Double { // Compare to sector median peRatio / sector.medianPE } </code></p></code></pre>}<p></p></pre>
-      </div>
-      <p>// Key paths provide type safety let revenueGrowthMetric: KeyPath
-        <stock, double>
-           = .revenueGrowth let peRatioMetric: KeyPath
-          <stock, double>
-             = .peRatio
-          </stock,>
-        </stock,></p>
-      <div>
-        <p>// Compiler prevents typos // let badMetric: KeyPath
-          <stock, double>
-             = .reveueGrowth // ✗ Compile error! 
-          </stock,></p>
+        <pre><code class="language-swift">struct Stock {<br />    // Company identifiers<br />    let ticker: String<br />    let name: String<br />    let sector: Sector<br /><br />    // Fundamentals<br />    let marketCap: Double<br />    let revenueGrowth: Double<br />    let earningsGrowth: Double<br />    let peRatio: Double<br />    let pbRatio: Double<br />    let debtToEquity: Double<br /><br />    // Price data<br />    let price: Double<br />    let returns1Month: Double<br />    let returns6Month: Double<br />    let returns12Month: Double<br />    let volatility: Double<br /><br />    // Valuation<br />    var relativeValuation: Double {<br />        // Compare to sector median<br />        peRatio / sector.medianPE<br />    }<br />}<br /><br />// Key paths provide type safety<br />let revenueGrowthMetric: KeyPath
+            <stock, double>
+               = .revenueGrowth
+              <br />let peRatioMetric: KeyPath
+              <stock, double>
+                 = .peRatio
+                <br />
+                <br />// Compiler prevents typos
+                <br />// let badMetric: KeyPath
+                <stock, double>
+                   = .reveueGrowth // ✗ Compile error!
+                  <br />
+                </stock,>
+              </stock,>
+            </stock,></code></pre>
         <h3>Part 4: Strategy Execution Engine</h3>The DSL compiles to executable code:
-        <pre><code class="language-swift">struct InvestmentStrategy { var name: String = “” var description: String = “” var rebalanceFrequency: RebalanceFrequency = .monthly</code><pre><code class="language-swift"><code>var universeFilters: [UniverseFilter] = [] var scoringFactors: [ScoringFactor] = [] var selectionRules: SelectionRules = SelectionRules() var riskLimits: RiskLimits = RiskLimits()<p></p></code>
-              <div>
-                <code><p>// Execute strategy on stock universe func execute(universe: [Stock]) -&gt; [Holding] { // 1. Apply universe filters let filteredUniverse = universe.filter { stock in universeFilters.allSatisfy { $0.passes(stock) } }</p><pre><code>// 2. Score each stock let scoredStocks = filteredUniverse.map { stock in (stock: stock, score: calculateScore(for: stock)) }<p></p><p>// 3. Select top stocks let selectedStocks = scoredStocks .filter { $0.score &gt;= selectionRules.scoreThreshold } .sorted { $0.score &gt; $1.score } .prefix(selectionRules.maxPositions)</p><p>// 4. Calculate weights let holdings = calculateWeights( selectedStocks: Array(selectedStocks), method: selectionRules.weightingMethod )</p><p>// 5. Apply risk limits let constrainedHoldings = applyRiskLimits(holdings)</p></code><p><code>return constrainedHoldings </code></p></pre>}<p></p></code>
-              </div>
-              <div>
-                <div>
-                  <p>private func calculateScore(for stock: Stock) -&gt; Double { var totalScore = 0.0</p>
-                  <pre><code>for factor in scoringFactors { let value = stock[keyPath: factor.metric] let benchmark = factor.benchmark?.value(for: stock) ?? 0.0</code><pre><code><code>let comparison = factor.comparison == .greaterThan ? value &gt; benchmark : value &lt; benchmark<p></p></code><p><code>if comparison { if factor.threshold.strong &gt; 0 &amp;&amp; value &gt;= factor.threshold.strong { totalScore += 2.0 * factor.weight } else if factor.threshold.moderate &gt; 0 &amp;&amp; value &gt;= factor.threshold.moderate { totalScore += 1.0 * factor.weight } } </code></p></code></pre>}<p></p></pre>
-                </div>
-                <p>return totalScore </p>
-              </div></code></pre>}<p></p></pre>
-      </div>
-      <div>
-        <p>private func calculateWeights( selectedStocks: [(stock: Stock, score: Double)], method: WeightingMethod ) -&gt; [Holding] { switch method { case .equalWeight: let weight = 1.0 / Double(selectedStocks.count) return selectedStocks.map { Holding(stock: $0.stock, weight: weight, score: $0.score) }</p>
-        <pre><code>case .scoreWeighted: let totalScore = selectedStocks.map(.score).reduce(0, +) return selectedStocks.map { Holding(stock: $0.stock, weight: $0.score / totalScore, score: $0.score) }<p></p></code><p><code>case .marketCapWeighted: let totalMarketCap = selectedStocks.map { $0.stock.marketCap }.reduce(0, +) return selectedStocks.map { Holding(stock: $0.stock, weight: $0.stock.marketCap / totalMarketCap, score: $0.score) } } </code></p></pre>}
+        <pre><code class="language-swift">struct InvestmentStrategy {<br />    var name: String = “”<br />    var description: String = “”<br />    var rebalanceFrequency: RebalanceFrequency = .monthly<br /><br />    var universeFilters: [UniverseFilter] = []<br />    var scoringFactors: [ScoringFactor] = []<br />    var selectionRules: SelectionRules = SelectionRules()<br />    var riskLimits: RiskLimits = RiskLimits()<br /><br />    // Execute strategy on stock universe<br />    func execute(universe: [Stock]) -&gt; [Holding] {<br />        // 1. Apply universe filters<br />        let filteredUniverse = universe.filter { stock in<br />            universeFilters.allSatisfy { $0.passes(stock) }<br />        }<br /><br />        // 2. Score each stock<br />        let scoredStocks = filteredUniverse.map { stock in<br />            (stock: stock, score: calculateScore(for: stock))<br />        }<br /><br />        // 3. Select top stocks<br />        let selectedStocks = scoredStocks<br />            .filter { $0.score &gt;= selectionRules.scoreThreshold }<br />            .sorted { $0.score &gt; $1.score }<br />            .prefix(selectionRules.maxPositions)<br /><br />        // 4. Calculate weights<br />        let holdings = calculateWeights(<br />            selectedStocks: Array(selectedStocks),<br />            method: selectionRules.weightingMethod<br />        )<br /><br />        // 5. Apply risk limits<br />        let constrainedHoldings = applyRiskLimits(holdings)<br /><br />        return constrainedHoldings<br />    }<br /><br />    private func calculateScore(for stock: Stock) -&gt; Double {<br />        var totalScore = 0.0<br /><br />        for factor in scoringFactors {<br />            let value = stock[keyPath: factor.metric]<br />            let benchmark = factor.benchmark?.value(for: stock) ?? 0.0<br /><br />            let comparison = factor.comparison == .greaterThan ?<br />                value &gt; benchmark : value &lt; benchmark<br /><br />            if comparison {<br />                if factor.threshold.strong &gt; 0 &amp;&amp; value &gt;= factor.threshold.strong {<br />                    totalScore += 2.0 * factor.weight<br />                } else if factor.threshold.moderate &gt; 0 &amp;&amp; value &gt;= factor.threshold.moderate {<br />                    totalScore += 1.0 * factor.weight<br />                }<br />            }<br />        }<br /><br />        return totalScore<br />    }<br /><br />    private func calculateWeights(<br />        selectedStocks: [(stock: Stock, score: Double)],<br />        method: WeightingMethod<br />    ) -&gt; [Holding] {<br />        switch method {<br />        case .equalWeight:<br />            let weight = 1.0 / Double(selectedStocks.count)<br />            return selectedStocks.map { Holding(stock: $0.stock, weight: weight, score: $0.score) }<br /><br />        case .scoreWeighted:<br />            let totalScore = selectedStocks.map(.score).reduce(0, +)<br />            return selectedStocks.map {<br />                Holding(stock: $0.stock, weight: $0.score / totalScore, score: $0.score)<br />            }<br /><br />        case .marketCapWeighted:<br />            let totalMarketCap = selectedStocks.map { $0.stock.marketCap }.reduce(0, +)<br />            return selectedStocks.map {<br />                Holding(stock: $0.stock, weight: $0.stock.marketCap / totalMarketCap, score: $0.score)<br />            }<br />        }<br />    }<br /><br />    private func applyRiskLimits(_ holdings: [Holding]) -&gt; [Holding] {<br />        var adjusted = holdings<br /><br />        // Cap individual positions<br />        adjusted = adjusted.map { holding in<br />            var h = holding<br />            h.weight = min(h.weight, riskLimits.maxPositionSize)<br />            return h<br />        }<br /><br />        // Renormalize to 100%<br />        let totalWeight = adjusted.map(.weight).reduce(0, +)<br />        adjusted = adjusted.map { holding in<br />            var h = holding<br />            h.weight = h.weight / totalWeight<br />            return h<br />        }<br /><br />        return adjusted<br />    }<br />}<br /><br />struct Holding {<br />    let stock: Stock<br />    var weight: Double<br />    let score: Double<br /><br />    var ticker: String { stock.ticker }<br />}<br /></code></pre>
+        <h3>Part 5: Strategy Composition</h3>Compose complex strategies from building blocks:
+        <pre><code class="language-swift">// Reusable factor definitions<br />let growthFactor = Factor(“Revenue Growth”) {<br />    Metric(.revenueGrowth)<br />    Threshold(strong: 0.15, moderate: 0.10)<br />    Weight(0.50)<br />}<br /><br />let valueFactor = Factor(“Valuation”) {<br />    Metric(.peRatio)<br />    Comparison(.lessThan)<br />    Benchmark(.sectorMedian)<br />    Threshold(strong: 0.80, moderate: 1.00)<br />    Weight(0.50)<br />}<br /><br />// Compose strategies<br />@InvestmentStrategyBuilder<br />var pureGrowth: InvestmentStrategy {<br />    Name(“Pure Growth”)<br />    ScoringModel {<br />        growthFactor<br />        // Single factor strategy<br />    }<br />}<br /><br />@InvestmentStrategyBuilder<br />var growthAtReasonablePrice: InvestmentStrategy {<br />    Name(“Growth at Reasonable Price (GARP)”)<br />    ScoringModel {<br />        growthFactor<br />        valueFactor<br />        // Combines two factors<br />    }<br />}<br /><br />// Conditional strategies<br />@InvestmentStrategyBuilder<br />var adaptiveStrategy: InvestmentStrategy {<br />    Name(“Adaptive Multi-Factor”)<br /><br />    ScoringModel {<br />        if marketCondition == .bull {<br />            growthFactor  // Growth in bull markets<br />        } else {<br />            valueFactor   // Value in bear markets<br />        }<br />    }<br />}<br /></code></pre>
+        <hr />
+        <h2>The Results</h2>
+        <h3>Code Comparison</h3>
+        <strong>Before (Python)</strong>:
+        <pre><code class="language-python"># 150 lines of procedural code<br /># Repeated logic across 15 strategies<br /># Runtime errors common<br /># Hard for PMs to validate<br /></code></pre>
+        <strong>After (Swift DSL)</strong>:
+        <pre><code class="language-swift">// 30 lines of declarative code<br />// Reusable components<br />// Compile-time type safety<br />// PMs can read and modify<br /></code></pre>
+        <strong>Code Reduction</strong>: 80% fewer lines per strategy
+        <h3>Validation and Testing</h3>
+        <pre><code class="language-swift">// Strategies are testable!<br />func testGrowthValueMomentumStrategy() {<br />    let strategy = growthValueMomentum<br /><br />    // Test universe filtering<br />    XCTAssertEqual(strategy.universeFilters.count, 3)<br /><br />    // Test scoring factors<br />    XCTAssertEqual(strategy.scoringFactors.count, 3)<br />    XCTAssertEqual(strategy.scoringFactors[0].name, “Revenue Growth”)<br /><br />    // Test with mock data<br />    let mockUniverse = createMockStocks()<br />    let holdings = strategy.execute(universe: mockUniverse)<br /><br />    // Verify risk limits applied<br />    XCTAssertTrue(holdings.allSatisfy { $0.weight &lt;= 0.05 })<br />}<br /><br />// Property-based testing<br />func testStrategyInvariants() {<br />    for _ in 0..&lt;100 {<br />        let randomUniverse = generateRandomStocks(count: 500)<br />        let holdings = growthValueMomentum.execute(universe: randomUniverse)<br /><br />        // Invariants that MUST hold<br />        let totalWeight = holdings.map(.weight).reduce(0, +)<br />        XCTAssertEqual(totalWeight, 1.0, accuracy: 1e-6, “Weights must sum to 100%”)<br />        XCTAssertLessOrEqual(holdings.count, 50, “Max 50 positions”)<br />        XCTAssertTrue(holdings.allSatisfy { $0.weight &lt;= 0.05 }, “No position &gt; 5%”)<br />    }<br />}<br /></code></pre>
+        <strong>Test Coverage</strong>: 15 strategies × 20 tests each = 300 automated tests
+        <hr />
+        <h2>Business Value</h2>
+        <strong>Before DSL</strong>:
+        <ul>
+          <li>Time to code new strategy: 3-5 days (developer-led)</li>
+          <li>Strategy validation: 2 days (manual review)</li>
+          <li>Bugs per strategy: 8-12 (runtime errors, logic bugs)</li>
+          <li>PM involvement: Minimal (couldn’t read code)</li>
+        </ul>
+        <strong>After DSL</strong>:
+        <ul>
+          <li>Time to code new strategy: 2-4 hours (PM can draft, developer refines)</li>
+          <li>Strategy validation: 30 minutes (DSL is self-documenting)</li>
+          <li>Bugs per strategy: 0-2 (type system catches most errors)</li>
+          <li>PM involvement: High (can read, modify, propose strategies)</li>
+        </ul>
+        <strong>Annual Impact</strong>:
+        <ul>
+          <li>Strategy development speed: 6× faster</li>
+          <li>Bugs in production: 85% reduction</li>
+          <li>PM productivity: Can now propose 10 strategies/year vs. 2/year</li>
+          <li><strong>Estimated value: $4.2M/year</strong> (faster strategy deployment, fewer errors, more strategies tested)</li>
+        </ul>
+        <strong>Technology ROI</strong>:
+        <ul>
+          <li>Development time: 6 engineer-weeks (~$45K)</li>
+          <li>Payback period: 12 days</li>
+          <li>5-year NPV: $18.4M</li>
+        </ul>
+        <hr />
+        <h2>What Worked</h2>
+        <ol>
+          <li><strong>Domain Expert Empowerment</strong>: Portfolio managers can now write strategies (with light developer support)</li>
+          <li><strong>Type Safety</strong>: Compiler catches errors that were runtime failures in Python</li>
+          <li><strong>Composability</strong>: Reusable factor definitions across all 15 strategies</li>
+          <li><strong>Testability</strong>: Every strategy has 20+ automated tests</li>
+          <li><strong>Documentation</strong>: Strategies are self-documenting (“reads like English”)</li>
+        </ol>
+        <hr />
+        <h2>What Didn’t Work</h2>
+        <ol>
+          <li><strong>Initial Learning Curve</strong>: PMs needed 2-day training on Swift basics</li>
+          <li><strong>Complex Nesting</strong>: Deeply nested result builders got confusing (limited to 2 levels)</li>
+          <li><strong>Error Messages</strong>: Result builder compile errors can be cryptic (improved with better type annotations)</li>
+        </ol>
+        <hr />
+        <h2>The Insight</h2>
+        <strong>The best DSL doesn’t feel like code—it feels like structured English.</strong>
         <p></p>
-      </div>
-      <div>
-        <p>private func applyRiskLimits(_ holdings: [Holding]) -&gt; [Holding] { var adjusted = holdings</p>
-        <pre><code>// Cap individual positions adjusted = adjusted.map { holding in var h = holding h.weight = min(h.weight, riskLimits.maxPositionSize) return h }<p></p><p>// Renormalize to 100% let totalWeight = adjusted.map(.weight).reduce(0, +) adjusted = adjusted.map { holding in var h = holding h.weight = h.weight / totalWeight return h }</p></code><p><code>return adjusted </code></p></pre>} }
+        <p>When a portfolio manager looks at this:</p>
+        <pre><code class="language-swift">Factor(“Revenue Growth”) {<br />    Metric(.revenueGrowth)<br />    Threshold(strong: 0.15, moderate: 0.10)<br />    Weight(0.50)<br />}<br /></code></pre>They see: “Revenue growth factor, strong threshold 15%, moderate 10%, weight 50%.”
         <p></p>
+        <p><strong>Not</strong>: “Function call with closure parameter accepting lambda with key path and tuple.”</p>
+        <p>That’s the magic of result builders: Hide the machinery, expose the meaning.</p>
+        <p>And when they try to write:</p>
+        <pre><code class="language-swift">Metric(.reveueGrowth)  // Typo<br /></code></pre>The compiler says: 
+        <strong>“No such property ‘reveueGrowth’ on Stock”</strong>
+        <p></p>
+        <p><strong>That’s the magic of type safety: Catch errors at compile time, not in production.</strong></p>
+        <p>Combine these two—readable DSL + type safety—and you get something remarkable: <strong>Domain experts writing production code that actually works.</strong>
+          <hr /></p>
+        <h2>Try It Yourself</h2>Download the complete case study playground:
+        <pre><code>→ Download: CaseStudies/InvestmentStrategyDSL.playground<br />→ Includes: Full DSL implementation, 15 strategy examples, test suite<br />→ Extensions: Add machine learning factors, real-time data feeds<br /></code></pre>
+        <hr />
+        <h2>Series Conclusion</h2>This is the final post in the 12-week BusinessMath blog series. We’ve covered:
+        <p></p>
+        <p><strong>Weeks 1-2</strong>: Foundation (getting started, time series, TVM, ratios) <strong>Weeks 3-5</strong>: Financial Modeling (growth, forecasting, statements, loans, bonds) <strong>Week 6</strong>: Simulation (Monte Carlo, scenarios) <strong>Weeks 7-11</strong>: Optimization (gradient descent → BFGS → genetic → PSO → annealing) <strong>Week 12</strong>: Reflections and this final case study</p>
+        <p><strong>6 Case Studies</strong>:</p>
+        <ol>
+          <li>Retirement Planning (Week 1)</li>
+          <li>Capital Equipment (Week 3)</li>
+          <li>Option Pricing (Week 6)</li>
+          <li>Portfolio Optimization (Week 8)</li>
+          <li>Real-Time Rebalancing (Week 11)</li>
+          <li><strong>Investment Strategy DSL (Week 12)</strong> ← You are here</li>
+        </ol>Thank you for following along on this journey. From NPV calculations to GPU-accelerated optimization to type-safe investment strategies—we’ve built something powerful.
+        <p></p>
+        <p><strong>Now go build something remarkable.</strong>
+          <hr /><strong>Series</strong>: [Week 12 of 12] <strong>COMPLETE</strong> | <strong>Case Study [6/6]</strong> <strong>COMPLETE</strong> | <strong>Topics Combined</strong>: Result Builders + Type Safety + Full Library</p>
+        <p><strong>The End</strong> 🎉</p>
       </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: case-study, swift-patterns</p>
     </div>
-    <p>struct Holding { let stock: Stock var weight: Double let score: Double</p>
-    <pre><code>var ticker: String { stock.ticker } </code></pre>} 
-    <h3>Part 5: Strategy Composition</h3>Compose complex strategies from building blocks:
-    <pre><code class="language-swift">// Reusable factor definitions let growthFactor = Factor(“Revenue Growth”) { Metric(.revenueGrowth) Threshold(strong: 0.15, moderate: 0.10) Weight(0.50) }<p></p><p>let valueFactor = Factor(“Valuation”) { Metric(.peRatio) Comparison(.lessThan) Benchmark(.sectorMedian) Threshold(strong: 0.80, moderate: 1.00) Weight(0.50) }</p><p>// Compose strategies @InvestmentStrategyBuilder var pureGrowth: InvestmentStrategy { Name(“Pure Growth”) ScoringModel { growthFactor // Single factor strategy } }</p><p>@InvestmentStrategyBuilder var growthAtReasonablePrice: InvestmentStrategy { Name(“Growth at Reasonable Price (GARP)”) ScoringModel { growthFactor valueFactor // Combines two factors } }</p></code>
-      <div>
-        <code class="language-swift"><p>// Conditional strategies @InvestmentStrategyBuilder var adaptiveStrategy: InvestmentStrategy { Name(“Adaptive Multi-Factor”)</p><pre><code>ScoringModel { if marketCondition == .bull { growthFactor  // Growth in bull markets } else { valueFactor   // Value in bear markets } } </code></pre>} </code>
-      </div></pre>
-    <hr />
-    <h2>The Results</h2>
-    <h3>Code Comparison</h3>
-    <strong>Before (Python)</strong>:
-    <pre><code class="language-python"># 150 lines of procedural code<h1>Runtime errors common</h1><h1>Hard for PMs to validate</h1></code></pre>
-    <strong>After (Swift DSL)</strong>:
-    <pre><code class="language-swift">// 30 lines of declarative code // Reusable components // Compile-time type safety // PMs can read and modify </code></pre>
-    <strong>Code Reduction</strong>: 80% fewer lines per strategy
-    <h3>Validation and Testing</h3>
-    <pre><code class="language-swift">// Strategies are testable! func testGrowthValueMomentumStrategy() { let strategy = growthValueMomentum</code><pre><code class="language-swift"><code>// Test universe filtering XCTAssertEqual(strategy.universeFilters.count, 3)<p></p><p>// Test scoring factors XCTAssertEqual(strategy.scoringFactors.count, 3) XCTAssertEqual(strategy.scoringFactors[0].name, “Revenue Growth”)</p><p>// Test with mock data let mockUniverse = createMockStocks() let holdings = strategy.execute(universe: mockUniverse)</p></code><p><code>// Verify risk limits applied XCTAssertTrue(holdings.allSatisfy { $0.weight &lt;= 0.05 }) </code></p></code></pre>}<p></p><p>// Property-based testing func testStrategyInvariants() { for _ in 0..&lt;100 { let randomUniverse = generateRandomStocks(count: 500) let holdings = growthValueMomentum.execute(universe: randomUniverse)</p><pre><code>    // Invariants that MUST hold let totalWeight = holdings.map(.weight).reduce(0, +) XCTAssertEqual(totalWeight, 1.0, accuracy: 1e-6, “Weights must sum to 100%”) XCTAssertLessOrEqual(holdings.count, 50, “Max 50 positions”) XCTAssertTrue(holdings.allSatisfy { $0.weight &lt;= 0.05 }, “No position &gt; 5%”) } </code></pre>} </pre>
-    <strong>Test Coverage</strong>: 15 strategies × 20 tests each = 300 automated tests
-    <hr />
-    <h2>Business Value</h2>
-    <strong>Before DSL</strong>:
-    <ul>
-      <li>Time to code new strategy: 3-5 days (developer-led)</li>
-      <li>Strategy validation: 2 days (manual review)</li>
-      <li>Bugs per strategy: 8-12 (runtime errors, logic bugs)</li>
-      <li>PM involvement: Minimal (couldn’t read code)</li>
-    </ul>
-    <strong>After DSL</strong>:
-    <ul>
-      <li>Time to code new strategy: 2-4 hours (PM can draft, developer refines)</li>
-      <li>Strategy validation: 30 minutes (DSL is self-documenting)</li>
-      <li>Bugs per strategy: 0-2 (type system catches most errors)</li>
-      <li>PM involvement: High (can read, modify, propose strategies)</li>
-    </ul>
-    <strong>Annual Impact</strong>:
-    <ul>
-      <li>Strategy development speed: 6× faster</li>
-      <li>Bugs in production: 85% reduction</li>
-      <li>PM productivity: Can now propose 10 strategies/year vs. 2/year</li>
-      <li><strong>Estimated value: $4.2M/year</strong> (faster strategy deployment, fewer errors, more strategies tested)</li>
-    </ul>
-    <strong>Technology ROI</strong>:
-    <ul>
-      <li>Development time: 6 engineer-weeks (~$45K)</li>
-      <li>Payback period: 12 days</li>
-      <li>5-year NPV: $18.4M</li>
-    </ul>
-    <hr />
-    <h2>What Worked</h2>
-    <ol>
-      <li><strong>Domain Expert Empowerment</strong>: Portfolio managers can now write strategies (with light developer support)</li>
-      <li><strong>Type Safety</strong>: Compiler catches errors that were runtime failures in Python</li>
-      <li><strong>Composability</strong>: Reusable factor definitions across all 15 strategies</li>
-      <li><strong>Testability</strong>: Every strategy has 20+ automated tests</li>
-      <li><strong>Documentation</strong>: Strategies are self-documenting (“reads like English”)</li>
-    </ol>
-    <hr />
-    <h2>What Didn’t Work</h2>
-    <ol>
-      <li><strong>Initial Learning Curve</strong>: PMs needed 2-day training on Swift basics</li>
-      <li><strong>Complex Nesting</strong>: Deeply nested result builders got confusing (limited to 2 levels)</li>
-      <li><strong>Error Messages</strong>: Result builder compile errors can be cryptic (improved with better type annotations)</li>
-    </ol>
-    <hr />
-    <h2>The Insight</h2>
-    <strong>The best DSL doesn’t feel like code—it feels like structured English.</strong>
-    <p></p>
-    <p>When a portfolio manager looks at this:</p>
-    <pre><code class="language-swift">Factor(“Revenue Growth”) { Metric(.revenueGrowth) Threshold(strong: 0.15, moderate: 0.10) Weight(0.50) } </code></pre>They see: “Revenue growth factor, strong threshold 15%, moderate 10%, weight 50%.”
-    <p></p>
-    <p><strong>Not</strong>: “Function call with closure parameter accepting lambda with key path and tuple.”</p>
-    <p>That’s the magic of result builders: Hide the machinery, expose the meaning.</p>
-    <p>And when they try to write:</p>
-    <pre><code class="language-swift">Metric(.reveueGrowth)  // Typo </code></pre>The compiler says: 
-    <strong>“No such property ‘reveueGrowth’ on Stock”</strong>
-    <p></p>
-    <p><strong>That’s the magic of type safety: Catch errors at compile time, not in production.</strong></p>
-    <p>Combine these two—readable DSL + type safety—and you get something remarkable: <strong>Domain experts writing production code that actually works.</strong>
-      <hr /></p>
-    <h2>Try It Yourself</h2>Download the complete case study playground:
-    <pre><code>→ Download: CaseStudies/InvestmentStrategyDSL.playground → Includes: Full DSL implementation, 15 strategy examples, test suite → Extensions: Add machine learning factors, real-time data feeds </code></pre>
-    <hr />
-    <h2>Series Conclusion</h2>This is the final post in the 12-week BusinessMath blog series. We’ve covered:
-    <p></p>
-    <p><strong>Weeks 1-2</strong>: Foundation (getting started, time series, TVM, ratios) <strong>Weeks 3-5</strong>: Financial Modeling (growth, forecasting, statements, loans, bonds) <strong>Week 6</strong>: Simulation (Monte Carlo, scenarios) <strong>Weeks 7-11</strong>: Optimization (gradient descent → BFGS → genetic → PSO → annealing) <strong>Week 12</strong>: Reflections and this final case study</p>
-    <p><strong>6 Case Studies</strong>:</p>
-    <ol>
-      <li>Retirement Planning (Week 1)</li>
-      <li>Capital Equipment (Week 3)</li>
-      <li>Option Pricing (Week 6)</li>
-      <li>Portfolio Optimization (Week 8)</li>
-      <li>Real-Time Rebalancing (Week 11)</li>
-      <li><strong>Investment Strategy DSL (Week 12)</strong> ← You are here</li>
-    </ol>Thank you for following along on this journey. From NPV calculations to GPU-accelerated optimization to type-safe investment strategies—we’ve built something powerful.
-    <p></p>
-    <p><strong>Now go build something remarkable.</strong>
-      <hr /><strong>Series</strong>: [Week 12 of 12] <strong>COMPLETE</strong> | <strong>Case Study [6/6]</strong> <strong>COMPLETE</strong> | <strong>Topics Combined</strong>: Result Builders + Type Safety + Full Library</p>
-    <p><strong>The End</strong> 🎉</p>
-    <hr />
-    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: case-study, swift-patterns</p>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

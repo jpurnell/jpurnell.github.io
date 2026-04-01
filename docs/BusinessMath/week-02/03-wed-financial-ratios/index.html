@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Financial Ratios and Metrics Guide</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">17 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 7 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -287,40 +287,220 @@
         <code>BalanceSheet</code> data structures, returning results as 
         <code>TimeSeries</code> for trend analysis.
         <h3>Setup: Creating Financial Statements</h3>First, let’s create sample financial statements for a fictional SaaS company “TechCo”:
-        <pre><code class="language-swift">// Define company and periods let entity = Entity(id: “TECH”, primaryType: .ticker, name: “TechCo Inc.”) let periods = [ Period.quarter(year: 2025, quarter: 1), Period.quarter(year: 2025, quarter: 2), Period.quarter(year: 2025, quarter: 3), Period.quarter(year: 2025, quarter: 4) ] // Convenient period references let q1 = periods[0] let q2 = periods[1] let q3 = periods[2] let q4 = periods[3]<p></p><p>// Create Income Statement // Revenue: $5M → $6M over the year (20% growth) let revenueSeries = TimeSeries
+        <pre><code class="language-swift">// Define company and periods<br />let entity = Entity(id: “TECH”, primaryType: .ticker, name: “TechCo Inc.”)<br />let periods = [<br />	Period.quarter(year: 2025, quarter: 1),<br />	Period.quarter(year: 2025, quarter: 2),<br />	Period.quarter(year: 2025, quarter: 3),<br />	Period.quarter(year: 2025, quarter: 4)<br />]<br /><br />// Convenient period references<br />let q1 = periods[0]<br />let q2 = periods[1]<br />let q3 = periods[2]<br />let q4 = periods[3]<br /><br />// Create Income Statement<br />// Revenue: $5M → $6M over the year (20% growth)<br />let revenueSeries = TimeSeries
+            <double>
+              (
+              <br /> periods: periods,
+              <br /> values: [5_000_000, 5_300_000, 5_600_000, 6_000_000]
+              <br />)
+              <br />let revenueAccount = try Account(
+              <br /> entity: entity,
+              <br /> name: “Subscription Revenue”,
+              <br /> type: .revenue,
+              <br /> timeSeries: revenueSeries
+              <br />)
+              <br />
+              <br />// COGS: 30% of revenue
+              <br />var cogsMetadata = AccountMetadata()
+              <br />cogsMetadata.category = “COGS”
+              <br />let cogsSeries = TimeSeries
               <double>
-                ( periods: periods, values: [5_000_000, 5_300_000, 5_600_000, 6_000_000] ) let revenueAccount = try Account( entity: entity, name: “Subscription Revenue”, type: .revenue, timeSeries: revenueSeries )
-              </double></p><p>// COGS: 30% of revenue var cogsMetadata = AccountMetadata() cogsMetadata.category = “COGS” let cogsSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [1_500_000, 1_590_000, 1_680_000, 1_800_000] ) let cogsAccount = try Account( entity: entity, name: “Cost of Goods Sold”, type: .expense, timeSeries: cogsSeries, metadata: cogsMetadata )
-              </double></p><p>// Operating Expenses: R&amp;D + S&amp;M + G&amp;A var opexMetadata = AccountMetadata() opexMetadata.category = “Operating” let opexSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [2_000_000, 2_100_000, 2_150_000, 2_200_000] ) let opexAccount = try Account( entity: entity, name: “Operating Expenses”, type: .expense, timeSeries: opexSeries, metadata: opexMetadata )
-              </double></p><p>// Interest expense let interestSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [100_000, 95_000, 90_000, 85_000] ) let interestAccount = try Account( entity: entity, name: “Interest Expense”, type: .expense, timeSeries: interestSeries )
-              </double></p><p>let incomeStatement = try IncomeStatement( entity: entity, periods: periods, revenueAccounts: [revenueAccount], expenseAccounts: [cogsAccount, opexAccount, interestAccount] )</p><p>// Create Balance Sheet // Current Assets var currentAssetMetadata = AccountMetadata() currentAssetMetadata.category = “Current”</p><p>let cashSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [3_000_000, 3_500_000, 4_000_000, 4_500_000] ) let cashAccount = try Account( entity: entity, name: “Cash”, type: .asset, timeSeries: cashSeries, metadata: currentAssetMetadata )
-              </double></p><p>let receivablesSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [1_200_000, 1_300_000, 1_400_000, 1_500_000] ) let receivablesAccount = try Account( entity: entity, name: “Accounts Receivable”, type: .asset, timeSeries: receivablesSeries, metadata: currentAssetMetadata )
-              </double></p><p>// Fixed Assets var fixedAssetMetadata = AccountMetadata() fixedAssetMetadata.category = “Fixed”</p><p>let ppeSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [2_000_000, 2_050_000, 2_100_000, 2_150_000] ) let ppeAccount = try Account( entity: entity, name: “Property &amp; Equipment”, type: .asset, timeSeries: ppeSeries, metadata: fixedAssetMetadata )
-              </double></p><p>// Current Liabilities var currentLiabilityMetadata = AccountMetadata() currentLiabilityMetadata.category = “Current”</p><p>let payablesSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [800_000, 850_000, 900_000, 950_000] ) let payablesAccount = try Account( entity: entity, name: “Accounts Payable”, type: .liability, timeSeries: payablesSeries, metadata: currentLiabilityMetadata )
-              </double></p><p>// Long-term Debt var longTermLiabilityMetadata = AccountMetadata() longTermLiabilityMetadata.category = “Long-term”</p><p>let debtSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [2_000_000, 1_900_000, 1_800_000, 1_700_000] ) let debtAccount = try Account( entity: entity, name: “Long-term Debt”, type: .liability, timeSeries: debtSeries, metadata: longTermLiabilityMetadata )
-              </double></p><p>// Equity (balancing to Assets = Liabilities + Equity) let equitySeries = TimeSeries
-              <double>
-                ( periods: periods, values: [3_400_000, 4_100_000, 4_800_000, 5_500_000] ) let equityAccount = try Account( entity: entity, name: “Shareholders Equity”, type: .equity, timeSeries: equitySeries )
-              </double></p><p>let balanceSheet = try BalanceSheet( entity: entity, periods: periods, assetAccounts: [cashAccount, receivablesAccount, ppeAccount], liabilityAccounts: [payablesAccount, debtAccount], equityAccounts: [equityAccount] )</p><p>// Market data for valuation metrics let marketPrice = 45.00 // $45 per share let sharesOutstanding = 200_000.0 // 200K shares outstanding</p><p>// Cash flow statement (for Piotroski F-Score) let operatingCashFlowSeries = TimeSeries
-              <double>
-                ( periods: periods, values: [1_500_000, 1_600_000, 1_700_000, 1_900_000] ) let cashFlowAccount = try Account( entity: entity, name: “Operating Cash Flow”, type: .operating, // Must use .operating for operating cash flow accounts timeSeries: operatingCashFlowSeries )
-              </double></p></code><p><code class="language-swift">let cashFlowStatement = try CashFlowStatement( entity: entity, periods: periods, operatingAccounts: [cashFlowAccount], investingAccounts: [], financingAccounts: [] ) </code></p></pre>
+                (
+                <br /> periods: periods,
+                <br /> values: [1_500_000, 1_590_000, 1_680_000, 1_800_000]
+                <br />)
+                <br />let cogsAccount = try Account(
+                <br /> entity: entity,
+                <br /> name: “Cost of Goods Sold”,
+                <br /> type: .expense,
+                <br /> timeSeries: cogsSeries,
+                <br /> metadata: cogsMetadata
+                <br />)
+                <br />
+                <br />// Operating Expenses: R&amp;D + S&amp;M + G&amp;A
+                <br />var opexMetadata = AccountMetadata()
+                <br />opexMetadata.category = “Operating”
+                <br />let opexSeries = TimeSeries
+                <double>
+                  (
+                  <br /> periods: periods,
+                  <br /> values: [2_000_000, 2_100_000, 2_150_000, 2_200_000]
+                  <br />)
+                  <br />let opexAccount = try Account(
+                  <br /> entity: entity,
+                  <br /> name: “Operating Expenses”,
+                  <br /> type: .expense,
+                  <br /> timeSeries: opexSeries,
+                  <br /> metadata: opexMetadata
+                  <br />)
+                  <br />
+                  <br />// Interest expense
+                  <br />let interestSeries = TimeSeries
+                  <double>
+                    (
+                    <br /> periods: periods,
+                    <br /> values: [100_000, 95_000, 90_000, 85_000]
+                    <br />)
+                    <br />let interestAccount = try Account(
+                    <br /> entity: entity,
+                    <br /> name: “Interest Expense”,
+                    <br /> type: .expense,
+                    <br /> timeSeries: interestSeries
+                    <br />)
+                    <br />
+                    <br />let incomeStatement = try IncomeStatement(
+                    <br /> entity: entity,
+                    <br /> periods: periods,
+                    <br /> revenueAccounts: [revenueAccount],
+                    <br /> expenseAccounts: [cogsAccount, opexAccount, interestAccount]
+                    <br />)
+                    <br />
+                    <br />// Create Balance Sheet
+                    <br />// Current Assets
+                    <br />var currentAssetMetadata = AccountMetadata()
+                    <br />currentAssetMetadata.category = “Current”
+                    <br />
+                    <br />let cashSeries = TimeSeries
+                    <double>
+                      (
+                      <br /> periods: periods,
+                      <br /> values: [3_000_000, 3_500_000, 4_000_000, 4_500_000]
+                      <br />)
+                      <br />let cashAccount = try Account(
+                      <br /> entity: entity,
+                      <br /> name: “Cash”,
+                      <br /> type: .asset,
+                      <br /> timeSeries: cashSeries,
+                      <br /> metadata: currentAssetMetadata
+                      <br />)
+                      <br />
+                      <br />let receivablesSeries = TimeSeries
+                      <double>
+                        (
+                        <br /> periods: periods,
+                        <br /> values: [1_200_000, 1_300_000, 1_400_000, 1_500_000]
+                        <br />)
+                        <br />let receivablesAccount = try Account(
+                        <br /> entity: entity,
+                        <br /> name: “Accounts Receivable”,
+                        <br /> type: .asset,
+                        <br /> timeSeries: receivablesSeries,
+                        <br /> metadata: currentAssetMetadata
+                        <br />)
+                        <br />
+                        <br />// Fixed Assets
+                        <br />var fixedAssetMetadata = AccountMetadata()
+                        <br />fixedAssetMetadata.category = “Fixed”
+                        <br />
+                        <br />let ppeSeries = TimeSeries
+                        <double>
+                          (
+                          <br /> periods: periods,
+                          <br /> values: [2_000_000, 2_050_000, 2_100_000, 2_150_000]
+                          <br />)
+                          <br />let ppeAccount = try Account(
+                          <br /> entity: entity,
+                          <br /> name: “Property &amp; Equipment”,
+                          <br /> type: .asset,
+                          <br /> timeSeries: ppeSeries,
+                          <br /> metadata: fixedAssetMetadata
+                          <br />)
+                          <br />
+                          <br />// Current Liabilities
+                          <br />var currentLiabilityMetadata = AccountMetadata()
+                          <br />currentLiabilityMetadata.category = “Current”
+                          <br />
+                          <br />let payablesSeries = TimeSeries
+                          <double>
+                            (
+                            <br /> periods: periods,
+                            <br /> values: [800_000, 850_000, 900_000, 950_000]
+                            <br />)
+                            <br />let payablesAccount = try Account(
+                            <br /> entity: entity,
+                            <br /> name: “Accounts Payable”,
+                            <br /> type: .liability,
+                            <br /> timeSeries: payablesSeries,
+                            <br /> metadata: currentLiabilityMetadata
+                            <br />)
+                            <br />
+                            <br />// Long-term Debt
+                            <br />var longTermLiabilityMetadata = AccountMetadata()
+                            <br />longTermLiabilityMetadata.category = “Long-term”
+                            <br />
+                            <br />let debtSeries = TimeSeries
+                            <double>
+                              (
+                              <br /> periods: periods,
+                              <br /> values: [2_000_000, 1_900_000, 1_800_000, 1_700_000]
+                              <br />)
+                              <br />let debtAccount = try Account(
+                              <br /> entity: entity,
+                              <br /> name: “Long-term Debt”,
+                              <br /> type: .liability,
+                              <br /> timeSeries: debtSeries,
+                              <br /> metadata: longTermLiabilityMetadata
+                              <br />)
+                              <br />
+                              <br />// Equity (balancing to Assets = Liabilities + Equity)
+                              <br />let equitySeries = TimeSeries
+                              <double>
+                                (
+                                <br /> periods: periods,
+                                <br /> values: [3_400_000, 4_100_000, 4_800_000, 5_500_000]
+                                <br />)
+                                <br />let equityAccount = try Account(
+                                <br /> entity: entity,
+                                <br /> name: “Shareholders Equity”,
+                                <br /> type: .equity,
+                                <br /> timeSeries: equitySeries
+                                <br />)
+                                <br />
+                                <br />let balanceSheet = try BalanceSheet(
+                                <br /> entity: entity,
+                                <br /> periods: periods,
+                                <br /> assetAccounts: [cashAccount, receivablesAccount, ppeAccount],
+                                <br /> liabilityAccounts: [payablesAccount, debtAccount],
+                                <br /> equityAccounts: [equityAccount]
+                                <br />)
+                                <br />
+                                <br />// Market data for valuation metrics
+                                <br />let marketPrice = 45.00 // $45 per share
+                                <br />let sharesOutstanding = 200_000.0 // 200K shares outstanding
+                                <br />
+                                <br />// Cash flow statement (for Piotroski F-Score)
+                                <br />let operatingCashFlowSeries = TimeSeries
+                                <double>
+                                  (
+                                  <br /> periods: periods,
+                                  <br /> values: [1_500_000, 1_600_000, 1_700_000, 1_900_000]
+                                  <br />)
+                                  <br />let cashFlowAccount = try Account(
+                                  <br /> entity: entity,
+                                  <br /> name: “Operating Cash Flow”,
+                                  <br /> type: .operating, // Must use .operating for operating cash flow accounts
+                                  <br /> timeSeries: operatingCashFlowSeries
+                                  <br />)
+                                  <br />
+                                  <br />let cashFlowStatement = try CashFlowStatement(
+                                  <br /> entity: entity,
+                                  <br /> periods: periods,
+                                  <br /> operatingAccounts: [cashFlowAccount],
+                                  <br /> investingAccounts: [],
+                                  <br /> financingAccounts: []
+                                  <br />)
+                                  <br />
+                                </double>
+                              </double>
+                            </double>
+                          </double>
+                        </double>
+                      </double>
+                    </double>
+                  </double>
+                </double>
+              </double>
+            </double></code></pre>
         <strong>About TechCo’s Financials:</strong>
         <ul>
           <li><strong>Revenue</strong>: Growing SaaS company, $5M → $6M quarterly (20% annual growth)</li>
@@ -338,7 +518,7 @@
         <code>sharesOutstanding</code>.
         <hr />
         <h3>Profitability Ratios</h3>How efficiently does the company generate profits?
-        <pre><code class="language-swift">import BusinessMath<p></p><p>// Get all profitability ratios at once let profitability = profitabilityRatios( incomeStatement: incomeStatement, balanceSheet: balanceSheet )</p></code><p><code class="language-swift">print(”=== Profitability Analysis ===”) print(“Gross Margin: (profitability.grossMargin[q1]!.percent(1))”) print(“Operating Margin: (profitability.operatingMargin[q1]!.percent(1))”) print(“Net Margin: (profitability.netMargin[q1]!.percent(1))”) print(“EBITDA Margin: (profitability.ebitdaMargin[q1]!.percent(1))”) print(“ROA: (profitability.roa[q1]!.percent(1))”) print(“ROE: (profitability.roe[q1]!.percent(1))”) print(“ROIC: (profitability.roic[q1]!.percent(1))”) </code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Get all profitability ratios at once<br />let profitability = profitabilityRatios(<br />	incomeStatement: incomeStatement,<br />	balanceSheet: balanceSheet<br />)<br /><br />print(”=== Profitability Analysis ===”)<br />print(“Gross Margin: (profitability.grossMargin[q1]!.percent(1))”)<br />print(“Operating Margin: (profitability.operatingMargin[q1]!.percent(1))”)<br />print(“Net Margin: (profitability.netMargin[q1]!.percent(1))”)<br />print(“EBITDA Margin: (profitability.ebitdaMargin[q1]!.percent(1))”)<br />print(“ROA: (profitability.roa[q1]!.percent(1))”)<br />print(“ROE: (profitability.roe[q1]!.percent(1))”)<br />print(“ROIC: (profitability.roic[q1]!.percent(1))”)<br /></code></pre>
         <strong>Interpretation</strong>:
         <ul>
           <li><strong>Gross Margin &gt; 40%</strong>: Strong pricing power</li>
@@ -348,7 +528,7 @@
         </ul>
         <hr />
         <h3>Efficiency Ratios</h3>How effectively does the company use its assets?
-        <pre><code class="language-swift">let efficiency = efficiencyRatios( incomeStatement: incomeStatement, balanceSheet: balanceSheet )<p></p><p>print(”\n=== Efficiency Analysis ===”) print(“Asset Turnover: (efficiency.assetTurnover[q1]!.number(2))”) print(“Inventory Turnover: (efficiency.inventoryTurnover![q1]!.number(1))”) print(“Receivables Turnover: (efficiency.receivablesTurnover![q1]!.number(1))”) print(“Days Sales Outstanding: (efficiency.daysSalesOutstanding![q1]!.number(1)) days”) print(“Days Inventory Outstanding: (efficiency.daysInventoryOutstanding![q1]!.number(1)) days”) print(“Days Payable Outstanding: (efficiency.daysPayableOutstanding![q1]!.number(1)) days”)</p></code><p><code class="language-swift">// Cash Conversion Cycle let ccc = efficiency.cashConversionCycle![q1]! print(“Cash Conversion Cycle: (ccc.number(1)) days”) </code></p></pre>
+        <pre><code class="language-swift">let efficiency = efficiencyRatios(<br />    incomeStatement: incomeStatement,<br />    balanceSheet: balanceSheet<br />)<br /><br />print(”\n=== Efficiency Analysis ===”)<br />print(“Asset Turnover: (efficiency.assetTurnover[q1]!.number(2))”)<br />print(“Inventory Turnover: (efficiency.inventoryTurnover![q1]!.number(1))”)<br />print(“Receivables Turnover: (efficiency.receivablesTurnover![q1]!.number(1))”)<br />print(“Days Sales Outstanding: (efficiency.daysSalesOutstanding![q1]!.number(1)) days”)<br />print(“Days Inventory Outstanding: (efficiency.daysInventoryOutstanding![q1]!.number(1)) days”)<br />print(“Days Payable Outstanding: (efficiency.daysPayableOutstanding![q1]!.number(1)) days”)<br /><br />// Cash Conversion Cycle<br />let ccc = efficiency.cashConversionCycle![q1]!<br />print(“Cash Conversion Cycle: (ccc.number(1)) days”)<br /></code></pre>
         <strong>Interpretation</strong>:
         <ul>
           <li><strong>Higher turnover</strong> = more efficient use of assets</li>
@@ -358,7 +538,7 @@
         </ul>
         <hr />
         <h3>Liquidity Ratios</h3>Can the company meet short-term obligations?
-        <pre><code class="language-swift">print(”\n=== Liquidity Analysis ===”) print(“Current Ratio: (liquidity.currentRatio[q1]!)”) print(“Quick Ratio: (liquidity.quickRatio[q1]!)”) print(“Cash Ratio: (liquidity.cashRatio[q1]!)”) print(“Working Capital: (liquidity.workingCapital[q1]!.currency(0))”)<p></p></code><p><code class="language-swift">// Assess liquidity health let currentRatio = liquidity.currentRatio[q1]! if currentRatio &lt; 1.0 { print(“⚠️ Warning: Current ratio &lt; 1.0 indicates potential liquidity issues”) } else if currentRatio &gt; 3.0 { print(“ℹ️ Note: High current ratio may indicate inefficient use of assets”) } else { print(“✓ Current ratio in healthy range”) } </code></p></pre>
+        <pre><code class="language-swift">print(”\n=== Liquidity Analysis ===”)<br />print(“Current Ratio: (liquidity.currentRatio[q1]!)”)<br />print(“Quick Ratio: (liquidity.quickRatio[q1]!)”)<br />print(“Cash Ratio: (liquidity.cashRatio[q1]!)”)<br />print(“Working Capital: (liquidity.workingCapital[q1]!.currency(0))”)<br /><br />// Assess liquidity health<br />let currentRatio = liquidity.currentRatio[q1]!<br />if currentRatio &lt; 1.0 {<br />	print(“⚠️  Warning: Current ratio &lt; 1.0 indicates potential liquidity issues”)<br />} else if currentRatio &gt; 3.0 {<br />	print(“ℹ️  Note: High current ratio may indicate inefficient use of assets”)<br />} else {<br />	print(“✓ Current ratio in healthy range”)<br />}<br /></code></pre>
         <strong>Interpretation</strong>:
         <ul>
           <li><strong>Current Ratio &gt; 1.5</strong>: Good short-term health</li>
@@ -368,7 +548,7 @@
         </ul>
         <hr />
         <h3>Solvency Ratios</h3>Can the company meet long-term obligations?
-        <pre><code class="language-swift">let solvency = solvencyRatios( incomeStatement: incomeStatement, balanceSheet: balanceSheet )<p></p><p>print(”\n=== Solvency Analysis ===”) print(“Debt-to-Equity: (solvency.debtToEquity[q2]!.number(2))”) print(“Debt-to-Assets: (solvency.debtToAssets[q2]!.number(2))”) print(“Equity Ratio: (solvency.equityRatio[q2]!.number(2))”) print(“Interest Coverage: (solvency.interestCoverage![q2]!.number(1))x”) print(“Debt Service Coverage: (solvency.debtServiceCoverage![q2]!.number(1))x”)</p><p>// Assess leverage let debtToEquity = solvency.debtToEquity[q1]! if debtToEquity &gt; 2.0 { print(“⚠️ High leverage - company relies heavily on debt”) } else if debtToEquity &lt; 0.5 { print(“ℹ️ Conservative capital structure - may be underlevered”) } else { print(“✓ Balanced capital structure”) }</p></code><p><code class="language-swift">// Check interest coverage let interestCoverage = solvency.interestCoverage[q1]! if interestCoverage &lt; 2.0 { print(“⚠️ Low interest coverage - may struggle to pay interest”) } else if interestCoverage &gt; 5.0 { print(“✓ Strong interest coverage”) } </code></p></pre>
+        <pre><code class="language-swift">let solvency = solvencyRatios(<br />    incomeStatement: incomeStatement,<br />    balanceSheet: balanceSheet<br />)<br /><br />print(”\n=== Solvency Analysis ===”)<br />print(“Debt-to-Equity: (solvency.debtToEquity[q2]!.number(2))”)<br />print(“Debt-to-Assets: (solvency.debtToAssets[q2]!.number(2))”)<br />print(“Equity Ratio: (solvency.equityRatio[q2]!.number(2))”)<br />print(“Interest Coverage: (solvency.interestCoverage![q2]!.number(1))x”)<br />print(“Debt Service Coverage: (solvency.debtServiceCoverage![q2]!.number(1))x”)<br /><br />// Assess leverage<br />let debtToEquity = solvency.debtToEquity[q1]!<br />if debtToEquity &gt; 2.0 {<br />    print(“⚠️  High leverage - company relies heavily on debt”)<br />} else if debtToEquity &lt; 0.5 {<br />    print(“ℹ️  Conservative capital structure - may be underlevered”)<br />} else {<br />    print(“✓ Balanced capital structure”)<br />}<br /><br />// Check interest coverage<br />let interestCoverage = solvency.interestCoverage[q1]!<br />if interestCoverage &lt; 2.0 {<br />    print(“⚠️  Low interest coverage - may struggle to pay interest”)<br />} else if interestCoverage &gt; 5.0 {<br />    print(“✓ Strong interest coverage”)<br />}<br /></code></pre>
         <strong>Interpretation</strong>:
         <ul>
           <li><strong>Lower D/E</strong>: Less risky, but may miss growth opportunities</li>
@@ -378,7 +558,7 @@
         </ul>
         <hr />
         <h3>DuPont Analysis</h3>Decompose ROE to understand its drivers:
-        <pre><code class="language-swift">// 3-Way DuPont Analysis let dupont = dupontAnalysis( incomeStatement: incomeStatement, balanceSheet: balanceSheet )<p></p><p>print(”\n=== 3-Way DuPont Analysis ===”) print(“ROE = Net Margin × Asset Turnover × Equity Multiplier\n”) print(“Net Margin: (dupont.netMargin[q1]!.percent())”) print(“Asset Turnover: (dupont.assetTurnover[q1]!.number(1))x”) print(“Equity Multiplier: (dupont.equityMultiplier[q1]!.number(1))x”) print(“ROE: (dupont.roe[q1]!.percent(1))”)</p></code><p><code class="language-swift">// Verify the formula let calculated = dupont.netMargin[q1]! * dupont.assetTurnover[q1]! * dupont.equityMultiplier[q1]! print(”\nVerification: (calculated.percent()) ≈ (dupont.roe[q1]!.percent())”) </code></p></pre>
+        <pre><code class="language-swift">// 3-Way DuPont Analysis<br />let dupont = dupontAnalysis(<br />    incomeStatement: incomeStatement,<br />    balanceSheet: balanceSheet<br />)<br /><br />print(”\n=== 3-Way DuPont Analysis ===”)<br />print(“ROE = Net Margin × Asset Turnover × Equity Multiplier\n”)<br />print(“Net Margin: (dupont.netMargin[q1]!.percent())”)<br />print(“Asset Turnover: (dupont.assetTurnover[q1]!.number(1))x”)<br />print(“Equity Multiplier: (dupont.equityMultiplier[q1]!.number(1))x”)<br />print(“ROE: (dupont.roe[q1]!.percent(1))”)<br /><br />// Verify the formula<br />let calculated = dupont.netMargin[q1]! *<br />				 dupont.assetTurnover[q1]! *<br />				 dupont.equityMultiplier[q1]!<br />print(”\nVerification: (calculated.percent()) ≈ (dupont.roe[q1]!.percent())”)<br /></code></pre>
         <strong>ROE can be high due to</strong>:
         <ul>
           <li><strong>High Net Margin</strong>: Pricing power (luxury goods)</li>
@@ -388,7 +568,7 @@
         <strong>which factor drives ROE</strong>, helping you understand the business model.
         <hr />
         <h3>Credit Metrics</h3>Assess bankruptcy risk and fundamental strength:
-        <pre><code class="language-swift">// Altman Z-Score (bankruptcy prediction) let altmanZ = altmanZScore( incomeStatement: incomeStatement, balanceSheet: balanceSheet, marketPrice: marketPrice, sharesOutstanding: sharesOutstanding )<p></p><p>print(”\n=== Altman Z-Score ===”) print(“Z-Score: (altmanZ[q1]!)”)</p><p>let zScore = altmanZ[q1]! if zScore &gt; 2.99 { print(“✓ Safe zone - low bankruptcy risk”) } else if zScore &gt; 1.81 { print(“⚠️ Grey zone - moderate risk”) } else { print(“⚠️ Distress zone - high bankruptcy risk”) }</p><p>// Piotroski F-Score (fundamental strength, 0-9) let piotroski = piotroskiFScore( incomeStatement: incomeStatement, balanceSheet: balanceSheet, cashFlowStatement: cashFlowStatement )</p><p>print(”\n=== Piotroski F-Score ===”) print(“F-Score: (Int(piotroski.totalScore)) / 9”)</p></code><p><code class="language-swift">let fScore = Int(piotroski.totalScore) if fScore &gt;= 7 { print(“✓ Strong fundamentals”) } else if fScore &gt;= 4 { print(“ℹ️ Moderate fundamentals”) } else { print(“⚠️ Weak fundamentals”) } </code></p></pre>
+        <pre><code class="language-swift">// Altman Z-Score (bankruptcy prediction)<br />let altmanZ = altmanZScore(<br />    incomeStatement: incomeStatement,<br />    balanceSheet: balanceSheet,<br />    marketPrice: marketPrice,<br />    sharesOutstanding: sharesOutstanding<br />)<br /><br />print(”\n=== Altman Z-Score ===”)<br />print(“Z-Score: (altmanZ[q1]!)”)<br /><br />let zScore = altmanZ[q1]!<br />if zScore &gt; 2.99 {<br />    print(“✓ Safe zone - low bankruptcy risk”)<br />} else if zScore &gt; 1.81 {<br />    print(“⚠️  Grey zone - moderate risk”)<br />} else {<br />    print(“⚠️  Distress zone - high bankruptcy risk”)<br />}<br /><br />// Piotroski F-Score (fundamental strength, 0-9)<br />let piotroski = piotroskiFScore(<br />    incomeStatement: incomeStatement,<br />    balanceSheet: balanceSheet,<br />    cashFlowStatement: cashFlowStatement<br />)<br /><br />print(”\n=== Piotroski F-Score ===”)<br />print(“F-Score: (Int(piotroski.totalScore)) / 9”)<br /><br />let fScore = Int(piotroski.totalScore)<br />if fScore &gt;= 7 {<br />    print(“✓ Strong fundamentals”)<br />} else if fScore &gt;= 4 {<br />    print(“ℹ️  Moderate fundamentals”)<br />} else {<br />    print(“⚠️  Weak fundamentals”)<br />}<br /></code></pre>
         <strong>Interpretation</strong>:
         <ul>
           <li><strong>Altman Z-Score</strong>:
@@ -409,7 +589,7 @@
         <h3>TimeSeries Return Values</h3>All ratio functions return 
         <code>TimeSeries
           <double></double></code>, allowing trend analysis:
-        <pre><code class="language-swift">// Analyze trends across quarters print(”\n=== Profitability Trends ===”) print(“Period       ROE      ROA    Net Margin”) for period in periods { let roe = profitability.roe[period]! let roa = profitability.roa[period]! let margin = profitability.netMargin[period]!<pre><code>print(”(period.label.padding(toLength: 7, withPad: “ “, startingAt: 0)) (roe.percent(1).paddingLeft(toLength: 8)) (roa.percent(1).paddingLeft(toLength: 8)) (margin.percent(1).paddingLeft(toLength: 12))”) </code></pre>}<p></p></code><p><code class="language-swift">// Calculate quarter-over-quarter growth let q1_roe = profitability.roe[q1]! let q2_roe = profitability.roe[q2]! let qoq_growth = ((q2_roe - q1_roe) / q1_roe) print(”\nQ2 ROE growth vs Q1: (qoq_growth.percent())”) </code></p></pre>
+        <pre><code class="language-swift">// Analyze trends across quarters<br />print(”\n=== Profitability Trends ===”)<br />print(“Period       ROE      ROA    Net Margin”)<br />for period in periods {<br />    let roe = profitability.roe[period]!<br />    let roa = profitability.roa[period]!<br />    let margin = profitability.netMargin[period]!<br /><br />	print(”(period.label.padding(toLength: 7, withPad: “ “, startingAt: 0)) (roe.percent(1).paddingLeft(toLength: 8)) (roa.percent(1).paddingLeft(toLength: 8)) (margin.percent(1).paddingLeft(toLength: 12))”)<br />}<br /><br />// Calculate quarter-over-quarter growth<br />let q1_roe = profitability.roe[q1]!<br />let q2_roe = profitability.roe[q2]!<br />let qoq_growth = ((q2_roe - q1_roe) / q1_roe)<br />print(”\nQ2 ROE growth vs Q1: (qoq_growth.percent())”)<br /></code></pre>
         <h3>Industry Benchmarks</h3>Typical ranges vary by industry:
         <p></p>
         <p><strong>Technology</strong>:</p>
@@ -436,92 +616,374 @@
         <hr />
         <h2>Try It Yourself</h2>
         <details>
-          <summary>Click to expand full playground code</summary>
-          <pre><code class="language-swift">import BusinessMath
-// Define company and periods let entity = Entity(id: “TECH”, primaryType: .ticker, name: “TechCo Inc.”) let periods = [ Period.quarter(year: 2025, quarter: 1), Period.quarter(year: 2025, quarter: 2), Period.quarter(year: 2025, quarter: 3), Period.quarter(year: 2025, quarter: 4) ]
-<p></p><p>// Convenient period references let q1 = periods[0] let q2 = periods[1] let q3 = periods[2] let q4 = periods[3]</p><p>// Create Income Statement // Revenue: $5M → $6M over the year (20% growth) let revenueSeries = TimeSeries
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br /><br />// Define company and periods<br />let entity = Entity(id: "TECH", primaryType: .ticker, name: "TechCo Inc.")<br />let periods = [<br />	Period.quarter(year: 2025, quarter: 1),<br />	Period.quarter(year: 2025, quarter: 2),<br />	Period.quarter(year: 2025, quarter: 3),<br />	Period.quarter(year: 2025, quarter: 4)<br />]<br /><br />// Convenient period references<br />let q1 = periods[0]<br />let q2 = periods[1]<br />let q3 = periods[2]<br />let q4 = periods[3]<br /><br />// Create Income Statement<br />// Revenue: $5M → $6M over the year (20% growth)<br />let revenueSeries = TimeSeries
+              <double>
+                (
+                <br /> periods: periods,
+                <br /> values: [5_000_000, 5_300_000, 5_600_000, 6_000_000]
+                <br />)
+                <br />let revenueAccount = try Account(
+                <br /> entity: entity,
+                <br /> name: "Subscription Revenue",
+                <br /> incomeStatementRole: .serviceRevenue,
+                <br /> timeSeries: revenueSeries
+                <br />)
+                <br />
+                <br />// COGS: 30% of revenue
+                <br />let cogsSeries = TimeSeries
                 <double>
-                  ( periods: periods, values: [5_000_000, 5_300_000, 5_600_000, 6_000_000] ) let revenueAccount = try Account( entity: entity, name: “Subscription Revenue”, incomeStatementRole: .serviceRevenue, timeSeries: revenueSeries )
-                </double></p><p>// COGS: 30% of revenue let cogsSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [1_500_000, 1_590_000, 1_680_000, 1_800_000] ) let cogsAccount = try Account( entity: entity, name: “Cost of Goods Sold”, incomeStatementRole: .costOfGoodsSold, timeSeries: cogsSeries )
-                </double></p><p>// Operating Expenses: R&amp;D + S&amp;M + G&amp;A let opexSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [2_000_000, 2_100_000, 2_150_000, 2_200_000] ) let opexAccount = try Account( entity: entity, name: “Operating Expenses”, incomeStatementRole: .operatingExpenseOther, timeSeries: opexSeries )
-                </double></p><p>// Interest expense let interestSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [100_000, 95_000, 90_000, 85_000] ) let interestAccount = try Account( entity: entity, name: “Interest Expense”, incomeStatementRole: .interestExpense, timeSeries: interestSeries )
-                </double></p><p>let incomeStatement = try IncomeStatement( entity: entity, periods: periods, accounts: [revenueAccount, cogsAccount, opexAccount, interestAccount] )</p><p>// Create Balance Sheet // Current Assets let cashSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [3_000_000, 3_500_000, 4_000_000, 4_500_000] ) let cashAccount = try Account( entity: entity, name: “Cash”, balanceSheetRole: .cashAndEquivalents, timeSeries: cashSeries )
-                </double></p><p>let receivablesSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [1_200_000, 1_300_000, 1_400_000, 1_500_000] ) let receivablesAccount = try Account( entity: entity, name: “Accounts Receivable”, balanceSheetRole: .accountsReceivable, // Required for receivables turnover timeSeries: receivablesSeries )
-                </double></p><p>// Inventory (needed for inventory turnover) let inventorySeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [500_000, 520_000, 540_000, 560_000] ) let inventoryAccount = try Account( entity: entity, name: “Inventory”, balanceSheetRole: .inventory, // Required for inventory turnover timeSeries: inventorySeries )
-                </double></p><p>// Fixed Assets let ppeSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [2_000_000, 2_050_000, 2_100_000, 2_150_000] ) let ppeAccount = try Account( entity: entity, name: “Property &amp; Equipment”, balanceSheetRole: .propertyPlantEquipment, timeSeries: ppeSeries )
-                </double></p><p>// Current Liabilities let payablesSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [800_000, 850_000, 900_000, 950_000] ) let payablesAccount = try Account( entity: entity, name: “Accounts Payable”, balanceSheetRole: .accountsPayable, // Required for days payable outstanding timeSeries: payablesSeries )
-                </double></p><p>// Long-term Debt let debtSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [2_000_000, 1_900_000, 1_800_000, 1_700_000] ) let debtAccount = try Account( entity: entity, name: “Long-term Debt”, balanceSheetRole: .longTermDebt, timeSeries: debtSeries )
-                </double></p><p>// Equity (balancing to Assets = Liabilities + Equity) // Adjusted for inventory: Assets now include $500K+ inventory each quarter let equitySeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [3_900_000, 4_620_000, 5_340_000, 6_060_000] ) let equityAccount = try Account( entity: entity, name: “Shareholders Equity”, balanceSheetRole: .commonStock, timeSeries: equitySeries )
-                </double></p><p>let balanceSheet = try BalanceSheet( entity: entity, periods: periods, accounts: [cashAccount, receivablesAccount, inventoryAccount, ppeAccount, payablesAccount, debtAccount, equityAccount] )</p><p>// Market data for valuation metrics let marketPrice = 45.00 // $45 per share let sharesOutstanding = 200_000.0 // 200K shares outstanding</p><p>// Cash flow statement (for Piotroski F-Score) let operatingCashFlowSeries = TimeSeries
-                <double>
-                  ( periods: periods, values: [1_500_000, 1_600_000, 1_700_000, 1_900_000] ) let cashFlowAccount = try Account( entity: entity, name: “Operating Cash Flow”, cashFlowRole: .otherOperatingActivities, // Use cashFlowRole for cash flow accounts timeSeries: operatingCashFlowSeries )
-                </double></p><p>let cashFlowStatement = try CashFlowStatement( entity: entity, periods: periods, accounts: [cashFlowAccount] )</p><p>// Get all profitability ratios at once let profitability = profitabilityRatios( incomeStatement: incomeStatement, balanceSheet: balanceSheet )</p><p>print(”=== Profitability Analysis ===”) print(“Gross Margin: (profitability.grossMargin[q2]!.percent(1))”) print(“Operating Margin: (profitability.operatingMargin[q2]!.percent(1))”) print(“Net Margin: (profitability.netMargin[q2]!.percent(1))”) print(“EBITDA Margin: (profitability.ebitdaMargin[q2]!.percent(1))”) print(“ROA: (profitability.roa[q2]!.percent(1))”) print(“ROE: (profitability.roe[q2]!.percent(1))”) print(“ROIC: (profitability.roic[q2]!.percent(1))”)</p><p>let efficiency = efficiencyRatios( incomeStatement: incomeStatement, balanceSheet: balanceSheet )</p><p>print(”\n=== Efficiency Analysis ===”) print(“Asset Turnover: (efficiency.assetTurnover[q2]!.number(2))”) print(“Inventory Turnover: (efficiency.inventoryTurnover![q2]!.number(1))”) print(“Receivables Turnover: (efficiency.receivablesTurnover![q2]!.number(1))”) print(“Days Sales Outstanding: (efficiency.daysSalesOutstanding![q2]!.number(1)) days”) print(“Days Inventory Outstanding: (efficiency.daysInventoryOutstanding![q2]!.number(1)) days”) print(“Days Payable Outstanding: (efficiency.daysPayableOutstanding![q2]!.number(1)) days”)</p><p>// Cash Conversion Cycle let ccc = efficiency.cashConversionCycle![q2]! print(“Cash Conversion Cycle: (ccc.number(1)) days”)</p><p>let liquidity = liquidityRatios(balanceSheet: balanceSheet)</p><p>print(”\n=== Liquidity Analysis ===”) print(“Current Ratio: (liquidity.currentRatio[q2]!.number(1))”) print(“Quick Ratio: (liquidity.quickRatio[q2]!.number(1))”) print(“Cash Ratio: (liquidity.cashRatio[q2]!.number(1))”) print(“Working Capital: (liquidity.workingCapital[q2]!.currency(0))”)</p><p>// Assess liquidity health let currentRatio = liquidity.currentRatio[q2]! if currentRatio &lt; 1.0 { print(“⚠️ Warning: Current ratio &lt; 1.0 indicates potential liquidity issues”) } else if currentRatio &gt; 3.0 { print(“ℹ️ Note: High current ratio may indicate inefficient use of assets”) } else { print(“✓ Current ratio in healthy range”) }</p><p>// Calculate solvency ratios using the convenience API // Principal payments are automatically derived from period-over-period debt reduction let solvency = solvencyRatios( incomeStatement: incomeStatement, balanceSheet: balanceSheet, debtAccount: debtAccount, // Automatically calculates principal payments interestAccount: interestAccount // from balance sheet changes )</p><p>print(”\n=== Solvency Analysis ===”) print(“Debt-to-Equity: (solvency.debtToEquity[q2]!.number(2))”) print(“Debt-to-Assets: (solvency.debtToAssets[q2]!.number(2))”) print(“Equity Ratio: (solvency.equityRatio[q2]!.number(2))”) print(“Interest Coverage: (solvency.interestCoverage![q2]!.number(1))x”) print(“Debt Service Coverage: (solvency.debtServiceCoverage![q2]!.number(1))x”)</p><p>// 3-Way DuPont Analysis let dupont = dupontAnalysis( incomeStatement: incomeStatement, balanceSheet: balanceSheet )</p><p>print(”\n=== 3-Way DuPont Analysis ===”) print(“ROE = Net Margin × Asset Turnover × Equity Multiplier\n”) print(“Net Margin: (dupont.netMargin[q1]!.percent())”) print(“Asset Turnover: (dupont.assetTurnover[q1]!.number(1))x”) print(“Equity Multiplier: (dupont.equityMultiplier[q1]!.number(1))x”) print(“ROE: (dupont.roe[q1]!.percent(1))”)</p><p>// Verify the formula let calculated = dupont.netMargin[q1]! * dupont.assetTurnover[q1]! * dupont.equityMultiplier[q1]! print(”\nVerification: (calculated.percent()) ≈ (dupont.roe[q1]!.percent())”)</p><p>// Assess leverage let debtToEquity = solvency.debtToEquity[q2]! if debtToEquity &gt; 2.0 { print(“⚠️ High leverage - company relies heavily on debt”) } else if debtToEquity &lt; 0.5 { print(“ℹ️ Conservative capital structure - may be underlevered”) } else { print(“✓ Balanced capital structure”) }</p></code>
-            <div>
-              <code class="language-swift"><p>// Check interest coverage let interestCoverage = solvency.interestCoverage?[q2]! ?? 0.0 if interestCoverage &lt; 2.0 { print(“⚠️ Low interest coverage - may struggle to pay interest”) } else if interestCoverage &gt; 5.0 { print(“✓ Strong interest coverage”) }</p><pre><code>// Analyze trends across quarters print(”\n=== Profitability Trends ===”) print(“Period       ROE      ROA    Net Margin”) for period in periods { let roe = profitability.roe[period]! let roa = profitability.roa[period]! let margin = profitability.netMargin[period]! print(”(period.label.padding(toLength: 7, withPad: “ “, startingAt: 0)) (roe.percent(1).paddingLeft(toLength: 8)) (roa.percent(1).paddingLeft(toLength: 8)) (margin.percent(1).paddingLeft(toLength: 12))”) }<p></p></code><p><code>// Calculate quarter-over-quarter growth let q1_roe = profitability.roe[q1]! let q2_roe = profitability.roe[q2]! let qoq_growth = ((q2_roe - q1_roe) / q1_roe) print(”\nQ2 ROE growth vs Q1: (qoq_growth.percent())”) </code></p></pre></code>
-            </div></pre>
-        </details>
+                  (
+                  <br /> periods: periods,
+                  <br /> values: [1_500_000, 1_590_000, 1_680_000, 1_800_000]
+                  <br />)
+                  <br />let cogsAccount = try Account(
+                  <br /> entity: entity,
+                  <br /> name: "Cost of Goods Sold",
+                  <br /> incomeStatementRole: .costOfGoodsSold,
+                  <br /> timeSeries: cogsSeries
+                  <br />)
+                  <br />
+                  <br />// Operating Expenses: R&amp;D + S&amp;M + G&amp;A
+                  <br />let opexSeries = TimeSeries
+                  <double>
+                    (
+                    <br /> periods: periods,
+                    <br /> values: [2_000_000, 2_100_000, 2_150_000, 2_200_000]
+                    <br />)
+                    <br />let opexAccount = try Account(
+                    <br /> entity: entity,
+                    <br /> name: "Operating Expenses",
+                    <br /> incomeStatementRole: .operatingExpenseOther,
+                    <br /> timeSeries: opexSeries
+                    <br />)
+                    <br />
+                    <br />// Interest expense
+                    <br />let interestSeries = TimeSeries
+                    <double>
+                      (
+                      <br /> periods: periods,
+                      <br /> values: [100_000, 95_000, 90_000, 85_000]
+                      <br />)
+                      <br />let interestAccount = try Account(
+                      <br /> entity: entity,
+                      <br /> name: "Interest Expense",
+                      <br /> incomeStatementRole: .interestExpense,
+                      <br /> timeSeries: interestSeries
+                      <br />)
+                      <br />
+                      <br />let incomeStatement = try IncomeStatement(
+                      <br /> entity: entity,
+                      <br /> periods: periods,
+                      <br /> accounts: [revenueAccount, cogsAccount, opexAccount, interestAccount]
+                      <br />)
+                      <br />
+                      <br />// Create Balance Sheet
+                      <br />// Current Assets
+                      <br />let cashSeries = TimeSeries
+                      <double>
+                        (
+                        <br /> periods: periods,
+                        <br /> values: [3_000_000, 3_500_000, 4_000_000, 4_500_000]
+                        <br />)
+                        <br />let cashAccount = try Account(
+                        <br /> entity: entity,
+                        <br /> name: "Cash",
+                        <br /> balanceSheetRole: .cashAndEquivalents,
+                        <br /> timeSeries: cashSeries
+                        <br />)
+                        <br />
+                        <br />let receivablesSeries = TimeSeries
+                        <double>
+                          (
+                          <br /> periods: periods,
+                          <br /> values: [1_200_000, 1_300_000, 1_400_000, 1_500_000]
+                          <br />)
+                          <br />let receivablesAccount = try Account(
+                          <br /> entity: entity,
+                          <br /> name: "Accounts Receivable",
+                          <br /> balanceSheetRole: .accountsReceivable, // Required for receivables turnover
+                          <br /> timeSeries: receivablesSeries
+                          <br />)
+                          <br />
+                          <br />// Inventory (needed for inventory turnover)
+                          <br />let inventorySeries = TimeSeries
+                          <double>
+                            (
+                            <br /> periods: periods,
+                            <br /> values: [500_000, 520_000, 540_000, 560_000]
+                            <br />)
+                            <br />let inventoryAccount = try Account(
+                            <br /> entity: entity,
+                            <br /> name: "Inventory",
+                            <br /> balanceSheetRole: .inventory, // Required for inventory turnover
+                            <br /> timeSeries: inventorySeries
+                            <br />)
+                            <br />
+                            <br />// Fixed Assets
+                            <br />let ppeSeries = TimeSeries
+                            <double>
+                              (
+                              <br /> periods: periods,
+                              <br /> values: [2_000_000, 2_050_000, 2_100_000, 2_150_000]
+                              <br />)
+                              <br />let ppeAccount = try Account(
+                              <br /> entity: entity,
+                              <br /> name: "Property &amp; Equipment",
+                              <br /> balanceSheetRole: .propertyPlantEquipment,
+                              <br /> timeSeries: ppeSeries
+                              <br />)
+                              <br />
+                              <br />// Current Liabilities
+                              <br />let payablesSeries = TimeSeries
+                              <double>
+                                (
+                                <br /> periods: periods,
+                                <br /> values: [800_000, 850_000, 900_000, 950_000]
+                                <br />)
+                                <br />let payablesAccount = try Account(
+                                <br /> entity: entity,
+                                <br /> name: "Accounts Payable",
+                                <br /> balanceSheetRole: .accountsPayable, // Required for days payable outstanding
+                                <br /> timeSeries: payablesSeries
+                                <br />)
+                                <br />
+                                <br />// Long-term Debt
+                                <br />let debtSeries = TimeSeries
+                                <double>
+                                  (
+                                  <br /> periods: periods,
+                                  <br /> values: [2_000_000, 1_900_000, 1_800_000, 1_700_000]
+                                  <br />)
+                                  <br />let debtAccount = try Account(
+                                  <br /> entity: entity,
+                                  <br /> name: "Long-term Debt",
+                                  <br /> balanceSheetRole: .longTermDebt,
+                                  <br /> timeSeries: debtSeries
+                                  <br />)
+                                  <br />
+                                  <br />// Equity (balancing to Assets = Liabilities + Equity)
+                                  <br />// Adjusted for inventory: Assets now include $500K+ inventory each quarter
+                                  <br />let equitySeries = TimeSeries
+                                  <double>
+                                    (
+                                    <br /> periods: periods,
+                                    <br /> values: [3_900_000, 4_620_000, 5_340_000, 6_060_000]
+                                    <br />)
+                                    <br />let equityAccount = try Account(
+                                    <br /> entity: entity,
+                                    <br /> name: "Shareholders Equity",
+                                    <br /> balanceSheetRole: .commonStock,
+                                    <br /> timeSeries: equitySeries
+                                    <br />)
+                                    <br />
+                                    <br />let balanceSheet = try BalanceSheet(
+                                    <br /> entity: entity,
+                                    <br /> periods: periods,
+                                    <br /> accounts: [cashAccount, receivablesAccount, inventoryAccount, ppeAccount, payablesAccount, debtAccount, equityAccount]
+                                    <br />)
+                                    <br />
+                                    <br />// Market data for valuation metrics
+                                    <br />let marketPrice = 45.00 // $45 per share
+                                    <br />let sharesOutstanding = 200_000.0 // 200K shares outstanding
+                                    <br />
+                                    <br />// Cash flow statement (for Piotroski F-Score)
+                                    <br />let operatingCashFlowSeries = TimeSeries
+                                    <double>
+                                      (
+                                      <br /> periods: periods,
+                                      <br /> values: [1_500_000, 1_600_000, 1_700_000, 1_900_000]
+                                      <br />)
+                                      <br />let cashFlowAccount = try Account(
+                                      <br /> entity: entity,
+                                      <br /> name: "Operating Cash Flow",
+                                      <br /> cashFlowRole: .otherOperatingActivities, // Use cashFlowRole for cash flow accounts
+                                      <br /> timeSeries: operatingCashFlowSeries
+                                      <br />)
+                                      <br />
+                                      <br />let cashFlowStatement = try CashFlowStatement(
+                                      <br /> entity: entity,
+                                      <br /> periods: periods,
+                                      <br /> accounts: [cashFlowAccount]
+                                      <br />)
+                                      <br />
+                                      <br />// Get all profitability ratios at once
+                                      <br />let profitability = profitabilityRatios(
+                                      <br /> incomeStatement: incomeStatement,
+                                      <br /> balanceSheet: balanceSheet
+                                      <br />)
+                                      <br />
+                                      <br />print("=== Profitability Analysis ===")
+                                      <br />print("Gross Margin: \(profitability.grossMargin[q2]!.percent(1))")
+                                      <br />print("Operating Margin: \(profitability.operatingMargin[q2]!.percent(1))")
+                                      <br />print("Net Margin: \(profitability.netMargin[q2]!.percent(1))")
+                                      <br />print("EBITDA Margin: \(profitability.ebitdaMargin[q2]!.percent(1))")
+                                      <br />print("ROA: \(profitability.roa[q2]!.percent(1))")
+                                      <br />print("ROE: \(profitability.roe[q2]!.percent(1))")
+                                      <br />print("ROIC: \(profitability.roic[q2]!.percent(1))")
+                                      <br />
+                                      <br />let efficiency = efficiencyRatios(
+                                      <br /> incomeStatement: incomeStatement,
+                                      <br /> balanceSheet: balanceSheet
+                                      <br />)
+                                      <br />
+                                      <br />print("\n=== Efficiency Analysis ===")
+                                      <br />print("Asset Turnover: \(efficiency.assetTurnover[q2]!.number(2))")
+                                      <br />print("Inventory Turnover: \(efficiency.inventoryTurnover![q2]!.number(1))")
+                                      <br />print("Receivables Turnover: \(efficiency.receivablesTurnover![q2]!.number(1))")
+                                      <br />print("Days Sales Outstanding: \(efficiency.daysSalesOutstanding![q2]!.number(1)) days")
+                                      <br />print("Days Inventory Outstanding: \(efficiency.daysInventoryOutstanding![q2]!.number(1)) days")
+                                      <br />print("Days Payable Outstanding: \(efficiency.daysPayableOutstanding![q2]!.number(1)) days")
+                                      <br />
+                                      <br />// Cash Conversion Cycle
+                                      <br />let ccc = efficiency.cashConversionCycle![q2]!
+                                      <br />print("Cash Conversion Cycle: \(ccc.number(1)) days")
+                                      <br />
+                                      <br />
+                                      <br />let liquidity = liquidityRatios(balanceSheet: balanceSheet)
+                                      <br />
+                                      <br />print("\n=== Liquidity Analysis ===")
+                                      <br />print("Current Ratio: \(liquidity.currentRatio[q2]!.number(1))")
+                                      <br />print("Quick Ratio: \(liquidity.quickRatio[q2]!.number(1))")
+                                      <br />print("Cash Ratio: \(liquidity.cashRatio[q2]!.number(1))")
+                                      <br />print("Working Capital: \(liquidity.workingCapital[q2]!.currency(0))")
+                                      <br />
+                                      <br />// Assess liquidity health
+                                      <br />let currentRatio = liquidity.currentRatio[q2]!
+                                      <br />if currentRatio &lt; 1.0 {
+                                      <br /> print("⚠️ Warning: Current ratio &lt; 1.0 indicates potential liquidity issues")
+                                      <br />} else if currentRatio &gt; 3.0 {
+                                      <br /> print("ℹ️ Note: High current ratio may indicate inefficient use of assets")
+                                      <br />} else {
+                                      <br /> print("✓ Current ratio in healthy range")
+                                      <br />}
+                                      <br />
+                                      <br />
+                                      <br />// Calculate solvency ratios using the convenience API
+                                      <br />// Principal payments are automatically derived from period-over-period debt reduction
+                                      <br />let solvency = solvencyRatios(
+                                      <br /> incomeStatement: incomeStatement,
+                                      <br /> balanceSheet: balanceSheet,
+                                      <br /> debtAccount: debtAccount, // Automatically calculates principal payments
+                                      <br /> interestAccount: interestAccount // from balance sheet changes
+                                      <br />)
+                                      <br />
+                                      <br />print("\n=== Solvency Analysis ===")
+                                      <br />print("Debt-to-Equity: \(solvency.debtToEquity[q2]!.number(2))")
+                                      <br />print("Debt-to-Assets: \(solvency.debtToAssets[q2]!.number(2))")
+                                      <br />print("Equity Ratio: \(solvency.equityRatio[q2]!.number(2))")
+                                      <br />print("Interest Coverage: \(solvency.interestCoverage![q2]!.number(1))x")
+                                      <br />print("Debt Service Coverage: \(solvency.debtServiceCoverage![q2]!.number(1))x")
+                                      <br />
+                                      <br />// 3-Way DuPont Analysis
+                                      <br />let dupont = dupontAnalysis(
+                                      <br /> incomeStatement: incomeStatement,
+                                      <br /> balanceSheet: balanceSheet
+                                      <br />)
+                                      <br />
+                                      <br />print("\n=== 3-Way DuPont Analysis ===")
+                                      <br />print("ROE = Net Margin × Asset Turnover × Equity Multiplier\n")
+                                      <br />print("Net Margin: \(dupont.netMargin[q1]!.percent())")
+                                      <br />print("Asset Turnover: \(dupont.assetTurnover[q1]!.number(1))x")
+                                      <br />print("Equity Multiplier: \(dupont.equityMultiplier[q1]!.number(1))x")
+                                      <br />print("ROE: \(dupont.roe[q1]!.percent(1))")
+                                      <br />
+                                      <br />// Verify the formula
+                                      <br />let calculated = dupont.netMargin[q1]! *
+                                      <br /> dupont.assetTurnover[q1]! *
+                                      <br /> dupont.equityMultiplier[q1]!
+                                      <br />print("\nVerification: \(calculated.percent()) ≈ \(dupont.roe[q1]!.percent())")
+                                      <br />
+                                      <br />// Assess leverage
+                                      <br />let debtToEquity = solvency.debtToEquity[q2]!
+                                      <br />if debtToEquity &gt; 2.0 {
+                                      <br /> print("⚠️ High leverage - company relies heavily on debt")
+                                      <br />} else if debtToEquity &lt; 0.5 {
+                                      <br /> print("ℹ️ Conservative capital structure - may be underlevered")
+                                      <br />} else {
+                                      <br /> print("✓ Balanced capital structure")
+                                      <br />}
+                                      <br />
+                                      <br />// Check interest coverage
+                                      <br />let interestCoverage = solvency.interestCoverage?[q2]! ?? 0.0
+                                      <br />if interestCoverage &lt; 2.0 {
+                                      <br /> print("⚠️ Low interest coverage - may struggle to pay interest")
+                                      <br />} else if interestCoverage &gt; 5.0 {
+                                      <br /> print("✓ Strong interest coverage")
+                                      <br />}
+                                      <br />
+                                      <br /> // Analyze trends across quarters
+                                      <br /> print("\n=== Profitability Trends ===")
+                                      <br /> print("Period ROE ROA Net Margin")
+                                      <br /> for period in periods {
+                                      <br /> let roe = profitability.roe[period]!
+                                      <br /> let roa = profitability.roa[period]!
+                                      <br /> let margin = profitability.netMargin[period]!
+                                      <br /> print("\(period.label.padding(toLength: 7, withPad: " ", startingAt: 0)) \(roe.percent(1).paddingLeft(toLength: 8)) \(roa.percent(1).paddingLeft(toLength: 8)) \(margin.percent(1).paddingLeft(toLength: 12))")
+                                      <br /> }
+                                      <br />
+                                      <br /> // Calculate quarter-over-quarter growth
+                                      <br /> let q1_roe = profitability.roe[q1]!
+                                      <br /> let q2_roe = profitability.roe[q2]!
+                                      <br /> let qoq_growth = ((q2_roe - q1_roe) / q1_roe)
+                                      <br /> print("\nQ2 ROE growth vs Q1: \(qoq_growth.percent())")
+                                      <br />
+                                      <br />
+                                    </double>
+                                  </double>
+                                </double>
+                              </double>
+                            </double>
+                          </double>
+                        </double>
+                      </double>
+                    </double>
+                  </double>
+                </double>
+              </double></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md"><strong>BusinessMath Docs – 2.2 Financial Ratios</strong></a> 
+        <p></p>
+        <p><strong>Modifications to try</strong>:</p>
+        <ol>
+          <li>Compare profitability ratios for two companies</li>
+          <li>Track liquidity trends over multiple quarters</li>
+          <li>Perform DuPont analysis to identify ROE drivers</li>
+        </ol>
+        <hr />
+        <h2>Real-World Application</h2>Investment analysts use financial ratios for every stock evaluation:
+        <ul>
+          <li><strong>Profitability screening</strong>: ROE &gt; 15%, ROIC &gt; WACC</li>
+          <li><strong>Safety checks</strong>: Current Ratio &gt; 1.5, Z-Score &gt; 2.99</li>
+          <li><strong>Efficiency comparisons</strong>: Compare DSO across industry peers</li>
+          <li><strong>Valuation</strong>: Low P/E + high Piotroski F-Score = potential value</li>
+        </ul>BusinessMath makes these calculations systematic, repeatable, and type-safe.
+        <hr />
+        <h3>📝 Development Note</h3>During development, we debated whether to return individual ratios (separate functions for each) or composite structs (one function returning all profitability ratios).
+        <p></p>
+        <p><strong>The composite approach won</strong> because real-world analysis requires calculating many related ratios simultaneously. Calling 7 separate functions for profitability analysis was tedious and led to code duplication.</p>
+        <p>But we kept individual functions available too:</p>
+        <pre><code class="language-swift">// Composite (most common)<br />let all = profitabilityRatios(incomeStatement: is, balanceSheet: bs)<br /><br />// Individual (when you only need one)<br />let roe = returnOnEquity(incomeStatement: is, balanceSheet: bs)<br /></code></pre>
+        <strong>The lesson</strong>: Provide both convenience (composite) and precision (individual). Let users choose based on their needs.
+        <p></p>
+        <p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan (Week 3) - Managing API surface area</a>
+          <hr /></p>
+        <h2>Next Steps</h2>
+        <strong>Coming up next</strong>: Risk Analytics (Friday) - VaR, stress testing, and comprehensive risk metrics.
+        <p></p>
+        <p><strong>Case Study</strong>: Week 3 Friday will combine depreciation + TVM + financial ratios for capital equipment decisions.
+          <hr /><strong>Series Progress</strong>:</p>
+        <ul>
+          <li>Week: 2/12</li>
+          <li>Posts Published: 7/~48</li>
+          <li>Topics Covered: Foundation + Analysis Tools (in progress)</li>
+          <li>Playgrounds: 6 available</li>
+        </ul>
         <p></p>
       </div>
-      <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md"><strong>BusinessMath Docs – 2.2 Financial Ratios</strong></a></p>
-      <p><strong>Modifications to try</strong>:</p>
-      <ol>
-        <li>Compare profitability ratios for two companies</li>
-        <li>Track liquidity trends over multiple quarters</li>
-        <li>Perform DuPont analysis to identify ROE drivers</li>
-      </ol>
       <hr />
-      <h2>Real-World Application</h2>Investment analysts use financial ratios for every stock evaluation:
-      <ul>
-        <li><strong>Profitability screening</strong>: ROE &gt; 15%, ROIC &gt; WACC</li>
-        <li><strong>Safety checks</strong>: Current Ratio &gt; 1.5, Z-Score &gt; 2.99</li>
-        <li><strong>Efficiency comparisons</strong>: Compare DSO across industry peers</li>
-        <li><strong>Valuation</strong>: Low P/E + high Piotroski F-Score = potential value</li>
-      </ul>BusinessMath makes these calculations systematic, repeatable, and type-safe.
-      <hr />
-      <h3>📝 Development Note</h3>During development, we debated whether to return individual ratios (separate functions for each) or composite structs (one function returning all profitability ratios).
-      <p></p>
-      <p><strong>The composite approach won</strong> because real-world analysis requires calculating many related ratios simultaneously. Calling 7 separate functions for profitability analysis was tedious and led to code duplication.</p>
-      <p>But we kept individual functions available too:</p>
-      <pre><code class="language-swift">// Composite (most common) let all = profitabilityRatios(incomeStatement: is, balanceSheet: bs) // Individual (when you only need one) let roe = returnOnEquity(incomeStatement: is, balanceSheet: bs) </code></pre>
-      <strong>The lesson</strong>: Provide both convenience (composite) and precision (individual). Let users choose based on their needs.
-      <p></p>
-      <p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan (Week 3) - Managing API surface area</a>
-        <hr /></p>
-      <h2>Next Steps</h2>
-      <strong>Coming up next</strong>: Risk Analytics (Friday) - VaR, stress testing, and comprehensive risk metrics.
-      <p></p>
-      <p><strong>Case Study</strong>: Week 3 Friday will combine depreciation + TVM + financial ratios for capital equipment decisions.
-        <hr /><strong>Series Progress</strong>:</p>
-      <ul>
-        <li>Week: 2/12</li>
-        <li>Posts Published: 7/~48</li>
-        <li>Topics Covered: Foundation + Analysis Tools (in progress)</li>
-        <li>Playgrounds: 6 available</li>
-      </ul>
-      <p></p>
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: financial-analysis</p>
     </div>
-    <hr />
-    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: financial-analysis</p>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

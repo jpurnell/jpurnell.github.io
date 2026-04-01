@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">L-BFGS Optimization: Memory-Efficient Large-Scale Optimization</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">12 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 34 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -284,51 +284,168 @@
         <strong>m</strong> gradient/position pairs (typically m = 3-20) instead of the full Hessian. This reduces memory from O(n²) to O(mn), making 10,000+ variable problems feasible.
         <h3>Pattern 1: Large Portfolio Optimization</h3>
         <strong>Business Problem</strong>: Optimize portfolio with 1,000 assets (standard BFGS would use 8 MB for Hessian alone).
-        <pre><code class="language-swift">import BusinessMath import Foundation // Portfolio with 1,000 assets let numAssets = 1_000 let expectedReturns = generateRandomReturns(count: numAssets, mean: 0.10, stdDev: 0.05) let volatilities = generateRandomVolatilities(count: numAssets, minVolatility: 0.15, maxVolatility: 0.25) let riskFreeRate = 0.03 let riskAversion = 2.0<p></p></code>
-          <div>
-            <code class="language-swift"><p>// Portfolio objective: Mean-variance with simplified risk model // Note: Uses uncorrelated assumption for speed (O(n) instead of O(n²)) // For full covariance, see “Pattern 3” below with sparse matrices func portfolioObjective(_ weights: VectorN
-                <double>
-                  ) -&gt; Double { let expectedReturn = weights.dot(expectedReturns)
-                </double></p><pre><code>// Simplified variance: σ²ₚ = Σ(wᵢ²σᵢ²) // Fast: O(n) complexity, completes in seconds let variance = simplifiedPortfolioVariance(weights: weights, volatilities: volatilities)<p></p></code><p><code>// Mean-variance utility: maximize return, penalize risk return -(expectedReturn - riskAversion * variance) </code></p></pre>}<p></p></code>
-          </div><p>// L-BFGS optimizer with memory size m = 10 let lbfgs = MultivariateLBFGS
-            <vectorn<double>
-              &gt;( memorySize: 10 // Store last 10 gradient pairs )
-            </vectorn<double></p><p>// Start with equal weights let initialWeights = VectorN
+        <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />// Portfolio with 1,000 assets<br />let numAssets = 1_000<br />let expectedReturns = generateRandomReturns(count: numAssets, mean: 0.10, stdDev: 0.05)<br />let volatilities = generateRandomVolatilities(count: numAssets, minVolatility: 0.15, maxVolatility: 0.25)<br />let riskFreeRate = 0.03<br />let riskAversion = 2.0<br /><br />// Portfolio objective: Mean-variance with simplified risk model<br />// Note: Uses uncorrelated assumption for speed (O(n) instead of O(n²))<br />// For full covariance, see “Pattern 3” below with sparse matrices<br />func portfolioObjective(_ weights: VectorN
             <double>
-              .equalWeights(dimension: numAssets)
-            </double></p><p>print(“Optimizing portfolio with (numAssets) assets using L-BFGS…”)</p><p>let startTime = Date() let result = try lbfgs.minimizeLBFGS( function: portfolioObjective, initialGuess: initialWeights ) let elapsedTime = Date().timeIntervalSince(startTime)</p><p>print(”\nOptimization Results:”) print(”  Expected Return: ((result.solution.dot(expectedReturns) * 100).number(2))%”) print(”  Volatility: ((sqrt(simplifiedPortfolioVariance(weights: result.solution, volatilities: volatilities)) * 100).number(2))%”) print(”  Iterations: (result.iterations)”) print(”  Time: (elapsedTime.number(2))s”) print(”  Converged: (result.converged)”)</p><p>// Show top holdings let topHoldings = result.solution.toArray().enumerated() .sorted { $0.element &gt; $1.element } .prefix(10)</p><p>print(”\nTop 10 Holdings:”) for (index, weight) in topHoldings { print(”  Asset (index): ((weight * 100).number(2))%”) }</p><p>// Memory usage comparison let bfgsMemory = Double(numAssets * numAssets) * 8.0 / 1_048_576.0  // MB let lbfgsMemory = Double(lbfgs.memorySize * numAssets * 2) * 8.0 / 1_048_576.0  // MB</p><p>print(”\nMemory Usage:”) print(”  BFGS would use: (bfgsMemory.number(1)) MB”) print(”  L-BFGS uses: (lbfgsMemory.number(1)) MB”) print(”  Savings: (((bfgsMemory - lbfgsMemory) / bfgsMemory).percent(1))”)</p><p>print(”\nNote: This example uses simplified variance (uncorrelated assets)”) print(“for speed. For full covariance with correlations, see Pattern 3 below.”)</p><p></p></pre>
+              ) -&gt; Double {
+              <br /> let expectedReturn = weights.dot(expectedReturns)
+              <br />
+              <br /> // Simplified variance: σ²ₚ = Σ(wᵢ²σᵢ²)
+              <br /> // Fast: O(n) complexity, completes in seconds
+              <br /> let variance = simplifiedPortfolioVariance(weights: weights, volatilities: volatilities)
+              <br />
+              <br /> // Mean-variance utility: maximize return, penalize risk
+              <br /> return -(expectedReturn - riskAversion * variance)
+              <br />}
+              <br />
+              <br />// L-BFGS optimizer with memory size m = 10
+              <br />let lbfgs = MultivariateLBFGS
+              <vectorn<double>
+                &gt;(
+                <br /> memorySize: 10 // Store last 10 gradient pairs
+                <br />)
+                <br />
+                <br />// Start with equal weights
+                <br />let initialWeights = VectorN
+                <double>
+                  .equalWeights(dimension: numAssets)
+                  <br />
+                  <br />print(“Optimizing portfolio with (numAssets) assets using L-BFGS…”)
+                  <br />
+                  <br />let startTime = Date()
+                  <br />let result = try lbfgs.minimizeLBFGS(
+                  <br /> function: portfolioObjective,
+                  <br /> initialGuess: initialWeights
+                  <br />)
+                  <br />let elapsedTime = Date().timeIntervalSince(startTime)
+                  <br />
+                  <br />print(”\nOptimization Results:”)
+                  <br />print(” Expected Return: ((result.solution.dot(expectedReturns) * 100).number(2))%”)
+                  <br />print(” Volatility: ((sqrt(simplifiedPortfolioVariance(weights: result.solution, volatilities: volatilities)) * 100).number(2))%”)
+                  <br />print(” Iterations: (result.iterations)”)
+                  <br />print(” Time: (elapsedTime.number(2))s”)
+                  <br />print(” Converged: (result.converged)”)
+                  <br />
+                  <br />// Show top holdings
+                  <br />let topHoldings = result.solution.toArray().enumerated()
+                  <br /> .sorted { $0.element &gt; $1.element }
+                  <br /> .prefix(10)
+                  <br />
+                  <br />print(”\nTop 10 Holdings:”)
+                  <br />for (index, weight) in topHoldings {
+                  <br /> print(” Asset (index): ((weight * 100).number(2))%”)
+                  <br />}
+                  <br />
+                  <br />// Memory usage comparison
+                  <br />let bfgsMemory = Double(numAssets * numAssets) * 8.0 / 1_048_576.0 // MB
+                  <br />let lbfgsMemory = Double(lbfgs.memorySize * numAssets * 2) * 8.0 / 1_048_576.0 // MB
+                  <br />
+                  <br />print(”\nMemory Usage:”)
+                  <br />print(” BFGS would use: (bfgsMemory.number(1)) MB”)
+                  <br />print(” L-BFGS uses: (lbfgsMemory.number(1)) MB”)
+                  <br />print(” Savings: (((bfgsMemory - lbfgsMemory) / bfgsMemory).percent(1))”)
+                  <br />
+                  <br />print(”\nNote: This example uses simplified variance (uncorrelated assets)”)
+                  <br />print(“for speed. For full covariance with correlations, see Pattern 3 below.”)
+                  <br />
+                  <br />
+                </double>
+              </vectorn<double>
+            </double></code></pre>
         <strong>Output</strong>:
-        <pre><code>Optimization Results: Expected Return: 8,123.74% Volatility: 450.66% Iterations: 18 Time: 24.59s Converged: true<p></p><p>Top 10 Holdings: Asset 841: 231.00% Asset 779: 227.65% Asset 379: 214.60% Asset 728: 195.06% Asset 478: 192.91% Asset 945: 192.75% Asset 540: 191.38% Asset 577: 188.47% Asset 152: 186.93% Asset 239: 185.10%</p><p>Memory Usage: BFGS would use: 7.6 MB L-BFGS uses: 0.2 MB Savings: 98.0%</p></code><p><code>Note: This example uses simplified variance (uncorrelated assets) for speed. For full covariance with correlations, see Pattern 3 below. </code></p></pre>
+        <pre><code>Optimization Results:<br />  Expected Return: 8,123.74%<br />  Volatility: 450.66%<br />  Iterations: 18<br />  Time: 24.59s<br />  Converged: true<br /><br />Top 10 Holdings:<br />  Asset 841: 231.00%<br />  Asset 779: 227.65%<br />  Asset 379: 214.60%<br />  Asset 728: 195.06%<br />  Asset 478: 192.91%<br />  Asset 945: 192.75%<br />  Asset 540: 191.38%<br />  Asset 577: 188.47%<br />  Asset 152: 186.93%<br />  Asset 239: 185.10%<br /><br />Memory Usage:<br />  BFGS would use: 7.6 MB<br />  L-BFGS uses: 0.2 MB<br />  Savings: 98.0%<br /><br />Note: This example uses simplified variance (uncorrelated assets)<br />for speed. For full covariance with correlations, see Pattern 3 below.<br /></code></pre>
         <h3>Pattern 2: Hyperparameter Tuning (History Size m)</h3>
         <strong>Pattern</strong>: Find optimal history size for your problem.
-        <pre><code class="language-swift">// Test different history sizes let historySizes = [3, 5, 10, 20, 50]<p></p><p>print(“History Size Tuning”) print(“═══════════════════════════════════════════════════════════”) print(“m | Final Value | Iterations | Time (s) | Memory (MB)”) print(“────────────────────────────────────────────────────────────”)</p></code>
-          <div>
-            <code class="language-swift"><p>for m in historySizes { let optimizer = MultivariateLBFGS
-                <vectorn<double>
-                  &gt;(memorySize: m)
-                </vectorn<double></p><pre><code>let startTime = Date() let result = try optimizer.minimizeLBFGS( function: portfolioObjective, initialGuess: initialWeights ) let elapsedTime = Date().timeIntervalSince(startTime)<p></p><p>let memory = Double(m * numAssets * 2) * 8.0 / 1_048_576.0</p></code><p><code>print(”(”(m)”.paddingLeft(toLength: 3)) | (result.value.number(6).padding(toLength: 12, withPad: “ “, startingAt: 0)) | (”(result.iterations)”.paddingLeft(toLength: 10)) | (elapsedTime.number(2).padding(toLength: 8, withPad: “ “, startingAt: 0)) | (memory.number(2))”) </code></p></pre>}<p></p></code>
-          </div><p>print(”\nRecommendation: m = 10-20 typically optimal (diminishing returns beyond)”) </p></pre>
+        <pre><code class="language-swift">// Test different history sizes<br />let historySizes = [3, 5, 10, 20, 50]<br /><br />print(“History Size Tuning”)<br />print(“═══════════════════════════════════════════════════════════”)<br />print(“m   | Final Value  | Iterations | Time (s) | Memory (MB)”)<br />print(“────────────────────────────────────────────────────────────”)<br /><br />for m in historySizes {<br />    let optimizer = MultivariateLBFGS
+            <vectorn<double>
+              &gt;(memorySize: m)
+              <br />
+              <br /> let startTime = Date()
+              <br /> let result = try optimizer.minimizeLBFGS(
+              <br /> function: portfolioObjective,
+              <br /> initialGuess: initialWeights
+              <br /> )
+              <br /> let elapsedTime = Date().timeIntervalSince(startTime)
+              <br />
+              <br /> let memory = Double(m * numAssets * 2) * 8.0 / 1_048_576.0
+              <br />
+              <br /> print(”(”(m)”.paddingLeft(toLength: 3)) | (result.value.number(6).padding(toLength: 12, withPad: “ “, startingAt: 0)) | (”(result.iterations)”.paddingLeft(toLength: 10)) | (elapsedTime.number(2).padding(toLength: 8, withPad: “ “, startingAt: 0)) | (memory.number(2))”)
+              <br />}
+              <br />
+              <br />print(”\nRecommendation: m = 10-20 typically optimal (diminishing returns beyond)”)
+              <br />
+            </vectorn<double></code></pre>
         <strong>Output</strong>:
-        <pre><code>History Size Tuning ═══════════════════════════════════════════════════════════ m   | Final Value  | Iterations | Time (s) | Memory (MB) ──────────────────────────────────────────────────────────── 3 | -41.016796   |         18 | 24.30    | 0.05 5 | -41.016796   |         16 | 21.74    | 0.08 10 | -41.016796   |         16 | 21.80    | 0.15 20 | -41.016796   |         16 | 21.83    | 0.31 50 | -41.016796   |         16 | 21.84    | 0.76<p></p></code><p><code>Recommendation: m = 10-20 typically optimal (diminishing returns beyond) </code></p></pre>
+        <pre><code>History Size Tuning<br />═══════════════════════════════════════════════════════════<br />m   | Final Value  | Iterations | Time (s) | Memory (MB)<br />────────────────────────────────────────────────────────────<br />  3 | -41.016796   |         18 | 24.30    | 0.05<br />  5 | -41.016796   |         16 | 21.74    | 0.08<br /> 10 | -41.016796   |         16 | 21.80    | 0.15<br /> 20 | -41.016796   |         16 | 21.83    | 0.31<br /> 50 | -41.016796   |         16 | 21.84    | 0.76<br /><br />Recommendation: m = 10-20 typically optimal (diminishing returns beyond)<br /></code></pre>
         <h3>Pattern 3: Full Covariance with Sparse Matrix</h3>
         <strong>Pattern</strong>: Optimize with realistic correlation structure using sparse covariance.
         <p></p>
         <p><strong>When to use</strong>: Large portfolios where assets are grouped (sectors, regions) but most pairs are uncorrelated.</p>
-        <pre><code class="language-swift">// Moderate-size portfolio with full covariance: 500 assets let numAssets_sparse = 500<p></p><p>print(“Portfolio with Sparse Covariance ((numAssets_sparse) assets)”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Generate problem data let returns = generateRandomReturns(count: numAssets_sparse, mean: 0.10, stdDev: 0.05)</p><p>// Sparse covariance (95% of correlations are zero) // Assets are grouped in sectors with correlation, but sectors are independent let sparseCovariance = generateSparseCovarianceMatrix( size: numAssets_sparse, sparsity: 0.95 )</p></code>
-          <div>
-            <code class="language-swift"><p>func sparseObjective(_ weights: VectorN
-                <double>
-                  ) -&gt; Double { let expectedReturn = weights.dot(returns)
-                </double></p><pre><code>// Exploit sparsity: only compute non-zero covariance terms var variance = 0.0<p></p><p>// Diagonal terms (always present) for i in 0..
-                    <numassets_sparse { variance +="weights[i]" * weights[i] * sparsecovariance[i][i] }< p></numassets_sparse></p><p>// Off-diagonal terms (only 5% are non-zero) for i in 0..
-                    <numassets_sparse { for j in (i+1)..<numassets_sparse where sparsecovariance[i][j] !="0.0" { variance +="2.0" * weights[i] * weights[j] * sparsecovariance[i][j] } }< p></numassets_sparse></p><p>let risk = sqrt(variance) let sharpeRatio = (expectedReturn - riskFreeRate) / risk</p></code><p><code>return -sharpeRatio // Minimize negative Sharpe </code></p></pre>}<p></p></code>
-          </div><p>let sparseLBFGS = MultivariateLBFGS
-            <vectorn<double>
-              &gt;( memorySize: 15, maxIterations: 200 )
-            </vectorn<double></p><p>let sparseStart = Date() let sparseResult = try sparseLBFGS.minimizeLBFGS( function: sparseObjective, initialGuess: VectorN
+        <pre><code class="language-swift">// Moderate-size portfolio with full covariance: 500 assets<br />let numAssets_sparse = 500<br /><br />print(“Portfolio with Sparse Covariance ((numAssets_sparse) assets)”)<br />print(“═══════════════════════════════════════════════════════════”)<br /><br />// Generate problem data<br />let returns = generateRandomReturns(count: numAssets_sparse, mean: 0.10, stdDev: 0.05)<br /><br />// Sparse covariance (95% of correlations are zero)<br />// Assets are grouped in sectors with correlation, but sectors are independent<br />let sparseCovariance = generateSparseCovarianceMatrix(<br />	size: numAssets_sparse,<br />	sparsity: 0.95<br />)<br /><br />func sparseObjective(_ weights: VectorN
             <double>
-              .equalWeights(dimension: numAssets_sparse) ) let sparseTime = Date().timeIntervalSince(sparseStart)
-            </double></p><p>print(“Results:”) print(”  Expected Return: ((sparseResult.solution.dot(returns)).percent(2))”) print(”  Iterations: (sparseResult.iterations)”) print(”  Time: (sparseTime.number(1))s”) print(”  Memory: ((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB”)</p><p>print(”\nComparison:”) let hypotheticalBFGSMemory = Double(numAssets_sparse * numAssets) * 8.0 / 1_048_576.0 print(”  Standard BFGS would require: (hypotheticalBFGSMemory.number(1)) MB”) print(”  L-BFGS actual usage: ((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB”) print(”  Savings: (((hypotheticalBFGSMemory - Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0) / hypotheticalBFGSMemory).percent(1))”)</p><p>print(”\nNote: Sparse covariance is realistic for large portfolios.”) print(“Most stocks aren’t directly correlated - only within sectors/regions.”) </p></pre>
+              ) -&gt; Double {
+              <br /> let expectedReturn = weights.dot(returns)
+              <br />
+              <br /> // Exploit sparsity: only compute non-zero covariance terms
+              <br /> var variance = 0.0
+              <br />
+              <br /> // Diagonal terms (always present)
+              <br /> for i in 0..
+              <numassets_sparse {<br>
+                 variance += weights[i] * weights[i] * sparseCovariance[i][i]
+                <br /> }
+                <br />
+                <br /> // Off-diagonal terms (only 5% are non-zero)
+                <br /> for i in 0..
+                <numassets_sparse {<br>
+                   for j in (i+1)..
+                  <numassets_sparse where sparsecovariance[i][j] !="0.0" {<br>
+                     variance += 2.0 * weights[i] * weights[j] * sparseCovariance[i][j]
+                    <br /> }
+                    <br /> }
+                    <br />
+                    <br /> let risk = sqrt(variance)
+                    <br /> let sharpeRatio = (expectedReturn - riskFreeRate) / risk
+                    <br />
+                    <br /> return -sharpeRatio // Minimize negative Sharpe
+                    <br />}
+                    <br />
+                    <br />let sparseLBFGS = MultivariateLBFGS
+                    <vectorn<double>
+                      &gt;(
+                      <br /> memorySize: 15,
+                      <br /> maxIterations: 200
+                      <br />)
+                      <br />
+                      <br />let sparseStart = Date()
+                      <br />let sparseResult = try sparseLBFGS.minimizeLBFGS(
+                      <br /> function: sparseObjective,
+                      <br /> initialGuess: VectorN
+                      <double>
+                        .equalWeights(dimension: numAssets_sparse)
+                        <br />)
+                        <br />let sparseTime = Date().timeIntervalSince(sparseStart)
+                        <br />
+                        <br />print(“Results:”)
+                        <br />print(” Expected Return: ((sparseResult.solution.dot(returns)).percent(2))”)
+                        <br />print(” Iterations: (sparseResult.iterations)”)
+                        <br />print(” Time: (sparseTime.number(1))s”)
+                        <br />print(” Memory: ((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB”)
+                        <br />
+                        <br />print(”\nComparison:”)
+                        <br />let hypotheticalBFGSMemory = Double(numAssets_sparse * numAssets) * 8.0 / 1_048_576.0
+                        <br />print(” Standard BFGS would require: (hypotheticalBFGSMemory.number(1)) MB”)
+                        <br />print(” L-BFGS actual usage: ((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB”)
+                        <br />print(” Savings: (((hypotheticalBFGSMemory - Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0) / hypotheticalBFGSMemory).percent(1))”)
+                        <br />
+                        <br />print(”\nNote: Sparse covariance is realistic for large portfolios.”)
+                        <br />print(“Most stocks aren’t directly correlated - only within sectors/regions.”)
+                        <br />
+                      </double>
+                    </vectorn<double>
+                  </numassets_sparse>
+                </numassets_sparse>
+              </numassets_sparse>
+            </double></code></pre>
         <hr />
         <h2>Performance Comparison: Which Approach to Use?</h2>
         <table class="table">
@@ -522,10 +639,18 @@
           <li>Standard BFGS: 32 MB for Hessian alone</li>
         </ul>
         <strong>Solution with L-BFGS</strong>:
-        <pre><code class="language-swift">let factorModel = FactorBasedPortfolio( numStocks: 2_000, factors: [ .value, .growth, .momentum, .quality, .lowVolatility, .size, .dividend, .profitability, .investment, .sector1, .sector2, .sector3, .sector4, .sector5 ] )<p></p><p>let lbfgs = MultivariateLBFGS
-              <vectorn<double>
-                &gt;(memorySize: 20)
-              </vectorn<double></p></code><p><code class="language-swift">// Note: L-BFGS is unconstrained. For constrained optimization, // use penalty methods or ConstrainedOptimizer/InequalityOptimizer let factorResult = try lbfgs.minimizeLBFGS( function: factorModel.negativeExpectedReturn, initialGuess: factorModel.marketCapWeights ) </code></p></pre>
+        <pre><code class="language-swift">let factorModel = FactorBasedPortfolio(<br />    numStocks: 2_000,<br />    factors: [<br />        .value, .growth, .momentum, .quality, .lowVolatility,<br />        .size, .dividend, .profitability, .investment,<br />        .sector1, .sector2, .sector3, .sector4, .sector5<br />    ]<br />)<br /><br />let lbfgs = MultivariateLBFGS
+            <vectorn<double>
+              &gt;(memorySize: 20)
+              <br />
+              <br />// Note: L-BFGS is unconstrained. For constrained optimization,
+              <br />// use penalty methods or ConstrainedOptimizer/InequalityOptimizer
+              <br />let factorResult = try lbfgs.minimizeLBFGS(
+              <br /> function: factorModel.negativeExpectedReturn,
+              <br /> initialGuess: factorModel.marketCapWeights
+              <br />)
+              <br />
+            </vectorn<double></code></pre>
         <strong>Results</strong>:
         <ul>
           <li>Optimization time: 3.5 minutes (previously ran overnight with full solver)</li>
@@ -536,50 +661,191 @@
         <hr />
         <h2>Try It Yourself</h2>
         <details>
-          <summary>Click to expand full playground code</summary>
-          <pre><code class="language-swift">import BusinessMath
-import Foundation
-// Portfolio with 1,000 assets var numAssets = 1_000 let expectedReturns = generateRandomReturns(count: numAssets, mean: 0.10, stdDev: 0.05) let volatilities = generateRandomVolatilities(count: numAssets, minVolatility: 0.15, maxVolatility: 0.25) let riskFreeRate = 0.03 let riskAversion = 2.0
-<p></p></code>
-            <div>
-              <code class="language-swift"><p>// Portfolio objective: Mean-variance with simplified risk model // Note: Uses uncorrelated assumption for speed (O(n) instead of O(n²)) // For full covariance, see “Pattern 3” below with sparse matrices func portfolioObjective(_ weights: VectorN
-                  <double>
-                    ) -&gt; Double { let expectedReturn = weights.dot(expectedReturns)
-                  </double></p><pre><code>// Simplified variance: σ²ₚ = Σ(wᵢ²σᵢ²) // Fast: O(n) complexity, completes in seconds let variance = simplifiedPortfolioVariance(weights: weights, volatilities: volatilities)<p></p></code><p><code>// Mean-variance utility: maximize return, penalize risk return -(expectedReturn - riskAversion * variance) </code></p></pre>}<p></p></code>
-            </div><p>// L-BFGS optimizer with memory size m = 10 let lbfgs = MultivariateLBFGS
-              <vectorn<double>
-                &gt;( memorySize: 10 // Store last 10 gradient pairs )
-              </vectorn<double></p><p>// Start with equal weights let initialWeights = VectorN
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />// Portfolio with 1,000 assets<br />var numAssets = 1_000<br />let expectedReturns = generateRandomReturns(count: numAssets, mean: 0.10, stdDev: 0.05)<br />let volatilities = generateRandomVolatilities(count: numAssets, minVolatility: 0.15, maxVolatility: 0.25)<br />let riskFreeRate = 0.03<br />let riskAversion = 2.0<br /><br />// Portfolio objective: Mean-variance with simplified risk model<br />// Note: Uses uncorrelated assumption for speed (O(n) instead of O(n²))<br />// For full covariance, see "Pattern 3" below with sparse matrices<br />func portfolioObjective(_ weights: VectorN
               <double>
-                .equalWeights(dimension: numAssets)
-              </double></p><p>print(“Optimizing portfolio with (numAssets) assets using L-BFGS…”)</p><p>let startTime = Date() let result = try lbfgs.minimizeLBFGS( function: portfolioObjective, initialGuess: initialWeights ) let elapsedTime = Date().timeIntervalSince(startTime)</p><p>print(”\nOptimization Results:”) print(”  Expected Return: ((result.solution.dot(expectedReturns)).percent(2))”) print(”  Volatility: ((sqrt(simplifiedPortfolioVariance(weights: result.solution, volatilities: volatilities))).percent(2))”) print(”  Iterations: (result.iterations)”) print(”  Time: (elapsedTime.number(2))s”) print(”  Converged: (result.converged)”)</p><p>// Show top holdings let topHoldings = result.solution.toArray().enumerated() .sorted { $0.element &gt; $1.element } .prefix(10)</p><p>print(”\nTop 10 Holdings:”) for (index, weight) in topHoldings { print(”  Asset (index): (weight.percent(2))”) }</p><p>// Memory usage comparison let bfgsMemory = Double(numAssets * numAssets) * 8.0 / 1_048_576.0  // MB let lbfgsMemory = Double(lbfgs.memorySize * numAssets * 2) * 8.0 / 1_048_576.0  // MB</p><p>print(”\nMemory Usage:”) print(”  BFGS would use: (bfgsMemory.number(1)) MB”) print(”  L-BFGS uses: (lbfgsMemory.number(1)) MB”) print(”  Savings: (((bfgsMemory - lbfgsMemory) / bfgsMemory).percent(1))”)</p><p>print(”\nNote: This example uses simplified variance (uncorrelated assets)”) print(“for speed. For full covariance with correlations, see Pattern 3 below.”)</p><p>// MARK: - Hyperparameter Tuning</p><p>// Test different history sizes let historySizes = [3, 5, 10, 20, 50]</p><p>print(“History Size Tuning”) print(“═══════════════════════════════════════════════════════════”) print(“m   | Final Value  | Iterations | Time (s) | Memory (MB)”) print(“────────────────────────────────────────────────────────────”)</p>
-            <div>
-              <p>for m in historySizes { let optimizer = MultivariateLBFGS
+                ) -&gt; Double {
+                <br /> let expectedReturn = weights.dot(expectedReturns)
+                <br />
+                <br /> // Simplified variance: σ²ₚ = Σ(wᵢ²σᵢ²)
+                <br /> // Fast: O(n) complexity, completes in seconds
+                <br /> let variance = simplifiedPortfolioVariance(weights: weights, volatilities: volatilities)
+                <br />
+                <br /> // Mean-variance utility: maximize return, penalize risk
+                <br /> return -(expectedReturn - riskAversion * variance)
+                <br />}
+                <br />
+                <br />// L-BFGS optimizer with memory size m = 10
+                <br />let lbfgs = MultivariateLBFGS
                 <vectorn<double>
-                  &gt;(memorySize: m)
-                </vectorn<double></p>
-              <pre><code>let startTime = Date() let result = try optimizer.minimizeLBFGS( function: portfolioObjective, initialGuess: initialWeights ) let elapsedTime = Date().timeIntervalSince(startTime)<p></p><p>let memory = Double(m * numAssets * 2) * 8.0 / 1_048_576.0</p></code><p><code>print(”(”(m)”.paddingLeft(toLength: 3)) | (result.value.number(6).padding(toLength: 12, withPad: “ “, startingAt: 0)) | (”(result.iterations)”.paddingLeft(toLength: 10)) | (elapsedTime.number(2).padding(toLength: 8, withPad: “ “, startingAt: 0)) | (memory.number(2))”) </code></p></pre>}
-              <p></p>
-            </div><p>print(”\nRecommendation: m = 10-20 typically optimal (diminishing returns beyond)”)</p><p>// MARK: Full Covariance with Sparse Matrix</p><p>// Moderate-size portfolio with full covariance: 500 assets let numAssets_sparse = 100</p><p>print(“Portfolio with Sparse Covariance ((numAssets_sparse) assets)”) print(“═══════════════════════════════════════════════════════════”)</p><p>// Generate problem data let returns = generateRandomReturns(count: numAssets_sparse, mean: 0.10, stdDev: 0.05)</p><p>// Sparse covariance (95% of correlations are zero) // Assets are grouped in sectors with correlation, but sectors are independent let sparseCovariance = generateSparseCovarianceMatrix( size: numAssets_sparse, sparsity: 0.95 )</p>
-            <div>
-              <p>func sparseObjective(_ weights: VectorN
-                <double>
-                  ) -&gt; Double { let expectedReturn = weights.dot(returns)
-                </double></p>
-              <pre><code>// Exploit sparsity: only compute non-zero covariance terms var variance = 0.0<p></p><p>// Diagonal terms (always present) for i in 0..
-                    <numassets_sparse { variance +="weights[i]" * weights[i] * sparsecovariance[i][i] }< p></numassets_sparse></p><p>// Off-diagonal terms (only 5% are non-zero) for i in 0..
-                    <numassets_sparse { for j in (i+1)..<numassets_sparse where sparsecovariance[i][j] !="0.0" { variance +="2.0" * weights[i] * weights[j] * sparsecovariance[i][j] } }< p></numassets_sparse></p><p>let risk = sqrt(variance) let sharpeRatio = (expectedReturn - riskFreeRate) / risk</p></code><p><code>return -sharpeRatio // Minimize negative Sharpe </code></p></pre>}
-              <p></p>
-            </div><p>let sparseLBFGS = MultivariateLBFGS
-              <vectorn<double>
-                &gt;( memorySize: 15, maxIterations: 200 )
-              </vectorn<double></p><p>let sparseStart = Date() let sparseResult = try sparseLBFGS.minimizeLBFGS( function: sparseObjective, initialGuess: VectorN
-              <double>
-                .equalWeights(dimension: numAssets_sparse) ) let sparseTime = Date().timeIntervalSince(sparseStart)
-              </double></p><p>print(“Results:”) print(”  Expected Return: ((sparseResult.solution.dot(returns)).percent(2))”) print(”  Iterations: (sparseResult.iterations)”) print(”  Time: (sparseTime.number(1))s”) print(”  Memory: ((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB”)</p><p>print(”\nComparison:”) let hypotheticalBFGSMemory = Double(numAssets_sparse * numAssets) * 8.0 / 1_048_576.0 print(”  Standard BFGS would require: (hypotheticalBFGSMemory.number(1)) MB”) print(”  L-BFGS actual usage: ((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB”) print(”  Savings: (((hypotheticalBFGSMemory - Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0) / hypotheticalBFGSMemory).percent(1))”)</p><p>print(”\nNote: Sparse covariance is realistic for large portfolios.”) print(“Most stocks aren’t directly correlated - only within sectors/regions.”)</p><p></p></pre>
-        </details>
-        <p></p>
-        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.20-LBFGSOptimizationTutorial.md">BusinessMath Docs – L-BFGS Tutorial</a></p>
+                  &gt;(
+                  <br /> memorySize: 10 // Store last 10 gradient pairs
+                  <br />)
+                  <br />
+                  <br />// Start with equal weights
+                  <br />let initialWeights = VectorN
+                  <double>
+                    .equalWeights(dimension: numAssets)
+                    <br />
+                    <br />print("Optimizing portfolio with \(numAssets) assets using L-BFGS...")
+                    <br />
+                    <br />let startTime = Date()
+                    <br />let result = try lbfgs.minimizeLBFGS(
+                    <br /> function: portfolioObjective,
+                    <br /> initialGuess: initialWeights
+                    <br />)
+                    <br />let elapsedTime = Date().timeIntervalSince(startTime)
+                    <br />
+                    <br />print("\nOptimization Results:")
+                    <br />print(" Expected Return: \((result.solution.dot(expectedReturns)).percent(2))")
+                    <br />print(" Volatility: \((sqrt(simplifiedPortfolioVariance(weights: result.solution, volatilities: volatilities))).percent(2))")
+                    <br />print(" Iterations: \(result.iterations)")
+                    <br />print(" Time: \(elapsedTime.number(2))s")
+                    <br />print(" Converged: \(result.converged)")
+                    <br />
+                    <br />// Show top holdings
+                    <br />let topHoldings = result.solution.toArray().enumerated()
+                    <br /> .sorted { $0.element &gt; $1.element }
+                    <br /> .prefix(10)
+                    <br />
+                    <br />print("\nTop 10 Holdings:")
+                    <br />for (index, weight) in topHoldings {
+                    <br /> print(" Asset \(index): \(weight.percent(2))")
+                    <br />}
+                    <br />
+                    <br />// Memory usage comparison
+                    <br />let bfgsMemory = Double(numAssets * numAssets) * 8.0 / 1_048_576.0 // MB
+                    <br />let lbfgsMemory = Double(lbfgs.memorySize * numAssets * 2) * 8.0 / 1_048_576.0 // MB
+                    <br />
+                    <br />print("\nMemory Usage:")
+                    <br />print(" BFGS would use: \(bfgsMemory.number(1)) MB")
+                    <br />print(" L-BFGS uses: \(lbfgsMemory.number(1)) MB")
+                    <br />print(" Savings: \(((bfgsMemory - lbfgsMemory) / bfgsMemory).percent(1))")
+                    <br />
+                    <br />print("\nNote: This example uses simplified variance (uncorrelated assets)")
+                    <br />print("for speed. For full covariance with correlations, see Pattern 3 below.")
+                    <br />
+                    <br />
+                    <br />// MARK: - Hyperparameter Tuning
+                    <br />
+                    <br />// Test different history sizes
+                    <br />let historySizes = [3, 5, 10, 20, 50]
+                    <br />
+                    <br />print("History Size Tuning")
+                    <br />print("═══════════════════════════════════════════════════════════")
+                    <br />print("m | Final Value | Iterations | Time (s) | Memory (MB)")
+                    <br />print("────────────────────────────────────────────────────────────")
+                    <br />
+                    <br />for m in historySizes {
+                    <br /> let optimizer = MultivariateLBFGS
+                    <vectorn<double>
+                      &gt;(memorySize: m)
+                      <br />
+                      <br /> let startTime = Date()
+                      <br /> let result = try optimizer.minimizeLBFGS(
+                      <br /> function: portfolioObjective,
+                      <br /> initialGuess: initialWeights
+                      <br /> )
+                      <br /> let elapsedTime = Date().timeIntervalSince(startTime)
+                      <br />
+                      <br /> let memory = Double(m * numAssets * 2) * 8.0 / 1_048_576.0
+                      <br />
+                      <br /> print("\("\(m)".paddingLeft(toLength: 3)) | \(result.value.number(6).padding(toLength: 12, withPad: " ", startingAt: 0)) | \("\(result.iterations)".paddingLeft(toLength: 10)) | \(elapsedTime.number(2).padding(toLength: 8, withPad: " ", startingAt: 0)) | \(memory.number(2))")
+                      <br />}
+                      <br />
+                      <br />print("\nRecommendation: m = 10-20 typically optimal (diminishing returns beyond)")
+                      <br />
+                      <br />// MARK: Full Covariance with Sparse Matrix
+                      <br />
+                      <br />// Moderate-size portfolio with full covariance: 500 assets
+                      <br />let numAssets_sparse = 100
+                      <br />
+                      <br />print("Portfolio with Sparse Covariance (\(numAssets_sparse) assets)")
+                      <br />print("═══════════════════════════════════════════════════════════")
+                      <br />
+                      <br />// Generate problem data
+                      <br />let returns = generateRandomReturns(count: numAssets_sparse, mean: 0.10, stdDev: 0.05)
+                      <br />
+                      <br />// Sparse covariance (95% of correlations are zero)
+                      <br />// Assets are grouped in sectors with correlation, but sectors are independent
+                      <br />let sparseCovariance = generateSparseCovarianceMatrix(
+                      <br /> size: numAssets_sparse,
+                      <br /> sparsity: 0.95
+                      <br />)
+                      <br />
+                      <br />func sparseObjective(_ weights: VectorN
+                      <double>
+                        ) -&gt; Double {
+                        <br /> let expectedReturn = weights.dot(returns)
+                        <br />
+                        <br /> // Exploit sparsity: only compute non-zero covariance terms
+                        <br /> var variance = 0.0
+                        <br />
+                        <br /> // Diagonal terms (always present)
+                        <br /> for i in 0..
+                        <numassets_sparse {<br>
+                           variance += weights[i] * weights[i] * sparseCovariance[i][i]
+                          <br /> }
+                          <br />
+                          <br /> // Off-diagonal terms (only 5% are non-zero)
+                          <br /> for i in 0..
+                          <numassets_sparse {<br>
+                             for j in (i+1)..
+                            <numassets_sparse where sparsecovariance[i][j] !="0.0" {<br>
+                               variance += 2.0 * weights[i] * weights[j] * sparseCovariance[i][j]
+                              <br /> }
+                              <br /> }
+                              <br />
+                              <br /> let risk = sqrt(variance)
+                              <br /> let sharpeRatio = (expectedReturn - riskFreeRate) / risk
+                              <br />
+                              <br /> return -sharpeRatio // Minimize negative Sharpe
+                              <br />}
+                              <br />
+                              <br />let sparseLBFGS = MultivariateLBFGS
+                              <vectorn<double>
+                                &gt;(
+                                <br /> memorySize: 15,
+                                <br /> maxIterations: 200
+                                <br />)
+                                <br />
+                                <br />let sparseStart = Date()
+                                <br />let sparseResult = try sparseLBFGS.minimizeLBFGS(
+                                <br /> function: sparseObjective,
+                                <br /> initialGuess: VectorN
+                                <double>
+                                  .equalWeights(dimension: numAssets_sparse)
+                                  <br />)
+                                  <br />let sparseTime = Date().timeIntervalSince(sparseStart)
+                                  <br />
+                                  <br />print("Results:")
+                                  <br />print(" Expected Return: \((sparseResult.solution.dot(returns)).percent(2))")
+                                  <br />print(" Iterations: \(sparseResult.iterations)")
+                                  <br />print(" Time: \(sparseTime.number(1))s")
+                                  <br />print(" Memory: \((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB")
+                                  <br />
+                                  <br />print("\nComparison:")
+                                  <br />let hypotheticalBFGSMemory = Double(numAssets_sparse * numAssets) * 8.0 / 1_048_576.0
+                                  <br />print(" Standard BFGS would require: \(hypotheticalBFGSMemory.number(1)) MB")
+                                  <br />print(" L-BFGS actual usage: \((Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0).number(2)) MB")
+                                  <br />print(" Savings: \(((hypotheticalBFGSMemory - Double(15 * numAssets_sparse * 2) * 8.0 / 1_048_576.0) / hypotheticalBFGSMemory).percent(1))")
+                                  <br />
+                                  <br />print("\nNote: Sparse covariance is realistic for large portfolios.")
+                                  <br />print("Most stocks aren't directly correlated - only within sectors/regions.")
+                                  <br />
+                                  <br />
+                                </double>
+                              </vectorn<double>
+                            </numassets_sparse>
+                          </numassets_sparse>
+                        </numassets_sparse>
+                      </double>
+                    </vectorn<double>
+                  </double>
+                </vectorn<double>
+              </double></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.20-LBFGSOptimizationTutorial.md">BusinessMath Docs – L-BFGS Tutorial</a>
         <h3>Experiments to Try</h3>
         <ol>
           <li><strong>History Size</strong>: Test m = 3, 10, 20, 50 on 1,000-variable problem</li>
@@ -590,7 +856,7 @@ import Foundation
         <hr />
         <h2>Next Steps</h2>
         <strong>Tomorrow</strong>: We’ll explore 
-        <strong>Conjugate Gradient</strong>, another memory-efficient method that doesn’t require storing Hessian information at all.
+        <strong>Conjugate Gradient</strong>, another memory-efficient method that doesn’t require storing Hessian information at all. 
         <p></p>
         <p><strong>Thursday</strong>: Week 10 concludes with <strong>Simulated Annealing</strong>, a global optimization method that doesn’t require gradients.
           <hr /><strong>Series</strong>: [Week 10 of 12] | <strong>Topic</strong>: [Part 5 - Advanced Methods] | <strong>Case Studies</strong>: [4/6 Complete]</p>

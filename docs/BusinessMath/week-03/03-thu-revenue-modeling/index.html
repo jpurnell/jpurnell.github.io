@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Building a Revenue Forecasting Model</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">"BusinessMath Quarterly Series"</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">12 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 11 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -286,83 +286,227 @@
         <hr />
         <h2>The Solution</h2>Let’s build a production-ready revenue forecast using BusinessMath, combining growth modeling, seasonality extraction, and trend fitting.
         <h3>Step 1: Prepare Historical Data</h3>Start with 2 years of quarterly revenue:
-        <pre><code class="language-swift">import BusinessMath // Define periods (8 quarters: 2023-2024) let periods = [ Period.quarter(year: 2023, quarter: 1), Period.quarter(year: 2023, quarter: 2), Period.quarter(year: 2023, quarter: 3), Period.quarter(year: 2023, quarter: 4), Period.quarter(year: 2024, quarter: 1), Period.quarter(year: 2024, quarter: 2), Period.quarter(year: 2024, quarter: 3), Period.quarter(year: 2024, quarter: 4) ]<p></p><p>// Historical revenue (showing both growth and Q4 spike) let revenue: [Double] = [ 800_000, // Q1 2023 850_000, // Q2 2023 820_000, // Q3 2023 1_100_000, // Q4 2023 (holiday spike) 900_000, // Q1 2024 950_000, // Q2 2024 920_000, // Q3 2024 1_250_000 // Q4 2024 (holiday spike + growth) ]</p><p>let historical = TimeSeries(periods: periods, values: revenue)</p></code><p><code class="language-swift">print(“Loaded (historical.count) quarters of historical data”) print(“Total historical revenue: (historical.reduce(0, +).currency())”) </code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Define periods (8 quarters: 2023-2024)<br />let periods = [<br />    Period.quarter(year: 2023, quarter: 1),<br />    Period.quarter(year: 2023, quarter: 2),<br />    Period.quarter(year: 2023, quarter: 3),<br />    Period.quarter(year: 2023, quarter: 4),<br />    Period.quarter(year: 2024, quarter: 1),<br />    Period.quarter(year: 2024, quarter: 2),<br />    Period.quarter(year: 2024, quarter: 3),<br />    Period.quarter(year: 2024, quarter: 4)<br />]<br /><br />// Historical revenue (showing both growth and Q4 spike)<br />let revenue: [Double] = [<br />    800_000,    // Q1 2023<br />    850_000,    // Q2 2023<br />    820_000,    // Q3 2023<br />    1_100_000,  // Q4 2023 (holiday spike)<br />    900_000,    // Q1 2024<br />    950_000,    // Q2 2024<br />    920_000,    // Q3 2024<br />    1_250_000   // Q4 2024 (holiday spike + growth)<br />]<br /><br />let historical = TimeSeries(periods: periods, values: revenue)<br /><br />print(“Loaded (historical.count) quarters of historical data”)<br />print(“Total historical revenue: (historical.reduce(0, +).currency())”)<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Loaded 8 quarters of historical data Total historical revenue: $7,590,000 </code></pre>
+        <pre><code>Loaded 8 quarters of historical data<br />Total historical revenue: $7,590,000<br /></code></pre>
         <hr />
         <h3>Step 2: Analyze Historical Patterns</h3>Before modeling, understand the data:
-        <pre><code class="language-swift">// Calculate quarter-over-quarter growth let qoqGrowth = historical.growthRate(lag: 1)<p></p><p>print(”\nQuarter-over-Quarter Growth:”) for (i, growth) in qoqGrowth.enumerated() { let period = periods[i + 1] print(”(period.label): (growth.percent(1))”) }</p><p>// Calculate year-over-year growth let yoyGrowth = historical.growthRate(lag: 4) // 4 quarters = 1 year</p><p>print(”\nYear-over-Year Growth:”) for (i, growth) in yoyGrowth.valuesArray.enumerated() { let period = periods[i + 4] print(”(period.label): (growth.percent(1))”) }</p></code><p><code class="language-swift">// Calculate overall CAGR let totalYears = 2.0 let cagrValue = cagr( beginningValue: revenue[0], endingValue: revenue[revenue.count - 1], years: totalYears ) print(”\nOverall CAGR: (cagrValue.percent(1))”) </code></p></pre>
+        <pre><code class="language-swift">// Calculate quarter-over-quarter growth<br />let qoqGrowth = historical.growthRate(lag: 1)<br /><br />print(”\nQuarter-over-Quarter Growth:”)<br />for (i, growth) in qoqGrowth.enumerated() {<br />    let period = periods[i + 1]<br />    print(”(period.label): (growth.percent(1))”)<br />}<br /><br />// Calculate year-over-year growth<br />let yoyGrowth = historical.growthRate(lag: 4)  // 4 quarters = 1 year<br /><br />print(”\nYear-over-Year Growth:”)<br />for (i, growth) in yoyGrowth.valuesArray.enumerated() {<br />    let period = periods[i + 4]<br />    print(”(period.label): (growth.percent(1))”)<br />}<br /><br />// Calculate overall CAGR<br />let totalYears = 2.0<br />let cagrValue = cagr(<br />    beginningValue: revenue[0],<br />    endingValue: revenue[revenue.count - 1],<br />    years: totalYears<br />)<br />print(”\nOverall CAGR: (cagrValue.percent(1))”)<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Quarter-over-Quarter Growth: 2023-Q2: +6.3% 2023-Q3: -3.5% 2023-Q4: +34.1%  ← Holiday spike 2024-Q1: -18.2%  ← Post-holiday drop 2024-Q2: +5.6% 2024-Q3: -3.2% 2024-Q4: +35.9%  ← Holiday spike again<p></p><p>Year-over-Year Growth: 2024-Q1: +12.5% 2024-Q2: +11.8% 2024-Q3: +12.2% 2024-Q4: +13.6%</p></code><p><code>Overall CAGR: 25.0% </code></p></pre>
+        <pre><code>Quarter-over-Quarter Growth:<br />2023-Q2: +6.3%<br />2023-Q3: -3.5%<br />2023-Q4: +34.1%  ← Holiday spike<br />2024-Q1: -18.2%  ← Post-holiday drop<br />2024-Q2: +5.6%<br />2024-Q3: -3.2%<br />2024-Q4: +35.9%  ← Holiday spike again<br /><br />Year-over-Year Growth:<br />2024-Q1: +12.5%<br />2024-Q2: +11.8%<br />2024-Q3: +12.2%<br />2024-Q4: +13.6%<br /><br />Overall CAGR: 25.0%<br /></code></pre>
         <strong>The insight</strong>: Q-o-Q growth is volatile (swings from -18% to +36%), but Y-o-Y growth is steady (~12%). This suggests 
         <strong>strong seasonality with underlying growth</strong>.
         <hr />
         <h3>Step 3: Extract Seasonal Pattern</h3>Identify the recurring pattern:
-        <pre><code class="language-swift">// Calculate seasonal indices (4 quarters per year) let seasonality = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)<p></p></code><p><code class="language-swift">print(”\nSeasonal Indices:”) let quarters = [“Q1”, “Q2”, “Q3”, “Q4”] for (i, index) in seasonality.enumerated() { let pct = (index - 1.0) let direction = pct &gt; 0 ? “above” : “below” print(”(quarters[i]): (index.number(3)) ((abs(pct).percent(1)) (direction) average)”) } </code></p></pre>
+        <pre><code class="language-swift">// Calculate seasonal indices (4 quarters per year)<br />let seasonality = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)<br /><br />print(”\nSeasonal Indices:”)<br />let quarters = [“Q1”, “Q2”, “Q3”, “Q4”]<br />for (i, index) in seasonality.enumerated() {<br />    let pct = (index - 1.0)<br />    let direction = pct &gt; 0 ? “above” : “below”<br />    print(”(quarters[i]): (index.number(3)) ((abs(pct).percent(1)) (direction) average)”)<br />}<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Seasonal Indices: Q1: 0.942 (5.8% below average) Q2: 0.968 (3.2% below average) Q3: 0.908 (9.2% below average) Q4: 1.183 (18.3% above average)  ← Holiday seasonality confirmed! </code></pre>
+        <pre><code>Seasonal Indices:<br />Q1: 0.942 (5.8% below average)<br />Q2: 0.968 (3.2% below average)<br />Q3: 0.908 (9.2% below average)<br />Q4: 1.183 (18.3% above average)  ← Holiday seasonality confirmed!<br /></code></pre>
         <strong>The pattern</strong>: Q4 is 18% above average (holiday shopping), Q1-Q3 are all below average, with Q3 the lowest (summer slowdown).
         <hr />
         <h3>Step 4: Deseasonalize the Data</h3>Remove seasonal effects to see the underlying trend:
-        <pre><code class="language-swift">let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonality)<p></p></code><p><code class="language-swift">print(”\nDeseasonalized Revenue:”) print(“Original → Deseasonalized”) for i in 0…(historical.count - 1) { let original = historical.valuesArray[i] let adjusted = deseasonalized.valuesArray[i] let period = periods[i] print(”(period.label): (original.currency(0)) → (adjusted.currency(0))”) } </code></p></pre>
+        <pre><code class="language-swift">let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonality)<br /><br />print(”\nDeseasonalized Revenue:”)<br />print(“Original → Deseasonalized”)<br />for i in 0…(historical.count - 1) {<br />    let original = historical.valuesArray[i]<br />    let adjusted = deseasonalized.valuesArray[i]<br />    let period = periods[i]<br />    print(”(period.label): (original.currency(0)) → (adjusted.currency(0))”)<br />}<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Deseasonalized Revenue: Original → Deseasonalized 2023-Q1: $800,000 → $849,566 2023-Q2: $850,000 → $878,143 2023-Q3: $820,000 → $903,399 2023-Q4: $1,100,000 → $930,069 2024-Q1: $900,000 → $955,762 2024-Q2: $950,000 → $981,454 2024-Q3: $920,000 → $1,013,570 2024-Q4: $1,250,000 → $1,056,897 </code></pre>
+        <pre><code>Deseasonalized Revenue:<br />Original → Deseasonalized<br />2023-Q1: $800,000 → $849,566<br />2023-Q2: $850,000 → $878,143<br />2023-Q3: $820,000 → $903,399<br />2023-Q4: $1,100,000 → $930,069<br />2024-Q1: $900,000 → $955,762<br />2024-Q2: $950,000 → $981,454<br />2024-Q3: $920,000 → $1,013,570<br />2024-Q4: $1,250,000 → $1,056,897<br /></code></pre>
         <strong>The insight</strong>: After removing seasonality, the revenue trend is smooth and steadily increasing: $850k → $878k → $903k → … → $1,060k.
         <hr />
         <h3>Step 5: Fit Trend Model</h3>Fit a linear trend to the deseasonalized data:
         <pre><code class="language-swift">var linearModel = LinearTrend
             <double>
-              () try linearModel.fit(to: deseasonalized)
-              <p></p>
-            </double></code><p><code class="language-swift">print(”\nLinear Trend Model Fitted”) print(“Indicates steady absolute growth per quarter”) </code></p></pre>
+              ()
+              <br />try linearModel.fit(to: deseasonalized)
+              <br />
+              <br />print(”\nLinear Trend Model Fitted”)
+              <br />print(“Indicates steady absolute growth per quarter”)
+              <br />
+            </double></code></pre>
         <hr />
         <h3>Step 6: Generate Forecast</h3>Project forward and reapply seasonality:
-        <pre><code class="language-swift">let forecastPeriods = 4  // Forecast next 4 quarters (2025)<p></p><p>// Step 6a: Project trend forward let trendForecast = try linearModel.project(periods: forecastPeriods)</p><p>print(”\nTrend Forecast (deseasonalized):”) for (period, value) in zip(trendForecast.periods, trendForecast.valuesArray) { print(”(period.label): (value.currency(0))”) }</p><p>// Step 6b: Reapply seasonal pattern let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonality)</p><p>print(”\nFinal Forecast (with seasonality):”) var forecastTotal = 0.0 for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) { forecastTotal += value print(”(period.label): (value.currency(0))”) }</p><p>print(”\nForecast Summary:”) print(“Total 2025 revenue: (forecastTotal.currency(0))”) print(“Average quarterly revenue: ((forecastTotal / 4).currency(0))”)</p></code><p><code class="language-swift">// Compare to 2024 let revenue2024 = revenue[4…7].reduce(0.0, +) let forecastGrowth = (forecastTotal - revenue2024) / revenue2024 print(“Growth vs 2024: (forecastGrowth.percent(1))”) </code></p></pre>
+        <pre><code class="language-swift">let forecastPeriods = 4  // Forecast next 4 quarters (2025)<br /><br />// Step 6a: Project trend forward<br />let trendForecast = try linearModel.project(periods: forecastPeriods)<br /><br />print(”\nTrend Forecast (deseasonalized):”)<br />for (period, value) in zip(trendForecast.periods, trendForecast.valuesArray) {<br />    print(”(period.label): (value.currency(0))”)<br />}<br /><br />// Step 6b: Reapply seasonal pattern<br />let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonality)<br /><br />print(”\nFinal Forecast (with seasonality):”)<br />var forecastTotal = 0.0<br />for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {<br />    forecastTotal += value<br />    print(”(period.label): (value.currency(0))”)<br />}<br /><br />print(”\nForecast Summary:”)<br />print(“Total 2025 revenue: (forecastTotal.currency(0))”)<br />print(“Average quarterly revenue: ((forecastTotal / 4).currency(0))”)<br /><br />// Compare to 2024<br />let revenue2024 = revenue[4…7].reduce(0.0, +)<br />let forecastGrowth = (forecastTotal - revenue2024) / revenue2024<br />print(“Growth vs 2024: (forecastGrowth.percent(1))”)<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Trend Forecast (deseasonalized): 2025-Q1: $1,074,052 2025-Q2: $1,102,485 2025-Q3: $1,130,917 2025-Q4: $1,159,349<p></p><p>Final Forecast (with seasonality): 2025-Q1: $1,011,389 ← Deseasonalized × Q1 index (0.942) 2025-Q2: $1,067,152 ← Deseasonalized × Q2 index (0.968) 2025-Q3: $1,026,514 ← Deseasonalized × Q3 index (0.908) 2025-Q4: $1,371,171 ← Deseasonalized × Q4 index (1.183)</p></code><p><code>Forecast Summary: Total 2025 revenue: $4,476,226 Average quarterly revenue: $1,119,057 Growth vs 2024: 11.3% </code></p></pre>
+        <pre><code>Trend Forecast (deseasonalized):<br />2025-Q1: $1,074,052<br />2025-Q2: $1,102,485<br />2025-Q3: $1,130,917<br />2025-Q4: $1,159,349<br /><br />Final Forecast (with seasonality):<br />2025-Q1: $1,011,389  ← Deseasonalized × Q1 index (0.942)<br />2025-Q2: $1,067,152  ← Deseasonalized × Q2 index (0.968)<br />2025-Q3: $1,026,514  ← Deseasonalized × Q3 index (0.908)<br />2025-Q4: $1,371,171  ← Deseasonalized × Q4 index (1.183)<br /><br />Forecast Summary:<br />Total 2025 revenue: $4,476,226<br />Average quarterly revenue: $1,119,057<br />Growth vs 2024: 11.3%<br /></code></pre>
         <strong>The insight</strong>: The forecast shows continued steady growth (~11%) with the expected Q4 spike.
         <hr />
         <h3>Step 7: Scenario Analysis</h3>Create conservative and optimistic scenarios by adjusting the growth rate:
-        <pre><code class="language-swift">print(”\nScenario Analysis for 2025:”)<p></p><p>// Base case parameters (from the fitted linear model) let baseSlope = linearModel.slopeValue! let baseIntercept = linearModel.interceptValue!</p><p>// Conservative: Reduce growth rate by 50% let conservativeSlope = baseSlope * 0.5 var conservativePeriods: [Period] = [] var conservativeValues: [Double] = [] for i in 1…forecastPeriods { let index = Double(deseasonalized.count + i - 1) let trendValue = baseIntercept + conservativeSlope * index conservativePeriods.append(Period.quarter(year: 2025, quarter: i)) conservativeValues.append(trendValue) } let conservativeForecast = TimeSeries( periods: conservativePeriods, values: conservativeValues ) let conservativeSeasonalForecast = try applySeasonal( timeSeries: conservativeForecast, indices: seasonality )</p><p>// Optimistic: Increase growth rate by 50% let optimisticSlope = baseSlope * 1.5 var optimisticPeriods: [Period] = [] var optimisticValues: [Double] = [] for i in 1…forecastPeriods { let index = Double(deseasonalized.count + i - 1) let trendValue = baseIntercept + optimisticSlope * index optimisticPeriods.append(Period.quarter(year: 2025, quarter: i)) optimisticValues.append(trendValue) } let optimisticForecast = TimeSeries( periods: optimisticPeriods, values: optimisticValues ) let optimisticSeasonalForecast = try applySeasonal( timeSeries: optimisticForecast, indices: seasonality )</p><p>let conservativeTotal = conservativeSeasonalForecast.reduce(0, +) let optimisticTotal = optimisticSeasonalForecast.reduce(0, +)</p></code><p><code class="language-swift">print(“Conservative: (conservativeTotal.currency(0)) (growth dampened 50%)”) print(“Base Case: (forecastTotal.currency(0))”) print(“Optimistic: (optimisticTotal.currency(0)) (growth amplified 50%)”) </code></p></pre>
+        <pre><code class="language-swift">print(”\nScenario Analysis for 2025:”)<br /><br />// Base case parameters (from the fitted linear model)<br />let baseSlope = linearModel.slopeValue!<br />let baseIntercept = linearModel.interceptValue!<br /><br />// Conservative: Reduce growth rate by 50%<br />let conservativeSlope = baseSlope * 0.5<br />var conservativePeriods: [Period] = []<br />var conservativeValues: [Double] = []<br />for i in 1…forecastPeriods {<br />    let index = Double(deseasonalized.count + i - 1)<br />    let trendValue = baseIntercept + conservativeSlope * index<br />    conservativePeriods.append(Period.quarter(year: 2025, quarter: i))<br />    conservativeValues.append(trendValue)<br />}<br />let conservativeForecast = TimeSeries(<br />    periods: conservativePeriods,<br />    values: conservativeValues<br />)<br />let conservativeSeasonalForecast = try applySeasonal(<br />    timeSeries: conservativeForecast,<br />    indices: seasonality<br />)<br /><br />// Optimistic: Increase growth rate by 50%<br />let optimisticSlope = baseSlope * 1.5<br />var optimisticPeriods: [Period] = []<br />var optimisticValues: [Double] = []<br />for i in 1…forecastPeriods {<br />    let index = Double(deseasonalized.count + i - 1)<br />    let trendValue = baseIntercept + optimisticSlope * index<br />    optimisticPeriods.append(Period.quarter(year: 2025, quarter: i))<br />    optimisticValues.append(trendValue)<br />}<br />let optimisticForecast = TimeSeries(<br />    periods: optimisticPeriods,<br />    values: optimisticValues<br />)<br />let optimisticSeasonalForecast = try applySeasonal(<br />    timeSeries: optimisticForecast,<br />    indices: seasonality<br />)<br /><br />let conservativeTotal = conservativeSeasonalForecast.reduce(0, +)<br />let optimisticTotal = optimisticSeasonalForecast.reduce(0, +)<br /><br />print(“Conservative: (conservativeTotal.currency(0)) (growth dampened 50%)”)<br />print(“Base Case: (forecastTotal.currency(0))”)<br />print(“Optimistic: (optimisticTotal.currency(0)) (growth amplified 50%)”)<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Scenario Analysis for 2025: Conservative: $3,931,302 (growth dampened 50%) Base Case: $4,476,226 Optimistic: $5,021,150 (growth amplified 50%) </code></pre>
+        <pre><code>Scenario Analysis for 2025:<br />Conservative: $3,931,302 (growth dampened 50%)<br />Base Case: $4,476,226<br />Optimistic: $5,021,150 (growth amplified 50%)<br /></code></pre>
         <blockquote>
           <strong>Note</strong>: The exact values depend on your fitted model’s slope parameter. Run the playground to see actual results with your data. The key insight is that dampening the growth rate by 50% produces noticeably lower forecasts, while amplifying by 50% produces higher forecasts.
         </blockquote>
         <hr />
         <h2>Complete Workflow</h2>Here’s the end-to-end forecast in one place:
-        <pre><code class="language-swift">import BusinessMath<p></p></code>
-          <div>
-            <code class="language-swift"><p>func buildRevenueModel() throws { // 1. Prepare data let periods = (1…8).map { i in let year = 2023 + (i - 1) / 4 let quarter = ((i - 1) % 4) + 1 return Period.quarter(year: year, quarter: quarter) }</p><pre><code>let revenue: [Double] = [ 800_000, 850_000, 820_000, 1_100_000, 900_000, 950_000, 920_000, 1_250_000 ]<p></p><p>let historical = TimeSeries(periods: periods, values: revenue)</p><p>// 2. Extract seasonality let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)</p><p>// 3. Deseasonalize let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)</p><p>// 4. Fit trend var model = LinearTrend
-                    <double>
-                      () try model.fit(to: deseasonalized)
-                    </double></p><p>// 5. Generate forecast let trendForecast = try model.project(periods: 4) let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)</p><p>// 6. Present results print(“Revenue Forecast:”) for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) { print(”(period.label): (value.currency(0))”) }</p></code><p><code>let total = finalForecast.reduce(0, +) print(“Total 2025 forecast: (total.currency(0))”) </code></p></pre>}<p></p></code>
-          </div><p>try buildRevenueModel() </p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />func buildRevenueModel() throws {<br />    // 1. Prepare data<br />    let periods = (1…8).map { i in<br />        let year = 2023 + (i - 1) / 4<br />        let quarter = ((i - 1) % 4) + 1<br />        return Period.quarter(year: year, quarter: quarter)<br />    }<br /><br />    let revenue: [Double] = [<br />        800_000, 850_000, 820_000, 1_100_000,<br />        900_000, 950_000, 920_000, 1_250_000<br />    ]<br /><br />    let historical = TimeSeries(periods: periods, values: revenue)<br /><br />    // 2. Extract seasonality<br />    let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)<br /><br />    // 3. Deseasonalize<br />    let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)<br /><br />    // 4. Fit trend<br />    var model = LinearTrend
+            <double>
+              ()
+              <br /> try model.fit(to: deseasonalized)
+              <br />
+              <br /> // 5. Generate forecast
+              <br /> let trendForecast = try model.project(periods: 4)
+              <br /> let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
+              <br />
+              <br /> // 6. Present results
+              <br /> print(“Revenue Forecast:”)
+              <br /> for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
+              <br /> print(”(period.label): (value.currency(0))”)
+              <br /> }
+              <br />
+              <br /> let total = finalForecast.reduce(0, +)
+              <br /> print(“Total 2025 forecast: (total.currency(0))”)
+              <br />}
+              <br />
+              <br />try buildRevenueModel()
+              <br />
+            </double></code></pre>
         <hr />
         <h2>Try It Yourself</h2>
         <details>
-          <summary>Click to expand full playground code</summary>
-          <pre><code class="language-swift">import BusinessMath
-// Define periods (8 quarters: 2023-2024) let periods = [ Period.quarter(year: 2023, quarter: 1), Period.quarter(year: 2023, quarter: 2), Period.quarter(year: 2023, quarter: 3), Period.quarter(year: 2023, quarter: 4), Period.quarter(year: 2024, quarter: 1), Period.quarter(year: 2024, quarter: 2), Period.quarter(year: 2024, quarter: 3), Period.quarter(year: 2024, quarter: 4) ]
-<p></p><p>// Historical revenue (showing both growth and Q4 spike) let revenue: [Double] = [ 800_000, // Q1 2023 850_000, // Q2 2023 820_000, // Q3 2023 1_100_000, // Q4 2023 (holiday spike) 900_000, // Q1 2024 950_000, // Q2 2024 920_000, // Q3 2024 1_250_000 // Q4 2024 (holiday spike + growth) ]</p><p>let historical = TimeSeries(periods: periods, values: revenue)</p></code>
-            <div>
-              <code class="language-swift"><p>print(“Loaded (historical.count) quarters of historical data”) print(“Total historical revenue: (historical.reduce(0, +).currency())”)</p><pre><code>// Calculate quarter-over-quarter growth let qoqGrowth = historical.growthRate(lag: 1)<p></p><p>print(”\nQuarter-over-Quarter Growth:”) for (i, growth) in qoqGrowth.enumerated() { let period = periods[i + 1] print(”(period.label): (growth.percent(1))”) }</p><p>// Calculate year-over-year growth let yoyGrowth = historical.growthRate(lag: 4) // 4 quarters = 1 year</p><p>print(”\nYear-over-Year Growth:”) for (i, growth) in yoyGrowth.valuesArray.enumerated() { let period = periods[i + 4] print(”(period.label): (growth.percent(1))”) }</p><p>// Calculate overall CAGR let totalYears = 2.0 let cagrValue = cagr( beginningValue: revenue[0], endingValue: revenue[revenue.count - 1], years: totalYears ) print(”\nOverall CAGR: (cagrValue.percent(1))”)</p><p>// Calculate seasonal indices (4 quarters per year) let seasonality = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)</p></code><p><code>print(”\nSeasonal Indices:”) let quarters = [“Q1”, “Q2”, “Q3”, “Q4”] for (i, index) in seasonality.enumerated() { let pct = (index - 1.0) let direction = pct &gt; 0 ? “above” : “below” print(”(quarters[i]): (index.number(3)) ((abs(pct).percent(1)) (direction) average)”) } </code></p></pre>let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonality)<p></p></code>
-            </div><p>print(”\nDeseasonalized Revenue:”) print(“Original → Deseasonalized”) for i in 0..
-              <historical.count { let original="historical.valuesArray[i]" let adjusted="deseasonalized.valuesArray[i]" let period="periods[i]" print(”(period.label): (original.currency(0)) → (adjusted.currency(0))”) }< p></historical.count></p><p>var linearModel = LinearTrend
-              <double>
-                () try linearModel.fit(to: deseasonalized)
-              </double></p><p>print(”\nLinear Trend Model Fitted”) print(“Indicates steady absolute growth per quarter”)</p><p>let forecastPeriods = 4  // Forecast next 4 quarters (2025)</p><p>// Step 6a: Project trend forward let trendForecast = try linearModel.project(periods: forecastPeriods)</p><p>print(”\nTrend Forecast (deseasonalized):”) for (period, value) in zip(trendForecast.periods, trendForecast.valuesArray) { print(”(period.label): (value.currency(0))”) }</p><p>// Step 6b: Reapply seasonal pattern let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonality)</p><p>print(”\nFinal Forecast (with seasonality):”) var forecastTotal = 0.0 for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) { forecastTotal += value print(”(period.label): (value.currency(0))”) }</p><p>print(”\nForecast Summary:”) print(“Total 2025 revenue: (forecastTotal.currency(0))”) print(“Average quarterly revenue: ((forecastTotal / 4).currency(0))”)</p><p>// Compare to 2024 let revenue2024 = revenue[4…7].reduce(0.0, +) let forecastGrowth = (forecastTotal - revenue2024) / revenue2024 print(“Growth vs 2024: (forecastGrowth.percent(1))”)</p><p>print(”\nScenario Analysis for 2025:”)</p><p>// Base case parameters (from the fitted linear model) let baseSlope = linearModel.slopeValue! let baseIntercept = linearModel.interceptValue!</p><p>// Conservative: Reduce growth rate by 50% let conservativeSlope = baseSlope * 0.5 var conservativePeriods: [Period] = [] var conservativeValues: [Double] = [] for i in 1…forecastPeriods { let index = Double(deseasonalized.count + i - 1) let trendValue = baseIntercept + conservativeSlope * index conservativePeriods.append(Period.quarter(year: 2025, quarter: i)) conservativeValues.append(trendValue) } let conservativeForecast = TimeSeries( periods: conservativePeriods, values: conservativeValues ) let conservativeSeasonalForecast = try applySeasonal( timeSeries: conservativeForecast, indices: seasonality )</p><p>// Optimistic: Increase growth rate by 50% let optimisticSlope = baseSlope * 1.5 var optimisticPeriods: [Period] = [] var optimisticValues: [Double] = [] for i in 1…forecastPeriods { let index = Double(deseasonalized.count + i - 1) let trendValue = baseIntercept + optimisticSlope * index optimisticPeriods.append(Period.quarter(year: 2025, quarter: i)) optimisticValues.append(trendValue) } let optimisticForecast = TimeSeries( periods: optimisticPeriods, values: optimisticValues ) let optimisticSeasonalForecast = try applySeasonal( timeSeries: optimisticForecast, indices: seasonality )</p><p>let conservativeTotal = conservativeSeasonalForecast.reduce(0, +) let optimisticTotal = optimisticSeasonalForecast.reduce(0, +)</p><p>print(“Conservative: (conservativeTotal.currency(0)) (growth dampened 50%)”) print(“Base Case: (forecastTotal.currency(0))”) print(“Optimistic: (optimisticTotal.currency(0)) (growth amplified 50%)”)</p>
-            <div>
-              <p>func buildRevenueModel() throws { // 1. Prepare data let periods = (1…8).map { i in let year = 2023 + (i - 1) / 4 let quarter = ((i - 1) % 4) + 1 return Period.quarter(year: year, quarter: quarter) }</p>
-              <pre><code>let revenue: [Double] = [ 800_000, 850_000, 820_000, 1_100_000, 900_000, 950_000, 920_000, 1_250_000 ]<p></p><p>let historical = TimeSeries(periods: periods, values: revenue)</p><p>// 2. Extract seasonality let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)</p><p>// 3. Deseasonalize let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)</p><p>// 4. Fit trend var model = LinearTrend
-                    <double>
-                      () try model.fit(to: deseasonalized)
-                    </double></p><p>// 5. Generate forecast let trendForecast = try model.project(periods: 4) let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)</p><p>// 6. Present results print(“Revenue Forecast:”) for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) { print(”(period.label): (value.currency(0))”) }</p></code><p><code>let total = finalForecast.reduce(0, +) print(“Total 2025 forecast: (total.currency(0))”) </code></p></pre>}
-              <p></p>
-            </div><p>try buildRevenueModel() </p></pre>
-        </details>
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br /><br />// Define periods (8 quarters: 2023-2024)<br />let periods = [<br />	Period.quarter(year: 2023, quarter: 1),<br />	Period.quarter(year: 2023, quarter: 2),<br />	Period.quarter(year: 2023, quarter: 3),<br />	Period.quarter(year: 2023, quarter: 4),<br />	Period.quarter(year: 2024, quarter: 1),<br />	Period.quarter(year: 2024, quarter: 2),<br />	Period.quarter(year: 2024, quarter: 3),<br />	Period.quarter(year: 2024, quarter: 4)<br />]<br /><br />// Historical revenue (showing both growth and Q4 spike)<br />let revenue: [Double] = [<br />	800_000,    // Q1 2023<br />	850_000,    // Q2 2023<br />	820_000,    // Q3 2023<br />	1_100_000,  // Q4 2023 (holiday spike)<br />	900_000,    // Q1 2024<br />	950_000,    // Q2 2024<br />	920_000,    // Q3 2024<br />	1_250_000   // Q4 2024 (holiday spike + growth)<br />]<br /><br />let historical = TimeSeries(periods: periods, values: revenue)<br /><br />print("Loaded \(historical.count) quarters of historical data")<br />print("Total historical revenue: \(historical.reduce(0, +).currency())")<br /><br /><br />	// Calculate quarter-over-quarter growth<br />	let qoqGrowth = historical.growthRate(lag: 1)<br /><br />	print("\nQuarter-over-Quarter Growth:")<br />	for (i, growth) in qoqGrowth.enumerated() {<br />		let period = periods[i + 1]<br />		print("\(period.label): \(growth.percent(1))")<br />	}<br /><br />	// Calculate year-over-year growth<br />	let yoyGrowth = historical.growthRate(lag: 4)  // 4 quarters = 1 year<br /><br />	print("\nYear-over-Year Growth:")<br />	for (i, growth) in yoyGrowth.valuesArray.enumerated() {<br />		let period = periods[i + 4]<br />		print("\(period.label): \(growth.percent(1))")<br />	}<br /><br />	// Calculate overall CAGR<br />	let totalYears = 2.0<br />	let cagrValue = cagr(<br />		beginningValue: revenue[0],<br />		endingValue: revenue[revenue.count - 1],<br />		years: totalYears<br />	)<br />	print("\nOverall CAGR: \(cagrValue.percent(1))")<br /><br />	// Calculate seasonal indices (4 quarters per year)<br />	let seasonality = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)<br /><br />	print("\nSeasonal Indices:")<br />	let quarters = ["Q1", "Q2", "Q3", "Q4"]<br />	for (i, index) in seasonality.enumerated() {<br />		let pct = (index - 1.0)<br />		let direction = pct &gt; 0 ? "above" : "below"<br />		print("\(quarters[i]): \(index.number(3)) (\(abs(pct).percent(1)) \(direction) average)")<br />	}<br /><br />let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonality)<br /><br />print("\nDeseasonalized Revenue:")<br />print("Original → Deseasonalized")<br />for i in 0..
+              <historical.count {<br>
+                 let original = historical.valuesArray[i]
+                <br /> let adjusted = deseasonalized.valuesArray[i]
+                <br /> let period = periods[i]
+                <br /> print("\(period.label): \(original.currency(0)) → \(adjusted.currency(0))")
+                <br />}
+                <br />
+                <br />var linearModel = LinearTrend
+                <double>
+                  ()
+                  <br />try linearModel.fit(to: deseasonalized)
+                  <br />
+                  <br />print("\nLinear Trend Model Fitted")
+                  <br />print("Indicates steady absolute growth per quarter")
+                  <br />
+                  <br />let forecastPeriods = 4 // Forecast next 4 quarters (2025)
+                  <br />
+                  <br />// Step 6a: Project trend forward
+                  <br />let trendForecast = try linearModel.project(periods: forecastPeriods)
+                  <br />
+                  <br />print("\nTrend Forecast (deseasonalized):")
+                  <br />for (period, value) in zip(trendForecast.periods, trendForecast.valuesArray) {
+                  <br /> print("\(period.label): \(value.currency(0))")
+                  <br />}
+                  <br />
+                  <br />// Step 6b: Reapply seasonal pattern
+                  <br />let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonality)
+                  <br />
+                  <br />print("\nFinal Forecast (with seasonality):")
+                  <br />var forecastTotal = 0.0
+                  <br />for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
+                  <br /> forecastTotal += value
+                  <br /> print("\(period.label): \(value.currency(0))")
+                  <br />}
+                  <br />
+                  <br />print("\nForecast Summary:")
+                  <br />print("Total 2025 revenue: \(forecastTotal.currency(0))")
+                  <br />print("Average quarterly revenue: \((forecastTotal / 4).currency(0))")
+                  <br />
+                  <br />// Compare to 2024
+                  <br />let revenue2024 = revenue[4...7].reduce(0.0, +)
+                  <br />let forecastGrowth = (forecastTotal - revenue2024) / revenue2024
+                  <br />print("Growth vs 2024: \(forecastGrowth.percent(1))")
+                  <br />
+                  <br />print("\nScenario Analysis for 2025:")
+                  <br />
+                  <br />// Base case parameters (from the fitted linear model)
+                  <br />let baseSlope = linearModel.slopeValue!
+                  <br />let baseIntercept = linearModel.interceptValue!
+                  <br />
+                  <br />// Conservative: Reduce growth rate by 50%
+                  <br />let conservativeSlope = baseSlope * 0.5
+                  <br />var conservativePeriods: [Period] = []
+                  <br />var conservativeValues: [Double] = []
+                  <br />for i in 1...forecastPeriods {
+                  <br /> let index = Double(deseasonalized.count + i - 1)
+                  <br /> let trendValue = baseIntercept + conservativeSlope * index
+                  <br /> conservativePeriods.append(Period.quarter(year: 2025, quarter: i))
+                  <br /> conservativeValues.append(trendValue)
+                  <br />}
+                  <br />let conservativeForecast = TimeSeries(
+                  <br /> periods: conservativePeriods,
+                  <br /> values: conservativeValues
+                  <br />)
+                  <br />let conservativeSeasonalForecast = try applySeasonal(
+                  <br /> timeSeries: conservativeForecast,
+                  <br /> indices: seasonality
+                  <br />)
+                  <br />
+                  <br />// Optimistic: Increase growth rate by 50%
+                  <br />let optimisticSlope = baseSlope * 1.5
+                  <br />var optimisticPeriods: [Period] = []
+                  <br />var optimisticValues: [Double] = []
+                  <br />for i in 1...forecastPeriods {
+                  <br /> let index = Double(deseasonalized.count + i - 1)
+                  <br /> let trendValue = baseIntercept + optimisticSlope * index
+                  <br /> optimisticPeriods.append(Period.quarter(year: 2025, quarter: i))
+                  <br /> optimisticValues.append(trendValue)
+                  <br />}
+                  <br />let optimisticForecast = TimeSeries(
+                  <br /> periods: optimisticPeriods,
+                  <br /> values: optimisticValues
+                  <br />)
+                  <br />let optimisticSeasonalForecast = try applySeasonal(
+                  <br /> timeSeries: optimisticForecast,
+                  <br /> indices: seasonality
+                  <br />)
+                  <br />
+                  <br />let conservativeTotal = conservativeSeasonalForecast.reduce(0, +)
+                  <br />let optimisticTotal = optimisticSeasonalForecast.reduce(0, +)
+                  <br />
+                  <br />print("Conservative: \(conservativeTotal.currency(0)) (growth dampened 50%)")
+                  <br />print("Base Case: \(forecastTotal.currency(0))")
+                  <br />print("Optimistic: \(optimisticTotal.currency(0)) (growth amplified 50%)")
+                  <br />
+                  <br />
+                  <br />func buildRevenueModel() throws {
+                  <br /> // 1. Prepare data
+                  <br /> let periods = (1...8).map { i in
+                  <br /> let year = 2023 + (i - 1) / 4
+                  <br /> let quarter = ((i - 1) % 4) + 1
+                  <br /> return Period.quarter(year: year, quarter: quarter)
+                  <br /> }
+                  <br />
+                  <br /> let revenue: [Double] = [
+                  <br /> 800_000, 850_000, 820_000, 1_100_000,
+                  <br /> 900_000, 950_000, 920_000, 1_250_000
+                  <br /> ]
+                  <br />
+                  <br /> let historical = TimeSeries(periods: periods, values: revenue)
+                  <br />
+                  <br /> // 2. Extract seasonality
+                  <br /> let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
+                  <br />
+                  <br /> // 3. Deseasonalize
+                  <br /> let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
+                  <br />
+                  <br /> // 4. Fit trend
+                  <br /> var model = LinearTrend
+                  <double>
+                    ()
+                    <br /> try model.fit(to: deseasonalized)
+                    <br />
+                    <br /> // 5. Generate forecast
+                    <br /> let trendForecast = try model.project(periods: 4)
+                    <br /> let finalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
+                    <br />
+                    <br /> // 6. Present results
+                    <br /> print("Revenue Forecast:")
+                    <br /> for (period, value) in zip(finalForecast.periods, finalForecast.valuesArray) {
+                    <br /> print("\(period.label): \(value.currency(0))")
+                    <br /> }
+                    <br />
+                    <br /> let total = finalForecast.reduce(0, +)
+                    <br /> print("Total 2025 forecast: \(total.currency(0))")
+                    <br />}
+                    <br />
+                    <br />try buildRevenueModel()
+                    <br />
+                  </double>
+                </double>
+              </historical.count></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.3-BuildingRevenueModel.md">BusinessMath Docs – 3.3 Revenue Forecasting</a> 
         <p></p>
-        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.3-BuildingRevenueModel.md">BusinessMath Docs – 3.3 Revenue Forecasting</a></p>
         <p><strong>Modifications to try</strong>:</p>
         <ol>
           <li>Use your company’s historical revenue data</li>

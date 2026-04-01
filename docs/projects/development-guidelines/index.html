@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Building a reusable instruction set that turns AI assistants into reliable development partners." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>How We Stopped Losing Context and Started Shipping Faster with AI | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/projects/development-guidelines" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="How We Stopped Losing Context and Started Shipping Faster with AI" />
+    <meta name="twitter:title" content="How We Stopped Losing Context and Started Shipping Faster with AI" />
+    <meta property="og:description" content="Building a reusable instruction set that turns AI assistants into reliable development partners." />
+    <meta name="twitter:description" content="Building a reusable instruction set that turns AI assistants into reliable development partners." />
+    <meta property="og:url" content="https://www.justinpurnell.com/projects/development-guidelines" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "address" : {
+    "@type" : "PostalAddress",
+    "addressCountry" : "US",
+    "addressLocality" : "New York",
+    "addressRegion" : "NY"
+  },
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University",
+      "url" : "https://www.princeton.edu"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth",
+      "url" : "https://www.tuck.dartmouth.edu"
+    }
+  ],
+  "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+  "hasCredential" : [
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "A.B. in Economics",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Princeton University"
+      }
+    },
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "Masters in Business Administration",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Tuck School of Business at Dartmouth"
+      }
+    }
+  ],
+  "hasOccupation" : [
+    {
+      "@type" : "Occupation",
+      "description" : "Search fund formed to acquire and operate a profitable business",
+      "name" : "Founder",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led re-platforming of 70+ global e-commerce sites across 40+ hospitality brands",
+      "name" : "Head of Product",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "Fairfield, NJ"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Directed business development initiatives for NBCUniversal Digital",
+      "name" : "Interim Vice President, Strategy & Business Development",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led retention initiatives increasing customer Lifetime Value by 40% at Seeso",
+      "name" : "Director, Content Strategy & Operations",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Published 400+ research reports covering Energy, Gaming, Lodging & Leisure high yield credit",
+      "name" : "Credit Analyst & Risk Manager",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    }
+  ],
+  "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development",
+    "E-Commerce",
+    "Credit Analysis",
+    "Search Funds",
+    "Streaming Media",
+    "Team Leadership"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners",
+    "url" : "https://www.ledgepartners.com"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Organization",
+  "description" : "Search fund formed to acquire and operate profitable businesses with a focus on operational efficiency and technology enablement.",
+  "foundingDate" : "2023-11-07",
+  "name" : "Ledge Partners",
+  "url" : "https://www.ledgepartners.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/projects/development-guidelines",
+      "name" : "How We Stopped Losing Context and Started Shipping Faster with AI",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">How We Stopped Losing Context and Started Shipping Faster with AI</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">7 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Building a reusable instruction set that turns AI assistants into reliable development partners.</strong>
+          <hr />Every developer who has used an AI coding assistant has hit the same wall: you spend twenty minutes getting Claude or ChatGPT up to speed on your project, make real progress, close the session — and the next day, start from scratch. The AI has no memory of the architectural decisions you made yesterday. It doesn’t know that your project forbids force unwraps. It doesn’t remember that you chose actors over structs for a specific reason.</p>
+        <p>As I began to work on larger and larger projects with AI, I realized I needed a system to eliminate it.</p>
+        <h2>The Problem: AI Amnesia</h2>I’ve been developing Swift libraries for mathematical and financial computation — the kind of code where a 0.01% floating-point error compounds into a real-world bug. Across sessions, I’d see Claude running into the same failures:
+        <ul>
+          <li><strong>Repeated mistakes.</strong> The AI would reintroduce force unwraps or unsafe patterns we’d explicitly banned.</li>
+          <li><strong>Lost architectural context.</strong> Decisions made three sessions ago were invisible to the current session.</li>
+          <li><strong>Wasted ramp-up time.</strong> Every new conversation started with re-explaining the project structure, testing approach, and coding standards.</li>
+          <li><strong>Inconsistent quality.</strong> Some sessions produced clean, well-tested code. Others drifted from established patterns.</li>
+        </ul>I needed the AI to walk into every session already knowing the rules, the current state of work, and exactly where to pick up.
+        <h2>The Solution: Documentation as Persistent Memory</h2>The core insight was simple: 
+        <strong>if the AI can’t remember, make it read.</strong> I created a structured set of development guidelines — a reusable instruction set — that gives any AI assistant everything it needs to be productive from the first message of a new session.
+        <p></p>
+        <p>The system isn’t a style guide. It’s an operational model for AI-assisted development, covering everything from project vision down to how a session should end.</p>
+        <h3>The Folder Structure</h3>The guidelines live in a numbered folder hierarchy that mirrors the development workflow:
+        <pre><code>00_CORE_RULES/                    → The rules. Read first, reference always.<br />01_ROADMAPS/                      → Strategic direction.<br />02_IMPLEMENTATION_PLANS/          → Tactical plans, proposals, and migrations.<br />03_STRATEGIES_AND_FRAMEWORKS/     → High-level product guidance.<br />04_IMPLEMENTATION_CHECKLISTS/     → Per-feature task tracking.<br />05_SUMMARIES/                     → Session history and handover notes.<br />06_BACKUP_FILES/                  → Archive.<br />07_LIBRARY/                       → Reference materials.<br /></code></pre>The numbering isn’t arbitrary. It reflects reading priority: an AI assistant recovering context reads 
+        <code>00_CORE_RULES</code> first, then works its way through based on what it needs. The structure forces a natural flow from strategy to implementation to tracking to history.
+        <h2>How It Works in Practice</h2>
+        <h3>1. Context Recovery: Never Start Cold</h3>Every session begins with a context recovery protocol. The AI reads a defined set of documents depending on the task:
+        <p></p>
+        <p><strong>Quick recovery</strong> — for bug fixes or resuming same-day work:</p>
+        <ul>
+          <li>The latest session summary (where we left off)</li>
+          <li>The active implementation checklist (what’s in progress)</li>
+        </ul>
+        <strong>Full recovery</strong> — for new sessions or complex features:
+        <ul>
+          <li>The Master Plan (project vision and architecture)</li>
+          <li>Coding Rules (forbidden patterns, safety rules)</li>
+          <li>TDD Guidelines (testing contract)</li>
+          <li>Active implementation checklist</li>
+          <li>Latest session summary</li>
+        </ul>The AI then confirms: 
+        <em>“Context recovered. Current task is X. Ready to follow Zero Warnings Gate.”</em>
+        <p></p>
+        <p>Two documents or five — either way, the AI is productive within seconds, not minutes. No re-explaining. No re-discovering constraints.</p>
+        <h3>2. Design-First TDD: Think Before You Code</h3>The development workflow has six phases, and the first one happens before any code is written:
+        <pre><code>0. DESIGN    → Propose architecture, get approval<br />1. RED       → Write failing tests<br />2. GREEN     → Write minimum code to pass<br />3. REFACTOR  → Improve while keeping tests green<br />4. DOCUMENT  → DocC comments and working examples<br />5. VERIFY    → Zero warnings gate — nothing ships until it passes<br /></code></pre>The Design phase is where the real leverage is. Before a single line of code is written, the AI produces a design proposal covering the objective, proposed architecture, API surface, constraints compliance, and test strategy. This catches misunderstandings before they become wasted code.
+        <p></p>
+        <p>For our mathematical libraries, the design phase also includes an MCP (Model Context Protocol) schema — a JSON specification of how the API would be consumed by AI tools. This means every function we build is designed for both human and machine consumption from day one.</p>
+        <h3>3. The Quality Gate: Zero Tolerance</h3>Every feature must pass a quality gate before it’s considered complete. Not “mostly passing.” Not “warnings but no errors.” Zero.
+        <p></p>
+        <p>The gate checks:</p>
+        <ul>
+          <li><strong>Build</strong> — zero compiler warnings</li>
+          <li><strong>Test</strong> — zero failures</li>
+          <li><strong>Safety</strong> — no force unwraps, force casts, or unsafe patterns</li>
+          <li><strong>Doc-lint</strong> — documentation compiles cleanly</li>
+          <li><strong>Doc-coverage</strong> — all public APIs are documented</li>
+        </ul>This sounds strict, and it is. But it eliminates the slow accumulation of technical debt that happens when “just one warning” becomes twenty. The AI knows the gate exists, checks against it continuously, and won’t declare a task complete until everything passes.
+        <h3>4. Session Handover: Leave a Trail</h3>This is what makes the whole system work across time. Before ending any session, the AI must:
+        <ol>
+          <li><strong>Run the quality gate</strong> and report the result.</li>
+          <li><strong>Update the implementation checklist</strong> — move completed items, flag blockers.</li>
+          <li><strong>Create a session summary</strong> documenting:
+            <ul>
+              <li>What was accomplished (with specific file paths and test names)</li>
+              <li>Quality gate status</li>
+              <li>The <strong>immediate next step</strong> — not “continue the feature” but “add the <code>calculateYTM</code> method to <code>BondPricing.swift</code>, tests are stubbed in <code>BondPricingTests.swift</code> line 47”</li>
+              <li>Pending blockers and context loss warnings</li>
+            </ul></li>
+        </ol>The next session reads this summary and picks up exactly where the last one stopped. No drift. No duplication. No “what were we working on?”
+        <h2>What Makes This Different</h2>
+        <h3>It’s Reusable Across Projects</h3>The guidelines are a template. Fork the repo, replace 
+        <code>[PROJECT_NAME]</code> placeholders, customize the coding rules for your stack, and you have a fully operational instruction set for a new project. I’ve used the same structure across multiple Swift libraries, and the ramp-up time for each new project is near zero.
+        <h3>It Handles Mathematical Code Correctly</h3>Most AI coding workflows don’t address the specific challenges of numerical computation. Our guidelines mandate:
+        <ul>
+          <li><strong>Deterministic random number generation</strong> with explicit seeds for reproducible stochastic tests</li>
+          <li><strong>Tolerance-based floating-point comparisons</strong> — never exact equality</li>
+          <li><strong>Division safety guards</strong> on every division operation</li>
+          <li><strong>Property-based tests</strong> that verify mathematical invariants (commutativity, boundary conditions, known analytical solutions)</li>
+        </ul>This means my Monte Carlo simulations produce identical results across runs, my tests catch numerical instability before anything reaches production, and all financial calculations are auditable.
+        <h3>It Scales Over Months</h3>Long-running projects create a different problem: too many session summaries. The system handles this with phase summaries — rollup documents created periodically that consolidate objectives, architectural decisions, and a dependency diagram. Meanwhile, file size limits keep individual documents within context window budgets.
+        <p></p>
+        <p>The Architecture Decisions Log uses structured entries that the AI can query by category without reading the entire history:</p>
+        <pre><code class="language-yaml">id: ADR-003<br />date: 2024-02-10<br />status: accepted<br />category: concurrency<br />title: Use actors for simulation engine<br />rationale: Thread-safe state without manual locking<br /></code></pre>When the AI needs to know why we chose actors, it searches by category instead of reading months of session summaries.
+        <h3>It Makes the AI Self-Auditing</h3>One of the most effective patterns is the safety audit built into the refactor phase. Before presenting code, the AI searches its own output for forbidden patterns — force unwraps, unsafe casts, unguarded divisions — rather than relying on human review to catch them. The guidelines make the AI its own code reviewer.
+        <h2>The Results</h2>Since adopting this system:
+        <ul>
+          <li><strong>Session ramp-up dropped from minutes to seconds.</strong> Context recovery is reading, not conversation.</li>
+          <li><strong>Defect rate fell significantly.</strong> The quality gate catches issues before they’re committed. Forbidden patterns are caught by the AI itself during the refactor phase.</li>
+          <li><strong>Consistency across sessions improved dramatically.</strong> Session 50 follows the same standards as session 1 because the rules are read, not remembered.</li>
+          <li><strong>Design proposals prevent wasted work.</strong> Catching architectural mismatches before coding starts saves hours of rework.</li>
+          <li><strong>The handover protocol preserves momentum.</strong> The next session starts where the last one ended, not where the AI guesses it ended.</li>
+        </ul>
+        <h2>Try It Yourself</h2>The key principles transfer to any stack:
+        <ol>
+          <li><strong>Write your rules down.</strong> If the AI should follow a pattern, document it where the AI will read it.</li>
+          <li><strong>End every session with a handover.</strong> The five minutes spent writing a summary saves twenty minutes of ramp-up.</li>
+          <li><strong>Automate your quality gate.</strong> If verification is manual, it gets skipped. Make it a single command.</li>
+          <li><strong>Design before you code.</strong> A ten-minute design review catches misunderstandings that cost hours to fix in implementation.</li>
+          <li><strong>Treat documentation as memory.</strong> It’s not overhead — it’s the mechanism that makes long-running AI collaboration possible.</li>
+        </ol>AI assistants are powerful. But power without continuity is just speed in random directions. Give the AI a structured memory, clear rules, and a defined workflow, and it becomes something better: a reliable development partner that gets more effective over time.
+        <hr />
+        <p></p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: project, swift, apple, development</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

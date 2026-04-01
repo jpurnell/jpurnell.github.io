@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Growth Modeling and Forecasting</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">11 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 9 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -284,34 +284,38 @@
         <hr />
         <h2>The Solution</h2>BusinessMath provides comprehensive growth modeling including growth rate calculations, trend fitting, and seasonality extraction.
         <h3>Growth Rates</h3>Calculate simple and compound growth:
-        <pre><code class="language-swift">import BusinessMath // Simple growth rate let growth = try growthRate(from: 100_000, to: 120_000) // Result: 0.20 (20% growth)<p></p></code><p><code class="language-swift">// Negative growth (decline) let decline = try growthRate(from: 120_000, to: 100_000) // Result: -0.1667 (-16.67% decline) </code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Simple growth rate<br />let growth = try growthRate(from: 100_000, to: 120_000)<br />// Result: 0.20 (20% growth)<br /><br />// Negative growth (decline)<br />let decline = try growthRate(from: 120_000, to: 100_000)<br />// Result: -0.1667 (-16.67% decline)<br /></code></pre>
         <strong>Formula:</strong>
-        <pre><code>Growth Rate = (Ending / Beginning) - 1 </code></pre>
+        <pre><code>Growth Rate = (Ending / Beginning) - 1<br /></code></pre>
         <hr />
         <h3>Compound Annual Growth Rate (CAGR)</h3>CAGR smooths out volatility to show steady equivalent growth:
-        <pre><code class="language-swift">// Revenue: $100k → $110k → $125k → $150k over 3 years let compoundGrowth = cagr( beginningValue: 100_000, endingValue: 150_000, years: 3 ) // Result: ~0.1447 (14.47% per year)<p></p></code><p><code class="language-swift">// Verify: does 14.47% compound for 3 years give $150k? let verification = 100_000 * pow((1 + compoundGrowth), 3.0) // Result: ~150,000 ✓ </code></p></pre>
+        <pre><code class="language-swift">// Revenue: $100k → $110k → $125k → $150k over 3 years<br />let compoundGrowth = cagr(<br />    beginningValue: 100_000,<br />    endingValue: 150_000,<br />    years: 3<br />)<br />// Result: ~0.1447 (14.47% per year)<br /><br />// Verify: does 14.47% compound for 3 years give $150k?<br />let verification = 100_000 * pow((1 + compoundGrowth), 3.0)<br />// Result: ~150,000 ✓<br /></code></pre>
         <strong>Formula:</strong>
-        <pre><code>CAGR = (Ending / Beginning)^(1/years) - 1 </code></pre>
+        <pre><code>CAGR = (Ending / Beginning)^(1/years) - 1<br /></code></pre>
         <strong>The insight</strong>: Revenue was volatile year-to-year ($10k, then $15k, then $25k growth), but CAGR shows the equivalent steady rate: 14.47% annually.
         <hr />
         <h3>Applying Growth</h3>Project future values:
-        <pre><code class="language-swift">// Project $100k base with 15% annual growth for 5 years let projection = applyGrowth( baseValue: 100_000, rate: 0.15, periods: 5, compounding: .annual ) // Result: [100k, 115k, 132.25k, 152.09k, 174.90k, 201.14k] </code></pre>
+        <pre><code class="language-swift">// Project $100k base with 15% annual growth for 5 years<br />let projection = applyGrowth(<br />    baseValue: 100_000,<br />    rate: 0.15,<br />    periods: 5,<br />    compounding: .annual<br />)<br />// Result: [100k, 115k, 132.25k, 152.09k, 174.90k, 201.14k]<br /></code></pre>
         <hr />
         <h3>Compounding Frequencies</h3>Different frequencies affect growth:
-        <pre><code class="language-swift">let base = 100_000.0 let rate = 0.12  // 12% annual rate let years = 5<p></p><p>// Annual: 12% once per year let annual = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .annual) print(annual.last!.number(0)) // Final: ~176,234</p><p>// Quarterly: 3% four times per year let quarterly = applyGrowth(baseValue: base, rate: rate, periods: years * 4, compounding: .quarterly) print(quarterly.last!.number(0)) // Final: ~180,611 (higher due to more frequent compounding)</p><p>// Monthly: 1% twelve times per year let monthly = applyGrowth(baseValue: base, rate: rate, periods: years * 12, compounding: .monthly) print(monthly.last!.number(0)) // Final: ~181,670</p></code><p><code class="language-swift">// Continuous: e^(rt) let continuous = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .continuous) print(continuous.last!.number(0)) // Final: ~182,212 (theoretical maximum) </code></p></pre>
+        <pre><code class="language-swift">let base = 100_000.0<br />let rate = 0.12  // 12% annual rate<br />let years = 5<br /><br />// Annual: 12% once per year<br />let annual = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .annual)<br />print(annual.last!.number(0))<br />// Final: ~176,234<br /><br />// Quarterly: 3% four times per year<br />let quarterly = applyGrowth(baseValue: base, rate: rate, periods: years * 4, compounding: .quarterly)<br />print(quarterly.last!.number(0))<br />// Final: ~180,611 (higher due to more frequent compounding)<br /><br />// Monthly: 1% twelve times per year<br />let monthly = applyGrowth(baseValue: base, rate: rate, periods: years * 12, compounding: .monthly)<br />print(monthly.last!.number(0))<br />// Final: ~181,670<br /><br />// Continuous: e^(rt)<br />let continuous = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .continuous)<br />print(continuous.last!.number(0))<br />// Final: ~182,212 (theoretical maximum)<br /></code></pre>
         <strong>The insight</strong>: More frequent compounding increases final value. Continuous compounding is the mathematical limit.
         <hr />
         <h2>Trend Models</h2>Trend models fit mathematical functions to historical data for forecasting.
         <h3>Linear Trend</h3>Models constant absolute growth:
-        <pre><code class="language-swift">// Historical revenue shows steady ~$5k/month increase let periods_linearTrend = (1…12).map { Period.month(year: 2024, month: $0) } let revenue_linearTrend: [Double] = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]<p></p><p>let historical_linearTrend = TimeSeries(periods: periods_linearTrend, values: revenue_linearTrend)</p><p>// Fit linear trend var trend_linearTrend = LinearTrend
-              <double>
-                () try trend_linearTrend.fit(to: historical_linearTrend)
-              </double></p></code><p><code class="language-swift">// Project 6 months forward let forecast_linearTrend = try trend_linearTrend.project(periods: 6) print(forecast_linearTrend.valuesArray.map({$0.rounded()})) // Result: [142, 145, 148, 152, 155, 159] (approximately) </code></p></pre>
+        <pre><code class="language-swift">// Historical revenue shows steady ~$5k/month increase<br />let periods_linearTrend = (1…12).map { Period.month(year: 2024, month: $0) }<br />let revenue_linearTrend: [Double] = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]<br /><br />let historical_linearTrend = TimeSeries(periods: periods_linearTrend, values: revenue_linearTrend)<br /><br />// Fit linear trend<br />var trend_linearTrend = LinearTrend
+            <double>
+              ()
+              <br />try trend_linearTrend.fit(to: historical_linearTrend)
+              <br />
+              <br />// Project 6 months forward
+              <br />let forecast_linearTrend = try trend_linearTrend.project(periods: 6)
+              <br />print(forecast_linearTrend.valuesArray.map({$0.rounded()}))
+              <br />// Result: [142, 145, 148, 152, 155, 159] (approximately)
+              <br />
+            </double></code></pre>
         <strong>Formula:</strong>
-        <pre><code>y = mx + b<p></p><p>Where:</p></code>
-          <ul>
-            <code><li>m = slope (rate of change)</li><li>b = intercept (starting value) </li></code>
-          </ul></pre>
+        <pre><code>y = mx + b<br /><br />Where:<br />- m = slope (rate of change)<br />- b = intercept (starting value)<br /></code></pre>
         <strong>Best for</strong>:
         <ul>
           <li>Steady absolute growth (adding same $ each period)</li>
@@ -320,15 +324,18 @@
         </ul>
         <hr />
         <h3>Exponential Trend</h3>Models constant percentage growth:
-        <pre><code class="language-swift">// Revenue doubling every few years let periods_exponentialTrend = (0..&lt;10).map { Period.year(2015 + $0) } let revenue_exponentialTrend: [Double] = [100, 115, 130, 155, 175, 200, 235, 265, 310, 350]let historical_exponentialTrend = TimeSeries(periods: periods_exponentialTrend, values: revenue_exponentialTrend)<p></p><p>// Fit exponential trend var trend_exponentialTrend = ExponentialTrend
-              <double>
-                () try trend_exponentialTrend.fit(to: historical_exponentialTrend)
-              </double></p></code><p><code class="language-swift">// Project 5 years forward let forecast_exponentialTrend = try trend_exponentialTrend.project(periods: 5) // Result: [407, 468, 538, 619, 713] </code></p></pre>
+        <pre><code class="language-swift">// Revenue doubling every few years<br />let periods_exponentialTrend = (0..&lt;10).map { Period.year(2015 + $0) }<br />let revenue_exponentialTrend: [Double] = [100, 115, 130, 155, 175, 200, 235, 265, 310, 350]<br /><br />let historical_exponentialTrend = TimeSeries(periods: periods_exponentialTrend, values: revenue_exponentialTrend)<br /><br />// Fit exponential trend<br />var trend_exponentialTrend = ExponentialTrend
+            <double>
+              ()
+              <br />try trend_exponentialTrend.fit(to: historical_exponentialTrend)
+              <br />
+              <br />// Project 5 years forward
+              <br />let forecast_exponentialTrend = try trend_exponentialTrend.project(periods: 5)
+              <br />// Result: [407, 468, 538, 619, 713]
+              <br />
+            </double></code></pre>
         <strong>Formula:</strong>
-        <pre><code>y = a × e^(bx)<p></p><p>Where:</p></code>
-          <ul>
-            <code><li>a = initial value</li><li>b = growth rate</li><li>e = Euler’s number (2.71828…) </li></code>
-          </ul></pre>
+        <pre><code>y = a × e^(bx)<br /><br />Where:<br />- a = initial value<br />- b = growth rate<br />- e = Euler’s number (2.71828…)<br /></code></pre>
         <strong>Best for</strong>:
         <ul>
           <li>Constant percentage growth (e.g., 15% per year)</li>
@@ -337,15 +344,18 @@
         </ul>
         <hr />
         <h3>Logistic Trend</h3>Models growth approaching a capacity limit (S-curve):
-        <pre><code class="language-swift">// User adoption: starts slow, accelerates, then plateaus let periods_logisticTrend = (0..&lt;24).map { Period.month(year: 2023 + $0/12, month: ($0 % 12) + 1) } let users_logisticTrend: [Double] = [100, 150, 250, 400, 700, 1200, 2000, 3500, 5500, 8000, 11000, 14000, 17000, 19500, 21500, 23000, 24000, 24500, 24800, 24900, 24950, 24970, 24985, 24990]let historical_logisticTrend = TimeSeries(periods: periods_logisticTrend, values: users_logisticTrend)<p></p><p>// Fit logistic trend with capacity of 25,000 users var trend_logisticTrend = LogisticTrend
-              <double>
-                (capacity: 25_000) try trend_logisticTrend.fit(to: historical_logisticTrend)
-              </double></p></code><p><code class="language-swift">// Project 12 months forward let forecast_logisticTrend = try trend_logisticTrend.project(periods: 12) // Result: Approaches but never exceeds 25,000 </code></p></pre>
+        <pre><code class="language-swift">// User adoption: starts slow, accelerates, then plateaus<br />let periods_logisticTrend = (0..&lt;24).map { Period.month(year: 2023 + $0/12, month: ($0 % 12) + 1) }<br />let users_logisticTrend: [Double] = [100, 150, 250, 400, 700, 1200, 2000, 3500, 5500, 8000,<br />						11000, 14000, 17000, 19500, 21500, 23000, 24000, 24500,<br />						24800, 24900, 24950, 24970, 24985, 24990]<br /><br />let historical_logisticTrend = TimeSeries(periods: periods_logisticTrend, values: users_logisticTrend)<br /><br />// Fit logistic trend with capacity of 25,000 users<br />var trend_logisticTrend = LogisticTrend
+            <double>
+              (capacity: 25_000)
+              <br />try trend_logisticTrend.fit(to: historical_logisticTrend)
+              <br />
+              <br />// Project 12 months forward
+              <br />let forecast_logisticTrend = try trend_logisticTrend.project(periods: 12)
+              <br />// Result: Approaches but never exceeds 25,000
+              <br />
+            </double></code></pre>
         <strong>Formula:</strong>
-        <pre><code>y = L / (1 + e^(-k(x-x₀)))<p></p><p>Where:</p></code>
-          <ul>
-            <code><li>L = capacity (maximum value)</li><li>k = growth rate</li><li>x₀ = midpoint of curve </li></code>
-          </ul></pre>
+        <pre><code>y = L / (1 + e^(-k(x-x₀)))<br /><br />Where:<br />- L = capacity (maximum value)<br />- k = growth rate<br />- x₀ = midpoint of curve<br /></code></pre>
         <strong>Best for</strong>:
         <ul>
           <li>Market saturation scenarios</li>
@@ -356,7 +366,7 @@
         <hr />
         <h2>Seasonality</h2>Extract and apply recurring patterns.
         <h3>Seasonal Indices</h3>Calculate seasonal factors:
-        <pre><code class="language-swift">// Quarterly revenue with Q4 holiday spike let periods = (0..&lt;12).map { Period.quarter(year: 2022 + $0/4, quarter: ($0 % 4) + 1) } let revenue: [Double] = [100, 120, 110, 150,  // 2022 105, 125, 115, 160,  // 2023 110, 130, 120, 170]  // 2024let ts = TimeSeries(periods: periods, values: revenue)<p></p></code><p><code class="language-swift">// Calculate seasonal indices (4 quarters per year) let indices = try seasonalIndices(timeSeries: ts, periodsPerYear: 4) print(indices.map({”($0.number(2))”}).joined(separator: “, “)) // Result: [~0.85, ~1.00, ~0.91, ~1.24] </code></p></pre>
+        <pre><code class="language-swift">// Quarterly revenue with Q4 holiday spike<br />let periods = (0..&lt;12).map { Period.quarter(year: 2022 + $0/4, quarter: ($0 % 4) + 1) }<br />let revenue: [Double] = [100, 120, 110, 150,  // 2022<br />                         105, 125, 115, 160,  // 2023<br />                         110, 130, 120, 170]  // 2024<br /><br />let ts = TimeSeries(periods: periods, values: revenue)<br /><br />// Calculate seasonal indices (4 quarters per year)<br />let indices = try seasonalIndices(timeSeries: ts, periodsPerYear: 4)<br />print(indices.map({”($0.number(2))”}).joined(separator: “, “))<br />// Result: [~0.85, ~1.00, ~0.91, ~1.24]<br /></code></pre>
         <strong>Interpretation</strong>:
         <ul>
           <li><strong>Q1: 0.85</strong> → 15% below average (post-holiday slump)</li>
@@ -366,10 +376,24 @@
         </ul>
         <hr />
         <h3>Complete Forecasting Workflow</h3>Combine all techniques:
-        <pre><code class="language-swift">// 1. Load historical data let historical = TimeSeries(periods: historicalPeriods, values: historicalRevenue)<p></p><p>// 2. Extract seasonal pattern let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)</p><p>// 3. Deseasonalize to reveal underlying trend let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)</p><p>// 4. Fit trend model to deseasonalized data var trend = LinearTrend
-              <double>
-                () try trend.fit(to: deseasonalized)
-              </double></p><p>// 5. Project trend forward let forecastPeriods = 4 // Next 4 quarters let trendForecast = try trend.project(periods: forecastPeriods)</p><p>// 6. Reapply seasonality to trend forecast let seasonalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)</p></code><p><code class="language-swift">// 7. Present forecast for (period, value) in zip(seasonalForecast.periods, seasonalForecast.valuesArray) { print(”(period.label): (value.currency())”) } </code></p></pre>
+        <pre><code class="language-swift">// 1. Load historical data<br />let historical = TimeSeries(periods: historicalPeriods, values: historicalRevenue)<br /><br />// 2. Extract seasonal pattern<br />let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)<br /><br />// 3. Deseasonalize to reveal underlying trend<br />let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)<br /><br />// 4. Fit trend model to deseasonalized data<br />var trend = LinearTrend
+            <double>
+              ()
+              <br />try trend.fit(to: deseasonalized)
+              <br />
+              <br />// 5. Project trend forward
+              <br />let forecastPeriods = 4 // Next 4 quarters
+              <br />let trendForecast = try trend.project(periods: forecastPeriods)
+              <br />
+              <br />// 6. Reapply seasonality to trend forecast
+              <br />let seasonalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
+              <br />
+              <br />// 7. Present forecast
+              <br />for (period, value) in zip(seasonalForecast.periods, seasonalForecast.valuesArray) {
+              <br /> print(”(period.label): (value.currency())”)
+              <br />}
+              <br />
+            </double></code></pre>
         <strong>This workflow</strong>:
         <ol>
           <li>Extracts the recurring seasonal pattern</li>
@@ -408,93 +432,166 @@
         <hr />
         <h2>Try It Yourself</h2>
         <details>
-          <summary>Click to expand full playground code</summary>
-          <pre><code class="language-swift">import BusinessMath
-// Simple growth rate let growth = try growthRate(from: 100_000, to: 120_000) // Result: 0.20 (20% growth)
-<p></p><p>// Negative growth (decline) let decline = try growthRate(from: 120_000, to: 100_000) // Result: -0.1667 (-16.67% decline)</p><p>// Revenue: $100k → $110k → $125k → $150k over 3 years let compoundGrowth = cagr( beginningValue: 100_000, endingValue: 150_000, years: 3 ) // Result: ~0.1447 (14.47% per year)</p><p>// Verify: does 14.47% compound for 3 years give $150k? let verification = 100_000 * pow((1 + compoundGrowth), 3.0) // Result: ~150,000 ✓</p><pre><code>// Project $100k base with 15% annual growth for 5 years let projection = applyGrowth( baseValue: 100_000, rate: 0.15, periods: 5, compounding: .annual ) // Result: [100k, 115k, 132.25k, 152.09k, 174.90k, 201.14k] </code></pre>let base = 100_000.0 let rate = 0.12  // 12% annual rate let years = 5<p></p><p>// Annual: 12% once per year let annual = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .annual) print(annual.last!.number(0)) // Final: ~176,234</p><p>// Quarterly: 3% four times per year let quarterly = applyGrowth(baseValue: base, rate: rate, periods: years * 4, compounding: .quarterly) print(quarterly.last!.number(0)) // Final: ~180,611 (higher due to more frequent compounding)</p><p>// Monthly: 1% twelve times per year let monthly = applyGrowth(baseValue: base, rate: rate, periods: years * 12, compounding: .monthly) print(monthly.last!.number(0)) // Final: ~181,670</p></code>
-            <div>
-              <code class="language-swift"><p>// Continuous: e^(rt) let continuous = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .continuous) print(continuous.last!.number(0)) // Final: ~182,212 (theoretical maximum)</p><pre><code>// Historical revenue shows steady ~$5k/month increase let periods_linearTrend = (1…12).map { Period.month(year: 2024, month: $0) } let revenue_linearTrend: [Double] = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]<p></p><p>let historical_linearTrend = TimeSeries(periods: periods_linearTrend, values: revenue_linearTrend)</p><p>// Fit linear trend var trend_linearTrend = LinearTrend
-                      <double>
-                        () try trend_linearTrend.fit(to: historical_linearTrend)
-                      </double></p><p>// Project 6 months forward let forecast_linearTrend = try trend_linearTrend.project(periods: 6) print(forecast_linearTrend.valuesArray.map({$0.rounded()})) // Result: [142, 145, 148, 152, 155, 159] (approximately)</p><p>// Revenue doubling every few years let periods_exponentialTrend = (0..&lt;10).map { Period.year(2015 + $0) } let revenue_exponentialTrend: [Double] = [100, 115, 130, 155, 175, 200, 235, 265, 310, 350]</p><p>let historical_exponentialTrend = TimeSeries(periods: periods_exponentialTrend, values: revenue_exponentialTrend)</p><p>// Fit exponential trend var trend_exponentialTrend = ExponentialTrend
-                      <double>
-                        () try trend_exponentialTrend.fit(to: historical_exponentialTrend)
-                      </double></p><p>// Project 5 years forward let forecast_exponentialTrend = try trend_exponentialTrend.project(periods: 5) print(forecast_exponentialTrend.valuesArray.map({$0.rounded()})) // Result: [407, 468, 538, 619, 713]</p><p>// User adoption: starts slow, accelerates, then plateaus let periods_logisticTrend = (0..&lt;24).map { Period.month(year: 2023 + $0/12, month: ($0 % 12) + 1) } let users_logisticTrend: [Double] = [100, 150, 250, 400, 700, 1200, 2000, 3500, 5500, 8000, 11000, 14000, 17000, 19500, 21500, 23000, 24000, 24500, 24800, 24900, 24950, 24970, 24985, 24990]</p><p>let historical_logisticTrend = TimeSeries(periods: periods_logisticTrend, values: users_logisticTrend)</p><p>// Fit logistic trend with capacity of 25,000 users var trend_logisticTrend = LogisticTrend
-                      <double>
-                        (capacity: 25_000) try trend_logisticTrend.fit(to: historical_logisticTrend)
-                      </double></p><p>// Project 12 months forward let forecast_logisticTrend = try trend_logisticTrend.project(periods: 12) print(forecast_logisticTrend.valuesArray.map({$0.rounded()})) // Result: Approaches but never exceeds 25,000</p><p>// Quarterly revenue with Q4 holiday spike let periods = (0..&lt;12).map { Period.quarter(year: 2022 + $0/4, quarter: ($0 % 4) + 1) } let revenue: [Double] = [100, 120, 110, 150, // 2022 105, 125, 115, 160, // 2023 110, 130, 120, 170] // 2024</p><p>let ts = TimeSeries(periods: periods, values: revenue)</p><p>// Calculate seasonal indices (4 quarters per year) let indices = try seasonalIndices(timeSeries: ts, periodsPerYear: 4) print(indices.map({”($0.number(2))”}).joined(separator: “, “)) // Result: [~0.85, ~1.00, ~0.91, ~1.24]</p><p>// 1. Load historical data let historical = TimeSeries(periods: historicalPeriods, values: historicalRevenue)</p><p>// 2. Extract seasonal pattern let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)</p><p>// 3. Deseasonalize to reveal underlying trend let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)</p><p>// 4. Fit trend model to deseasonalized data var trend = LinearTrend
-                      <double>
-                        () try trend.fit(to: deseasonalized)
-                      </double></p><p>// 5. Project trend forward let forecastPeriods = 4 // Next 4 quarters let trendForecast = try trend.project(periods: forecastPeriods)</p><p>// 6. Reapply seasonality to trend forecast let seasonalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)</p></code><p><code>// 7. Present forecast for (period, value) in zip(seasonalForecast.periods, seasonalForecast.valuesArray) { print(”(period.label): (value.currency())”) } </code></p></pre></code>
-            </div></pre>
-        </details>
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br /><br />// Simple growth rate<br />let growth = try growthRate(from: 100_000, to: 120_000)<br />// Result: 0.20 (20% growth)<br /><br />// Negative growth (decline)<br />let decline = try growthRate(from: 120_000, to: 100_000)<br />// Result: -0.1667 (-16.67% decline)<br /><br /><br />// Revenue: $100k → $110k → $125k → $150k over 3 years<br />let compoundGrowth = cagr(<br />	beginningValue: 100_000,<br />	endingValue: 150_000,<br />	years: 3<br />)<br />// Result: ~0.1447 (14.47% per year)<br /><br />// Verify: does 14.47% compound for 3 years give $150k?<br />let verification = 100_000 * pow((1 + compoundGrowth), 3.0)<br />// Result: ~150,000 ✓<br /><br />	// Project $100k base with 15% annual growth for 5 years<br />	let projection = applyGrowth(<br />		baseValue: 100_000,<br />		rate: 0.15,<br />		periods: 5,<br />		compounding: .annual<br />	)<br />	// Result: [100k, 115k, 132.25k, 152.09k, 174.90k, 201.14k]<br /><br />let base = 100_000.0<br />let rate = 0.12  // 12% annual rate<br />let years = 5<br /><br />// Annual: 12% once per year<br />let annual = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .annual)<br />print(annual.last!.number(0))<br />// Final: ~176,234<br /><br />// Quarterly: 3% four times per year<br />let quarterly = applyGrowth(baseValue: base, rate: rate, periods: years * 4, compounding: .quarterly)<br />print(quarterly.last!.number(0))<br />// Final: ~180,611 (higher due to more frequent compounding)<br /><br />// Monthly: 1% twelve times per year<br />let monthly = applyGrowth(baseValue: base, rate: rate, periods: years * 12, compounding: .monthly)<br />print(monthly.last!.number(0))<br />// Final: ~181,670<br /><br />// Continuous: e^(rt)<br />let continuous = applyGrowth(baseValue: base, rate: rate, periods: years, compounding: .continuous)<br />print(continuous.last!.number(0))<br />// Final: ~182,212 (theoretical maximum)<br /><br />	// Historical revenue shows steady ~$5k/month increase<br />	let periods_linearTrend = (1...12).map { Period.month(year: 2024, month: $0) }<br />	let revenue_linearTrend: [Double] = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 135, 140]<br /><br />	let historical_linearTrend = TimeSeries(periods: periods_linearTrend, values: revenue_linearTrend)<br /><br />	// Fit linear trend<br />	var trend_linearTrend = LinearTrend
+              <double>
+                ()
+                <br /> try trend_linearTrend.fit(to: historical_linearTrend)
+                <br />
+                <br /> // Project 6 months forward
+                <br /> let forecast_linearTrend = try trend_linearTrend.project(periods: 6)
+                <br /> print(forecast_linearTrend.valuesArray.map({$0.rounded()}))
+                <br /> // Result: [142, 145, 148, 152, 155, 159] (approximately)
+                <br />
+                <br /> // Revenue doubling every few years
+                <br /> let periods_exponentialTrend = (0..&lt;10).map { Period.year(2015 + $0) }
+                <br /> let revenue_exponentialTrend: [Double] = [100, 115, 130, 155, 175, 200, 235, 265, 310, 350]
+                <br />
+                <br /> let historical_exponentialTrend = TimeSeries(periods: periods_exponentialTrend, values: revenue_exponentialTrend)
+                <br />
+                <br /> // Fit exponential trend
+                <br /> var trend_exponentialTrend = ExponentialTrend
+                <double>
+                  ()
+                  <br /> try trend_exponentialTrend.fit(to: historical_exponentialTrend)
+                  <br />
+                  <br /> // Project 5 years forward
+                  <br /> let forecast_exponentialTrend = try trend_exponentialTrend.project(periods: 5)
+                  <br /> print(forecast_exponentialTrend.valuesArray.map({$0.rounded()}))
+                  <br /> // Result: [407, 468, 538, 619, 713]
+                  <br />
+                  <br /> // User adoption: starts slow, accelerates, then plateaus
+                  <br /> let periods_logisticTrend = (0..&lt;24).map { Period.month(year: 2023 + $0/12, month: ($0 % 12) + 1) }
+                  <br /> let users_logisticTrend: [Double] = [100, 150, 250, 400, 700, 1200, 2000, 3500, 5500, 8000,
+                  <br /> 11000, 14000, 17000, 19500, 21500, 23000, 24000, 24500,
+                  <br /> 24800, 24900, 24950, 24970, 24985, 24990]
+                  <br />
+                  <br /> let historical_logisticTrend = TimeSeries(periods: periods_logisticTrend, values: users_logisticTrend)
+                  <br />
+                  <br /> // Fit logistic trend with capacity of 25,000 users
+                  <br /> var trend_logisticTrend = LogisticTrend
+                  <double>
+                    (capacity: 25_000)
+                    <br /> try trend_logisticTrend.fit(to: historical_logisticTrend)
+                    <br />
+                    <br /> // Project 12 months forward
+                    <br /> let forecast_logisticTrend = try trend_logisticTrend.project(periods: 12)
+                    <br /> print(forecast_logisticTrend.valuesArray.map({$0.rounded()}))
+                    <br /> // Result: Approaches but never exceeds 25,000
+                    <br />
+                    <br /> // Quarterly revenue with Q4 holiday spike
+                    <br /> let periods = (0..&lt;12).map { Period.quarter(year: 2022 + $0/4, quarter: ($0 % 4) + 1) }
+                    <br /> let revenue: [Double] = [100, 120, 110, 150, // 2022
+                    <br /> 105, 125, 115, 160, // 2023
+                    <br /> 110, 130, 120, 170] // 2024
+                    <br />
+                    <br /> let ts = TimeSeries(periods: periods, values: revenue)
+                    <br />
+                    <br /> // Calculate seasonal indices (4 quarters per year)
+                    <br /> let indices = try seasonalIndices(timeSeries: ts, periodsPerYear: 4)
+                    <br /> print(indices.map({"\($0.number(2))"}).joined(separator: ", "))
+                    <br /> // Result: [~0.85, ~1.00, ~0.91, ~1.24]
+                    <br />
+                    <br /> // 1. Load historical data
+                    <br /> let historical = TimeSeries(periods: historicalPeriods, values: historicalRevenue)
+                    <br />
+                    <br /> // 2. Extract seasonal pattern
+                    <br /> let seasonalIndices = try seasonalIndices(timeSeries: historical, periodsPerYear: 4)
+                    <br />
+                    <br /> // 3. Deseasonalize to reveal underlying trend
+                    <br /> let deseasonalized = try seasonallyAdjust(timeSeries: historical, indices: seasonalIndices)
+                    <br />
+                    <br /> // 4. Fit trend model to deseasonalized data
+                    <br /> var trend = LinearTrend
+                    <double>
+                      ()
+                      <br /> try trend.fit(to: deseasonalized)
+                      <br />
+                      <br /> // 5. Project trend forward
+                      <br /> let forecastPeriods = 4 // Next 4 quarters
+                      <br /> let trendForecast = try trend.project(periods: forecastPeriods)
+                      <br />
+                      <br /> // 6. Reapply seasonality to trend forecast
+                      <br /> let seasonalForecast = try applySeasonal(timeSeries: trendForecast, indices: seasonalIndices)
+                      <br />
+                      <br /> // 7. Present forecast
+                      <br /> for (period, value) in zip(seasonalForecast.periods, seasonalForecast.valuesArray) {
+                      <br /> print("\(period.label): \(value.currency())")
+                      <br /> }
+                      <br /> 
+                      <br />
+                    </double>
+                  </double>
+                </double>
+              </double></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.1-GrowthModeling.md"><strong>BusinessMath Docs – 3.1 Growth Modeling</strong></a> 
+        <p></p>
+        <p><strong>Modifications to try</strong>:</p>
+        <ol>
+          <li>Calculate CAGR for your company’s historical revenue</li>
+          <li>Fit different trend models and compare predictions</li>
+          <li>Extract seasonal patterns from your business data</li>
+        </ol>
+        <hr />
+        <h2>Real-World Application</h2>A SaaS company tracking user growth notices:
+        <ul>
+          <li><strong>Monthly data</strong>: 10-15% growth, but volatile</li>
+          <li><strong>CAGR over 2 years</strong>: 12.3% (the smoothed view)</li>
+          <li><strong>Seasonal pattern</strong>: Lower signups in July-August (summer)</li>
+          <li><strong>Trend model</strong>: Logistic with 100k user capacity (market saturation)</li>
+        </ul>Combining these insights produces a forecast that accounts for:
+        <ul>
+          <li>Long-term growth trajectory (logistic curve)</li>
+          <li>Seasonal dips in summer</li>
+          <li>Market saturation approaching</li>
+        </ul>
+        <strong>This is infinitely more useful than a simple “we’re growing 15%/month” projection.</strong>
+        <hr />
+        <code>★ Insight ─────────────────────────────────────</code>
+        <p></p>
+        <p><strong>Why Deseasonalize Before Trend Fitting?</strong></p>
+        <p>If you fit a trend to raw seasonal data, the model gets confused:</p>
+        <ul>
+          <li>Q4 spikes look like acceleration</li>
+          <li>Q1 dips look like deceleration</li>
+          <li>The fitted trend becomes wavy instead of smooth</li>
+        </ul>
+        <strong>Deseasonalizing first</strong> lets you fit a clean trend, then reapply the seasonal pattern to forecasts.
+        <p></p>
+        <p>Think of it like removing noise before measuring signal.</p>
+        <p><code>─────────────────────────────────────────────────</code>
+          <hr /></p>
+        <h3>📝 Development Note</h3>The hardest decision in growth modeling was: 
+        <strong>Should we make seasonality automatic, or explicit?</strong>
+        <p></p>
+        <p>Some libraries auto-detect seasonal patterns. Sounds convenient! But it often gets it wrong—detecting false patterns in noise, or missing real patterns in small datasets.</p>
+        <p>We chose <strong>explicit seasonality</strong>:</p>
+        <ul>
+          <li>You specify <code>periodsPerYear</code> (4 for quarters, 12 for months)</li>
+          <li>You inspect the indices before using them</li>
+          <li>You decide if the pattern makes business sense</li>
+        </ul>This requires one extra line of code, but prevents silent errors. When seasonality extraction fails, you know immediately and can investigate.
+        <p></p>
+        <p><strong>The lesson</strong>: Convenience features that fail silently are worse than explicit APIs that require judgment.</p>
+        <p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan</a> (Tuesday) - Planning for API decisions
+          <hr /></p>
+        <h2>Next Steps</h2>
+        <strong>Coming up next</strong>: The Master Plan (Tuesday) - How to organize large projects with AI collaboration.
+        <p></p>
+        <p><strong>This week</strong>: Revenue modeling (Thursday) and Capital Equipment case study (Friday).
+          <hr /><strong>Series Progress</strong>:</p>
+        <ul>
+          <li>Week: 3/12</li>
+          <li>Posts Published: 9/~48</li>
+          <li>Topics Covered: Foundation + Analysis + Operational Models (starting)</li>
+          <li>Playgrounds: 8 available</li>
+        </ul>
         <p></p>
       </div>
-      <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.1-GrowthModeling.md"><strong>BusinessMath Docs – 3.1 Growth Modeling</strong></a></p>
-      <p><strong>Modifications to try</strong>:</p>
-      <ol>
-        <li>Calculate CAGR for your company’s historical revenue</li>
-        <li>Fit different trend models and compare predictions</li>
-        <li>Extract seasonal patterns from your business data</li>
-      </ol>
       <hr />
-      <h2>Real-World Application</h2>A SaaS company tracking user growth notices:
-      <ul>
-        <li><strong>Monthly data</strong>: 10-15% growth, but volatile</li>
-        <li><strong>CAGR over 2 years</strong>: 12.3% (the smoothed view)</li>
-        <li><strong>Seasonal pattern</strong>: Lower signups in July-August (summer)</li>
-        <li><strong>Trend model</strong>: Logistic with 100k user capacity (market saturation)</li>
-      </ul>Combining these insights produces a forecast that accounts for:
-      <ul>
-        <li>Long-term growth trajectory (logistic curve)</li>
-        <li>Seasonal dips in summer</li>
-        <li>Market saturation approaching</li>
-      </ul>
-      <strong>This is infinitely more useful than a simple “we’re growing 15%/month” projection.</strong>
-      <hr />
-      <code>★ Insight ─────────────────────────────────────</code>
-      <p></p>
-      <p><strong>Why Deseasonalize Before Trend Fitting?</strong></p>
-      <p>If you fit a trend to raw seasonal data, the model gets confused:</p>
-      <ul>
-        <li>Q4 spikes look like acceleration</li>
-        <li>Q1 dips look like deceleration</li>
-        <li>The fitted trend becomes wavy instead of smooth</li>
-      </ul>
-      <strong>Deseasonalizing first</strong> lets you fit a clean trend, then reapply the seasonal pattern to forecasts.
-      <p></p>
-      <p>Think of it like removing noise before measuring signal.</p>
-      <p><code>─────────────────────────────────────────────────</code>
-        <hr /></p>
-      <h3>📝 Development Note</h3>The hardest decision in growth modeling was: 
-      <strong>Should we make seasonality automatic, or explicit?</strong>
-      <p></p>
-      <p>Some libraries auto-detect seasonal patterns. Sounds convenient! But it often gets it wrong—detecting false patterns in noise, or missing real patterns in small datasets.</p>
-      <p>We chose <strong>explicit seasonality</strong>:</p>
-      <ul>
-        <li>You specify <code>periodsPerYear</code> (4 for quarters, 12 for months)</li>
-        <li>You inspect the indices before using them</li>
-        <li>You decide if the pattern makes business sense</li>
-      </ul>This requires one extra line of code, but prevents silent errors. When seasonality extraction fails, you know immediately and can investigate.
-      <p></p>
-      <p><strong>The lesson</strong>: Convenience features that fail silently are worse than explicit APIs that require judgment.</p>
-      <p><strong>Related Methodology</strong>: <a href="../week-03/02-tue-master-plan.md">The Master Plan</a> (Tuesday) - Planning for API decisions
-        <hr /></p>
-      <h2>Next Steps</h2>
-      <strong>Coming up next</strong>: The Master Plan (Tuesday) - How to organize large projects with AI collaboration.
-      <p></p>
-      <p><strong>This week</strong>: Revenue modeling (Thursday) and Capital Equipment case study (Friday).
-        <hr /><strong>Series Progress</strong>:</p>
-      <ul>
-        <li>Week: 3/12</li>
-        <li>Posts Published: 9/~48</li>
-        <li>Topics Covered: Foundation + Analysis + Operational Models (starting)</li>
-        <li>Playgrounds: 8 available</li>
-      </ul>
-      <p></p>
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: forecasting</p>
     </div>
-    <hr />
-    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: forecasting</p>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

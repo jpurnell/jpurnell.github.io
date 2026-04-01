@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Vector Operations: Foundation for Multivariate Optimization</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">15 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 25 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -292,25 +292,13 @@
           <li><strong>Norms and distances</strong>: ‖v‖, ‖v - w‖</li>
         </ul>
         <strong>Protocol Definition</strong> (simplified):
-        <pre><code class="language-swift">public protocol VectorSpace: AdditiveArithmetic { associatedtype Scalar: Real<pre><code>// Required operations
-static var zero: Self { get }
-static func + (lhs: Self, rhs: Self) -&gt; Self
-static func * (lhs: Scalar, rhs: Self) -&gt; Self
-
-// Norm and distance
-var norm: Scalar { get }
-func dot(_ other: Self) -&gt; Scalar
-
-// Conversion
-static func fromArray(_ array: [Scalar]) -&gt; Self?
-func toArray() -&gt; [Scalar]
-</code></pre>} </code></pre>
+        <pre><code class="language-swift">public protocol VectorSpace: AdditiveArithmetic {<br />    associatedtype Scalar: Real<br /><br />    // Required operations<br />    static var zero: Self { get }<br />    static func + (lhs: Self, rhs: Self) -&gt; Self<br />    static func * (lhs: Scalar, rhs: Self) -&gt; Self<br /><br />    // Norm and distance<br />    var norm: Scalar { get }<br />    func dot(_ other: Self) -&gt; Scalar<br /><br />    // Conversion<br />    static func fromArray(_ array: [Scalar]) -&gt; Self?<br />    func toArray() -&gt; [Scalar]<br />}<br /></code></pre>
         <strong>Why it matters:</strong>
-        <pre><code class="language-swift">// ❌ Before: Duplicate implementations func optimize2D(_ f: (Vector2D) -&gt; Double, …) -&gt; Vector2D func optimize3D(_ f: (Vector3D) -&gt; Double, …) -&gt; Vector3D func optimizeND(_ f: (VectorN) -&gt; Double, …) -&gt; VectorN
-<p></p></code><p><code class="language-swift">// ✅ After: One generic implementation func optimize
-              <v: vectorspace>
-                (_ f: (V) -&gt; V.Scalar, …) -&gt; V 
-              </v:></code></p></pre>One algorithm works for all vector types!
+        <pre><code class="language-swift">// ❌ Before: Duplicate implementations<br />func optimize2D(_ f: (Vector2D) -&gt; Double, …) -&gt; Vector2D<br />func optimize3D(_ f: (Vector3D) -&gt; Double, …) -&gt; Vector3D<br />func optimizeND(_ f: (VectorN) -&gt; Double, …) -&gt; VectorN<br /><br />// ✅ After: One generic implementation<br />func optimize
+            <v: vectorspace>
+              (_ f: (V) -&gt; V.Scalar, …) -&gt; V
+              <br />
+            </v:></code></pre>One algorithm works for all vector types!
         <hr />
         <h2>Vector Implementations</h2>BusinessMath provides three vector types optimized for different use cases.
         <h3>Vector2D: Fixed 2D Vectors</h3>
@@ -321,12 +309,29 @@ func toArray() -&gt; [Scalar]
           <li>Complex numbers (real, imaginary)</li>
         </ul>
         <strong>Performance:</strong> Fastest (compile-time optimization, zero array overhead)
-        <pre><code class="language-swift">import BusinessMath<p></p><p>// Create a 2D vector let v = Vector2D
-              <double>
-                (x: 3.0, y: 4.0) let w = Vector2D(x: 1.0, y: 2.0)
-              </double></p><p>// Basic operations let sum = v + w // Vector2D(x: 4.0, y: 6.0) let scaled = 2.0 * v // Vector2D(x: 6.0, y: 8.0)</p><p>// Norm and distance print(v.norm) // 5.0 (√(3² + 4²)) print(v.distance(to: w)) // 2.828… print(v.dot(w)) // 11.0 (3<em>1 + 4</em>2)</p></code><p><code class="language-swift">// 2D-specific operations print(v.cross(w)) // 2.0 (pseudo-cross product) print(v.angle) // 0.927… radians (~53°) let rotated = v.rotated(by: .pi/2) // Vector2D(x: -4.0, y: 3.0) </code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Create a 2D vector<br />let v = Vector2D
+            <double>
+              (x: 3.0, y: 4.0)
+              <br />let w = Vector2D(x: 1.0, y: 2.0)
+              <br />
+              <br />// Basic operations
+              <br />let sum = v + w // Vector2D(x: 4.0, y: 6.0)
+              <br />let scaled = 2.0 * v // Vector2D(x: 6.0, y: 8.0)
+              <br />
+              <br />// Norm and distance
+              <br />print(v.norm) // 5.0 (√(3² + 4²))
+              <br />print(v.distance(to: w)) // 2.828…
+              <br />print(v.dot(w)) // 11.0 (3
+              <em>1 + 4</em>2)
+              <br />
+              <br />// 2D-specific operations
+              <br />print(v.cross(w)) // 2.0 (pseudo-cross product)
+              <br />print(v.angle) // 0.927… radians (~53°)
+              <br />let rotated = v.rotated(by: .pi/2) // Vector2D(x: -4.0, y: 3.0)
+              <br />
+            </double></code></pre>
         <strong>Output:</strong>
-        <pre><code>5.0 2.8284271247461903 11.0 2.0 0.9272952180016122 Vector2D(x: -4.0, y: 3.0) </code></pre>
+        <pre><code>5.0<br />2.8284271247461903<br />11.0<br />2.0<br />0.9272952180016122<br />Vector2D(x: -4.0, y: 3.0)<br /></code></pre>
         <hr />
         <h3>Vector3D: Fixed 3D Vectors</h3>
         <strong>Use Cases:</strong>
@@ -337,15 +342,34 @@ func toArray() -&gt; [Scalar]
           <li>Cross product calculations</li>
         </ul>
         <strong>Performance:</strong> Very fast (compile-time optimization)
-        <pre><code class="language-swift">import BusinessMath<p></p><p>// Create 3D vectors let v3 = Vector3D
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Create 3D vectors<br />let v3 = Vector3D
+            <double>
+              (x: 1.0, y: 2.0, z: 3.0)
+              <br />let w3 = Vector3D
               <double>
-                (x: 1.0, y: 2.0, z: 3.0) let w3 = Vector3D
-                <double>
-                  (x: 4.0, y: 5.0, z: 6.0)
-                </double>
-              </double></p><p>// Basic operations let sum3 = v3 + w3 // Vector3D(x: 5.0, y: 7.0, z: 9.0) let scaled3 = 2.0 * v3 // Vector3D(x: 2.0, y: 4.0, z: 6.0)</p><p>// Norm and dot product print(v3.norm) // 3.742… (√(1² + 2² + 3²)) print(v3.dot(w3)) // 32.0 (1<em>4 + 2</em>5 + 3*6)</p><p>// 3D-specific: Cross product let cross = v3.cross(w3) // Vector3D perpendicular to both print(cross) // Vector3D(x: -3.0, y: 6.0, z: -3.0)</p></code><p><code class="language-swift">// Verify perpendicularity print(v3.dot(cross)) // ~0.0 (perpendicular) print(w3.dot(cross)) // ~0.0 (perpendicular) </code></p></pre>
+                (x: 4.0, y: 5.0, z: 6.0)
+                <br />
+                <br />// Basic operations
+                <br />let sum3 = v3 + w3 // Vector3D(x: 5.0, y: 7.0, z: 9.0)
+                <br />let scaled3 = 2.0 * v3 // Vector3D(x: 2.0, y: 4.0, z: 6.0)
+                <br />
+                <br />// Norm and dot product
+                <br />print(v3.norm) // 3.742… (√(1² + 2² + 3²))
+                <br />print(v3.dot(w3)) // 32.0 (1
+                <em>4 + 2</em>5 + 3*6)
+                <br />
+                <br />// 3D-specific: Cross product
+                <br />let cross = v3.cross(w3) // Vector3D perpendicular to both
+                <br />print(cross) // Vector3D(x: -3.0, y: 6.0, z: -3.0)
+                <br />
+                <br />// Verify perpendicularity
+                <br />print(v3.dot(cross)) // ~0.0 (perpendicular)
+                <br />print(w3.dot(cross)) // ~0.0 (perpendicular)
+                <br />
+              </double>
+            </double></code></pre>
         <strong>Output:</strong>
-        <pre><code>3.7416573867739413 32.0 Vector3D(x: -3.0, y: 6.0, z: -3.0) 0.0 0.0 </code></pre>
+        <pre><code>3.7416573867739413<br />32.0<br />Vector3D(x: -3.0, y: 6.0, z: -3.0)<br />0.0<br />0.0<br /></code></pre>
         <strong>The insight</strong>: Cross product gives a vector perpendicular to both inputs—useful for 3D geometry and physics.
         <hr />
         <h3>VectorN: Variable N-Dimensional Vectors</h3>
@@ -357,20 +381,42 @@ func toArray() -&gt; [Scalar]
           <li>Any variable or runtime-determined dimension</li>
         </ul>
         <strong>Performance:</strong> Flexible but has array bounds checking overhead
-        <pre><code class="language-swift">import BusinessMath<p></p><p>// Create an N-dimensional vector let vN = VectorN
-              <double>
-                ([1.0, 2.0, 3.0, 4.0, 5.0]) let wN = VectorN([5.0, 4.0, 3.0, 2.0, 1.0])
-              </double></p><p>// Basic operations let sumN = vN + wN // VectorN([6, 6, 6, 6, 6]) let scaledN = 2.0 * vN // VectorN([2, 4, 6, 8, 10])</p><p>// Norm and dot product print(vN.norm) // 7.416… (√55) print(vN.dot(wN)) // 35.0</p><p>// Element access print(vN[0]) // 1.0 print(vN[2]) // 3.0</p></code><p><code class="language-swift">// Statistical operations print(vN.dimension) // 5 print(vN.sum) // 15.0 print(vN.mean) // 3.0 print(vN.standardDeviation()) // 1.581… print(vN.min) // 1.0 print(vN.max) // 5.0 </code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Create an N-dimensional vector<br />let vN = VectorN
+            <double>
+              ([1.0, 2.0, 3.0, 4.0, 5.0])
+              <br />let wN = VectorN([5.0, 4.0, 3.0, 2.0, 1.0])
+              <br />
+              <br />// Basic operations
+              <br />let sumN = vN + wN // VectorN([6, 6, 6, 6, 6])
+              <br />let scaledN = 2.0 * vN // VectorN([2, 4, 6, 8, 10])
+              <br />
+              <br />// Norm and dot product
+              <br />print(vN.norm) // 7.416… (√55)
+              <br />print(vN.dot(wN)) // 35.0
+              <br />
+              <br />// Element access
+              <br />print(vN[0]) // 1.0
+              <br />print(vN[2]) // 3.0
+              <br />
+              <br />// Statistical operations
+              <br />print(vN.dimension) // 5
+              <br />print(vN.sum) // 15.0
+              <br />print(vN.mean) // 3.0
+              <br />print(vN.standardDeviation()) // 1.581…
+              <br />print(vN.min) // 1.0
+              <br />print(vN.max) // 5.0
+              <br />
+            </double></code></pre>
         <strong>Output:</strong>
-        <pre><code>7.416198487095663 35.0 1.0 3.0 5 15.0 3.0 1.5811388300841898 1.0 5.0 </code></pre>
+        <pre><code>7.416198487095663<br />35.0<br />1.0<br />3.0<br />5<br />15.0<br />3.0<br />1.5811388300841898<br />1.0<br />5.0<br /></code></pre>
         <hr />
         <h2>Common Operations</h2>All vector types share these operations through the 
         <code>VectorSpace</code> protocol:
         <h3>Arithmetic Operations</h3>
-        <pre><code class="language-swift">let v = VectorN([1.0, 2.0, 3.0]) let w = VectorN([4.0, 5.0, 6.0])<p></p><p>// Addition and subtraction let sum = v + w // [5, 7, 9] let diff = v - w // [-3, -3, -3]</p><p>// Scalar multiplication let scaled = 3.0 * v // [3, 6, 9] let divided = v / 2.0 // [0.5, 1.0, 1.5]</p></code><p><code class="language-swift">// Negation let negated = -v // [-1, -2, -3] </code></p></pre>
+        <pre><code class="language-swift">let v = VectorN([1.0, 2.0, 3.0])<br />let w = VectorN([4.0, 5.0, 6.0])<br /><br />// Addition and subtraction<br />let sum = v + w                    // [5, 7, 9]<br />let diff = v - w                   // [-3, -3, -3]<br /><br />// Scalar multiplication<br />let scaled = 3.0 * v               // [3, 6, 9]<br />let divided = v / 2.0              // [0.5, 1.0, 1.5]<br /><br />// Negation<br />let negated = -v                   // [-1, -2, -3]<br /></code></pre>
         <hr />
         <h3>Norms and Distances</h3>
-        <pre><code class="language-swift">let v = VectorN([3.0, 4.0]) let w = VectorN([0.0, 0.0])<p></p><p>// Euclidean norm print(v.norm) // 5.0 (√(3² + 4²)) print(v.squaredNorm) // 25.0 (faster for comparisons)</p></code><p><code class="language-swift">// Distance metrics print(v.distance(to: w)) // 5.0 (Euclidean) print(v.manhattanDistance(to: w)) // 7.0 (|3| + |4|) print(v.chebyshevDistance(to: w)) // 4.0 (max(|3|, |4|)) </code></p></pre>
+        <pre><code class="language-swift">let v = VectorN([3.0, 4.0])<br />let w = VectorN([0.0, 0.0])<br /><br />// Euclidean norm<br />print(v.norm)                      // 5.0 (√(3² + 4²))<br />print(v.squaredNorm)               // 25.0 (faster for comparisons)<br /><br />// Distance metrics<br />print(v.distance(to: w))           // 5.0 (Euclidean)<br />print(v.manhattanDistance(to: w))  // 7.0 (|3| + |4|)<br />print(v.chebyshevDistance(to: w))  // 4.0 (max(|3|, |4|))<br /></code></pre>
         <strong>Use cases:</strong>
         <ul>
           <li><strong>Euclidean</strong>: Standard distance (geometric)</li>
@@ -379,131 +425,314 @@ func toArray() -&gt; [Scalar]
         </ul>
         <hr />
         <h3>Dot Products and Angles</h3>
-        <pre><code class="language-swift">let v = VectorN([1.0, 0.0, 0.0]) let w = VectorN([0.0, 1.0, 0.0])<p></p><p>// Dot product print(v.dot(w)) // 0.0 (perpendicular)</p><p>// Cosine similarity print(v.cosineSimilarity(with: w)) // 0.0 (orthogonal)</p></code><p><code class="language-swift">// Angle between vectors let angle = v.angle(with: w) // π/2 radians (90°) print(angle * 180 / .pi) // 90.0 degrees </code></p></pre>
+        <pre><code class="language-swift">let v = VectorN([1.0, 0.0, 0.0])<br />let w = VectorN([0.0, 1.0, 0.0])<br /><br />// Dot product<br />print(v.dot(w))                    // 0.0 (perpendicular)<br /><br />// Cosine similarity<br />print(v.cosineSimilarity(with: w)) // 0.0 (orthogonal)<br /><br />// Angle between vectors<br />let angle = v.angle(with: w)       // π/2 radians (90°)<br />print(angle * 180 / .pi)           // 90.0 degrees<br /></code></pre>
         <hr />
         <h3>Projections</h3>
-        <pre><code class="language-swift">let v = VectorN([3.0, 4.0]) let w = VectorN([1.0, 0.0])<p></p><p>// Project v onto w let projection = v.projection(onto: w) // [3.0, 0.0]</p><p>// Rejection (component perpendicular to w) let rejection = v.rejection(from: w) // [0.0, 4.0]</p></code><p><code class="language-swift">// Verify: v = projection + rejection print(v == projection + rejection) // true </code></p></pre>
+        <pre><code class="language-swift">let v = VectorN([3.0, 4.0])<br />let w = VectorN([1.0, 0.0])<br /><br />// Project v onto w<br />let projection = v.projection(onto: w)  // [3.0, 0.0]<br /><br />// Rejection (component perpendicular to w)<br />let rejection = v.rejection(from: w)    // [0.0, 4.0]<br /><br />// Verify: v = projection + rejection<br />print(v == projection + rejection)      // true<br /></code></pre>
         <strong>Application</strong>: Decompose a vector into parallel and perpendicular components.
         <hr />
         <h3>Normalization</h3>
-        <pre><code class="language-swift">let v = VectorN([3.0, 4.0])<p></p><p>// Normalize to unit length let unit = v.normalized() // [0.6, 0.8] print(unit.norm) // 1.0</p></code><p><code class="language-swift">// Verify direction preserved print(v.cosineSimilarity(with: unit)) // 1.0 (same direction) </code></p></pre>
+        <pre><code class="language-swift">let v = VectorN([3.0, 4.0])<br /><br />// Normalize to unit length<br />let unit = v.normalized()          // [0.6, 0.8]<br />print(unit.norm)                   // 1.0<br /><br />// Verify direction preserved<br />print(v.cosineSimilarity(with: unit))  // 1.0 (same direction)<br /></code></pre>
         <strong>Use case</strong>: Unit vectors for direction without magnitude.
         <hr />
         <h2>VectorN-Specific Operations</h2>
         <h3>Construction Methods</h3>
-        <pre><code class="language-swift">// From array let v1 = VectorN([1.0, 2.0, 3.0])<p></p><p>// Repeating value let v2 = VectorN(repeating: 5.0, count: 10)</p><p>// Zero vector let v3 = VectorN
-              <double>
-                .zero
-              </double></p><p>// Ones vector let v4 = VectorN
+        <pre><code class="language-swift">// From array<br />let v1 = VectorN([1.0, 2.0, 3.0])<br /><br />// Repeating value<br />let v2 = VectorN(repeating: 5.0, count: 10)<br /><br />// Zero vector<br />let v3 = VectorN
+            <double>
+              .zero
+              <br />
+              <br />// Ones vector
+              <br />let v4 = VectorN
               <double>
                 .ones(dimension: 5)
-              </double></p><p>// Basis vector (one component = 1, rest = 0) let e2 = VectorN
-              <double>
-                .basisVector(dimension: 5, index: 2) // [0, 0, 1, 0, 0]
-              </double></p><p>// Linear space (evenly spaced) let v5 = VectorN.linearSpace(from: 0.0, to: 10.0, count: 11) // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]</p></code><p><code class="language-swift">// Log space (logarithmically spaced) let v6 = VectorN.logSpace(from: 1.0, to: 100.0, count: 3) // [1, 10, 100] </code></p></pre>
+                <br />
+                <br />// Basis vector (one component = 1, rest = 0)
+                <br />let e2 = VectorN
+                <double>
+                  .basisVector(dimension: 5, index: 2)
+                  <br />// [0, 0, 1, 0, 0]
+                  <br />
+                  <br />// Linear space (evenly spaced)
+                  <br />let v5 = VectorN.linearSpace(from: 0.0, to: 10.0, count: 11)
+                  <br />// [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                  <br />
+                  <br />// Log space (logarithmically spaced)
+                  <br />let v6 = VectorN.logSpace(from: 1.0, to: 100.0, count: 3)
+                  <br />// [1, 10, 100]
+                  <br />
+                </double>
+              </double>
+            </double></code></pre>
         <hr />
         <h3>Functional Operations</h3>
-        <pre><code class="language-swift">let v = VectorN([-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])<p></p><p>// Map (element-wise transform) let squared = v.map { $0 * $0 } // [4, 1, 0, 1, 4, 9]</p><p>// Filter let positive = v.filter { $0 &gt; 0 } // [1, 2, 3]</p><p>// Reduce let sum = v.reduce(0.0, +) // 3.0</p></code><p><code class="language-swift">// Zip with another vector let w = VectorN([4.0, 5.0, 6.0, 7.0, 8.0, 9.0]) let product = v.zipWith(w, *) // [-8, -5, 0, 7, 16, 27] </code></p></pre>
+        <pre><code class="language-swift">let v = VectorN([-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])<br /><br />// Map (element-wise transform)<br />let squared = v.map { $0 * $0 }    // [4, 1, 0, 1, 4, 9]<br /><br />// Filter<br />let positive = v.filter { $0 &gt; 0 } // [1, 2, 3]<br /><br />// Reduce<br />let sum = v.reduce(0.0, +)         // 3.0<br /><br />// Zip with another vector<br />let w = VectorN([4.0, 5.0, 6.0, 7.0, 8.0, 9.0])<br />let product = v.zipWith(w, *)      // [-8, -5, 0, 7, 16, 27]<br /></code></pre>
         <hr />
         <h2>Real-World Example: Portfolio Weights</h2>
-        <pre><code class="language-swift">import BusinessMath<p></p><p>// 4-asset portfolio let assets = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”] let weights = VectorN([0.40, 0.25, 0.25, 0.10]) let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.08])</p><p>// Verify fully invested (weights sum to 1.0) print(“Fully invested: (weights.sum == 1.0)”)</p><p>// Portfolio expected return (weighted average) let portfolioReturn = weights.dot(expectedReturns) print(“Portfolio return: (portfolioReturn.percent(1))”)</p></code><p><code class="language-swift">// Normalize to equal weights for comparison let equalWeights = VectorN
-              <double>
-                .equalWeights(dimension: 4) let equalReturn = equalWeights.dot(expectedReturns) print(“Equal-weight return: (equalReturn.percent(1))”) 
-              </double></code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// 4-asset portfolio<br />let assets = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”]<br />let weights = VectorN([0.40, 0.25, 0.25, 0.10])<br />let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.08])<br /><br />// Verify fully invested (weights sum to 1.0)<br />print(“Fully invested: (weights.sum == 1.0)”)<br /><br />// Portfolio expected return (weighted average)<br />let portfolioReturn = weights.dot(expectedReturns)<br />print(“Portfolio return: (portfolioReturn.percent(1))”)<br /><br />// Normalize to equal weights for comparison<br />let equalWeights = VectorN
+            <double>
+              .equalWeights(dimension: 4)
+              <br />let equalReturn = equalWeights.dot(expectedReturns)
+              <br />print(“Equal-weight return: (equalReturn.percent(1))”)
+              <br />
+            </double></code></pre>
         <strong>Output:</strong>
-        <pre><code>Fully invested: true Portfolio return: 8.8% Equal-weight return: 8.5% </code></pre>
+        <pre><code>Fully invested: true<br />Portfolio return: 8.8%<br />Equal-weight return: 8.5%<br /></code></pre>
         <hr />
         <h2>Try It Yourself</h2>
         <details>
-          <summary>Click to expand full playground code</summary>
-          <pre><code class="language-swift">import BusinessMath
-// Create a 2D vector let v = Vector2D
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br /><br />// Create a 2D vector<br />let v = Vector2D
               <double>
-                (x: 3.0, y: 4.0) let w = Vector2D(x: 1.0, y: 2.0) 
-                <p></p>
-                <p>// Basic operations let sum = v + w // Vector2D(x: 4.0, y: 6.0) let scaled = 2.0 * v // Vector2D(x: 6.0, y: 8.0)</p>
-                <p>// Norm and distance print(v.norm) // 5.0 (√(3² + 4²)) print(v.distance(to: w)) // 2.828… print(v.dot(w)) // 11.0 (3<em>1 + 4</em>2)</p>
-                <p>// 2D-specific operations print(v.cross(w)) // 2.0 (pseudo-cross product) print(v.angle) // 0.927… radians (~53°) let rotated = v.rotated(by: .pi/2) // Vector2D(x: -4.0, y: 3.0) print(rotated.toArray())</p>
-                <p>// MARK: Vector3D</p>
-                <pre><code>// Create 3D vectors </code></pre>let v_3d = Vector3D
+                (x: 3.0, y: 4.0)
+                <br />let w = Vector2D(x: 1.0, y: 2.0)
+                <br />
+                <br />// Basic operations
+                <br />let sum = v + w // Vector2D(x: 4.0, y: 6.0)
+                <br />let scaled = 2.0 * v // Vector2D(x: 6.0, y: 8.0)
+                <br />
+                <br />// Norm and distance
+                <br />print(v.norm) // 5.0 (√(3² + 4²))
+                <br />print(v.distance(to: w)) // 2.828...
+                <br />print(v.dot(w)) // 11.0 (3*1 + 4*2)
+                <br />
+                <br />// 2D-specific operations
+                <br />print(v.cross(w)) // 2.0 (pseudo-cross product)
+                <br />print(v.angle) // 0.927... radians (~53°)
+                <br />let rotated = v.rotated(by: .pi/2) // Vector2D(x: -4.0, y: 3.0)
+                <br />print(rotated.toArray())
+                <br />
+                <br />// MARK: Vector3D
+                <br />
+                <br /> // Create 3D vectors
+                <br />let v_3d = Vector3D
                 <double>
-                  (x: 1.0, y: 2.0, z: 3.0) let w_3d = Vector3D
+                  (x: 1.0, y: 2.0, z: 3.0)
+                  <br />let w_3d = Vector3D
                   <double>
                     (x: 4.0, y: 5.0, z: 6.0)
-                    <p></p>
-                    <p>// Basic operations let sum3 = v_3d + w_3d // Vector3D(x: 5.0, y: 7.0, z: 9.0) let scaled3 = 2.0 * v_3d // Vector3D(x: 2.0, y: 4.0, z: 6.0)</p>
-                    <p>// Norm and dot product print(v_3d.norm) // 3.742… (√(1² + 2² + 3²)) print(v_3d.dot(w_3d)) // 32.0 (1<em>4 + 2</em>5 + 3*6)</p>
-                    <p>// 3D-specific: Cross product let cross = v_3d.cross(w_3d) // Vector3D perpendicular to both print(cross) // Vector3D(x: -3.0, y: 6.0, z: -3.0)</p>
-                    <p>// Verify perpendicularity print(v_3d.dot(cross)) // ~0.0 (perpendicular) print(w_3d.dot(cross)) // ~0.0 (perpendicular)</p>
+                    <br />
+                    <br />// Basic operations
+                    <br />let sum3 = v_3d + w_3d // Vector3D(x: 5.0, y: 7.0, z: 9.0)
+                    <br />let scaled3 = 2.0 * v_3d // Vector3D(x: 2.0, y: 4.0, z: 6.0)
+                    <br />
+                    <br />// Norm and dot product
+                    <br />print(v_3d.norm) // 3.742... (√(1² + 2² + 3²))
+                    <br />print(v_3d.dot(w_3d)) // 32.0 (1*4 + 2*5 + 3*6)
+                    <br />
+                    <br />// 3D-specific: Cross product
+                    <br />let cross = v_3d.cross(w_3d) // Vector3D perpendicular to both
+                    <br />print(cross) // Vector3D(x: -3.0, y: 6.0, z: -3.0)
+                    <br />
+                    <br />// Verify perpendicularity
+                    <br />print(v_3d.dot(cross)) // ~0.0 (perpendicular)
+                    <br />print(w_3d.dot(cross)) // ~0.0 (perpendicular)
+                    <br />
+                    <br />// MARK: VectorN
+                    <br />
+                    <br /> // Create an N-dimensional vector
+                    <br /> let vN = VectorN
+                    <double>
+                      ([1.0, 2.0, 3.0, 4.0, 5.0])
+                      <br /> let wN = VectorN([5.0, 4.0, 3.0, 2.0, 1.0])
+                      <br />
+                      <br /> // Basic operations
+                      <br /> let sumN = vN + wN // VectorN([6, 6, 6, 6, 6])
+                      <br /> let scaledN = 2.0 * vN // VectorN([2, 4, 6, 8, 10])
+                      <br />
+                      <br /> // Norm and dot product
+                      <br /> print(vN.norm) // 7.416... (√55)
+                      <br /> print(vN.dot(wN)) // 35.0
+                      <br />
+                      <br /> // Element access
+                      <br /> print(vN[0]) // 1.0
+                      <br /> print(vN[2]) // 3.0
+                      <br />
+                      <br /> // Statistical operations
+                      <br /> print(vN.dimension) // 5
+                      <br /> print(vN.sum) // 15.0
+                      <br /> print(vN.mean) // 3.0
+                      <br /> print(vN.standardDeviation()) // 1.581...
+                      <br /> print(vN.min) // 1.0
+                      <br /> print(vN.max) // 5.0
+                      <br />
+                      <br />// MARK: - Arithmetic Operations
+                      <br />
+                      <br />let v_arith = VectorN([1.0, 2.0, 3.0])
+                      <br />let w_arith = VectorN([4.0, 5.0, 6.0])
+                      <br />
+                      <br />// Addition and subtraction
+                      <br />let sum_arith = v_arith + w_arith // [5, 7, 9]
+                      <br />let diff_arith = v_arith - w_arith // [-3, -3, -3]
+                      <br />
+                      <br />// Scalar multiplication
+                      <br />let scaled_arith = 3.0 * v_arith // [3, 6, 9]
+                      <br />let divided = v_arith / 2.0 // [0.5, 1.0, 1.5]
+                      <br />
+                      <br />// Negation
+                      <br />let negated = -v_arith // [-1, -2, -3]
+                      <br />
+                      <br />// MARK: - Norms and Distances
+                      <br />
+                      <br />let v_norm = VectorN([3.0, 4.0])
+                      <br />let w_norm = VectorN([0.0, 0.0])
+                      <br />
+                      <br />// Euclidean norm
+                      <br />print(v_norm.norm) // 5.0 (√(3² + 4²))
+                      <br />print(v_norm.squaredNorm) // 25.0 (faster for comparisons)
+                      <br />
+                      <br />// Distance metrics
+                      <br />print(v_norm.distance(to: w_norm)) // 5.0 (Euclidean)
+                      <br />print(v_norm.manhattanDistance(to: w_norm)) // 7.0 (|3| + |4|)
+                      <br />print(v_norm.chebyshevDistance(to: w_norm)) // 4.0 (max(|3|, |4|))
+                      <br />
+                      <br />
+                      <br />// MARK: - Dot Products and Angles
+                      <br />
+                      <br />let v_dot = VectorN([1.0, 0.0, 0.0])
+                      <br />let w_dot = VectorN([0.0, 1.0, 0.0])
+                      <br />
+                      <br />// Dot product
+                      <br />print(v_dot.dot(w_dot)) // 0.0 (perpendicular)
+                      <br />
+                      <br />// Cosine similarity
+                      <br />print(v_dot.cosineSimilarity(with: w_dot)) // 0.0 (orthogonal)
+                      <br />
+                      <br />// Angle between vectors
+                      <br />let angle_dot = v_dot.angle(with: w_dot) // π/2 radians (90°)
+                      <br />print(angle_dot * 180 / .pi) // 90.0 degrees
+                      <br />
+                      <br />
+                      <br />// MARK: Projections
+                      <br />
+                      <br />let v_proj = VectorN([3.0, 4.0])
+                      <br />let w_proj = VectorN([1.0, 0.0])
+                      <br />
+                      <br />// Project v onto w
+                      <br />let projection = v_proj.projection(onto: w_proj) // [3.0, 0.0]
+                      <br />
+                      <br />// Rejection (component perpendicular to w)
+                      <br />let rejection = v_proj.rejection(from: w_proj) // [0.0, 4.0]
+                      <br />
+                      <br />// Verify: v = projection + rejection
+                      <br />print(v_proj == projection + rejection) // true
+                      <br />
+                      <br />// MARK: - Normalization
+                      <br />
+                      <br />
+                      <br />
+                      <br />// Normalize to unit length
+                      <br />let unit = v_norm.normalized() // [0.6, 0.8]
+                      <br />print(unit.norm) // 1.0
+                      <br />
+                      <br />// Verify direction preserved
+                      <br />print(v_norm.cosineSimilarity(with: unit)) // 1.0 (same direction)
+                      <br />
+                      <br />
+                      <br />// MARK: - VectorN Specific Construction
+                      <br />
+                      <br /> // From array
+                      <br /> let v1 = VectorN([1.0, 2.0, 3.0])
+                      <br />
+                      <br /> // Repeating value
+                      <br /> let v2 = VectorN(repeating: 5.0, count: 10)
+                      <br />
+                      <br /> // Zero vector
+                      <br /> let v3 = VectorN
+                      <double>
+                        .zero
+                        <br />
+                        <br /> // Ones vector
+                        <br /> let v4 = VectorN
+                        <double>
+                          .ones(dimension: 5)
+                          <br />
+                          <br /> // Basis vector (one component = 1, rest = 0)
+                          <br /> let e2 = VectorN
+                          <double>
+                            .basisVector(dimension: 5, index: 2)
+                            <br /> // [0, 0, 1, 0, 0]
+                            <br />
+                            <br /> // Linear space (evenly spaced)
+                            <br /> let v5 = VectorN.linearSpace(from: 0.0, to: 10.0, count: 11)
+                            <br /> // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                            <br />
+                            <br /> // Log space (logarithmically spaced)
+                            <br /> let v6 = VectorN.logSpace(from: 1.0, to: 100.0, count: 3)
+                            <br /> // [1, 10, 100]
+                            <br />
+                            <br />// MARK: - Functional Operations
+                            <br />
+                            <br />let v_func = VectorN([-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])
+                            <br />
+                            <br />// Map (element-wise transform)
+                            <br />let squared_func = v_func.map { $0 * $0 } // [4, 1, 0, 1, 4, 9]
+                            <br />
+                            <br />// Filter
+                            <br />let positive_func = v_func.filter { $0 &gt; 0 } // [1, 2, 3]
+                            <br />
+                            <br />// Reduce
+                            <br />let sum_func = v_func.reduce(0.0, +) // 3.0
+                            <br />
+                            <br />// Zip with another vector
+                            <br />let w_func = VectorN([4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+                            <br />let product_func = v_func.zipWith(w_func, *) // [-8, -5, 0, 7, 16, 27]
+                            <br />print(product_func)
+                            <br />
+                            <br />
+                            <br />// MARK: Portfolio Weights Example
+                            <br />
+                            <br />// 4-asset portfolio
+                            <br />let assets = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]
+                            <br />let weights = VectorN([0.40, 0.25, 0.25, 0.10])
+                            <br />let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.08])
+                            <br />
+                            <br />// Verify fully invested (weights sum to 1.0)
+                            <br />print("Fully invested: \(weights.sum == 1.0)")
+                            <br />
+                            <br />// Portfolio expected return (weighted average)
+                            <br />let portfolioReturn = weights.dot(expectedReturns)
+                            <br />print("Portfolio return: \(portfolioReturn.percent(1))")
+                            <br />
+                            <br />// Equal weights for comparison (each asset gets 25%)
+                            <br />let equalWeights = VectorN
+                            <double>
+                              .equalWeights(dimension: 4)
+                              <br />print("Equal weights: \(equalWeights.toArray())") // [0.25, 0.25, 0.25, 0.25]
+                              <br />print("Sum: \(equalWeights.sum)") // 1.0
+                              <br />let equalReturn = equalWeights.dot(expectedReturns)
+                              <br />print("Equal-weight return: \(equalReturn.percent(1))") // 8.5%
+                              <br />
+                              <br />// MARK: - Simplex Projection vs Normalization
+                              <br />
+                              <br />// Demonstrate the difference between simplex projection and normalization
+                              <br />let rawScores = VectorN([3.0, 1.0, 2.0])
+                              <br />
+                              <br />// Simplex projection: components sum to 1.0
+                              <br />let probabilities = rawScores.simplexProjection()
+                              <br />print("\nSimplex projection (sum = 1.0):")
+                              <br />print(" Values: \(probabilities.toArray().map { $0.number(3) })")
+                              <br />print(" Sum: \(probabilities.sum.number(2))")
+                              <br />print(" Norm: \(probabilities.norm.number(3))")
+                              <br />
+                              <br />// Normalization: Euclidean norm = 1.0
+                              <br />let unitVector = rawScores.normalized()
+                              <br />print("\nNormalization (norm = 1.0):")
+                              <br />print(" Values: \(unitVector.toArray().map { $0.number(3) })")
+                              <br />print(" Sum: \(unitVector.sum.number(3))")
+                              <br />print(" Norm: \(unitVector.norm.number(2))")
+                              <br />
+                              <br />
+                            </double>
+                          </double>
+                        </double>
+                      </double>
+                    </double>
                   </double>
-                  <p>let v_arith = VectorN([1.0, 2.0, 3.0]) let w_arith = VectorN([4.0, 5.0, 6.0])</p>
-                  <p>// Addition and subtraction let sum_arith = v_arith + w_arith // [5, 7, 9] let diff_arith = v_arith - w_arith // [-3, -3, -3]</p>
-                  <p>// Scalar multiplication let scaled_arith = 3.0 * v_arith // [3, 6, 9] let divided = v_arith / 2.0 // [0.5, 1.0, 1.5]</p>
-                  <p>// Negation let negated = -v_arith // [-1, -2, -3]</p>
-                  <p>// MARK: - Norms and Distances</p>
-                  <p>let v_norm = VectorN([3.0, 4.0]) let w_norm = VectorN([0.0, 0.0])</p>
-                  <p>// Euclidean norm print(v_norm.norm) // 5.0 (√(3² + 4²)) print(v_norm.squaredNorm) // 25.0 (faster for comparisons)</p>
-                  <p>// Distance metrics print(v_norm.distance(to: w_norm)) // 5.0 (Euclidean) print(v_norm.manhattanDistance(to: w_norm)) // 7.0 (|3| + |4|) print(v_norm.chebyshevDistance(to: w_norm)) // 4.0 (max(|3|, |4|))</p>
-                  <p>// MARK: - Dot Products and Angles</p>
-                  <p>let v_dot = VectorN([1.0, 0.0, 0.0]) let w_dot = VectorN([0.0, 1.0, 0.0])</p>
-                  <p>// Dot product print(v_dot.dot(w_dot)) // 0.0 (perpendicular)</p>
-                  <p>// Cosine similarity print(v_dot.cosineSimilarity(with: w_dot)) // 0.0 (orthogonal)</p>
-                  <p>// Angle between vectors let angle_dot = v_dot.angle(with: w_dot) // π/2 radians (90°) print(angle_dot * 180 / .pi) // 90.0 degrees</p>
-                  <p>// MARK: Projections</p>
-                  <p>let v_proj = VectorN([3.0, 4.0]) let w_proj = VectorN([1.0, 0.0])</p>
-                  <p>// Project v onto w let projection = v_proj.projection(onto: w_proj) // [3.0, 0.0]</p>
-                  <p>// Rejection (component perpendicular to w) let rejection = v_proj.rejection(from: w_proj) // [0.0, 4.0]</p>
-                  <p>// Verify: v = projection + rejection print(v_proj == projection + rejection) // true</p>
-                  <p>// MARK: - Normalization</p>
-                  <p>// Normalize to unit length let unit = v_norm.normalized() // [0.6, 0.8] print(unit.norm) // 1.0</p>
-                  <p>// Verify direction preserved print(v_norm.cosineSimilarity(with: unit)) // 1.0 (same direction)</p>
-                  <div>
-                    <p>// MARK: - VectorN Specific Construction</p>
-                    <pre><code>// From array let v1 = VectorN([1.0, 2.0, 3.0])<p></p><p>// Repeating value let v2 = VectorN(repeating: 5.0, count: 10)</p><p>// Zero vector let v3 = VectorN
-                          <double>
-                            .zero
-                          </double></p><p>// Ones vector let v4 = VectorN
-                          <double>
-                            .ones(dimension: 5)
-                          </double></p><p>// Basis vector (one component = 1, rest = 0) let e2 = VectorN
-                          <double>
-                            .basisVector(dimension: 5, index: 2) // [0, 0, 1, 0, 0]
-                          </double></p><p>// Linear space (evenly spaced) let v5 = VectorN.linearSpace(from: 0.0, to: 10.0, count: 11) // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]</p></code><p><code>// Log space (logarithmically spaced) let v6 = VectorN.logSpace(from: 1.0, to: 100.0, count: 3) // [1, 10, 100] </code></p></pre>// MARK: - Functional Operations
-                    <p></p>
-                  </div>
-                  <p>let v_func = VectorN([-2.0, -1.0, 0.0, 1.0, 2.0, 3.0])</p>
-                  <p>// Map (element-wise transform) let squared_func = v_func.map { $0 * $0 } // [4, 1, 0, 1, 4, 9]</p>
-                  <p>// Filter let positive_func = v_func.filter { $0 &gt; 0 } // [1, 2, 3]</p>
-                  <p>// Reduce let sum_func = v_func.reduce(0.0, +) // 3.0</p>
-                  <p>// Zip with another vector let w_func = VectorN([4.0, 5.0, 6.0, 7.0, 8.0, 9.0]) let product_func = v_func.zipWith(w_func, *) // [-8, -5, 0, 7, 16, 27] print(product_func)</p>
-                  <p>// MARK: Portfolio Weights Example</p>
-                  <p>// 4-asset portfolio let assets = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”] let weights = VectorN([0.40, 0.25, 0.25, 0.10]) let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.08])</p>
-                  <p>// Verify fully invested (weights sum to 1.0) print(“Fully invested: (weights.sum == 1.0)”)</p>
-                  <p>// Portfolio expected return (weighted average) let portfolioReturn = weights.dot(expectedReturns) print(“Portfolio return: (portfolioReturn.percent(1))”)</p>
-                  <p>// Equal weights for comparison (each asset gets 25%) let equalWeights = VectorN
-                    <double>
-                      .equalWeights(dimension: 4) print(“Equal weights: (equalWeights.toArray())”) // [0.25, 0.25, 0.25, 0.25] print(“Sum: (equalWeights.sum)”) // 1.0 let equalReturn = equalWeights.dot(expectedReturns) print(“Equal-weight return: (equalReturn.percent(1))”) // 8.5%
-                    </double></p>
-                  <p>// MARK: - Simplex Projection vs Normalization</p>
-                  <p>// Demonstrate the difference between simplex projection and normalization let rawScores = VectorN([3.0, 1.0, 2.0])</p>
-                  <p>// Simplex projection: components sum to 1.0 let probabilities = rawScores.simplexProjection() print(”\nSimplex projection (sum = 1.0):”) print(” Values: (probabilities.toArray().map { $0.number(3) })”) print(” Sum: (probabilities.sum.number(2))”) print(” Norm: (probabilities.norm.number(3))”)</p>
-                  <p>// Normalization: Euclidean norm = 1.0 let unitVector = rawScores.normalized() print(”\nNormalization (norm = 1.0):”) print(” Values: (unitVector.toArray().map { $0.number(3) })”) print(” Sum: (unitVector.sum.number(3))”) print(” Norm: (unitVector.norm.number(2))”)</p>
-                  <p></p>
                 </double>
-              </double></code>
-            <div>
-              <code class="language-swift"><p>// MARK: VectorN</p><pre><code>// Create an N-dimensional vector let vN = VectorN
-                    <double>
-                      ([1.0, 2.0, 3.0, 4.0, 5.0]) let wN = VectorN([5.0, 4.0, 3.0, 2.0, 1.0])
-                      <p></p>
-                      <p>// Basic operations let sumN = vN + wN // VectorN([6, 6, 6, 6, 6]) let scaledN = 2.0 * vN // VectorN([2, 4, 6, 8, 10])</p>
-                      <p>// Norm and dot product print(vN.norm) // 7.416… (√55) print(vN.dot(wN)) // 35.0</p>
-                      <p>// Element access print(vN[0]) // 1.0 print(vN[2]) // 3.0</p>
-                    </double></code><p><code>// Statistical operations print(vN.dimension) // 5 print(vN.sum) // 15.0 print(vN.mean) // 3.0 print(vN.standardDeviation()) // 1.581… print(vN.min) // 1.0 print(vN.max) // 5.0 </code></p></pre>// MARK: - Arithmetic Operations<p></p></code>
-            </div></pre>
-        </details>
+              </double></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.4-VectorOperations.md">BusinessMath Docs – 5.4 Vector Operations</a> 
         <p></p>
-        <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.4-VectorOperations.md">BusinessMath Docs – 5.4 Vector Operations</a></p>
         <p><strong>Modifications to try</strong>:</p>
         <ol>
           <li>Build a 10-asset portfolio and compute risk contribution per asset</li>

@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">The Supporting Cast: Coding Rules, DocC Guidelines, and Testing Standards</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Development Journey</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">12 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Development Journey Series</strong>
           <hr /></p>
@@ -292,34 +292,17 @@
         <h2>Document 1: Coding Rules</h2>
         <strong>The Problem It Solves</strong>: “How should I structure this code?”
         <h3>What It Contains</h3>
-        <pre><code class="language-markdown"># Coding Rules for BusinessMath Library
-            <ul>
-              <li>Use <code>
-                  <t: real></t:></code> for all numeric functions</li>
-              <li>Enables flexibility across Float, Double, Float16, etc.</li>
-            </ul><h2>2. Function Signatures</h2>
-            <ul>
-              <li>Public API: All user-facing functions marked <code>public</code></li>
-              <li>Descriptive parameter labels</li>
-              <li>Default parameters for common cases</li>
-            </ul><h2>3. Guard Clauses &amp; Validation</h2>
-            <ul>
-              <li>Use <code>guard</code> for input validation</li>
-              <li>Return sensible defaults for empty inputs (e.g., <code>T(0)</code>)</li>
-              <li>Throw errors for truly invalid cases</li>
-            </ul><h2>4. Formatting Rules</h2></code>
-          <ul>
-            <code class="language-markdown"><li>NEVER use String(format:) for number formatting</li><li>ALWAYS use Swift’s formatted() API</li><li>Respect user locales automatically </li></code>
-          </ul></pre>
+        <pre><code class="language-markdown"># Coding Rules for BusinessMath Library<br /><br />## 1. Generic Programming<br />- Use <code>
+              <t: real></t:></code> for all numeric functions<br />- Enables flexibility across Float, Double, Float16, etc.<br /><br />## 2. Function Signatures<br />- Public API: All user-facing functions marked <code>public</code><br />- Descriptive parameter labels<br />- Default parameters for common cases<br /><br />## 3. Guard Clauses &amp; Validation<br />- Use <code>guard</code> for input validation<br />- Return sensible defaults for empty inputs (e.g., <code>T(0)</code>)<br />- Throw errors for truly invalid cases<br /><br />## 4. Formatting Rules<br />- NEVER use String(format:) for number formatting<br />- ALWAYS use Swift’s formatted() API<br />- Respect user locales automatically<br /></code></pre>
         <h3>Real Example: The String Formatting Rule</h3>Early in the project, we used C-style formatting:
-        <pre><code class="language-swift">// Week 2 code let output = String(format: “%.2f”, value) </code></pre>This created problems:
+        <pre><code class="language-swift">// Week 2 code<br />let output = String(format: “%.2f”, value)<br /></code></pre>This created problems:
         <ul>
           <li>Doesn’t respect user locales</li>
           <li>Breaks with non-decimal numeric types</li>
           <li>Error-prone format strings</li>
         </ul>We established a rule:
-        <pre><code class="language-swift">// RULE: Never use String(format:) // ALWAYS use formatted() API// Correct approach let output = value.formatted(.number.precision(.fractionLength(2))) </code></pre>
-        <strong>Before the rule</strong>: 30 minutes per session debating formatting approaches. 
+        <pre><code class="language-swift">// RULE: Never use String(format:)<br />// ALWAYS use formatted() API<br /><br />// Correct approach<br />let output = value.formatted(.number.precision(.fractionLength(2)))<br /></code></pre>
+        <strong>Before the rule</strong>: 30 minutes per session debating formatting approaches.
         <p></p>
         <p><strong>After the rule</strong>: 0 minutes. “Check CODING_RULES.md. Use formatted().”
           <hr /></p>
@@ -336,11 +319,11 @@
         </blockquote>
         <strong>Result</strong>: Consistent code on first try.
         <h4>2. Rules Prevent Regression</h4>Week 10, implementing a new feature:
-        <pre><code class="language-swift">// AI’s first attempt let result = String(format: “%.4f”, value) </code></pre>My review:
+        <pre><code class="language-swift">// AI’s first attempt<br />let result = String(format: “%.4f”, value)<br /></code></pre>My review:
         <blockquote>
           “This violates CODING_RULES.md section 4. Use formatted() API.”
         </blockquote>AI immediately corrects:
-        <pre><code class="language-swift">let result = value.formatted(.number.precision(.fractionLength(4))) </code></pre>
+        <pre><code class="language-swift">let result = value.formatted(.number.precision(.fractionLength(4)))<br /></code></pre>
         <strong>Without the documented rule</strong>, I’d have to re-explain 
         <em>why</em> every single time.
         <h4>3. Rules Capture Hard-Won Lessons</h4>The string formatting rule exists because we spent 2 hours debugging locale issues in Week 2. The rule captures that lesson so it’s never repeated.
@@ -348,32 +331,16 @@
         <h2>Document 2: DocC Guidelines</h2>
         <strong>The Problem It Solves</strong>: “How should I document this API?”
         <h3>What It Contains</h3>
-        <pre><code class="language-markdown"># DocC Documentation Guidelines<h2>Required for All Public APIs</h2>
-            <ol>
-              <li>Brief one-line summary</li>
-              <li>Detailed explanation including:
-                <ul>
-                  <li>What problem it solves</li>
-                  <li>How it works (if non-obvious)</li>
-                  <li>When to use it</li>
-                </ul></li>
-              <li>Parameter documentation</li>
-              <li>Return value documentation</li>
-              <li>Throws documentation (if applicable)</li>
-              <li>Usage example</li>
-              <li>Mathematical formula (for math functions)</li>
-              <li>Excel equivalent (if applicable)</li>
-              <li>See Also links</li>
-            </ol><h2>Documentation Template</h2>/// /// Brief one-line summary. /// /// Detailed explanation… /// /// - Parameters: ///   - param1: Description with valid ranges /// - Returns: Description of return value and guarantees /// - Throws: Specific errors and when they occur /// /// ## Usage Example /// /// let result = function(param: value) /// // Output: expected result /// /// /// ## Mathematical Formula /// [LaTeX or ASCII math notation] /// /// - SeeAlso: ///   - <code>RelatedType</code> ///   - <code>relatedFunction(_:)</code> </code></pre>
+        <pre><code class="language-markdown"># DocC Documentation Guidelines<br /><br />## Required for All Public APIs<br /><br />1. Brief one-line summary<br />2. Detailed explanation including:<br />   - What problem it solves<br />   - How it works (if non-obvious)<br />   - When to use it<br />3. Parameter documentation<br />4. Return value documentation<br />5. Throws documentation (if applicable)<br />6. Usage example<br />7. Mathematical formula (for math functions)<br />8. Excel equivalent (if applicable)<br />9. See Also links<br /><br />## Documentation Template<br /><br />///<br />/// Brief one-line summary.<br />///<br />/// Detailed explanation…<br />///<br />/// - Parameters:<br />///   - param1: Description with valid ranges<br />/// - Returns: Description of return value and guarantees<br />/// - Throws: Specific errors and when they occur<br />///<br />/// ## Usage Example<br />/// <br />/// let result = function(param: value)<br />/// // Output: expected result<br />/// <br />///<br />/// ## Mathematical Formula<br />/// [LaTeX or ASCII math notation]<br />///<br />/// - SeeAlso:<br />///   - <code>RelatedType</code><br />///   - <code>relatedFunction(_:)</code><br /></code></pre>
         <h3>Real Example: The Formula Format</h3>Week 4, documenting the NPV function. First attempt:
-        <pre><code class="language-swift">/// NPV = sum of (cash flow / (1 + rate)^period) </code></pre>
+        <pre><code class="language-swift">/// NPV = sum of (cash flow / (1 + rate)^period)<br /></code></pre>
         <strong>Problems</strong>:
         <ul>
           <li>Unclear notation</li>
           <li>No variable definitions</li>
           <li>Doesn’t render well in DocC</li>
         </ul>After establishing guidelines:
-        <pre><code class="language-swift">/// ## Mathematical Formula /// NPV is calculated as: /// /// NPV = Σ (CFₜ / (1 + r)ᵗ) /// /// where: /// - CFₜ = cash flow at time t /// - r = discount rate /// - t = time period </code></pre>
+        <pre><code class="language-swift">/// ## Mathematical Formula<br />/// NPV is calculated as:<br />/// <br />/// NPV = Σ (CFₜ / (1 + r)ᵗ)<br />/// <br />/// where:<br />/// - CFₜ = cash flow at time t<br />/// - r = discount rate<br />/// - t = time period<br /></code></pre>
         <strong>Result</strong>: Consistent, readable mathematical notation across all 200+ documented functions.
         <hr />
         <h3>Why This Worked</h3>
@@ -381,10 +348,10 @@
         <p></p>
         <p><strong>Question</strong>: “What errors can calculateIRR throw?”</p>
         <p><strong>DocC forces answer</strong>:</p>
-        <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if calculation ///   does not converge within <code>maxIterations</code>. ///   <code>FinancialError.invalidInput</code> if cash flows array is empty. </code></pre>Now I know 
+        <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if calculation<br />///   does not converge within <code>maxIterations</code>.<br />///   <code>FinancialError.invalidInput</code> if cash flows array is empty.<br /></code></pre>Now I know 
         <em>exactly</em> what to implement.
         <h4>2. Examples Must Compile</h4>The guidelines require runnable examples:
-        <pre><code class="language-swift">/// ## Usage Example /// /// let cashFlows = [-1000.0, 300.0, 400.0, 500.0] /// let irr = try calculateIRR(cashFlows: cashFlows) /// print(irr.formatted(.percent))  // Output: 12.5% /// </code></pre>
+        <pre><code class="language-swift">/// ## Usage Example<br />/// <br />/// let cashFlows = [-1000.0, 300.0, 400.0, 500.0]<br />/// let irr = try calculateIRR(cashFlows: cashFlows)<br />/// print(irr.formatted(.percent))  // Output: 12.5%<br />/// <br /></code></pre>
         <strong>Rule</strong>: Every example must run successfully in a playground.
         <p></p>
         <p>We manually verified all of the documented examples to make sure we had correct values and an ergonomic approach for users.</p>
@@ -395,7 +362,7 @@
           <li>Incorrect output claims (example output didn’t match reality)</li>
         </ul>
         <h4>3. Prevents Documentation Drift</h4>Week 15, adding async versions of functions. The template ensures consistent documentation:
-        <pre><code class="language-swift">/// [Async version follows same structure as sync version] /// - Same brief summary /// - Same parameter docs /// - Added: Concurrency section /// - Same usage examples (with await) </code></pre>
+        <pre><code class="language-swift">/// [Async version follows same structure as sync version]<br />/// - Same brief summary<br />/// - Same parameter docs<br />/// - Added: Concurrency section<br />/// - Same usage examples (with await)<br /></code></pre>
         <strong>Without guidelines</strong>: 15 different documentation styles for 15 async functions.
         <p></p>
         <p><strong>With guidelines</strong>: Perfect consistency.
@@ -403,41 +370,38 @@
         <h2>Document 3: Test-Driven Development Standards</h2>
         <strong>The Problem It Solves</strong>: “How should I test this function?”
         <h3>What It Contains</h3>
-        <pre><code class="language-markdown"># Test-Driven Development Standards<h2>Test Structure (Swift Testing)</h2>
-            <ul>
-              <li>Use <code>@Test</code> attribute with descriptive names</li>
-              <li>Use <code>@Suite</code> to group related tests</li>
-              <li>Use <code>#expect</code> for assertions</li>
-              <li>Use parameterized tests for multiple scenarios</li>
-            </ul><h2>Test Organization</h2>Tests mirror source structure:<p></p><p>Tests/BusinessMathTests/ ├── Time Series Tests/ │ ├── PeriodTests.swift │ └── TVM Tests/ │ └── NPVTests.swift</p><h2>RED-GREEN-REFACTOR Cycle</h2>
-            <ol>
-              <li>RED: Write failing test</li>
-              <li>GREEN: Minimal implementation to pass</li>
-              <li>REFACTOR: Improve code quality (tests still pass)</li>
-            </ol><h2>Deterministic Testing for Random Functions</h2><strong>Always use seeded random number generators</strong><p></p></code><p><code class="language-markdown">@Test(“Monte Carlo with seed is deterministic”) func testDeterministic() { let seed: UInt64 = 12345 let result1 = runSimulation(trials: 10000, seed: seed) let result2 = runSimulation(trials: 10000, seed: seed) #expect(result1 == result2) // Must be identical } </code></p></pre>
+        <pre><code class="language-markdown"># Test-Driven Development Standards<br /><br />## Test Structure (Swift Testing)<br /><br />- Use <code>@Test</code> attribute with descriptive names<br />- Use <code>@Suite</code> to group related tests<br />- Use <code>#expect</code> for assertions<br />- Use parameterized tests for multiple scenarios<br /><br />## Test Organization<br /><br />Tests mirror source structure:<br /><br />Tests/BusinessMathTests/<br />├── Time Series Tests/<br />│   ├── PeriodTests.swift<br />│   └── TVM Tests/<br />│       └── NPVTests.swift<br /><br /><br />## RED-GREEN-REFACTOR Cycle<br /><br />1. RED: Write failing test<br />2. GREEN: Minimal implementation to pass<br />3. REFACTOR: Improve code quality (tests still pass)<br /><br />## Deterministic Testing for Random Functions<br /><br /><strong>Always use seeded random number generators</strong><br /><br /><br />@Test(“Monte Carlo with seed is deterministic”)<br />func testDeterministic() {<br />    let seed: UInt64 = 12345<br />    let result1 = runSimulation(trials: 10000, seed: seed)<br />    let result2 = runSimulation(trials: 10000, seed: seed)<br />    #expect(result1 == result2)  // Must be identical<br />}<br /></code></pre>
         <h3>Real Example: The Deterministic Testing Rule</h3>Week 6, implementing Monte Carlo simulations. First test:
-        <pre><code class="language-swift">@Test(“Monte Carlo converges to expected value”) func testConvergence() { let result = runSimulation(trials: 10000) #expect(abs(result.mean - 100.0) &lt; 1.0) } </code></pre>
+        <pre><code class="language-swift">@Test(“Monte Carlo converges to expected value”)<br />func testConvergence() {<br />    let result = runSimulation(trials: 10000)<br />    #expect(abs(result.mean - 100.0) &lt; 1.0)<br />}<br /></code></pre>
         <strong>Problem</strong>: Flaky test. Sometimes passed, sometimes failed (randomness).
         <p></p>
         <p>After establishing the rule:</p>
-        <pre><code class="language-swift">@Test(“Monte Carlo with seed converges to expected value”) func testConvergence() { let seed: UInt64 = 12345 let result = runSimulation(trials: 10000, seed: seed) #expect(abs(result.mean - 100.023) &lt; 0.001)  // Exact value } </code></pre>
+        <pre><code class="language-swift">@Test(“Monte Carlo with seed converges to expected value”)<br />func testConvergence() {<br />    let seed: UInt64 = 12345<br />    let result = runSimulation(trials: 10000, seed: seed)<br />    #expect(abs(result.mean - 100.023) &lt; 0.001)  // Exact value<br />}<br /></code></pre>
         <strong>Result</strong>: 100% reliable tests. CI never flakes.
         <hr />
         <h3>Why This Worked</h3>
         <h4>1. Tests as Specifications</h4>The RED-GREEN-REFACTOR rule means tests are written 
         <em>before</em> code:
-        <pre><code class="language-swift">// STEP 1: Write test (RED) @Test(“IRR calculates correctly”) func testIRR() { let cashFlows = [-1000.0, 300.0, 400.0, 500.0] let result = try calculateIRR(cashFlows: cashFlows) #expect(abs(result - 0.125) &lt; 0.001)  // 12.5% } // ❌ Test fails: calculateIRR doesn’t exist yet<p></p><p>// STEP 2: Implement function (GREEN) public func calculateIRR
-              <t: real>
-                (cashFlows: [T]) throws -&gt; T { // … implementation … } // ✅ Test passes
-              </t:></p></code><p><code class="language-swift">// STEP 3: Refactor (tests still pass) // Extract validation logic, improve performance, etc. // ✅ Tests still pass after refactoring </code></p></pre>
+        <pre><code class="language-swift">// STEP 1: Write test (RED)<br />@Test(“IRR calculates correctly”)<br />func testIRR() {<br />    let cashFlows = [-1000.0, 300.0, 400.0, 500.0]<br />    let result = try calculateIRR(cashFlows: cashFlows)<br />    #expect(abs(result - 0.125) &lt; 0.001)  // 12.5%<br />}<br />// ❌ Test fails: calculateIRR doesn’t exist yet<br /><br />// STEP 2: Implement function (GREEN)<br />public func calculateIRR
+            <t: real>
+              (cashFlows: [T]) throws -&gt; T {
+              <br /> // … implementation …
+              <br />}
+              <br />// ✅ Test passes
+              <br />
+              <br />// STEP 3: Refactor (tests still pass)
+              <br />// Extract validation logic, improve performance, etc.
+              <br />// ✅ Tests still pass after refactoring
+              <br />
+            </t:></code></pre>
         <strong>The test specifies behavior before implementation exists.</strong>
         <h4>2. Parameterized Tests Prevent Duplication</h4>Instead of:
-        <pre><code class="language-swift">@Test(“NPV at 5%”) func npv5() { /* … <em>/ } @Test(“NPV at 10%”) func npv10() { /</em> … <em>/ } @Test(“NPV at 15%”) func npv15() { /</em> … */ } </code></pre>Use parameterized tests:
-        <pre><code class="language-swift">@Test(“NPV at multiple discount rates”, arguments: [ (rate: 0.05, expected: 297.59), (rate: 0.10, expected: 146.87), (rate: 0.15, expected: 20.42) ]) func multipleRates(rate: Double, expected: Double) { let cashFlows = [-1000.0, 300.0, 300.0, 300.0, 300.0] let result = npv(discountRate: rate, cashFlows: cashFlows) #expect(abs(result - expected) &lt; 0.01) } </code></pre>
+        <pre><code class="language-swift">@Test(“NPV at 5%”) func npv5() { /* … <em>/ }<br />@Test(“NPV at 10%”) func npv10() { /</em> … <em>/ }<br />@Test(“NPV at 15%”) func npv15() { /</em> … */ }<br /></code></pre>Use parameterized tests:
+        <pre><code class="language-swift">@Test(“NPV at multiple discount rates”,<br />      arguments: [<br />          (rate: 0.05, expected: 297.59),<br />          (rate: 0.10, expected: 146.87),<br />          (rate: 0.15, expected: 20.42)<br />      ])<br />func multipleRates(rate: Double, expected: Double) {<br />    let cashFlows = [-1000.0, 300.0, 300.0, 300.0, 300.0]<br />    let result = npv(discountRate: rate, cashFlows: cashFlows)<br />    #expect(abs(result - expected) &lt; 0.01)<br />}<br /></code></pre>
         <strong>Result</strong>: 3 test cases, 10 lines of code instead of 30.
         <hr />
         <h2>The Triad Working Together</h2>These three documents form a complete system:
-        <pre><code>┌─────────────────────────────────────────────┐ │          MASTER_PLAN.md                     │ │   “What to build next”                      │ └─────────────────────┬───────────────────────┘ │ ┌────────────┴────────────┐ │                         │ ┌────▼──────┐         ┌────────▼───────┐ │  CODING   │         │  TEST_DRIVEN   │ │  RULES    │◄────────┤  DEVELOPMENT   │ └────┬──────┘         └────────┬───────┘ │                         │ │                         │ ┌────▼─────────────────────────▼───────┐ │       DOCC_GUIDELINES.md              │ │   “How to document it”                │ └───────────────────────────────────────┘ </code></pre>
+        <pre><code>┌─────────────────────────────────────────────┐<br />│          MASTER_PLAN.md                     │<br />│   “What to build next”                      │<br />└─────────────────────┬───────────────────────┘<br />                      │<br />         ┌────────────┴────────────┐<br />         │                         │<br />    ┌────▼──────┐         ┌────────▼───────┐<br />    │  CODING   │         │  TEST_DRIVEN   │<br />    │  RULES    │◄────────┤  DEVELOPMENT   │<br />    └────┬──────┘         └────────┬───────┘<br />         │                         │<br />         │                         │<br />    ┌────▼─────────────────────────▼───────┐<br />    │       DOCC_GUIDELINES.md              │<br />    │   “How to document it”                │<br />    └───────────────────────────────────────┘<br /></code></pre>
         <strong>Master Plan</strong>: “Implement Statistical Distributions (Topic 2)”
         <p></p>
         <p><strong>Test-Driven Development</strong>: “Write tests for normalCDF first, then implement”</p>
@@ -529,84 +493,25 @@
           <hr /></p>
         <h2>Template Starter Pack</h2>
         <h3>CODING_RULES.md Template</h3>
-        <pre><code class="language-markdown"># Coding Rules for [Project Name]<p></p><p><strong>Updated</strong>: [Date]</p><h2>MUST (Non-Negotiable)</h2>
-            <ol>
-              <li>[Critical rule with rationale]<pre><code class="language-swift">// Example </code></pre></li>
-            </ol></code></pre>
-        <h2>SHOULD (Strong Preference)</h2>
+        <pre><code class="language-markdown"># Coding Rules for [Project Name]<br /><br /><strong>Updated</strong>: [Date]<br /><br />## MUST (Non-Negotiable)<br /><br />1. [Critical rule with rationale]<br />   <code>swift<br /> // Example<br /></code></code></pre>
+        <h2><code class="language-markdown">SHOULD (Strong Preference)</code></h2>
         <ol>
-          <li>[Preferred pattern]<pre><code class="language-swift">// Example </code></pre></li>
+          <li><code class="language-markdown">[Preferred pattern]<pre><code class="language-swift">// Example<br /></code></pre></code></li>
         </ol>
-        <h2>CONSIDER (Suggestions)</h2>
+        <h2><code class="language-markdown">CONSIDER (Suggestions)</code></h2>
         <ol>
-          <li>[Optional guideline]</li>
+          <li><code class="language-markdown">[Optional guideline]</code></li>
         </ol>
-        <pre><code><h3>DOCC_GUIDELINES.md Template</h3><pre><code class="language-markdown"># Documentation Guidelines
-                <ol>
-                  <li>Brief summary</li>
-                  <li>Detailed explanation</li>
-                  <li>Parameters/Returns/Throws</li>
-                  <li>Usage example</li>
-                  <li>See Also</li>
-                </ol><h2>Template</h2>/// /// [Brief one-line summary] /// /// [Detailed explanation] /// /// - Parameters: ///   - param: [Description] /// - Returns: [Description] /// /// ## Usage Example /// <code>swift /// [Runnable code] /// </code> </code></pre><h3>TEST_DRIVEN_DEVELOPMENT.md Template</h3><pre><code class="language-markdown"># Testing Standards<h2>Test Structure</h2><pre><code class="language-swift">@Suite("[Topic] Tests")
-struct TopicTests {
-    @Test("[What this tests]")
-    func descriptiveName() {
-        // Arrange
-        // Act
-        // Assert with #expect
-    }
-}
-</code></pre><h2>RED-GREEN-REFACTOR</h2>
-                <ol>
-                  <li>Write failing test (RED)</li>
-                  <li>Minimal implementation (GREEN)</li>
-                  <li>Improve quality (REFACTOR)</li>
-                </ol><pre><code>
----
-
-## See It In Action
-
-BusinessMath's standards documents:
-- **CODING_RULES.md**: 25 rules developed over 20 weeks
-- **DOCC_GUIDELINES.md**: Complete documentation template with 9 required sections
-- **TEST_DRIVEN_DEVELOPMENT.md**: Testing patterns for deterministic behavior
-
-**Results**:
-- 200+ functions with consistent style
-- 100% documentation coverage
-- 250+ tests with 0 flaky tests
-- Code reviews focus on logic, not style
-
----
-
-## Discussion
-
-**Questions to consider**:
-1. How detailed should your standards be?
-2. When do you add a new rule vs. accepting variation?
-3. How do you balance flexibility with consistency?
-
-**Share your experience**: Do you maintain coding standards documents? What works for your team?
-
----
-
-**Series Progress**:
-- Week: 3/12
-- Posts Published: 10.5/~48
-- Methodology Posts: 4/12
-- Practices Covered: Test-First, Documentation as Design, Master Planning, **Standards Documents**
-- Standards Established: Coding Rules, DocC Guidelines, Testing Patterns
-
----
-
-**Related Posts**:
-- **Previous**: [The Master Plan: Organizing Complexity](#) - How to maintain project context
-- **Next**: [Case Study #2: Capital Equipment Decision](#) - Standards documents in action
-- **See Also**: [Building with Claude: A Reflection](#) - Full methodology overview
-</code></pre>
-</code></pre>
-</code></pre>
+        <pre><code class="language-markdown"><code><br />### DOCC_GUIDELINES.md Template<br /><br /></code>markdown<br /># Documentation Guidelines<br /><br />## Required Sections<br /><br />1. Brief summary<br />2. Detailed explanation<br />3. Parameters/Returns/Throws<br />4. Usage example<br />5. See Also<br /><br />## Template<br /><br />///<br />/// [Brief one-line summary]<br />///<br />/// [Detailed explanation]<br />///<br />/// - Parameters:<br />///   - param: [Description]<br />/// - Returns: [Description]<br />///<br />/// ## Usage Example<br />/// <code>swift<br />/// [Runnable code]<br />/// </code><br /></code></pre>
+        <h3>TEST_DRIVEN_DEVELOPMENT.md Template</h3>
+        <pre><code class="language-markdown"># Testing Standards<br /><br />## Test Structure<br /><br />```swift<br />@Suite(”[Topic] Tests”)<br />struct TopicTests {<br />    @Test(”[What this tests]”)<br />    func descriptiveName() {<br />        // Arrange<br />        // Act<br />        // Assert with #expect<br />    }<br />}<br /></code></pre>
+        <h2>RED-GREEN-REFACTOR</h2>
+        <ol>
+          <li>Write failing test (RED)</li>
+          <li>Minimal implementation (GREEN)</li>
+          <li>Improve quality (REFACTOR)</li>
+        </ol>
+        <pre><code><br />—<br /><br />## See It In Action<br /><br />BusinessMath’s standards documents:<br />- <strong>CODING_RULES.md</strong>: 25 rules developed over 20 weeks<br />- <strong>DOCC_GUIDELINES.md</strong>: Complete documentation template with 9 required sections<br />- <strong>TEST_DRIVEN_DEVELOPMENT.md</strong>: Testing patterns for deterministic behavior<br /><br /><strong>Results</strong>:<br />- 200+ functions with consistent style<br />- 100% documentation coverage<br />- 250+ tests with 0 flaky tests<br />- Code reviews focus on logic, not style<br /><br />—<br /><br />## Discussion<br /><br /><strong>Questions to consider</strong>:<br />1. How detailed should your standards be?<br />2. When do you add a new rule vs. accepting variation?<br />3. How do you balance flexibility with consistency?<br /><br /><strong>Share your experience</strong>: Do you maintain coding standards documents? What works for your team?<br /><br />—<br /><br /><strong>Series Progress</strong>:<br />- Week: 3/12<br />- Posts Published: 10.5/~48<br />- Methodology Posts: 4/12<br />- Practices Covered: Test-First, Documentation as Design, Master Planning, <strong>Standards Documents</strong><br />- Standards Established: Coding Rules, DocC Guidelines, Testing Patterns<br /><br />—<br /><br /><strong>Related Posts</strong>:<br />- <strong>Previous</strong>: <a href="#">The Master Plan: Organizing Complexity</a> - How to maintain project context<br />- <strong>Next</strong>: <a href="#">Case Study #2: Capital Equipment Decision</a> - Standards documents in action<br />- <strong>See Also</strong>: <a href="#">Building with Claude: A Reflection</a> - Full methodology overview<br /></code></pre>
         <p></p>
       </div>
       <hr />

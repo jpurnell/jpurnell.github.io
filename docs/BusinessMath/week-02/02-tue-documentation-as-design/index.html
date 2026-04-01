@@ -303,12 +303,12 @@
           <hr /></p>
         <h2>The Results</h2>
         <h3>Before: Hard to Document</h3>Here’s what AI generated on the first attempt:
-        <pre><code class="language-swift">// BEFORE: Hard to document public func calc(_ a: [Double], _ b: Double, _ c: Int) -&gt; Double? </code></pre>
+        <pre><code class="language-swift">// BEFORE: Hard to document<br />public func calc(_ a: [Double], _ b: Double, _ c: Int) -&gt; Double?<br /></code></pre>
         <strong>Trying to document this</strong>:
-        <pre><code class="language-swift">/// Calculates… something? /// /// - Parameter a: An array of… values? Cash flows? /// - Parameter b: A rate? Or is it a guess? /// - Parameter c: Maximum… iterations? Or is it periods? /// - Returns: The result, or nil if… it fails? </code></pre>Even writing this, I had to guess what the parameters meant. That’s a sign of bad API design.
+        <pre><code class="language-swift">/// Calculates… something?<br />///<br />/// - Parameter a: An array of… values? Cash flows?<br />/// - Parameter b: A rate? Or is it a guess?<br />/// - Parameter c: Maximum… iterations? Or is it periods?<br />/// - Returns: The result, or nil if… it fails?<br /></code></pre>Even writing this, I had to guess what the parameters meant. That’s a sign of bad API design.
         <hr />
         <h3>After: Easy to Document</h3>After redesigning the API with documentation in mind:
-        <pre><code class="language-swift">// AFTER: Easy to document /// Calculates the internal rate of return for a series of cash flows. /// /// The IRR is the discount rate that makes NPV equal to zero. /// Uses Newton-Raphson method for iterative solving. /// /// ## Usage Example /// /// let cashFlows = [-1000, 300, 400, 500] /// let irr = try calculateIRR(cashFlows: cashFlows) /// print(irr.percent(1)) // “12.5%” /// /// - Parameter cashFlows: Array of cash flows, starting with initial investment /// - Returns: IRR as Double (0.125 = 12.5%) /// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge public func calculateIRR(cashFlows: [Double]) throws -&gt; Double </code></pre>
+        <pre><code class="language-swift">// AFTER: Easy to document<br />/// Calculates the internal rate of return for a series of cash flows.<br />///<br />/// The IRR is the discount rate that makes NPV equal to zero.<br />/// Uses Newton-Raphson method for iterative solving.<br />///<br />/// ## Usage Example<br />///<br />/// let cashFlows = [-1000, 300, 400, 500]<br />/// let irr = try calculateIRR(cashFlows: cashFlows)<br />/// print(irr.percent(1)) // “12.5%”<br />///<br />/// - Parameter cashFlows: Array of cash flows, starting with initial investment<br />/// - Returns: IRR as Double (0.125 = 12.5%)<br />/// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge<br />public func calculateIRR(cashFlows: [Double]) throws -&gt; Double<br /></code></pre>
         <strong>Notice the difference</strong>:
         <ul>
           <li>Function name is clear: <code>calculateIRR</code> (not <code>calc</code>)</li>
@@ -321,7 +321,7 @@
         <h2>What Worked</h2>
         <h3>1. Documentation Revealed IRR Needed Error Handling</h3>The first attempt returned 
         <code>Double?</code> (optional). But when I tried to document this:
-        <pre><code class="language-swift">/// - Returns: The IRR, or nil if… </code></pre>I couldn’t finish the sentence. 
+        <pre><code class="language-swift">/// - Returns: The IRR, or nil if…<br /></code></pre>I couldn’t finish the sentence. 
         <strong>What does nil mean?</strong>
         <ul>
           <li>Didn’t converge after max iterations?</li>
@@ -330,15 +330,15 @@
         </ul>The documentation revealed the design flaw: we needed typed errors, not ambiguous nil.
         <p></p>
         <p><strong>Fix</strong>:</p>
-        <pre><code class="language-swift">enum FinancialError: Error { case convergenceFailure case invalidCashFlows } public func calculateIRR(cashFlows: [Double]) throws -&gt; Double </code></pre>Now the documentation writes itself:
-        <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge after 100 iterations ///          <code>FinancialError.invalidCashFlows</code> if all cash flows are positive </code></pre>
+        <pre><code class="language-swift">enum FinancialError: Error {<br />    case convergenceFailure<br />    case invalidCashFlows<br />}<br /><br />public func calculateIRR(cashFlows: [Double]) throws -&gt; Double<br /></code></pre>Now the documentation writes itself:
+        <pre><code class="language-swift">/// - Throws: <code>FinancialError.convergenceFailure</code> if doesn’t converge after 100 iterations<br />///          <code>FinancialError.invalidCashFlows</code> if all cash flows are positive<br /></code></pre>
         <hr />
         <h3>2. Example Showed We Needed Better Formatting</h3>When writing the usage example, I wrote:
-        <pre><code class="language-swift">let irr = try calculateIRR(cashFlows: cashFlows) print(irr)  // Prints: 0.12456789 </code></pre>Looking at that output, I realized: 
+        <pre><code class="language-swift">let irr = try calculateIRR(cashFlows: cashFlows)<br />print(irr)  // Prints: 0.12456789<br /></code></pre>Looking at that output, I realized: 
         <strong>Users will want percentages, not decimals.</strong>
         <p></p>
         <p>This led to adding format guidance in the documentation:</p>
-        <pre><code class="language-swift">print(irr.percent(1))  // “12.5%” </code></pre>
+        <pre><code class="language-swift">print(irr.percent(1))  // “12.5%”<br /></code></pre>
         <strong>Without writing the example first</strong>, I wouldn’t have caught this usability issue.
         <hr />
         <h3>3. AI Implementation Matched Documentation Perfectly</h3>Once the documentation was clear, I gave it to AI with this prompt:
@@ -356,16 +356,16 @@
         <hr />
         <h2>What Didn’t Work</h2>
         <h3>1. First Attempt at Documentation Was Too Vague</h3>My initial documentation attempt:
-        <pre><code class="language-swift">/// Calculates IRR for cash flows. /// /// - Parameter cashFlows: The cash flows /// - Returns: The IRR </code></pre>This tells you nothing. What’s the format? What are the units? What can go wrong?
+        <pre><code class="language-swift">/// Calculates IRR for cash flows.<br />///<br />/// - Parameter cashFlows: The cash flows<br />/// - Returns: The IRR<br /></code></pre>This tells you nothing. What’s the format? What are the units? What can go wrong?
         <p></p>
         <p><strong>AI implemented it</strong>, but not the way I wanted. It made assumptions about default values, convergence tolerance, and error handling that didn’t match my intent.</p>
         <p><strong>Fix</strong>: Be specific. Include units, formats, edge cases, and examples.
           <hr /></p>
         <h3>2. Example Initially Didn’t Compile</h3>I wrote the example before implementing the function (good!), but I made a mistake:
-        <pre><code class="language-swift">// Wrong: let irr = calculateIRR([-1000, 300, 400, 500])  // Missing label! </code></pre>When I tried to build the documentation, it failed.
+        <pre><code class="language-swift">// Wrong:<br />let irr = calculateIRR([-1000, 300, 400, 500])  // Missing label!<br /></code></pre>When I tried to build the documentation, it failed.
         <p></p>
         <p><strong>This is actually good!</strong> I caught the error in documentation, not in user code. Fixed it immediately:</p>
-        <pre><code class="language-swift">// Correct: let irr = try calculateIRR(cashFlows: [-1000, 300, 400, 500]) </code></pre>
+        <pre><code class="language-swift">// Correct:<br />let irr = try calculateIRR(cashFlows: [-1000, 300, 400, 500])<br /></code></pre>
         <strong>Lesson</strong>: Documentation examples should compile. If they don’t, fix the API before implementing.
         <hr />
         <h2>The Insight</h2>
@@ -461,7 +461,7 @@
           <li>Posts Published: 6/~48</li>
           <li>Methodology Posts: 2/12</li>
           <li>Practices Covered: Test-First, Documentation as Design</li>
-        </ul>
+        </ul> 
         <p></p>
       </div>
       <hr />

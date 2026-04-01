@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Optimization Foundations: From Goal-Seeking to Multivariate</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">10 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">12 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 22 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -290,144 +290,362 @@
           <li><strong>Phase 5</strong>: Business-specific modules</li>
         </ul>
         <h3>Phase 1: Goal-Seeking</h3>Find where a function equals a target value:
-        <pre><code class="language-swift">import BusinessMath // Profit function with price elasticity func profit(price: Double) -&gt; Double { let quantity = 10_000 - 1_000 * price  // Demand curve let revenue = price * quantity let fixedCosts = 2_000.0 let variableCost = 5.0 let totalCosts = fixedCosts + variableCost * quantity return revenue - totalCosts }<p></p><p>// Find breakeven price (profit = 0) let breakevenPrice = try goalSeek( function: profit, target: 0.0, guess: 10.0, tolerance: 0.01 )</p></code><p><code class="language-swift">print(“Breakeven price: (breakevenPrice.currency(2))”) </code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />// Profit function with price elasticity<br />func profit(price: Double) -&gt; Double {<br />    let quantity = 10_000 - 1_000 * price  // Demand curve<br />    let revenue = price * quantity<br />    let fixedCosts = 2_000.0<br />    let variableCost = 5.0<br />    let totalCosts = fixedCosts + variableCost * quantity<br />    return revenue - totalCosts<br />}<br /><br />// Find breakeven price (profit = 0)<br />let breakevenPrice = try goalSeek(<br />    function: profit,<br />    target: 0.0,<br />    guess: 10.0,<br />    tolerance: 0.01<br />)<br /><br />print(“Breakeven price: (breakevenPrice.currency(2))”)<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Breakeven price: $9.56 </code></pre>
+        <pre><code>Breakeven price: $9.56<br /></code></pre>
         <strong>The method</strong>: Uses bisection + Newton-Raphson hybrid for robust convergence.
         <hr />
         <h3>Goal-Seeking for IRR</h3>Internal Rate of Return is a goal-seek problem (find rate where NPV = 0):
-        <pre><code class="language-swift">let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]<p></p><p>func npv(rate: Double) -&gt; Double { var npv = 0.0 for (t, cf) in cashFlows.enumerated() { npv += cf / pow(1 + rate, Double(t)) } return npv }</p><p>// Find rate where NPV = 0 let irr = try goalSeek( function: npv, target: 0.0, guess: 0.10 )</p></code><p><code class="language-swift">print(“IRR: (irr.percent(2))”) </code></p></pre>
+        <pre><code class="language-swift">let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]<br /><br />func npv(rate: Double) -&gt; Double {<br />    var npv = 0.0<br />    for (t, cf) in cashFlows.enumerated() {<br />        npv += cf / pow(1 + rate, Double(t))<br />    }<br />    return npv<br />}<br /><br />// Find rate where NPV = 0<br />let irr = try goalSeek(<br />    function: npv,<br />    target: 0.0,<br />    guess: 0.10<br />)<br /><br />print(“IRR: (irr.percent(2))”)<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>IRR: 12.83% </code></pre>
+        <pre><code>IRR: 12.83%<br /></code></pre>
         <hr />
         <h3>Phase 2: Vector Operations</h3>Multivariate optimization requires vector operations:
-        <pre><code class="language-swift">// Create vectors let v = VectorN([3.0, 4.0]) let w = VectorN([1.0, 2.0])<p></p><p>// Basic operations let sum = v + w // [4, 6] let scaled = 2.0 * v // [6, 8]</p></code><p><code class="language-swift">// Norms and distances print(“Norm: (v.norm)”) // 5.0 print(“Distance: (v.distance(to: w))”) // 2.828 print(“Dot product: (v.dot(w))”) // 11.0 </code></p></pre>
+        <pre><code class="language-swift">// Create vectors<br />let v = VectorN([3.0, 4.0])<br />let w = VectorN([1.0, 2.0])<br /><br />// Basic operations<br />let sum = v + w              // [4, 6]<br />let scaled = 2.0 * v         // [6, 8]<br /><br />// Norms and distances<br />print(“Norm: (v.norm)”)                // 5.0<br />print(“Distance: (v.distance(to: w))”) // 2.828<br />print(“Dot product: (v.dot(w))”)       // 11.0<br /></code></pre>
         <strong>Application - Portfolio weights</strong>:
-        <pre><code class="language-swift">let weights = VectorN([0.25, 0.30, 0.25, 0.20]) let returns = VectorN([0.12, 0.15, 0.10, 0.18])<p></p></code><p><code class="language-swift">// Portfolio return (weighted average) let portfolioReturn = weights.dot(returns) print(“Portfolio return: (portfolioReturn.percent(1))”) // 13.6% </code></p></pre>
+        <pre><code class="language-swift">let weights = VectorN([0.25, 0.30, 0.25, 0.20])<br />let returns = VectorN([0.12, 0.15, 0.10, 0.18])<br /><br />// Portfolio return (weighted average)<br />let portfolioReturn = weights.dot(returns)<br />print(“Portfolio return: (portfolioReturn.percent(1))”)  // 13.6%<br /></code></pre>
         <hr />
         <h3>Phase 3: Multivariate Optimization</h3>Optimize functions of multiple variables:
-        <pre><code class="language-swift">// Minimize Rosenbrock function (classic test problem) let rosenbrock: (VectorN
+        <pre><code class="language-swift">// Minimize Rosenbrock function (classic test problem)<br />let rosenbrock: (VectorN
             <double>
-              ) -&gt; Double = { v in let x = v[0], y = v[1] let a = 1 - x let b = y - x
-              <em>x return a</em>a + 100
-              <em>b</em>b // Minimum at (1, 1) }
-              <p></p>
-              <p>// Adam optimizer (adaptive learning rate) let optimizer = MultivariateGradientDescent
-                <vectorn<double>
-                  &gt;( learningRate: 0.01, maxIterations: 10_000 )
-                </vectorn<double></p>
-              <p>let result = try optimizer.minimizeAdam( function: rosenbrock, initialGuess: VectorN([0.0, 0.0]) )</p>
-            </double></code><p><code class="language-swift">print(“Solution: (result.solution.toArray())”) // ~[1, 1] print(“Iterations: (result.iterations)”) print(“Final value: (result.value)”) </code></p></pre>
+              ) -&gt; Double = { v in
+              <br /> let x = v[0], y = v[1]
+              <br /> let a = 1 - x
+              <br /> let b = y - x
+              <em>x<br /> return a</em>a + 100
+              <em>b</em>b // Minimum at (1, 1)
+              <br />}
+              <br />
+              <br />// Adam optimizer (adaptive learning rate)
+              <br />let optimizer = MultivariateGradientDescent
+              <vectorn<double>
+                &gt;(
+                <br /> learningRate: 0.01,
+                <br /> maxIterations: 10_000
+                <br />)
+                <br />
+                <br />let result = try optimizer.minimizeAdam(
+                <br /> function: rosenbrock,
+                <br /> initialGuess: VectorN([0.0, 0.0])
+                <br />)
+                <br />
+                <br />print(“Solution: (result.solution.toArray())”) // ~[1, 1]
+                <br />print(“Iterations: (result.iterations)”)
+                <br />print(“Final value: (result.value)”)
+                <br />
+              </vectorn<double>
+            </double></code></pre>
         <strong>Output:</strong>
-        <pre><code>Solution: [0.9999990406781208, 0.9999980785494371] Iterations: 704 Final value: 9.210867997017215e-13```<p></p></code>
-          <div>
-            <code><p><strong>The power</strong>: Adam finds the minimum automatically with no manual tuning.
-                <hr />For smooth, well-behaved functions, BFGS converges faster:</p><pre><code class="language-swift">// Quadratic function: f(x) = x^T A x let A = [[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 4.0]]<p></p><p>let quadratic: (VectorN
-                    <double>
-                      ) -&gt; Double = { v in var result = 0.0 for i in 0..&lt;3 { for j in 0..&lt;3 { result += v[i] * A[i][j] * v[j] } } return result }
-                    </double></p><p>let bfgs = MultivariateNewtonRaphson
-                    <vectorn<double>
-                      &gt;( maxIterations: 50 )
-                    </vectorn<double></p><p>let resultBFGS = try bfgs.minimize( quadratic, from: VectorN([5.0, 5.0, 5.0]) )</p></code><p><code class="language-swift">print(“Converged in (result.iterations) iterations”) print(“Solution: (result.solution.toArray())”) // ~[0, 0, 0] </code></p></pre><strong>Output:</strong><pre><code>Converged in 12 iterations Solution: [0.000, 0.000, 0.000] </code></pre><strong>The comparison</strong>: BFGS took 12 iterations vs. Adam’s 4,782. For smooth functions, second-order methods dominate.
-              <hr /><h3>Phase 4: Constrained Optimization</h3>Optimize with equality and inequality constraints:<pre><code class="language-swift">// Minimize x² + y² subject to x + y = 1 let objective: (VectorN
+        <pre><code>Solution: [0.9999990406781208, 0.9999980785494371]<br />Iterations: 704<br />Final value: 9.210867997017215e-13<code><br /><br />**The power**: Adam finds the minimum automatically with no manual tuning.<br /><br />---<br /><br />### BFGS for Smooth Functions<br /><br />For smooth, well-behaved functions, BFGS converges faster:<br /><br /></code>swift<br />// Quadratic function: f(x) = x^T A x<br />let A = [[2.0, 0.0, 0.0],<br />         [0.0, 3.0, 0.0],<br />         [0.0, 0.0, 4.0]]<br /><br />let quadratic: (VectorN
+            <double>
+              ) -&gt; Double = { v in
+              <br /> var result = 0.0
+              <br /> for i in 0..&lt;3 {
+              <br /> for j in 0..&lt;3 {
+              <br /> result += v[i] * A[i][j] * v[j]
+              <br /> }
+              <br /> }
+              <br /> return result
+              <br />}
+              <br />
+              <br />let bfgs = MultivariateNewtonRaphson
+              <vectorn<double>
+                &gt;(
+                <br /> maxIterations: 50
+                <br />)
+                <br />
+                <br />let resultBFGS = try bfgs.minimize(
+                <br /> quadratic,
+                <br /> from: VectorN([5.0, 5.0, 5.0])
+                <br />)
+                <br />
+                <br />print(“Converged in (result.iterations) iterations”)
+                <br />print(“Solution: (result.solution.toArray())”) // ~[0, 0, 0]
+                <br />
+              </vectorn<double>
+            </double></code></pre>
+        <strong>Output:</strong>
+        <pre><code>Converged in 12 iterations<br />Solution: [0.000, 0.000, 0.000]<br /></code></pre>
+        <strong>The comparison</strong>: BFGS took 12 iterations vs. Adam’s 4,782. For smooth functions, second-order methods dominate.
+        <hr />
+        <h3>Phase 4: Constrained Optimization</h3>Optimize with equality and inequality constraints:
+        <pre><code class="language-swift">// Minimize x² + y² subject to x + y = 1<br />let objective: (VectorN
+            <double>
+              ) -&gt; Double = { v in
+              <br /> v[0]*v[0] + v[1]*v[1]
+              <br />}
+              <br />
+              <br />let optimizerConstrained = ConstrainedOptimizer
+              <vectorn<double>
+                &gt;()
+                <br />
+                <br />let resultConstrained = try optimizerConstrained.minimize(
+                <br /> objective,
+                <br /> from: VectorN([0.0, 1.0]),
+                <br /> subjectTo: [
+                <br /> .equality { v in v[0] + v[1] - 1.0 }
+                <br /> ]
+                <br />)
+                <br />
+                <br />print(“Solution: (resultConstrained.solution.toArray())”) // [0.5, 0.5]
+                <br />
+                <br />// Shadow price (Lagrange multiplier)
+                <br />if let lambda = resultConstrained.lagrangeMultipliers.first {
+                <br /> print(“Shadow price: (lambda.number(3))”) // How much objective improves if constraint relaxed
+                <br />}
+                <br />
+              </vectorn<double>
+            </double></code></pre>
+        <strong>Output:</strong>
+        <pre><code>Solution: [0.5, 0.5]<br />Shadow price: 0.500<br /></code></pre>
+        <strong>The interpretation</strong>: If we relax the constraint from “x + y = 1” to “x + y = 1.01”, the objective improves by ~0.005 (shadow price × change).
+        <hr />
+        <h3>Real-World: Portfolio with Constraints</h3>Minimize portfolio risk subject to target return:
+        <pre><code class="language-swift">let expectedReturns = VectorN([0.08, 0.12, 0.15])<br />let covarianceMatrix = [<br />    [0.0400, 0.0100, 0.0080],<br />    [0.0100, 0.0900, 0.0200],<br />    [0.0080, 0.0200, 0.1600]<br />]<br /><br />// Portfolio variance function<br />let portfolioVariance: (VectorN
+            <double>
+              ) -&gt; Double = { weights in
+              <br /> var variance = 0.0
+              <br /> for i in 0..&lt;3 {
+              <br /> for j in 0..&lt;3 {
+              <br /> variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+              <br /> }
+              <br /> }
+              <br /> return variance
+              <br />}
+              <br />
+              <br />let portfolioOptimizer = InequalityOptimizer
+              <vectorn<double>
+                &gt;()
+                <br />
+                <br />let result = try portfolioOptimizer.minimize(
+                <br /> portfolioVariance,
+                <br /> from: VectorN([0.4, 0.4, 0.2]),
+                <br /> subjectTo: [
+                <br /> // Target return ≥ 10%
+                <br /> .inequality { w in
+                <br /> let ret = w.dot(expectedReturns)
+                <br /> return 0.10 - ret // ≤ 0 means ret ≥ 10%
+                <br /> },
+                <br /> // Fully invested
+                <br /> .equality { w in w.reduce(0, +) - 1.0 },
+                <br /> // Long-only
+                <br /> .inequality { w in -w[0] },
+                <br /> .inequality { w in -w[1] },
+                <br /> .inequality { w in -w[2] }
+                <br /> ]
+                <br />)
+                <br />
+                <br />print(“Optimal weights: (result.solution.toArray())”)
+                <br />print(“Portfolio variance: (portfolioVariance(result.solution).number(4))”)
+                <br />print(“Portfolio volatility: ((sqrt(portfolioVariance(result.solution))).percent(1))”)
+                <br />
+              </vectorn<double>
+            </double></code></pre>
+        <strong>Output:</strong>
+        <pre><code>Optimal weights: [0.6099086625245681, 0.2435453283923856, 0.1465460569466559]<br />Portfolio variance: 0.0295<br />Portfolio volatility: 17.2%<br /></code></pre>
+        <strong>The solution</strong>: 45% in asset 1 (low risk), 35% in asset 2 (medium), 20% in asset 3 (high return). Achieves 10% target return with minimum possible risk.
+        <hr />
+        <h2>Try It Yourself</h2>
+        <details>
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />// Profit function with price elasticity<br />func profit(price: Double) -&gt; Double {<br />	let quantity = 10_000 - 1_000 * price  // Demand curve<br />	let revenue = price * quantity<br />	let fixedCosts = 2_000.0<br />	let variableCost = 5.0<br />	let totalCosts = fixedCosts + variableCost * quantity<br />	return revenue - totalCosts<br />}<br /><br />	// Find breakeven price (profit = 0)<br />	let breakevenPrice = try goalSeek(<br />		function: profit,<br />		target: 0.0,<br />		guess: 10.0,<br />		tolerance: 0.01<br />	)<br />	print("Breakeven price: \(breakevenPrice.currency(2))")<br /><br /><br />// MARK: - Goal Seeking for IRR<br /><br />let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]<br /><br />func npv(rate: Double) -&gt; Double {<br />	var npv = 0.0<br />	for (t, cf) in cashFlows.enumerated() {<br />		npv += cf / pow(1 + rate, Double(t))<br />	}<br />	return npv<br />}<br /><br />// Find rate where NPV = 0<br />let irr = try goalSeek(<br />	function: npv,<br />	target: 0.0,<br />	guess: 0.10<br />)<br /><br />print("IRR: \(irr.percent(2))")<br /><br /><br />// MARK: - Vector Operations<br /><br />// Create vectors<br />let v = VectorN([3.0, 4.0])<br />let w = VectorN([1.0, 2.0])<br /><br />// Basic operations<br />let sum = v + w              // [4, 6]<br />let scaled = 2.0 * v         // [6, 8]<br /><br />// Norms and distances<br />print("Norm: \(v.norm)")                // 5.0<br />print("Distance: \(v.distance(to: w))") // 2.828<br />print("Dot product: \(v.dot(w))")       // 11.0<br /><br /><br />// MARK: - Portfolio Weights<br /><br />let weights = VectorN([0.25, 0.30, 0.25, 0.20])<br />let returns = VectorN([0.12, 0.15, 0.10, 0.18])<br /><br />// Portfolio return (weighted average)<br />let portfolioReturn = weights.dot(returns)<br />print("Portfolio return: \(portfolioReturn.percent(1))")  // 13.6%<br /><br />// MARK: - Multivariate Operations<br /><br />// Minimize Rosenbrock function (classic test problem)<br />let rosenbrock: (VectorN
+              <double>
+                ) -&gt; Double = { v in
+                <br /> let x = v[0], y = v[1]
+                <br /> let a = 1 - x
+                <br /> let b = y - x*x
+                <br /> return a*a + 100*b*b // Minimum at (1, 1)
+                <br />}
+                <br />
+                <br />// Adam optimizer (adaptive learning rate)
+                <br />let optimizer = MultivariateGradientDescent
+                <vectorn<double>
+                  &gt;(
+                  <br /> learningRate: 0.01,
+                  <br /> maxIterations: 10_000
+                  <br />)
+                  <br />
+                  <br />let result = try optimizer.minimizeAdam(
+                  <br /> function: rosenbrock,
+                  <br /> initialGuess: VectorN([0.0, 0.0])
+                  <br />)
+                  <br />
+                  <br />print("Solution: \(result.solution.toArray())") // ~[1, 1]
+                  <br />print("Iterations: \(result.iterations)")
+                  <br />print("Final value: \(result.value)")
+                  <br />
+                  <br />
+                  <br />// MARK: - BFGS
+                  <br /> // Quadratic function: f(x) = x^T A x
+                  <br /> let A = [[2.0, 0.0, 0.0],
+                  <br /> [0.0, 3.0, 0.0],
+                  <br /> [0.0, 0.0, 4.0]]
+                  <br />
+                  <br /> let quadratic: (VectorN
                   <double>
-                    ) -&gt; Double = { v in v[0]*v[0] + v[1]*v[1] }
-                    <p></p>
-                    <p>let optimizerConstrained = ConstrainedOptimizer
-                      <vectorn<double>
-                        &gt;()
-                      </vectorn<double></p>
-                    <p>let resultConstrained = try optimizerConstrained.minimize( objective, from: VectorN([0.0, 1.0]), subjectTo: [ .equality { v in v[0] + v[1] - 1.0 } ] )</p>
-                    <p>print(“Solution: (resultConstrained.solution.toArray())”) // [0.5, 0.5]</p>
-                  </double></code><p><code class="language-swift">// Shadow price (Lagrange multiplier) if let lambda = resultConstrained.lagrangeMultipliers.first { print(“Shadow price: (lambda.number(3))”) // How much objective improves if constraint relaxed } </code></p></pre><strong>Output:</strong><pre><code>Solution: [0.5, 0.5] Shadow price: 0.500 </code></pre><strong>The interpretation</strong>: If we relax the constraint from “x + y = 1” to “x + y = 1.01”, the objective improves by ~0.005 (shadow price × change).
-              <hr /><h3>Real-World: Portfolio with Constraints</h3>Minimize portfolio risk subject to target return:<pre><code class="language-swift">let expectedReturns = VectorN([0.08, 0.12, 0.15]) let covarianceMatrix = [ [0.0400, 0.0100, 0.0080], [0.0100, 0.0900, 0.0200], [0.0080, 0.0200, 0.1600] ]<p></p><p>// Portfolio variance function let portfolioVariance: (VectorN
-                    <double>
-                      ) -&gt; Double = { weights in var variance = 0.0 for i in 0..&lt;3 { for j in 0..&lt;3 { variance += weights[i] * weights[j] * covarianceMatrix[i][j] } } return variance }
-                    </double></p><p>let portfolioOptimizer = InequalityOptimizer
+                    ) -&gt; Double = { v in
+                    <br /> var result = 0.0
+                    <br /> for i in 0..&lt;3 {
+                    <br /> for j in 0..&lt;3 {
+                    <br /> result += v[i] * A[i][j] * v[j]
+                    <br /> }
+                    <br /> }
+                    <br /> return result
+                    <br /> }
+                    <br />
+                    <br /> let bfgs = MultivariateNewtonRaphson
                     <vectorn<double>
-                      &gt;()
-                    </vectorn<double></p><p>let result = try portfolioOptimizer.minimize( portfolioVariance, from: VectorN([0.4, 0.4, 0.2]), subjectTo: [ // Target return ≥ 10% .inequality { w in let ret = w.dot(expectedReturns) return 0.10 - ret // ≤ 0 means ret ≥ 10% }, // Fully invested .equality { w in w.reduce(0, +) - 1.0 }, // Long-only .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] } ] )</p></code><p><code class="language-swift">print(“Optimal weights: (result.solution.toArray())”) print(“Portfolio variance: (portfolioVariance(result.solution).number(4))”) print(“Portfolio volatility: ((sqrt(portfolioVariance(result.solution))).percent(1))”) </code></p></pre><strong>Output:</strong><pre><code>Optimal weights: [0.6099086625245681, 0.2435453283923856, 0.1465460569466559] Portfolio variance: 0.0295 Portfolio volatility: 17.2% </code></pre><strong>The solution</strong>: 45% in asset 1 (low risk), 35% in asset 2 (medium), 20% in asset 3 (high return). Achieves 10% target return with minimum possible risk.
-              <hr /><h2>Try It Yourself</h2>
-              <details>
-                <summary>Click to expand full playground code</summary>
-                <pre><code class="language-swift">import BusinessMath
-import Foundation
-// Profit function with price elasticity func profit(price: Double) -&gt; Double { let quantity = 10_000 - 1_000 * price  // Demand curve let revenue = price * quantity let fixedCosts = 2_000.0 let variableCost = 5.0 let totalCosts = fixedCosts + variableCost * quantity return revenue - totalCosts }<pre><code>// Find breakeven price (profit = 0)
-let breakevenPrice = try goalSeek(
-	function: profit,
-	target: 0.0,
-	guess: 10.0,
-	tolerance: 0.01
-)
-print("Breakeven price: \(breakevenPrice.currency(2))")
-</code></pre>// MARK: - Goal Seeking for IRR
-<p></p><p>let cashFlows = [-1_000.0, 200.0, 300.0, 400.0, 500.0]</p><p>func npv(rate: Double) -&gt; Double { var npv = 0.0 for (t, cf) in cashFlows.enumerated() { npv += cf / pow(1 + rate, Double(t)) } return npv }</p><p>// Find rate where NPV = 0 let irr = try goalSeek( function: npv, target: 0.0, guess: 0.10 )</p><p>print(“IRR: (irr.percent(2))”)</p><p>// MARK: - Vector Operations</p><p>// Create vectors let v = VectorN([3.0, 4.0]) let w = VectorN([1.0, 2.0])</p><p>// Basic operations let sum = v + w // [4, 6] let scaled = 2.0 * v // [6, 8]</p><p>// Norms and distances print(“Norm: (v.norm)”) // 5.0 print(“Distance: (v.distance(to: w))”) // 2.828 print(“Dot product: (v.dot(w))”) // 11.0</p><p>// MARK: - Portfolio Weights</p><p>let weights = VectorN([0.25, 0.30, 0.25, 0.20]) let returns = VectorN([0.12, 0.15, 0.10, 0.18])</p><p>// Portfolio return (weighted average) let portfolioReturn = weights.dot(returns) print(“Portfolio return: (portfolioReturn.percent(1))”) // 13.6%</p><p>// MARK: - Multivariate Operations</p><p>// Minimize Rosenbrock function (classic test problem) let rosenbrock: (VectorN
+                      &gt;(
+                      <br /> maxIterations: 50
+                      <br /> )
+                      <br />
+                      <br /> let resultBFGS = try bfgs.minimize(
+                      <br /> quadratic,
+                      <br /> from: VectorN([5.0, 5.0, 5.0])
+                      <br /> )
+                      <br />
+                      <br /> print("Converged in \(resultBFGS.iterations) iterations")
+                      <br /> print("Solution: \(resultBFGS.solution.toArray())") // ~[0, 0, 0]
+                      <br />
+                      <br />// MARK: - Constrained Optimization
+                      <br />
+                      <br />// Minimize x² + y² subject to x + y = 1
+                      <br />let objective: (VectorN
                       <double>
-                        ) -&gt; Double = { v in let x = v[0], y = v[1] let a = 1 - x let b = y - x
-                        <em>x return a</em>a + 100
-                        <em>b</em>b // Minimum at (1, 1) }
-                      </double></p><p>// Adam optimizer (adaptive learning rate) let optimizer = MultivariateGradientDescent
-                      <vectorn<double>
-                        &gt;( learningRate: 0.01, maxIterations: 10_000 )
-                      </vectorn<double></p><p>let result = try optimizer.minimizeAdam( function: rosenbrock, initialGuess: VectorN([0.0, 0.0]) )</p><p>print(“Solution: (result.solution.toArray())”) // ~[1, 1] print(“Iterations: (result.iterations)”) print(“Final value: (result.value)”)</p></code>
-                  <div>
-                    <code class="language-swift"><p>// MARK: - BFGS // Quadratic function: f(x) = x^T A x let A = [[2.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 4.0]]</p><pre><code>let quadratic: (VectorN
+                        ) -&gt; Double = { v in
+                        <br /> v[0]*v[0] + v[1]*v[1]
+                        <br />}
+                        <br />
+                        <br />let optimizerConstrained = ConstrainedOptimizer
+                        <vectorn<double>
+                          &gt;()
+                          <br />
+                          <br />let resultConstrained = try optimizerConstrained.minimize(
+                          <br /> objective,
+                          <br /> from: VectorN([0.0, 1.0]),
+                          <br /> subjectTo: [
+                          <br /> .equality { v in v[0] + v[1] - 1.0 }
+                          <br /> ]
+                          <br />)
+                          <br />
+                          <br />print("Solution: \(resultConstrained.solution.toArray())") // [0.5, 0.5]
+                          <br />
+                          <br />// Shadow price (Lagrange multiplier)
+                          <br />if let lambda = resultConstrained.lagrangeMultipliers.first {
+                          <br /> print("Shadow price: \(lambda.number(3))") // How much objective improves if constraint relaxed
+                          <br />}
+                          <br />
+                          <br />// MARK: - Portfolio with Constraints
+                          <br />
+                          <br />let expectedReturns = VectorN([0.08, 0.12, 0.15])
+                          <br />let covarianceMatrix = [
+                          <br /> [0.0400, 0.0100, 0.0080],
+                          <br /> [0.0100, 0.0900, 0.0200],
+                          <br /> [0.0080, 0.0200, 0.1600]
+                          <br />]
+                          <br />
+                          <br />// Portfolio variance function
+                          <br />let portfolioVariance: (VectorN
                           <double>
-                            ) -&gt; Double = { v in var result = 0.0 for i in 0..&lt;3 { for j in 0..&lt;3 { result += v[i] * A[i][j] * v[j] } } return result }
-                            <p></p>
-                            <p>let bfgs = MultivariateNewtonRaphson
-                              <vectorn<double>
-                                &gt;( maxIterations: 50 )
-                              </vectorn<double></p>
-                            <p>let resultBFGS = try bfgs.minimize( quadratic, from: VectorN([5.0, 5.0, 5.0]) )</p>
-                          </double></code><p><code>print(“Converged in (resultBFGS.iterations) iterations”) print(“Solution: (resultBFGS.solution.toArray())”) // ~[0, 0, 0] </code></p></pre>// MARK: - Constrained Optimization<p></p></code>
-                  </div><p>// Minimize x² + y² subject to x + y = 1 let objective: (VectorN
-                    <double>
-                      ) -&gt; Double = { v in v[0]*v[0] + v[1]*v[1] }
-                    </double></p><p>let optimizerConstrained = ConstrainedOptimizer
-                    <vectorn<double>
-                      &gt;()
-                    </vectorn<double></p><p>let resultConstrained = try optimizerConstrained.minimize( objective, from: VectorN([0.0, 1.0]), subjectTo: [ .equality { v in v[0] + v[1] - 1.0 } ] )</p><p>print(“Solution: (resultConstrained.solution.toArray())”)  // [0.5, 0.5]</p><p>// Shadow price (Lagrange multiplier) if let lambda = resultConstrained.lagrangeMultipliers.first { print(“Shadow price: (lambda.number(3))”)  // How much objective improves if constraint relaxed }</p><p>// MARK: - Portfolio with Constraints</p><p>let expectedReturns = VectorN([0.08, 0.12, 0.15]) let covarianceMatrix = [ [0.0400, 0.0100, 0.0080], [0.0100, 0.0900, 0.0200], [0.0080, 0.0200, 0.1600] ]</p><p>// Portfolio variance function let portfolioVariance: (VectorN
-                    <double>
-                      ) -&gt; Double = { weights in var variance = 0.0 for i in 0..&lt;3 { for j in 0..&lt;3 { variance += weights[i] * weights[j] * covarianceMatrix[i][j] } } return variance }
-                    </double></p><p>let portfolioOptimizer = InequalityOptimizer
-                    <vectorn<double>
-                      &gt;()
-                    </vectorn<double></p><p>let resultPortfolio = try portfolioOptimizer.minimize( portfolioVariance, from: VectorN([0.4, 0.4, 0.2]), subjectTo: [ // Target return ≥ 10% .inequality { w in let ret = w.dot(expectedReturns) return 0.10 - ret  // ≤ 0 means ret ≥ 10% }, // Fully invested .equality { w in w.reduce(0, +) - 1.0 }, // Long-only .inequality { w in -w[0] }, .inequality { w in -w[1] }, .inequality { w in -w[2] } ] )</p><p>print(“Optimal weights: (resultPortfolio.solution.toArray())”) print(“Portfolio variance: (portfolioVariance(resultPortfolio.solution).number(4))”) print(“Portfolio volatility: ((sqrt(portfolioVariance(resultPortfolio.solution))).percent(1))”)</p><p></p></pre>
-              </details> → Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.1-OptimizationGuide.md">BusinessMath Docs – 5.1 Optimization Guide</a><p></p></code>
-          </div><p><strong>Modifications to try</strong>:</p>
-          <ol>
-            <li>Find the profit-maximizing price (not just breakeven)</li>
-            <li>Build a 10-asset portfolio with sector constraints</li>
-            <li>Optimize production mix given resource constraints</li>
-            <li>Compare Adam vs. BFGS vs. gradient descent convergence</li>
-          </ol>
-          <hr /><h2>Real-World Application</h2>
-          <ul>
-            <li><strong>Private equity</strong>: Portfolio company optimization (pricing, production, capex)</li>
-            <li><strong>Trading</strong>: Optimal execution algorithms</li>
-            <li><strong>Corporate finance</strong>: Capital structure optimization (debt/equity mix)</li>
-            <li><strong>Supply chain</strong>: Multi-facility production allocation</li>
-          </ul><strong>CFO use case</strong>: “We manufacture 3 products in 2 factories. Each product has different margins, each factory has capacity constraints. Find the production mix that maximizes EBITDA.”<p></p><p>BusinessMath makes this programmatic, not a manual Excel Solver exercise.
-            <hr /><code>★ Insight ─────────────────────────────────────</code></p><p><strong>Why Second-Order Methods (BFGS) Beat First-Order (Gradient Descent)</strong></p><p>Gradient descent uses only the <strong>slope</strong> (first derivative). BFGS uses the <strong>curvature</strong> (second derivative via Hessian approximation).</p><p><strong>Analogy</strong>: Finding the bottom of a valley.</p>
-          <ul>
-            <li><strong>Gradient descent</strong>: Walks downhill, adjusts step size manually</li>
-            <li><strong>BFGS</strong>: Estimates the valley’s shape, jumps near the bottom</li>
-          </ul><strong>Trade-off</strong>: BFGS is faster (fewer iterations) but more complex (memory for Hessian approximation).<p></p><p><strong>Rule of thumb</strong>: Use Adam for non-smooth, noisy functions. Use BFGS for smooth, well-behaved functions.</p><p><code>─────────────────────────────────────────────────</code>
-            <hr /></p><h3>📝 Development Note</h3>The hardest part was <strong>choosing default optimization algorithms</strong>. We provide multiple (Adam, BFGS, Nelder-Mead, simulated annealing) because no single algorithm dominates:
-          <ul>
-            <li><strong>Adam</strong>: Best for neural networks, noisy gradients</li>
-            <li><strong>BFGS</strong>: Best for smooth functions, small-medium dimensions</li>
-            <li><strong>Nelder-Mead</strong>: Best when gradients unavailable</li>
-            <li><strong>Simulated Annealing</strong>: Best for discrete, combinatorial problems</li>
-          </ul>Rather than pick one “default,” we expose all and provide guidance on when to use each.<p></p><p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We tested each optimizer on standard test functions (Rosenbrock, Rastrigin, etc.) with known solutions.
-            <hr /></p><h2>Next Steps</h2><strong>Coming up tomorrow</strong>: Portfolio Optimization - Deep dive into Modern Portfolio Theory, efficient frontiers, and risk parity.
-          <hr /><strong>Series Progress</strong>:
-          <ul>
-            <li>Week: 7/12</li>
-            <li>Posts Published: 22/~48</li>
-            <li>Playgrounds: 21 available</li>
-          </ul> </pre>
+                            ) -&gt; Double = { weights in
+                            <br /> var variance = 0.0
+                            <br /> for i in 0..&lt;3 {
+                            <br /> for j in 0..&lt;3 {
+                            <br /> variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+                            <br /> }
+                            <br /> }
+                            <br /> return variance
+                            <br />}
+                            <br />
+                            <br />let portfolioOptimizer = InequalityOptimizer
+                            <vectorn<double>
+                              &gt;()
+                              <br />
+                              <br />let resultPortfolio = try portfolioOptimizer.minimize(
+                              <br /> portfolioVariance,
+                              <br /> from: VectorN([0.4, 0.4, 0.2]),
+                              <br /> subjectTo: [
+                              <br /> // Target return ≥ 10%
+                              <br /> .inequality { w in
+                              <br /> let ret = w.dot(expectedReturns)
+                              <br /> return 0.10 - ret // ≤ 0 means ret ≥ 10%
+                              <br /> },
+                              <br /> // Fully invested
+                              <br /> .equality { w in w.reduce(0, +) - 1.0 },
+                              <br /> // Long-only
+                              <br /> .inequality { w in -w[0] },
+                              <br /> .inequality { w in -w[1] },
+                              <br /> .inequality { w in -w[2] }
+                              <br /> ]
+                              <br />)
+                              <br />
+                              <br />print("Optimal weights: \(resultPortfolio.solution.toArray())")
+                              <br />print("Portfolio variance: \(portfolioVariance(resultPortfolio.solution).number(4))")
+                              <br />print("Portfolio volatility: \((sqrt(portfolioVariance(resultPortfolio.solution))).percent(1))")
+                              <br />
+                              <br />
+                            </vectorn<double>
+                          </double>
+                        </vectorn<double>
+                      </double>
+                    </vectorn<double>
+                  </double>
+                </vectorn<double>
+              </double></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.1-OptimizationGuide.md">BusinessMath Docs – 5.1 Optimization Guide</a> 
+        <p></p>
+        <p><strong>Modifications to try</strong>:</p>
+        <ol>
+          <li>Find the profit-maximizing price (not just breakeven)</li>
+          <li>Build a 10-asset portfolio with sector constraints</li>
+          <li>Optimize production mix given resource constraints</li>
+          <li>Compare Adam vs. BFGS vs. gradient descent convergence</li>
+        </ol>
+        <hr />
+        <h2>Real-World Application</h2>
+        <ul>
+          <li><strong>Private equity</strong>: Portfolio company optimization (pricing, production, capex)</li>
+          <li><strong>Trading</strong>: Optimal execution algorithms</li>
+          <li><strong>Corporate finance</strong>: Capital structure optimization (debt/equity mix)</li>
+          <li><strong>Supply chain</strong>: Multi-facility production allocation</li>
+        </ul>
+        <strong>CFO use case</strong>: “We manufacture 3 products in 2 factories. Each product has different margins, each factory has capacity constraints. Find the production mix that maximizes EBITDA.”
+        <p></p>
+        <p>BusinessMath makes this programmatic, not a manual Excel Solver exercise.
+          <hr /><code>★ Insight ─────────────────────────────────────</code></p>
+        <p><strong>Why Second-Order Methods (BFGS) Beat First-Order (Gradient Descent)</strong></p>
+        <p>Gradient descent uses only the <strong>slope</strong> (first derivative). BFGS uses the <strong>curvature</strong> (second derivative via Hessian approximation).</p>
+        <p><strong>Analogy</strong>: Finding the bottom of a valley.</p>
+        <ul>
+          <li><strong>Gradient descent</strong>: Walks downhill, adjusts step size manually</li>
+          <li><strong>BFGS</strong>: Estimates the valley’s shape, jumps near the bottom</li>
+        </ul>
+        <strong>Trade-off</strong>: BFGS is faster (fewer iterations) but more complex (memory for Hessian approximation).
+        <p></p>
+        <p><strong>Rule of thumb</strong>: Use Adam for non-smooth, noisy functions. Use BFGS for smooth, well-behaved functions.</p>
+        <p><code>─────────────────────────────────────────────────</code>
+          <hr /></p>
+        <h3>📝 Development Note</h3>The hardest part was 
+        <strong>choosing default optimization algorithms</strong>. We provide multiple (Adam, BFGS, Nelder-Mead, simulated annealing) because no single algorithm dominates:
+        <ul>
+          <li><strong>Adam</strong>: Best for neural networks, noisy gradients</li>
+          <li><strong>BFGS</strong>: Best for smooth functions, small-medium dimensions</li>
+          <li><strong>Nelder-Mead</strong>: Best when gradients unavailable</li>
+          <li><strong>Simulated Annealing</strong>: Best for discrete, combinatorial problems</li>
+        </ul>Rather than pick one “default,” we expose all and provide guidance on when to use each.
+        <p></p>
+        <p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We tested each optimizer on standard test functions (Rosenbrock, Rastrigin, etc.) with known solutions.
+          <hr /></p>
+        <h2>Next Steps</h2>
+        <strong>Coming up tomorrow</strong>: Portfolio Optimization - Deep dive into Modern Portfolio Theory, efficient frontiers, and risk parity.
+        <hr />
+        <strong>Series Progress</strong>:
+        <ul>
+          <li>Week: 7/12</li>
+          <li>Posts Published: 22/~48</li>
+          <li>Playgrounds: 21 available</li>
+        </ul>
         <p></p>
       </div>
       <hr />

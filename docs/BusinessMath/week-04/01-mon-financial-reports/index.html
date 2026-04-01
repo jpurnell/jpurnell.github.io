@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Building Multi-Period Financial Reports</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">11 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 13 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -286,145 +286,319 @@
         <code>FinancialPeriodSummary</code> and 
         <code>MultiPeriodReport</code> for analyst-quality financial reporting.
         <h3>Step 1: Create Financial Statements</h3>Start with Income Statement and Balance Sheet for multiple periods:
-        <pre><code class="language-swift">import BusinessMath let entity = Entity( id: “ACME”, primaryType: .ticker, name: “Acme Corporation” )<p></p><p>let periods = (1…4).map { Period.quarter(year: 2025, quarter: $0) }</p><p>// Revenue account let revenue = try Account( entity: entity, name: “Product Revenue”, incomeStatementRole: .revenue, timeSeries: TimeSeries(periods: periods, values: [1_000_000, 1_100_000, 1_200_000, 1_300_000]) )</p><p>// Expense accounts let cogs = try Account( entity: entity, name: “Cost of Goods Sold”, incomeStatementRole: .costOfGoodsSold, timeSeries: TimeSeries(periods: periods, values: [400_000, 450_000, 480_000, 520_000]) )</p><p>let opex = try Account( entity: entity, name: “Operating Expenses”, incomeStatementRole: .operatingExpenseOther, timeSeries: TimeSeries(periods: periods, values: [300_000, 325_000, 350_000, 375_000]) )</p><p>let depreciation = try Account( entity: entity, name: “Depreciation”, incomeStatementRole: .depreciationAmortization, timeSeries: TimeSeries(periods: periods, values: [50_000, 50_000, 50_000, 50_000]) )</p><p>let interest = try Account( entity: entity, name: “Interest Expense”, incomeStatementRole: .interestExpense, timeSeries: TimeSeries(periods: periods, values: [25_000, 25_000, 25_000, 25_000]) )</p><p>let tax = try Account( entity: entity, name: “Income Tax”, incomeStatementRole: .incomeTaxExpense, timeSeries: TimeSeries(periods: periods, values: [47_000, 49_000, 61_000, 68_000]) )</p><p>// Create Income Statement let incomeStatement = try IncomeStatement( entity: entity, periods: periods, accounts: [revenue, cogs, opex, depreciation, interest, tax] )</p><p>// Create Balance Sheet (assets, liabilities, equity) let cash = try Account( entity: entity, name: “Cash”, balanceSheetRole: .cashAndEquivalents, timeSeries: TimeSeries(periods: periods, values: [500_000, 600_000, 750_000, 900_000]) )</p><p>let receivables = try Account( entity: entity, name: “Receivables”, balanceSheetRole: .accountsReceivable, timeSeries: TimeSeries(periods: periods, values: [300_000, 330_000, 360_000, 390_000]) )</p><p>let ppe = try Account( entity: entity, name: “PP&amp;E”, balanceSheetRole: .propertyPlantEquipment, timeSeries: TimeSeries(periods: periods, values: [1_000_000, 980_000, 960_000, 940_000]) )</p><p>let payables = try Account( entity: entity, name: “Payables”, balanceSheetRole: .accountsPayable, timeSeries: TimeSeries(periods: periods, values: [200_000, 220_000, 240_000, 260_000]) )</p><p>let debt = try Account( entity: entity, name: “Long-Term Debt”, balanceSheetRole: .longTermDebtNoncurrent, timeSeries: TimeSeries(periods: periods, values: [500_000, 500_000, 500_000, 500_000]) )</p><p>let equity = try Account( entity: entity, name: “Equity”, balanceSheetRole: .retainedEarnings, timeSeries: TimeSeries(periods: periods, values: [1_100_000, 1_190_000, 1_330_000, 1_470_000]) )</p></code><p><code class="language-swift">let balanceSheet = try BalanceSheet( entity: entity, periods: periods, accounts: [cash, receivables, ppe, payables, debt, equity] ) </code></p></pre>
+        <pre><code class="language-swift">import BusinessMath<br /><br />let entity = Entity(<br />    id: “ACME”,<br />    primaryType: .ticker,<br />    name: “Acme Corporation”<br />)<br /><br />let periods = (1…4).map { Period.quarter(year: 2025, quarter: $0) }<br /><br />// Revenue account<br />let revenue = try Account(<br />    entity: entity,<br />    name: “Product Revenue”,<br />    incomeStatementRole: .revenue,<br />    timeSeries: TimeSeries(periods: periods, values: [1_000_000, 1_100_000, 1_200_000, 1_300_000])<br />)<br /><br />// Expense accounts<br />let cogs = try Account(<br />    entity: entity,<br />    name: “Cost of Goods Sold”,<br />    incomeStatementRole: .costOfGoodsSold,<br />    timeSeries: TimeSeries(periods: periods, values: [400_000, 450_000, 480_000, 520_000])<br />)<br /><br />let opex = try Account(<br />    entity: entity,<br />    name: “Operating Expenses”,<br />    incomeStatementRole: .operatingExpenseOther,<br />    timeSeries: TimeSeries(periods: periods, values: [300_000, 325_000, 350_000, 375_000])<br />)<br /><br />let depreciation = try Account(<br />    entity: entity,<br />    name: “Depreciation”,<br />    incomeStatementRole: .depreciationAmortization,<br />    timeSeries: TimeSeries(periods: periods, values: [50_000, 50_000, 50_000, 50_000])<br />)<br /><br />let interest = try Account(<br />    entity: entity,<br />    name: “Interest Expense”,<br />    incomeStatementRole: .interestExpense,<br />    timeSeries: TimeSeries(periods: periods, values: [25_000, 25_000, 25_000, 25_000])<br />)<br /><br />let tax = try Account(<br />    entity: entity,<br />    name: “Income Tax”,<br />    incomeStatementRole: .incomeTaxExpense,<br />    timeSeries: TimeSeries(periods: periods, values: [47_000, 49_000, 61_000, 68_000])<br />)<br /><br />// Create Income Statement<br />let incomeStatement = try IncomeStatement(<br />	entity: entity,<br />	periods: periods,<br />	accounts: [revenue, cogs, opex, depreciation, interest, tax]<br />)<br /><br />// Create Balance Sheet (assets, liabilities, equity)<br />let cash = try Account(<br />    entity: entity,<br />    name: “Cash”,<br />    balanceSheetRole: .cashAndEquivalents,<br />    timeSeries: TimeSeries(periods: periods, values: [500_000, 600_000, 750_000, 900_000])<br />)<br /><br />let receivables = try Account(<br />    entity: entity,<br />    name: “Receivables”,<br />    balanceSheetRole: .accountsReceivable,<br />    timeSeries: TimeSeries(periods: periods, values: [300_000, 330_000, 360_000, 390_000])<br />)<br /><br />let ppe = try Account(<br />    entity: entity,<br />    name: “PP&amp;E”,<br />    balanceSheetRole: .propertyPlantEquipment,<br />    timeSeries: TimeSeries(periods: periods, values: [1_000_000, 980_000, 960_000, 940_000])<br />)<br /><br />let payables = try Account(<br />    entity: entity,<br />    name: “Payables”,<br />    balanceSheetRole: .accountsPayable,<br />    timeSeries: TimeSeries(periods: periods, values: [200_000, 220_000, 240_000, 260_000])<br />)<br /><br />let debt = try Account(<br />    entity: entity,<br />    name: “Long-Term Debt”,<br />    balanceSheetRole: .longTermDebtNoncurrent,<br />    timeSeries: TimeSeries(periods: periods, values: [500_000, 500_000, 500_000, 500_000])<br />)<br /><br />let equity = try Account(<br />    entity: entity,<br />    name: “Equity”,<br />    balanceSheetRole: .retainedEarnings,<br />    timeSeries: TimeSeries(periods: periods, values: [1_100_000, 1_190_000, 1_330_000, 1_470_000])<br />)<br /><br />let balanceSheet = try BalanceSheet(<br />	entity: entity,<br />	periods: periods,<br />	accounts: [cash, receivables, ppe, payables, debt, equity]<br />)<br /></code></pre>
         <hr />
         <h3>Step 2: Add Operational Metrics</h3>Track business drivers that explain the financials:
-        <pre><code class="language-swift">// Define operational metrics for each quarter let q1Metrics = OperationalMetrics
+        <pre><code class="language-swift">// Define operational metrics for each quarter<br />let q1Metrics = OperationalMetrics
             <double>
-              ( entity: entity, period: periods[0], metrics: [ “units_sold”: 10_000, “average_price”: 100.0, “customer_count”: 500, “average_revenue_per_customer”: 2_000 ] )
-              <p></p>
-              <p>let q2Metrics = OperationalMetrics
+              (
+              <br /> entity: entity,
+              <br /> period: periods[0],
+              <br /> metrics: [
+              <br /> “units_sold”: 10_000,
+              <br /> “average_price”: 100.0,
+              <br /> “customer_count”: 500,
+              <br /> “average_revenue_per_customer”: 2_000
+              <br /> ]
+              <br />)
+              <br />
+              <br />let q2Metrics = OperationalMetrics
+              <double>
+                (
+                <br /> entity: entity,
+                <br /> period: periods[1],
+                <br /> metrics: [
+                <br /> “units_sold”: 11_000,
+                <br /> “average_price”: 100.0,
+                <br /> “customer_count”: 550,
+                <br /> “average_revenue_per_customer”: 2_000
+                <br /> ]
+                <br />)
+                <br />
+                <br />let q3Metrics = OperationalMetrics
                 <double>
-                  ( entity: entity, period: periods[1], metrics: [ “units_sold”: 11_000, “average_price”: 100.0, “customer_count”: 550, “average_revenue_per_customer”: 2_000 ] )
-                </double></p>
-              <p>let q3Metrics = OperationalMetrics
-                <double>
-                  ( entity: entity, period: periods[2], metrics: [ “units_sold”: 12_000, “average_price”: 100.0, “customer_count”: 600, “average_revenue_per_customer”: 2_000 ] )
-                </double></p>
-              <p>let q4Metrics = OperationalMetrics
-                <double>
-                  ( entity: entity, period: periods[3], metrics: [ “units_sold”: 13_000, “average_price”: 100.0, “customer_count”: 650, “average_revenue_per_customer”: 2_000 ] )
-                </double></p>
-            </double></code><p><code class="language-swift">let operationalMetrics = [q1Metrics, q2Metrics, q3Metrics, q4Metrics] </code></p></pre>
+                  (
+                  <br /> entity: entity,
+                  <br /> period: periods[2],
+                  <br /> metrics: [
+                  <br /> “units_sold”: 12_000,
+                  <br /> “average_price”: 100.0,
+                  <br /> “customer_count”: 600,
+                  <br /> “average_revenue_per_customer”: 2_000
+                  <br /> ]
+                  <br />)
+                  <br />
+                  <br />let q4Metrics = OperationalMetrics
+                  <double>
+                    (
+                    <br /> entity: entity,
+                    <br /> period: periods[3],
+                    <br /> metrics: [
+                    <br /> “units_sold”: 13_000,
+                    <br /> “average_price”: 100.0,
+                    <br /> “customer_count”: 650,
+                    <br /> “average_revenue_per_customer”: 2_000
+                    <br /> ]
+                    <br />)
+                    <br />
+                    <br />let operationalMetrics = [q1Metrics, q2Metrics, q3Metrics, q4Metrics]
+                    <br />
+                  </double>
+                </double>
+              </double>
+            </double></code></pre>
         <strong>The insight</strong>: Operational metrics explain the financials. Revenue growth comes from adding 150 customers (30% increase) while maintaining price.
         <hr />
         <h3>Step 3: Create Financial Period Summary</h3>Combine statements and metrics into a comprehensive one-pager:
-        <pre><code class="language-swift">let q1Summary = try FinancialPeriodSummary( entity: entity, period: periods[0], incomeStatement: incomeStatement, balanceSheet: balanceSheet, operationalMetrics: q1Metrics )<p></p></code><p><code class="language-swift">print(”=== Q1 2025 Financial Summary ===\n”) print(“Revenue: (q1Summary.revenue.currency())”) print(“Gross Profit: (q1Summary.grossProfit.currency())”) print(“EBITDA: (q1Summary.ebitda.currency())”) print(“EBIT: (q1Summary.operatingIncome.currency())”) print(“Net Income: (q1Summary.netIncome.currency())”) print() print(“Margins:”) print(” Gross Margin: (q1Summary.grossMargin.percent(1))”) print(” Operating Margin: (q1Summary.operatingMargin.percent(1))”) print(” Net Margin: (q1Summary.netMargin.percent(1))”) print() print(“Returns:”) print(” ROA: (q1Summary.roa.percent(1))”) print(” ROE: (q1Summary.roe.percent(1))”) print() print(“Leverage:”) print(” Debt/Equity: (q1Summary.debtToEquityRatio.number(2))x”) print(” Debt/EBITDA: (q1Summary.debtToEBITDARatio.number(2))x”) print(” EBIT Interest Coverage: (q1Summary.interestCoverageRatio!.number(1))x”) print() print(“Liquidity:”) print(” Current Ratio: (q1Summary.currentRatio.number(2))x”) </code></p></pre>
+        <pre><code class="language-swift">let q1Summary = try FinancialPeriodSummary(<br />    entity: entity,<br />    period: periods[0],<br />    incomeStatement: incomeStatement,<br />    balanceSheet: balanceSheet,<br />    operationalMetrics: q1Metrics<br />)<br /><br />print(”=== Q1 2025 Financial Summary ===\n”)<br />print(“Revenue: (q1Summary.revenue.currency())”)<br />print(“Gross Profit: (q1Summary.grossProfit.currency())”)<br />print(“EBITDA: (q1Summary.ebitda.currency())”)<br />print(“EBIT: (q1Summary.operatingIncome.currency())”)<br />print(“Net Income: (q1Summary.netIncome.currency())”)<br />print()<br />print(“Margins:”)<br />print(”  Gross Margin: (q1Summary.grossMargin.percent(1))”)<br />print(”  Operating Margin: (q1Summary.operatingMargin.percent(1))”)<br />print(”  Net Margin: (q1Summary.netMargin.percent(1))”)<br />print()<br />print(“Returns:”)<br />print(”  ROA: (q1Summary.roa.percent(1))”)<br />print(”  ROE: (q1Summary.roe.percent(1))”)<br />print()<br />print(“Leverage:”)<br />print(”  Debt/Equity: (q1Summary.debtToEquityRatio.number(2))x”)<br />print(”  Debt/EBITDA: (q1Summary.debtToEBITDARatio.number(2))x”)<br />print(”  EBIT Interest Coverage: (q1Summary.interestCoverageRatio!.number(1))x”)<br />print()<br />print(“Liquidity:”)<br />print(”  Current Ratio: (q1Summary.currentRatio.number(2))x”)<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>=== Q1 2025 Financial Summary ===<p></p><p>Revenue: $1,000,000.00 Gross Profit: $600,000.00 EBITDA: $300,000.00 EBIT: $250,000.00 Net Income: $178,000.00</p><p>Margins: Gross Margin: 60.0% Operating Margin: 25.0% Net Margin: 17.8%</p><p>Returns: ROA: 9.9% ROE: 16.2%</p><p>Leverage: Debt/Equity: 0.45x Debt/EBITDA: 1.67x EBIT Interest Coverage: 10.0x</p></code><p><code>Liquidity: Current Ratio: 4.00x </code></p></pre>
+        <pre><code>=== Q1 2025 Financial Summary ===<br /><br />Revenue: $1,000,000.00<br />Gross Profit: $600,000.00<br />EBITDA: $300,000.00<br />EBIT: $250,000.00<br />Net Income: $178,000.00<br /><br />Margins:<br />  Gross Margin: 60.0%<br />  Operating Margin: 25.0%<br />  Net Margin: 17.8%<br /><br />Returns:<br />  ROA: 9.9%<br />  ROE: 16.2%<br /><br />Leverage:<br />  Debt/Equity: 0.45x<br />  Debt/EBITDA: 1.67x<br />  EBIT Interest Coverage: 10.0x<br /><br />Liquidity:<br />  Current Ratio: 4.00x<br /></code></pre>
         <strong>The power</strong>: One 
         <code>FinancialPeriodSummary</code> object gives you ~30 key metrics automatically computed.
         <hr />
         <h3>Step 4: Build Multi-Period Report</h3>Aggregate multiple periods for trend analysis:
-        <pre><code class="language-swift">// Create summaries for all quarters let summaries = try periods.indices.map { index in try FinancialPeriodSummary( entity: entity, period: periods[index], incomeStatement: incomeStatement, balanceSheet: balanceSheet, operationalMetrics: operationalMetrics[index] ) }<p></p><p>// Create multi-period report let report = try MultiPeriodReport( entity: entity, periodSummaries: summaries )</p></code><p><code class="language-swift">print(”\n=== Acme Corporation - FY2025 Trends ===\n”) print(“Periods analyzed: (report.periodCount)”) </code></p></pre>
+        <pre><code class="language-swift">// Create summaries for all quarters<br />let summaries = try periods.indices.map { index in<br />    try FinancialPeriodSummary(<br />        entity: entity,<br />        period: periods[index],<br />        incomeStatement: incomeStatement,<br />        balanceSheet: balanceSheet,<br />        operationalMetrics: operationalMetrics[index]<br />    )<br />}<br /><br />// Create multi-period report<br />let report = try MultiPeriodReport(<br />    entity: entity,<br />    periodSummaries: summaries<br />)<br /><br />print(”\n=== Acme Corporation - FY2025 Trends ===\n”)<br />print(“Periods analyzed: (report.periodCount)”)<br /></code></pre>
         <hr />
         <h3>Step 5: Analyze Growth Rates</h3>Calculate period-over-period growth:
-        <pre><code class="language-swift">// Revenue growth let revenueGrowth = report.revenueGrowth() print(”\nRevenue Growth (Q-o-Q):”) for (index, growth) in revenueGrowth.enumerated() { let quarter = index + 2  // Q2, Q3, Q4 print(”  Q(quarter): (growth.percent(1))”) }<p></p><p>// EBITDA growth let ebitdaGrowth = report.ebitdaGrowth() print(”\nEBITDA Growth (Q-o-Q):”) for (index, growth) in ebitdaGrowth.enumerated() { let quarter = index + 2 print(” Q(quarter): (growth.percent(1))”) }</p></code><p><code class="language-swift">// Net income growth let netIncomeGrowth = report.netIncomeGrowth() print(”\nNet Income Growth (Q-o-Q):”) for (index, growth) in netIncomeGrowth.enumerated() { let quarter = index + 2 print(” Q(quarter): (growth.percent(1))”) } </code></p></pre>
+        <pre><code class="language-swift">// Revenue growth<br />let revenueGrowth = report.revenueGrowth()<br />print(”\nRevenue Growth (Q-o-Q):”)<br />for (index, growth) in revenueGrowth.enumerated() {<br />    let quarter = index + 2  // Q2, Q3, Q4<br />    print(”  Q(quarter): (growth.percent(1))”)<br />}<br /><br />// EBITDA growth<br />let ebitdaGrowth = report.ebitdaGrowth()<br />print(”\nEBITDA Growth (Q-o-Q):”)<br />for (index, growth) in ebitdaGrowth.enumerated() {<br />    let quarter = index + 2<br />    print(”  Q(quarter): (growth.percent(1))”)<br />}<br /><br />// Net income growth<br />let netIncomeGrowth = report.netIncomeGrowth()<br />print(”\nNet Income Growth (Q-o-Q):”)<br />for (index, growth) in netIncomeGrowth.enumerated() {<br />    let quarter = index + 2<br />    print(”  Q(quarter): (growth.percent(1))”)<br />}<br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>Periods analyzed: 4<p></p><p>Revenue Growth (Q-o-Q): Q2: 10.0% Q3: 9.1% Q4: 8.3%</p><p>EBITDA Growth (Q-o-Q): Q2: 8.3% Q3: 13.8% Q4: 9.5%</p></code><p><code>Net Income Growth (Q-o-Q): Q2: 12.9% Q3: 16.4% Q4: 12.0% </code></p></pre>
+        <pre><code>Periods analyzed: 4<br /><br />Revenue Growth (Q-o-Q):<br />  Q2: 10.0%<br />  Q3: 9.1%<br />  Q4: 8.3%<br /><br />EBITDA Growth (Q-o-Q):<br />  Q2: 8.3%<br />  Q3: 13.8%<br />  Q4: 9.5%<br /><br />Net Income Growth (Q-o-Q):<br />  Q2: 12.9%<br />  Q3: 16.4%<br />  Q4: 12.0%<br /></code></pre>
         <strong>The insight</strong>: Revenue growth is decelerating (10% → 9.1% → 8.3%), but net income growth is accelerating due to margin expansion.
         <hr />
         <h3>Step 6: Track Margin Trends</h3>Analyze margin evolution:
-        <pre><code class="language-swift">// Margin trends let grossMargins = report.grossMarginTrend() let operatingMargins = report.operatingMarginTrend() let netMargins = report.netMarginTrend()<pre><code>print(”\n=== Margin Trend Analysis ===”) print(“Period\t\tGross\tOperating\t   Net”) print(”——\t\t—–\t———\t—––”) for i in 0…(periods.count - 1) { let quarter = i + 1 print(“Q(quarter)(grossMargins[i].percent(1).paddingLeft(toLength: 15))(operatingMargins[i].percent(1).paddingLeft(toLength: 12))(netMargins[i].percent(1).paddingLeft(toLength: 10))”) } </code></pre>// Calculate margin expansion (convert from decimal to basis points) // 1 percentage point = 100 basis points, so multiply decimal by 10,000 let grossExpansion = (grossMargins[3] - grossMargins[0]) * 10000 let operatingExpansion = (operatingMargins[3] - operatingMargins[0]) * 10000 let netExpansion = (netMargins[3] - netMargins[0]) * 10000<p></p><p>print(”\nMargin Expansion (Q1 → Q4):”) print(” Gross: (grossExpansion.number(0)) bps”) print(” Operating: (operatingExpansion.number(0)) bps”) print(” Net: (netExpansion.number(0)) bps”)</p></code><p><code class="language-swift"></code></p></pre>
+        <pre><code class="language-swift">// Margin trends<br />let grossMargins = report.grossMarginTrend()<br />let operatingMargins = report.operatingMarginTrend()<br />let netMargins = report.netMarginTrend()<br /><br />	print(”\n=== Margin Trend Analysis ===”)<br />	print(“Period\t\tGross\tOperating\t   Net”)<br />	print(”——\t\t—–\t———\t—––”)<br />	for i in 0…(periods.count - 1) {<br />		let quarter = i + 1<br />		print(“Q(quarter)(grossMargins[i].percent(1).paddingLeft(toLength: 15))(operatingMargins[i].percent(1).paddingLeft(toLength: 12))(netMargins[i].percent(1).paddingLeft(toLength: 10))”)<br />	}<br /><br />// Calculate margin expansion (convert from decimal to basis points)<br />// 1 percentage point = 100 basis points, so multiply decimal by 10,000<br />let grossExpansion = (grossMargins[3] - grossMargins[0]) * 10000<br />let operatingExpansion = (operatingMargins[3] - operatingMargins[0]) * 10000<br />let netExpansion = (netMargins[3] - netMargins[0]) * 10000<br /><br />print(”\nMargin Expansion (Q1 → Q4):”)<br />print(”  Gross: (grossExpansion.number(0)) bps”)<br />print(”  Operating: (operatingExpansion.number(0)) bps”)<br />print(”  Net: (netExpansion.number(0)) bps”)<br /><br /></code></pre>
         <strong>Output:</strong>
-        <pre><code>=== Margin Trend Analysis === Period		Gross	Operating	   Net
-            <hr />Q1          60.0%       25.0%     17.8% Q2          59.1%       25.0%     18.3% Q3          60.0%       26.7%     19.5% Q4          60.0%       27.3%     20.2%<p></p></code><p><code>Margin Expansion (Q1 → Q4): Gross: 0 bps Operating: 231 bps Net: 235 bps </code></p></pre>
+        <pre><code>=== Margin Trend Analysis ===<br />Period		Gross	Operating	   Net<br />——		—–	———	—––<br />Q1          60.0%       25.0%     17.8%<br />Q2          59.1%       25.0%     18.3%<br />Q3          60.0%       26.7%     19.5%<br />Q4          60.0%       27.3%     20.2%<br /><br />Margin Expansion (Q1 → Q4):<br />  Gross: 0 bps<br />  Operating: 231 bps<br />  Net: 235 bps<br /></code></pre>
         <strong>The insight</strong>: Gross margin stable at 60%, while operating margin expanded 231 basis points (2.3 percentage points) and net margin expanded 235 basis points (2.4 percentage points) due to operating leverage and improving efficiency.
         <hr />
         <h2>Try It Yourself</h2>
         <details>
-          <summary>Click to expand full playground code</summary>
-          <pre><code class="language-swift">import BusinessMath
-let entity = Entity( id: “ACME”, primaryType: .ticker, name: “Acme Corporation” )
-<p></p><p>let periods = (1…4).map { Period.quarter(year: 2025, quarter: $0) }</p><p>// Revenue account let revenue = try Account( entity: entity, name: “Product Revenue”, incomeStatementRole: .revenue, timeSeries: TimeSeries(periods: periods, values: [1_000_000, 1_100_000, 1_200_000, 1_300_000]) )</p><p>// Expense accounts let cogs = try Account( entity: entity, name: “Cost of Goods Sold”, incomeStatementRole: .costOfGoodsSold, timeSeries: TimeSeries(periods: periods, values: [400_000, 450_000, 480_000, 520_000]) )</p><p>let opex = try Account( entity: entity, name: “Operating Expenses”, incomeStatementRole: .operatingExpenseOther, timeSeries: TimeSeries(periods: periods, values: [300_000, 325_000, 350_000, 375_000]) )</p><p>let depreciation = try Account( entity: entity, name: “Depreciation”, incomeStatementRole: .depreciationAmortization, timeSeries: TimeSeries(periods: periods, values: [50_000, 50_000, 50_000, 50_000]) )</p><p>let interest = try Account( entity: entity, name: “Interest Expense”, incomeStatementRole: .interestExpense, timeSeries: TimeSeries(periods: periods, values: [25_000, 25_000, 25_000, 25_000]) )</p><p>let tax = try Account( entity: entity, name: “Income Tax”, incomeStatementRole: .incomeTaxExpense, timeSeries: TimeSeries(periods: periods, values: [47_000, 49_000, 61_000, 68_000]) )</p><p>// Create Income Statement let incomeStatement = try IncomeStatement( entity: entity, periods: periods, accounts: [revenue, cogs, opex, depreciation, interest, tax] )</p><p>// Create Balance Sheet (assets, liabilities, equity) let cash = try Account( entity: entity, name: “Cash”, balanceSheetRole: .cashAndEquivalents, timeSeries: TimeSeries(periods: periods, values: [500_000, 600_000, 750_000, 900_000]) )</p><p>let receivables = try Account( entity: entity, name: “Receivables”, balanceSheetRole: .accountsReceivable, timeSeries: TimeSeries(periods: periods, values: [300_000, 330_000, 360_000, 390_000]) )</p><p>let ppe = try Account( entity: entity, name: “PP&amp;E”, balanceSheetRole: .propertyPlantEquipment, timeSeries: TimeSeries(periods: periods, values: [1_000_000, 980_000, 960_000, 940_000]) )</p><p>let payables = try Account( entity: entity, name: “Payables”, balanceSheetRole: .accountsPayable, timeSeries: TimeSeries(periods: periods, values: [200_000, 220_000, 240_000, 260_000]) )</p><p>let debt = try Account( entity: entity, name: “Long-Term Debt”, balanceSheetRole: .longTermDebt, timeSeries: TimeSeries(periods: periods, values: [500_000, 500_000, 500_000, 500_000]) )</p><p>let equity = try Account( entity: entity, name: “Equity”, balanceSheetRole: .retainedEarnings, timeSeries: TimeSeries(periods: periods, values: [1_100_000, 1_190_000, 1_330_000, 1_470_000]) )</p></code>
-            <div>
-              <code class="language-swift"><p>let balanceSheet = try BalanceSheet( entity: entity, periods: periods, accounts: [cash, receivables, ppe, payables, debt, equity] )</p><pre><code>// Define operational metrics for each quarter let q1Metrics = OperationalMetrics
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br /><br />let entity = Entity(<br />	id: "ACME",<br />	primaryType: .ticker,<br />	name: "Acme Corporation"<br />)<br /><br />let periods = (1...4).map { Period.quarter(year: 2025, quarter: $0) }<br /><br />// Revenue account<br />let revenue = try Account(<br />	entity: entity,<br />	name: "Product Revenue",<br />	incomeStatementRole: .revenue,<br />	timeSeries: TimeSeries(periods: periods, values: [1_000_000, 1_100_000, 1_200_000, 1_300_000])<br />)<br /><br />// Expense accounts<br />let cogs = try Account(<br />	entity: entity,<br />	name: "Cost of Goods Sold",<br />	incomeStatementRole: .costOfGoodsSold,<br />	timeSeries: TimeSeries(periods: periods, values: [400_000, 450_000, 480_000, 520_000])<br />)<br /><br />let opex = try Account(<br />	entity: entity,<br />	name: "Operating Expenses",<br />	incomeStatementRole: .operatingExpenseOther,<br />	timeSeries: TimeSeries(periods: periods, values: [300_000, 325_000, 350_000, 375_000])<br />)<br /><br />let depreciation = try Account(<br />	entity: entity,<br />	name: "Depreciation",<br />	incomeStatementRole: .depreciationAmortization,<br />	timeSeries: TimeSeries(periods: periods, values: [50_000, 50_000, 50_000, 50_000])<br />)<br /><br />let interest = try Account(<br />	entity: entity,<br />	name: "Interest Expense",<br />	incomeStatementRole: .interestExpense,<br />	timeSeries: TimeSeries(periods: periods, values: [25_000, 25_000, 25_000, 25_000])<br />)<br /><br />let tax = try Account(<br />	entity: entity,<br />	name: "Income Tax",<br />	incomeStatementRole: .incomeTaxExpense,<br />	timeSeries: TimeSeries(periods: periods, values: [47_000, 49_000, 61_000, 68_000])<br />)<br /><br />// Create Income Statement<br />let incomeStatement = try IncomeStatement(<br />	entity: entity,<br />	periods: periods,<br />	accounts: [revenue, cogs, opex, depreciation, interest, tax]<br />)<br /><br />// Create Balance Sheet (assets, liabilities, equity)<br />let cash = try Account(<br />	entity: entity,<br />	name: "Cash",<br />	balanceSheetRole: .cashAndEquivalents,<br />	timeSeries: TimeSeries(periods: periods, values: [500_000, 600_000, 750_000, 900_000])<br />)<br /><br />let receivables = try Account(<br />	entity: entity,<br />	name: "Receivables",<br />	balanceSheetRole: .accountsReceivable,<br />	timeSeries: TimeSeries(periods: periods, values: [300_000, 330_000, 360_000, 390_000])<br />)<br /><br />let ppe = try Account(<br />	entity: entity,<br />	name: "PP&amp;E",<br />	balanceSheetRole: .propertyPlantEquipment,<br />	timeSeries: TimeSeries(periods: periods, values: [1_000_000, 980_000, 960_000, 940_000])<br />)<br /><br />let payables = try Account(<br />	entity: entity,<br />	name: "Payables",<br />	balanceSheetRole: .accountsPayable,<br />	timeSeries: TimeSeries(periods: periods, values: [200_000, 220_000, 240_000, 260_000])<br />)<br /><br />let debt = try Account(<br />	entity: entity,<br />	name: "Long-Term Debt",<br />	balanceSheetRole: .longTermDebt,<br />	timeSeries: TimeSeries(periods: periods, values: [500_000, 500_000, 500_000, 500_000])<br />)<br /><br />let equity = try Account(<br />	entity: entity,<br />	name: "Equity",<br />	balanceSheetRole: .retainedEarnings,<br />	timeSeries: TimeSeries(periods: periods, values: [1_100_000, 1_190_000, 1_330_000, 1_470_000])<br />)<br /><br />let balanceSheet = try BalanceSheet(<br />	entity: entity,<br />	periods: periods,<br />	accounts: [cash, receivables, ppe, payables, debt, equity]<br />)<br /><br />	// Define operational metrics for each quarter<br />	let q1Metrics = OperationalMetrics
+              <double>
+                (
+                <br /> entity: entity,
+                <br /> period: periods[0],
+                <br /> metrics: [
+                <br /> "units_sold": 10_000,
+                <br /> "average_price": 100.0,
+                <br /> "customer_count": 500,
+                <br /> "average_revenue_per_customer": 2_000
+                <br /> ]
+                <br /> )
+                <br />
+                <br /> let q2Metrics = OperationalMetrics
+                <double>
+                  (
+                  <br /> entity: entity,
+                  <br /> period: periods[1],
+                  <br /> metrics: [
+                  <br /> "units_sold": 11_000,
+                  <br /> "average_price": 100.0,
+                  <br /> "customer_count": 550,
+                  <br /> "average_revenue_per_customer": 2_000
+                  <br /> ]
+                  <br /> )
+                  <br />
+                  <br /> let q3Metrics = OperationalMetrics
+                  <double>
+                    (
+                    <br /> entity: entity,
+                    <br /> period: periods[2],
+                    <br /> metrics: [
+                    <br /> "units_sold": 12_000,
+                    <br /> "average_price": 100.0,
+                    <br /> "customer_count": 600,
+                    <br /> "average_revenue_per_customer": 2_000
+                    <br /> ]
+                    <br /> )
+                    <br />
+                    <br /> let q4Metrics = OperationalMetrics
                     <double>
-                      ( entity: entity, period: periods[0], metrics: [ “units_sold”: 10_000, “average_price”: 100.0, “customer_count”: 500, “average_revenue_per_customer”: 2_000 ] )
-                      <p></p>
-                      <p>let q2Metrics = OperationalMetrics
-                        <double>
-                          ( entity: entity, period: periods[1], metrics: [ “units_sold”: 11_000, “average_price”: 100.0, “customer_count”: 550, “average_revenue_per_customer”: 2_000 ] )
-                        </double></p>
-                      <p>let q3Metrics = OperationalMetrics
-                        <double>
-                          ( entity: entity, period: periods[2], metrics: [ “units_sold”: 12_000, “average_price”: 100.0, “customer_count”: 600, “average_revenue_per_customer”: 2_000 ] )
-                        </double></p>
-                      <p>let q4Metrics = OperationalMetrics
-                        <double>
-                          ( entity: entity, period: periods[3], metrics: [ “units_sold”: 13_000, “average_price”: 100.0, “customer_count”: 650, “average_revenue_per_customer”: 2_000 ] )
-                        </double></p>
-                    </double></code><p><code>let operationalMetrics = [q1Metrics, q2Metrics, q3Metrics, q4Metrics] </code></p></pre>let q1Summary = try FinancialPeriodSummary( entity: entity, period: periods[0], incomeStatement: incomeStatement, balanceSheet: balanceSheet, operationalMetrics: q1Metrics )<p></p></code>
-            </div>
-            <div>
-              <p>print(”=== Q1 2025 Financial Summary ===\n”) print(“Revenue: (q1Summary.revenue.currency())”) print(“Gross Profit: (q1Summary.grossProfit.currency())”) print(“EBITDA: (q1Summary.ebitda.currency())”) print(“EBIT: (q1Summary.operatingIncome.currency())”) print(“Net Income: (q1Summary.netIncome.currency())”) print() print(“Margins:”) print(” Gross Margin: (q1Summary.grossMargin.percent(1))”) print(” Operating Margin: (q1Summary.operatingMargin.percent(1))”) print(” Net Margin: (q1Summary.netMargin.percent(1))”) print() print(“Returns:”) print(” ROA: (q1Summary.roa.percent(1))”) print(” ROE: (q1Summary.roe.percent(1))”) print() print(“Leverage:”) print(” Debt/Equity: (q1Summary.debtToEquityRatio.number(2))x”) print(” Debt/EBITDA: (q1Summary.debtToEBITDARatio.number(2))x”) print(” EBIT Interest Coverage: (q1Summary.interestCoverageRatio!.number(1))x”) print() print(“Liquidity:”) print(” Current Ratio: (q1Summary.currentRatio.number(2))x”)</p>
-              <pre><code>// Create summaries for all quarters let summaries = try periods.indices.map { index in try FinancialPeriodSummary( entity: entity, period: periods[index], incomeStatement: incomeStatement, balanceSheet: balanceSheet, operationalMetrics: operationalMetrics[index] ) }<p></p><p>// Create multi-period report let report = try MultiPeriodReport( entity: entity, periodSummaries: summaries )</p><p>print(”\n=== Acme Corporation - FY2025 Trends ===\n”) print(“Periods analyzed: (report.periodCount)”)</p><p>// Revenue growth let revenueGrowth = report.revenueGrowth() print(”\nRevenue Growth (Q-o-Q):”) for (index, growth) in revenueGrowth.enumerated() { let quarter = index + 2 // Q2, Q3, Q4 print(” Q(quarter): (growth.percent(1))”) }</p><p>// EBITDA growth let ebitdaGrowth = report.ebitdaGrowth() print(”\nEBITDA Growth (Q-o-Q):”) for (index, growth) in ebitdaGrowth.enumerated() { let quarter = index + 2 print(” Q(quarter): (growth.percent(1))”) }</p><p>// Net income growth let netIncomeGrowth = report.netIncomeGrowth() print(”\nNet Income Growth (Q-o-Q):”) for (index, growth) in netIncomeGrowth.enumerated() { let quarter = index + 2 print(” Q(quarter): (growth.percent(1))”) }</p><p>// Margin trends let grossMargins = report.grossMarginTrend() let operatingMargins = report.operatingMarginTrend() let netMargins = report.netMarginTrend()</p><p>print(”\n=== Margin Trend Analysis ===”) print(“Period\t\tGross\tOperating\t Net”) print(”——\t\t—–\t———\t—––”) for i in 0…(periods.count - 1) { let quarter = i + 1 print(“Q(quarter)(grossMargins[i].percent(1).paddingLeft(toLength: 15))(operatingMargins[i].percent(1).paddingLeft(toLength: 12))(netMargins[i].percent(1).paddingLeft(toLength: 10))”) }</p><p>// Calculate margin expansion (convert from decimal to basis points) // 1 percentage point = 100 basis points, so multiply decimal by 10,000 let grossExpansion = (grossMargins[3] - grossMargins[0]) * 10000 let operatingExpansion = (operatingMargins[3] - operatingMargins[0]) * 10000 let netExpansion = (netMargins[3] - netMargins[0]) * 10000</p></code><p><code>print(”\nMargin Expansion (Q1 → Q4):”) print(” Gross: (grossExpansion.number(0)) bps”) print(” Operating: (operatingExpansion.number(0)) bps”) print(” Net: (netExpansion.number(0)) bps”) </code></p></pre>
-            </div></pre>
-        </details>
+                      (
+                      <br /> entity: entity,
+                      <br /> period: periods[3],
+                      <br /> metrics: [
+                      <br /> "units_sold": 13_000,
+                      <br /> "average_price": 100.0,
+                      <br /> "customer_count": 650,
+                      <br /> "average_revenue_per_customer": 2_000
+                      <br /> ]
+                      <br /> )
+                      <br />
+                      <br /> let operationalMetrics = [q1Metrics, q2Metrics, q3Metrics, q4Metrics]
+                      <br />
+                      <br />let q1Summary = try FinancialPeriodSummary(
+                      <br /> entity: entity,
+                      <br /> period: periods[0],
+                      <br /> incomeStatement: incomeStatement,
+                      <br /> balanceSheet: balanceSheet,
+                      <br /> operationalMetrics: q1Metrics
+                      <br />)
+                      <br />
+                      <br />print("=== Q1 2025 Financial Summary ===\n")
+                      <br />print("Revenue: \(q1Summary.revenue.currency())")
+                      <br />print("Gross Profit: \(q1Summary.grossProfit.currency())")
+                      <br />print("EBITDA: \(q1Summary.ebitda.currency())")
+                      <br />print("EBIT: \(q1Summary.operatingIncome.currency())")
+                      <br />print("Net Income: \(q1Summary.netIncome.currency())")
+                      <br />print()
+                      <br />print("Margins:")
+                      <br />print(" Gross Margin: \(q1Summary.grossMargin.percent(1))")
+                      <br />print(" Operating Margin: \(q1Summary.operatingMargin.percent(1))")
+                      <br />print(" Net Margin: \(q1Summary.netMargin.percent(1))")
+                      <br />print()
+                      <br />print("Returns:")
+                      <br />print(" ROA: \(q1Summary.roa.percent(1))")
+                      <br />print(" ROE: \(q1Summary.roe.percent(1))")
+                      <br />print()
+                      <br />print("Leverage:")
+                      <br />print(" Debt/Equity: \(q1Summary.debtToEquityRatio.number(2))x")
+                      <br />print(" Debt/EBITDA: \(q1Summary.debtToEBITDARatio.number(2))x")
+                      <br />print(" EBIT Interest Coverage: \(q1Summary.interestCoverageRatio!.number(1))x")
+                      <br />print()
+                      <br />print("Liquidity:")
+                      <br />print(" Current Ratio: \(q1Summary.currentRatio.number(2))x")
+                      <br />
+                      <br />
+                      <br /> // Create summaries for all quarters
+                      <br /> let summaries = try periods.indices.map { index in
+                      <br /> try FinancialPeriodSummary(
+                      <br /> entity: entity,
+                      <br /> period: periods[index],
+                      <br /> incomeStatement: incomeStatement,
+                      <br /> balanceSheet: balanceSheet,
+                      <br /> operationalMetrics: operationalMetrics[index]
+                      <br /> )
+                      <br /> }
+                      <br />
+                      <br /> // Create multi-period report
+                      <br /> let report = try MultiPeriodReport(
+                      <br /> entity: entity,
+                      <br /> periodSummaries: summaries
+                      <br /> )
+                      <br />
+                      <br /> print("\n=== Acme Corporation - FY2025 Trends ===\n")
+                      <br /> print("Periods analyzed: \(report.periodCount)")
+                      <br />
+                      <br /> // Revenue growth
+                      <br /> let revenueGrowth = report.revenueGrowth()
+                      <br /> print("\nRevenue Growth (Q-o-Q):")
+                      <br /> for (index, growth) in revenueGrowth.enumerated() {
+                      <br /> let quarter = index + 2 // Q2, Q3, Q4
+                      <br /> print(" Q\(quarter): \(growth.percent(1))")
+                      <br /> }
+                      <br />
+                      <br /> // EBITDA growth
+                      <br /> let ebitdaGrowth = report.ebitdaGrowth()
+                      <br /> print("\nEBITDA Growth (Q-o-Q):")
+                      <br /> for (index, growth) in ebitdaGrowth.enumerated() {
+                      <br /> let quarter = index + 2
+                      <br /> print(" Q\(quarter): \(growth.percent(1))")
+                      <br /> }
+                      <br />
+                      <br /> // Net income growth
+                      <br /> let netIncomeGrowth = report.netIncomeGrowth()
+                      <br /> print("\nNet Income Growth (Q-o-Q):")
+                      <br /> for (index, growth) in netIncomeGrowth.enumerated() {
+                      <br /> let quarter = index + 2
+                      <br /> print(" Q\(quarter): \(growth.percent(1))")
+                      <br /> }
+                      <br />
+                      <br /> // Margin trends
+                      <br /> let grossMargins = report.grossMarginTrend()
+                      <br /> let operatingMargins = report.operatingMarginTrend()
+                      <br /> let netMargins = report.netMarginTrend()
+                      <br />
+                      <br /> print("\n=== Margin Trend Analysis ===")
+                      <br /> print("Period\t\tGross\tOperating\t Net")
+                      <br /> print("------\t\t-----\t---------\t-------")
+                      <br /> for i in 0...(periods.count - 1) {
+                      <br /> let quarter = i + 1
+                      <br /> print("Q\(quarter)\(grossMargins[i].percent(1).paddingLeft(toLength: 15))\(operatingMargins[i].percent(1).paddingLeft(toLength: 12))\(netMargins[i].percent(1).paddingLeft(toLength: 10))")
+                      <br /> }
+                      <br />
+                      <br /> // Calculate margin expansion (convert from decimal to basis points)
+                      <br /> // 1 percentage point = 100 basis points, so multiply decimal by 10,000
+                      <br /> let grossExpansion = (grossMargins[3] - grossMargins[0]) * 10000
+                      <br /> let operatingExpansion = (operatingMargins[3] - operatingMargins[0]) * 10000
+                      <br /> let netExpansion = (netMargins[3] - netMargins[0]) * 10000
+                      <br />
+                      <br /> print("\nMargin Expansion (Q1 → Q4):")
+                      <br /> print(" Gross: \(grossExpansion.number(0)) bps")
+                      <br /> print(" Operating: \(operatingExpansion.number(0)) bps")
+                      <br /> print(" Net: \(netExpansion.number(0)) bps")
+                      <br />
+                      <br />
+                    </double>
+                  </double>
+                </double>
+              </double></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.4-BuildingFinancialReports.md"><strong>BusinessMath Docs – 3.4 Financial Reports</strong></a> 
+        <p></p>
+        <p><strong>Modifications to try</strong>:</p>
+        <ol>
+          <li>Add more operational metrics (customer acquisition cost, LTV)</li>
+          <li>Create annual reports instead of quarterly</li>
+          <li>Compare multiple companies side-by-side</li>
+        </ol>
+        <hr />
+        <h2>Real-World Application</h2>This is how equity analysts create quarterly reports:
+        <ul>
+          <li><strong>Equity and Credit research</strong>: 50-page reports start with one-page summary tables</li>
+          <li><strong>Earnings presentations</strong>: CFOs show this exact format to investors</li>
+          <li><strong>Internal dashboards</strong>: Management tracks these metrics monthly</li>
+        </ul>BusinessMath makes creating these reports programmatic and reproducible.
+        <hr />
+        <code>★ Insight ─────────────────────────────────────</code>
+        <p></p>
+        <p><strong>Why Separate Financial Statements from Reports?</strong></p>
+        <p><code>IncomeStatement</code> and <code>BalanceSheet</code> model the raw data.</p>
+        <p><code>FinancialPeriodSummary</code> computes derived metrics (EBITDA, ROE, ratios).</p>
+        <p><code>MultiPeriodReport</code> analyzes trends (growth rates, margin expansion).</p>
+        <p>This separation follows the <strong>Single Responsibility Principle</strong>:</p>
+        <ul>
+          <li>Statements = data containers</li>
+          <li>Summaries = metric calculators</li>
+          <li>Reports = trend analyzers</li>
+        </ul>Each layer adds value without bloating the lower layers.
+        <p></p>
+        <p><code>─────────────────────────────────────────────────</code>
+          <hr /></p>
+        <h3>📝 Development Note</h3>The hardest design decision was: 
+        <strong>How opinionated should the report format be?</strong>
+        <p></p>
+        <p>We could have made <code>FinancialPeriodSummary</code> produce formatted output (tables, charts). But formatting requirements vary wildly:</p>
+        <ul>
+          <li>CLI tools want plain text</li>
+          <li>Web apps want HTML</li>
+          <li>iOS apps want SwiftUI views</li>
+          <li>Analysts want Excel exports</li>
+        </ul>We chose 
+        <strong>data-only output</strong>: 
+        <code>FinancialPeriodSummary</code> computes metrics and returns them as properties. You format however you want.
+        <p></p>
+        <p>This makes the API flexible at the cost of requiring formatting code. Worth it.</p>
+        <p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design.md">Documentation as Design</a> (Week 2) - Designing APIs that users understand
+          <hr /></p>
+        <h2>Next Steps</h2>
+        <strong>Coming up next</strong>: 
+        <a href="../02-wed-financial-statements">Financial Statements Guide (Wednesday)</a> - Deep dive into Income Statement, Balance Sheet, and Cash Flow Statement.
+        <p></p>
+        <p><strong>This week</strong>: <a href="../03-fri-lease-accounting">Lease Accounting (Friday)</a> - IFRS 16 / ASC 842 lease modeling.
+          <hr /><strong>Series Progress</strong>:</p>
+        <ul>
+          <li>Week: 4/12</li>
+          <li>Posts Published: 13/~48</li>
+          <li>Topics Covered: Foundation + Analysis + Operational + Financial Statements (starting)</li>
+          <li>Playgrounds: 12 available</li>
+        </ul>
         <p></p>
       </div>
-      <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.4-BuildingFinancialReports.md"><strong>BusinessMath Docs – 3.4 Financial Reports</strong></a></p>
-      <p><strong>Modifications to try</strong>:</p>
-      <ol>
-        <li>Add more operational metrics (customer acquisition cost, LTV)</li>
-        <li>Create annual reports instead of quarterly</li>
-        <li>Compare multiple companies side-by-side</li>
-      </ol>
       <hr />
-      <h2>Real-World Application</h2>This is how equity analysts create quarterly reports:
-      <ul>
-        <li><strong>Equity and Credit research</strong>: 50-page reports start with one-page summary tables</li>
-        <li><strong>Earnings presentations</strong>: CFOs show this exact format to investors</li>
-        <li><strong>Internal dashboards</strong>: Management tracks these metrics monthly</li>
-      </ul>BusinessMath makes creating these reports programmatic and reproducible.
-      <hr />
-      <code>★ Insight ─────────────────────────────────────</code>
-      <p></p>
-      <p><strong>Why Separate Financial Statements from Reports?</strong></p>
-      <p><code>IncomeStatement</code> and <code>BalanceSheet</code> model the raw data.</p>
-      <p><code>FinancialPeriodSummary</code> computes derived metrics (EBITDA, ROE, ratios).</p>
-      <p><code>MultiPeriodReport</code> analyzes trends (growth rates, margin expansion).</p>
-      <p>This separation follows the <strong>Single Responsibility Principle</strong>:</p>
-      <ul>
-        <li>Statements = data containers</li>
-        <li>Summaries = metric calculators</li>
-        <li>Reports = trend analyzers</li>
-      </ul>Each layer adds value without bloating the lower layers.
-      <p></p>
-      <p><code>─────────────────────────────────────────────────</code>
-        <hr /></p>
-      <h3>📝 Development Note</h3>The hardest design decision was: 
-      <strong>How opinionated should the report format be?</strong>
-      <p></p>
-      <p>We could have made <code>FinancialPeriodSummary</code> produce formatted output (tables, charts). But formatting requirements vary wildly:</p>
-      <ul>
-        <li>CLI tools want plain text</li>
-        <li>Web apps want HTML</li>
-        <li>iOS apps want SwiftUI views</li>
-        <li>Analysts want Excel exports</li>
-      </ul>We chose 
-      <strong>data-only output</strong>: 
-      <code>FinancialPeriodSummary</code> computes metrics and returns them as properties. You format however you want.
-      <p></p>
-      <p>This makes the API flexible at the cost of requiring formatting code. Worth it.</p>
-      <p><strong>Related Methodology</strong>: <a href="../week-02/02-tue-documentation-as-design.md">Documentation as Design</a> (Week 2) - Designing APIs that users understand
-        <hr /></p>
-      <h2>Next Steps</h2>
-      <strong>Coming up next</strong>: 
-      <a href="../02-wed-financial-statements">Financial Statements Guide (Wednesday)</a> - Deep dive into Income Statement, Balance Sheet, and Cash Flow Statement.
-      <p></p>
-      <p><strong>This week</strong>: <a href="../03-fri-lease-accounting">Lease Accounting (Friday)</a> - IFRS 16 / ASC 842 lease modeling.
-        <hr /><strong>Series Progress</strong>:</p>
-      <ul>
-        <li>Week: 4/12</li>
-        <li>Posts Published: 13/~48</li>
-        <li>Topics Covered: Foundation + Analysis + Operational + Financial Statements (starting)</li>
-        <li>Playgrounds: 12 available</li>
-      </ul>
-      <p></p>
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: financial-analysis</p>
     </div>
-    <hr />
-    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: financial-analysis</p>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

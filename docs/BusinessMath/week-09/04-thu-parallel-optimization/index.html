@@ -258,7 +258,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Parallel Multi-Start Optimization: Finding Global Optima</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">16 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">19 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Part 32 of 12-Week BusinessMath Series</strong>
           <hr /></p>
@@ -288,59 +288,158 @@
         <strong>multiple random starting points in parallel</strong>, then returns the best result found. This dramatically increases the chance of finding the global optimum.
         <h3>Automatic Parallel Multi-Start Optimization</h3>
         <strong>Business Problem</strong>: Optimize portfolio allocation, but don’t get stuck in local minima.
-        <pre><code class="language-swift">import BusinessMath import Foundation let assets = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”] let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09]) let riskFreeRate = 0.03<p></p><p>// Covariance matrix let covarianceMatrix = [ [0.0400, 0.0150, 0.0020, 0.0180], // US Stocks [0.0150, 0.0625, 0.0015, 0.0200], // Intl Stocks [0.0020, 0.0015, 0.0036, 0.0010], // Bonds [0.0180, 0.0200, 0.0010, 0.0400] // Real Estate ]</p></code>
-          <div>
-            <code class="language-swift"><p>// Objective: Maximize Sharpe ratio let portfolioObjective: @Sendable (VectorN
-                <double>
-                  ) -&gt; Double = { weights in let expectedReturn = weights.dot(expectedReturns)
-                </double></p><pre><code>var variance = 0.0 for i in 0..
-                  <weights.dimension { for j in 0..<weights.dimension { variance +="weights[i]" * weights[j] * covariancematrix[i][j] } }< p>
-                    <p>let risk = sqrt(variance) let sharpeRatio = (expectedReturn - riskFreeRate) / risk</p>
-                  </weights.dimension></code><p><code>return -sharpeRatio // Minimize negative = maximize positive </code></p></pre>}<p></p></code>
-          </div><p>// Constraints: budget + long-only let budgetConstraint = MultivariateConstraint
-            <vectorn<double>
-              &gt;.budgetConstraint let longOnlyConstraints = MultivariateConstraint
-              <vectorn<double>
-                &gt;.nonNegativity(dimension: assets.count) let constraints: [MultivariateConstraint
-                <vectorn<double>
-                  &gt;] = [budgetConstraint] + longOnlyConstraints
-                </vectorn<double>
-              </vectorn<double>
-            </vectorn<double></p><p>// Create parallel multi-start optimizer let parallelOptimizer = ParallelOptimizer
-            <vectorn<double>
-              &gt;( algorithm: .inequality, // Use inequality-constrained optimizer numberOfStarts: 20, // Try 20 different starting points maxIterations: 1000, tolerance: 1e-6 )
-            </vectorn<double></p><p>// Define search region for random starting points let searchRegion = ( lower: VectorN(repeating: 0.0, count: assets.count), upper: VectorN(repeating: 1.0, count: assets.count) )</p><p>// Run optimization in parallel (async/await) // Note: Wrap in Task for playground execution Task { do { let result = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</p><pre><code>	print(“Parallel Multi-Start Optimization:”) print(”  Attempts: (result.allResults.count)”) print(”  Converged: (result.allResults.filter(.converged).count)”) print(”  Success rate: (result.successRate.percent())”) print(”  Best Sharpe ratio: ((-result.objectiveValue).number())”)<pre><code>print("\nBest Solution:")
-for (asset, weight) in zip(assets, result.solution.toArray()) {
-	if weight &gt; 0.01 {
-		print("  \(asset): \(weight.percent())")
-	}
-}
-</code></pre>} catch { print(“Optimization failed: (error)”) } </code></pre>} </pre>
+        <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />let assets = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”]<br />let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09])<br />let riskFreeRate = 0.03<br /><br />// Covariance matrix<br />let covarianceMatrix = [<br />	[0.0400, 0.0150, 0.0020, 0.0180],  // US Stocks<br />	[0.0150, 0.0625, 0.0015, 0.0200],  // Intl Stocks<br />	[0.0020, 0.0015, 0.0036, 0.0010],  // Bonds<br />	[0.0180, 0.0200, 0.0010, 0.0400]   // Real Estate<br />]<br /><br />// Objective: Maximize Sharpe ratio<br />let portfolioObjective: @Sendable (VectorN
+            <double>
+              ) -&gt; Double = { weights in
+              <br /> let expectedReturn = weights.dot(expectedReturns)
+              <br />
+              <br /> var variance = 0.0
+              <br /> for i in 0..
+              <weights.dimension {<br>
+                 for j in 0..
+                <weights.dimension {<br>
+                   variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+                  <br /> }
+                  <br /> }
+                  <br />
+                  <br /> let risk = sqrt(variance)
+                  <br /> let sharpeRatio = (expectedReturn - riskFreeRate) / risk
+                  <br />
+                  <br /> return -sharpeRatio // Minimize negative = maximize positive
+                  <br />}
+                  <br />
+                  <br />// Constraints: budget + long-only
+                  <br />let budgetConstraint = MultivariateConstraint
+                  <vectorn<double>
+                    &gt;.budgetConstraint
+                    <br />let longOnlyConstraints = MultivariateConstraint
+                    <vectorn<double>
+                      &gt;.nonNegativity(dimension: assets.count)
+                      <br />let constraints: [MultivariateConstraint
+                      <vectorn<double>
+                        &gt;] = [budgetConstraint] + longOnlyConstraints
+                        <br />
+                        <br />// Create parallel multi-start optimizer
+                        <br />let parallelOptimizer = ParallelOptimizer
+                        <vectorn<double>
+                          &gt;(
+                          <br /> algorithm: .inequality, // Use inequality-constrained optimizer
+                          <br /> numberOfStarts: 20, // Try 20 different starting points
+                          <br /> maxIterations: 1000,
+                          <br /> tolerance: 1e-6
+                          <br />)
+                          <br />
+                          <br />// Define search region for random starting points
+                          <br />let searchRegion = (
+                          <br /> lower: VectorN(repeating: 0.0, count: assets.count),
+                          <br /> upper: VectorN(repeating: 1.0, count: assets.count)
+                          <br />)
+                          <br />
+                          <br />// Run optimization in parallel (async/await)
+                          <br />// Note: Wrap in Task for playground execution
+                          <br />Task {
+                          <br /> do {
+                          <br /> let result = try await parallelOptimizer.optimize(
+                          <br /> objective: portfolioObjective,
+                          <br /> searchRegion: searchRegion,
+                          <br /> constraints: constraints
+                          <br /> )
+                          <br />
+                          <br /> print(“Parallel Multi-Start Optimization:”)
+                          <br /> print(” Attempts: (result.allResults.count)”)
+                          <br /> print(” Converged: (result.allResults.filter(.converged).count)”)
+                          <br /> print(” Success rate: (result.successRate.percent())”)
+                          <br /> print(” Best Sharpe ratio: ((-result.objectiveValue).number())”)
+                          <br />
+                          <br /> print(”\nBest Solution:”)
+                          <br /> for (asset, weight) in zip(assets, result.solution.toArray()) {
+                          <br /> if weight &gt; 0.01 {
+                          <br /> print(” (asset): (weight.percent())”)
+                          <br /> }
+                          <br /> }
+                          <br /> } catch {
+                          <br /> print(“Optimization failed: (error)”)
+                          <br /> }
+                          <br />}
+                          <br />
+                        </vectorn<double>
+                      </vectorn<double>
+                    </vectorn<double>
+                  </vectorn<double>
+                </weights.dimension>
+              </weights.dimension>
+            </double></code></pre>
         <h3>Comparing Single-Start vs Multi-Start</h3>
         <strong>Pattern</strong>: See how multi-start improves over single-start optimization.
-        <pre><code class="language-swift">// Single-start optimization (baseline) let singleStartOptimizer = AdaptiveOptimizer
+        <pre><code class="language-swift">// Single-start optimization (baseline)<br />let singleStartOptimizer = AdaptiveOptimizer
             <vectorn<double>
               &gt;()
-              <p></p>
-              <p>let singleResult = try singleStartOptimizer.optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints )</p>
-              <p>print(“Single-Start Result:”) print(” Sharpe ratio: ((-singleResult.objectiveValue).number())”) print(” Algorithm: (singleResult.algorithmUsed)”)</p>
-            </vectorn<double></code>
-          <div>
-            <code class="language-swift">
-              <div>
-                <p>// Multi-start optimization Task { do { let multiStartResult = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</p>
-                <pre><code>	print(”\nMulti-Start Result (20 starting points):”) print(”  Best Sharpe ratio: ((-multiStartResult.objectiveValue).number())”) print(”  Success rate: (multiStartResult.successRate.percent())”)<pre><code>// Compare let improvement = (-multiStartResult.objectiveValue) / (-singleResult.objectiveValue) - 1.0 print(”\nImprovement: (improvement.percent(1))”) </code></pre>} catch { print(“Multi-start optimization failed: (error)”) } </code></pre>} 
-              </div></code>
-          </div></pre>
+              <br />
+              <br />let singleResult = try singleStartOptimizer.optimize(
+              <br /> objective: portfolioObjective,
+              <br /> initialGuess: VectorN.equalWeights(dimension: assets.count),
+              <br /> constraints: constraints
+              <br />)
+              <br />
+              <br />print(“Single-Start Result:”)
+              <br />print(” Sharpe ratio: ((-singleResult.objectiveValue).number())”)
+              <br />print(” Algorithm: (singleResult.algorithmUsed)”)
+              <br />
+              <br />// Multi-start optimization
+              <br />Task {
+              <br /> do {
+              <br /> let multiStartResult = try await parallelOptimizer.optimize(
+              <br /> objective: portfolioObjective,
+              <br /> searchRegion: searchRegion,
+              <br /> constraints: constraints
+              <br /> )
+              <br />
+              <br /> print(”\nMulti-Start Result (20 starting points):”)
+              <br /> print(” Best Sharpe ratio: ((-multiStartResult.objectiveValue).number())”)
+              <br /> print(” Success rate: (multiStartResult.successRate.percent())”)
+              <br />
+              <br /> // Compare
+              <br /> let improvement = (-multiStartResult.objectiveValue) / (-singleResult.objectiveValue) - 1.0
+              <br /> print(”\nImprovement: (improvement.percent(1))”)
+              <br /> } catch {
+              <br /> print(“Multi-start optimization failed: (error)”)
+              <br /> }
+              <br />}
+              <br />
+            </vectorn<double></code></pre>
         <h3>Analyzing Result Distribution</h3>
         <strong>Pattern</strong>: Understand variation across different starting points.
-        <pre><code class="language-swift">Task { do { // Run multi-start optimization let result = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</code><pre><code class="language-swift"><code> // Analyze distribution of objectives found let objectives = result.allResults.map(.value) let sortedObjectives = objectives.sorted()</code><pre><code><code>print(“Result Distribution:”) print(” Best: (sortedObjectives.first?.number() ?? “N/A”)”) print(” Median: (sortedObjectives[sortedObjectives.count / 2].number())”) print(” Worst: (sortedObjectives.last?.number() ?? “N/A”)”) print(” Range: ((sortedObjectives.last! - sortedObjectives.first!).number())”)<p></p><p>// Show how many found the global optimum (within 1% of best) let globalThreshold = sortedObjectives.first! * 1.01 let globalCount = sortedObjectives.filter { $0 &lt;= globalThreshold }.count</p></code><p><code>print(”\nFound global optimum: (globalCount)/(sortedObjectives.count) attempts”) print(” (((Double(globalCount) / Double(sortedObjectives.count)).percent(0)))”) </code></p></code></pre>} catch { print(“Analysis failed: (error)”) } </code></pre>} </pre>
+        <pre><code class="language-swift">Task {<br />	do {<br />		// Run multi-start optimization<br />		let result = try await parallelOptimizer.optimize(<br />			objective: portfolioObjective,<br />			searchRegion: searchRegion,<br />			constraints: constraints<br />		)<br /><br />		// Analyze distribution of objectives found<br />		let objectives = result.allResults.map(.value)<br />		let sortedObjectives = objectives.sorted()<br /><br />		print(“Result Distribution:”)<br />		print(”  Best: (sortedObjectives.first?.number() ?? “N/A”)”)<br />		print(”  Median: (sortedObjectives[sortedObjectives.count / 2].number())”)<br />		print(”  Worst: (sortedObjectives.last?.number() ?? “N/A”)”)<br />		print(”  Range: ((sortedObjectives.last! - sortedObjectives.first!).number())”)<br /><br />		// Show how many found the global optimum (within 1% of best)<br />		let globalThreshold = sortedObjectives.first! * 1.01<br />		let globalCount = sortedObjectives.filter { $0 &lt;= globalThreshold }.count<br /><br />		print(”\nFound global optimum: (globalCount)/(sortedObjectives.count) attempts”)<br />		print(”  (((Double(globalCount) / Double(sortedObjectives.count)).percent(0)))”)<br />	} catch {<br />		print(“Analysis failed: (error)”)<br />	}<br />}<br /></code></pre>
         <h3>Choosing Number of Starting Points</h3>
         <strong>Pattern</strong>: Trade off between solution quality and computation time.
-        <pre><code class="language-swift">Task { // Test different numbers of starting points for numStarts in [5, 10, 20, 50] { do { let optimizer = ParallelOptimizer
+        <pre><code class="language-swift">Task {<br />	// Test different numbers of starting points<br />	for numStarts in [5, 10, 20, 50] {<br />		do {<br />			let optimizer = ParallelOptimizer
             <vectorn<double>
-              &gt;( algorithm: .inequality, numberOfStarts: numStarts, maxIterations: 500, tolerance: 1e-5 )
-              <pre><code>		let startTime = Date() let result = try await optimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints ) let elapsedTime = Date().timeIntervalSince(startTime)<pre><code>	print(”\n(numStarts) starting points:”) print(”  Best objective: (result.objectiveValue.number())”) print(”  Success rate: (result.successRate.percent())”) print(”  Time: (elapsedTime.number(2))s”) print(”  Time per start: ((elapsedTime / Double(numStarts)).number(2))s”) } catch { print(”\n(numStarts) starting points: FAILED”) } </code></pre>} </code></pre>} 
+              &gt;(
+              <br /> algorithm: .inequality,
+              <br /> numberOfStarts: numStarts,
+              <br /> maxIterations: 500,
+              <br /> tolerance: 1e-5
+              <br /> )
+              <br />
+              <br /> let startTime = Date()
+              <br /> let result = try await optimizer.optimize(
+              <br /> objective: portfolioObjective,
+              <br /> searchRegion: searchRegion,
+              <br /> constraints: constraints
+              <br /> )
+              <br /> let elapsedTime = Date().timeIntervalSince(startTime)
+              <br />
+              <br /> print(”\n(numStarts) starting points:”)
+              <br /> print(” Best objective: (result.objectiveValue.number())”)
+              <br /> print(” Success rate: (result.successRate.percent())”)
+              <br /> print(” Time: (elapsedTime.number(2))s”)
+              <br /> print(” Time per start: ((elapsedTime / Double(numStarts)).number(2))s”)
+              <br /> } catch {
+              <br /> print(”\n(numStarts) starting points: FAILED”)
+              <br /> }
+              <br /> }
+              <br />}
+              <br />
             </vectorn<double></code></pre>
         <strong>Rule of Thumb</strong>:
         <ul>
@@ -354,338 +453,805 @@ for (asset, weight) in zip(assets, result.solution.toArray()) {
         <h3>Parallel Execution with Swift Concurrency</h3>BusinessMath uses Swift’s 
         <code>async/await</code> and 
         <code>TaskGroup</code> to run optimizations in parallel:
-        <pre><code class="language-swift">// Inside ParallelOptimizer (simplified) let results = try await withThrowingTaskGroup( of: (startingPoint: V, result: MultivariateOptimizationResult
+        <pre><code class="language-swift">// Inside ParallelOptimizer (simplified)<br />let results = try await withThrowingTaskGroup(<br />	of: (startingPoint: V, result: MultivariateOptimizationResult
             <v>
-              ).self ) { group in
-              <pre><code>// Add a task for each starting point for start in startingPoints { group.addTask { let result = try ParallelOptimizer.runSingleOptimization( algorithm: algorithm, objective: objective, initialGuess: start, constraints: constraints ) return (startingPoint: start, result: result) } }<p></p></code></pre>
+              ).self
+              <br />) { group in
+              <br />
+              <br /> // Add a task for each starting point
+              <br /> for start in startingPoints {
+              <br /> group.addTask {
+              <br /> let result = try ParallelOptimizer.runSingleOptimization(
+              <br /> algorithm: algorithm,
+              <br /> objective: objective,
+              <br /> initialGuess: start,
+              <br /> constraints: constraints
+              <br /> )
+              <br /> return (startingPoint: start, result: result)
+              <br /> }
+              <br /> }
+              <br />
+              <br /> // Collect all results as they complete
+              <br /> var allResults: [(V, MultivariateOptimizationResult
+              <v>
+                )] = []
+                <br /> for try await (start, result) in group {
+                <br /> allResults.append((start, result))
+                <br /> }
+                <br /> return allResults
+                <br />}
+                <br />
+                <br />// Find best result (lowest objective value)
+                <br />let best = results.min(by: { $0.1.value &lt; $1.1.value })!
+                <br />
+              </v>
             </v></code></pre>
-      </div>
-      <p><code class="language-swift"><code>// Collect all results as they complete var allResults: [(V, MultivariateOptimizationResult
-            <v>
-              )] = [] for try await (start, result) in group { allResults.append((start, result)) } return allResults 
-            </v></code>}</code></p>
-    </div>
-    <p><code class="language-swift">// Find best result (lowest objective value) let best = results.min(by: { $0.1.value &lt; $1.1.value })! </code></p>
-    <h3>Algorithm Selection</h3>ParallelOptimizer supports multiple base algorithms:
-    <pre><code class="language-swift">public enum Algorithm { case gradientDescent(learningRate: Double) case newtonRaphson case constrained case inequality }<p></p><p>// Choose based on problem characteristics let optimizer = ParallelOptimizer
-          <vectorn<double>
-            &gt;( algorithm: .inequality, // For problems with inequality constraints numberOfStarts: 20 )
-          </vectorn<double></p></code><p><code class="language-swift">// Or use gradient descent for unconstrained problems let unconstrainedOptimizer = ParallelOptimizer
-          <vectorn<double>
-            &gt;( algorithm: .gradientDescent(learningRate: 0.01), numberOfStarts: 20 ) 
-          </vectorn<double></code></p></pre>
-    <h3>Performance Characteristics</h3>
-    <strong>Speedup</strong> depends on:
-    <ol>
-      <li><strong>Number of CPU cores</strong>: 8-core M3 can run 8 optimizations simultaneously</li>
-      <li><strong>Objective function cost</strong>: Expensive functions (&gt;10ms) benefit most</li>
-      <li><strong>Number of starting points</strong>: 20 starts on 8 cores ≈ 2.5× speedup</li>
-    </ol>
-    <strong>Typical Results</strong> (M3 MacBook Pro, 8 cores):
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Starting Points</th>
-          <th scope="col">Sequential Time</th>
-          <th scope="col">Parallel Time</th>
-          <th scope="col">Speedup</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>5 starts</td>
-          <td>15s</td>
-          <td>5s</td>
-          <td>3.0×</td>
-        </tr>
-        <tr>
-          <td>10 starts</td>
-          <td>30s</td>
-          <td>8s</td>
-          <td>3.75×</td>
-        </tr>
-        <tr>
-          <td>20 starts</td>
-          <td>60s</td>
-          <td>15s</td>
-          <td>4.0×</td>
-        </tr>
-        <tr>
-          <td>50 starts</td>
-          <td>150s</td>
-          <td>35s</td>
-          <td>4.3×</td>
-        </tr>
-      </tbody>
-    </table>
-    <strong>Key Insight</strong>: Speedup plateaus around number of physical cores (8 for M3).
-    <hr />
-    <h2>When to Use Multi-Start Optimization</h2>
-    <h3>Strong Candidates</h3>
-    <strong>Use multi-start when</strong>:
-    <ul>
-      <li>Objective has multiple local minima</li>
-      <li>Problem is non-convex</li>
-      <li>Single-start results vary significantly with initial guess</li>
-      <li>Solution quality is critical (willing to spend more time)</li>
-    </ul>
-    <strong>Examples</strong>:
-    <ul>
-      <li>Portfolio optimization with transaction costs</li>
-      <li>Facility location problems</li>
-      <li>Machine learning hyperparameter tuning</li>
-      <li>Supply chain network design</li>
-    </ul>
-    <h3>Weak Candidates</h3>
-    <strong>Don’t use multi-start when</strong>:
-    <ul>
-      <li>Problem is convex (single local minimum = global minimum)</li>
-      <li>Objective is very expensive (&gt;1 minute per evaluation)</li>
-      <li>Quick approximate solution is acceptable</li>
-      <li>Single-start consistently finds good solutions</li>
-    </ul>
-    <strong>Examples</strong>:
-    <ul>
-      <li>Simple least-squares regression (convex)</li>
-      <li>Linear programming (convex)</li>
-      <li>Unconstrained quadratic problems (convex)</li>
-    </ul>
-    <h3>Hybrid Approach</h3>
-    <strong>Pattern</strong>: Use multi-start to find good region, then refine with single-start.
-    <pre><code class="language-swift">Task { do { // Phase 1: Broad search with low accuracy let explorationOptimizer = ParallelOptimizer
-        <vectorn<double>
-          &gt;( algorithm: .gradientDescent(learningRate: 0.01), numberOfStarts: 50, maxIterations: 100, // Low iterations tolerance: 1e-3 // Loose tolerance )
-          <pre><code>	let roughSolution = try await explorationOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )<pre><code>print("Phase 1 (exploration): Sharpe \((-roughSolution.objectiveValue).number())")
-
-// Phase 2: Refine best solution with high accuracy
-let refinementOptimizer = AdaptiveOptimizer
-                  <vectorn<double>
-                    &gt;( maxIterations: 2000, tolerance: 1e-8 ) let finalSolution = try refinementOptimizer.optimize( objective: portfolioObjective, initialGuess: roughSolution.solution, constraints: constraints ) print("Phase 2 (refinement): Sharpe \((-finalSolution.objectiveValue).number())") 
-                  </vectorn<double></code></pre>} catch { print(“Hybrid optimization failed: (error)”) } </code></pre>} 
-        </vectorn<double></code></pre>
-    <hr />
-    <h2>Real-World Application</h2>
-    <h3>Investment Firm: Quarterly Rebalancing</h3>
-    <strong>Company</strong>: Mid-sized investment firm managing $2B across 80 assets 
-    <strong>Challenge</strong>: Optimize portfolio quarterly, accounting for:
-    <ul>
-      <li>Non-linear transaction costs</li>
-      <li>Tax-loss harvesting opportunities</li>
-      <li>Regulatory diversification requirements</li>
-    </ul>
-    <strong>Problem Characteristics</strong>:
-    <ul>
-      <li>80 variables (asset weights)</li>
-      <li>Non-convex objective (transaction costs create discontinuities)</li>
-      <li>50+ constraints (position limits, sector allocations, tax rules)</li>
-    </ul>
-    <strong>Single-Start Results</strong> (10 trials from different starting points):
-    <ul>
-      <li>Best Sharpe ratio: 0.94</li>
-      <li>Worst Sharpe ratio: 0.78</li>
-      <li>Average: 0.85</li>
-      <li><strong>High variance suggests local minima problem</strong></li>
-    </ul>
-    <strong>Multi-Start Solution</strong>:
-    <pre><code class="language-swift">import BusinessMath import Foundation<p></p><p>// Simplified 80-asset portfolio problem let numAssets = 80 let portfolioValue = 2_000_000_000.0 // $2B AUM</p><p>// Generate realistic expected returns (4% to 15%, mean ~9%) let expectedReturns80 = VectorN((0..
-          <numassets).map { i in 0.04 + 0.11 * double.random(in: 0…1) })< p></numassets).map></p><p>// Simplified covariance: diagonal-dominant with moderate correlations var covariance80 = [[Double]]( repeating: [Double](repeating: 0.0, count: numAssets), count: numAssets ) for i in 0..
-          <numassets { let volatility="0.10" + 0.30 * double.random(in: 0…1) 10-40% volatility covariance80[i][i]="volatility" * volatility<pre>
-            <code>// Add some correlation with nearby assets for j in (i+1)..
-              <min(i+5, numassets) { let correlation="0.3" * double.random(in: 0…1) let vol_i="sqrt(covariance80[i][i])" let vol_j="0.10" + 0.30 * double.random(in: 0…1) covariance80[j][j]="vol_j" * vol_j covariance80[i][j]="correlation" * vol_i * vol_j covariance80[j][i]="covariance80[i][j]" }< code></min(i+5,></code>
-          </numassets></p></code></pre>
-    <code class="language-swift"><code>}<p></p><p>// Current holdings (starting point before rebalancing) let currentHoldings = VectorN((0..
-          <numassets).map { _ in 0.005 + 0.015 * double.random(in: 0…1) 0.5% to 2% per asset }).simplexprojection() normalize to sum to 1< p></numassets).map></p><p>// Objective with transaction costs let transactionCostBps = 5.0 // 5 basis points per trade let riskFreeRate80 = 0.03</p></code></code>
-    <div>
-      <code class="language-swift"><code><p>let objectiveWithCosts: @Sendable (VectorN
-            <double>
-              ) -&gt; Double = { weights in // Expected return let expectedReturn = weights.dot(expectedReturns80)
-            </double></p><pre><code>// Portfolio variance var variance = 0.0 for i in 0..
-              <numassets { for j in 0..<numassets { variance +="weights[i]" * weights[j] * covariance80[i][j] } } let risk="sqrt(variance)</p">
-                <p>// Transaction costs (creates non-convexity) var totalTurnover = 0.0 for i in 0..
-                  <numassets { totalturnover +="abs(weights[i]" - currentholdings[i]) } let transactioncost="(transactionCostBps" 10000.0) * totalturnover< p></numassets></p>
-                <p>// Net return after costs let netReturn = expectedReturn - transactionCost let sharpeRatio = (netReturn - riskFreeRate80) / risk</p>
-              </numassets></code><p><code>return -sharpeRatio // Minimize negative Sharpe </code></p></pre>}<p></p></code></code>
-    </div>
-    <p>// Constraints let budgetConstraint80 = MultivariateConstraint
-      <vectorn<double>
-        &gt;.budgetConstraint let longOnlyConstraints80 = MultivariateConstraint
-        <vectorn<double>
-          &gt;.nonNegativity(dimension: numAssets)
-        </vectorn<double>
-      </vectorn<double></p>
-    <p>// Position limits: no more than 5% per asset (diversification requirement) let positionLimits80 = (0..
-      <numassets).map { i in multivariateconstraint<vectorn<double>
-        &gt;.inequality { w in w[i] - 0.05 // w[i] ≤ 5% } }
-      </numassets).map></p>
-    <p>let allConstraints80 = [budgetConstraint80] + longOnlyConstraints80 + positionLimits80</p>
-    <p>// Multi-start optimization Task { do { print(String(repeating: “=”, count: 70)) print(“REAL-WORLD EXAMPLE: 80-ASSET PORTFOLIO REBALANCING”) print(String(repeating: “=”, count: 70)) print(“Portfolio value: $((portfolioValue / 1_000_000_000).number(1))B”) print(“Number of assets: (numAssets)”) print(“Transaction costs: (transactionCostBps) bps”) print()</p>
-    <pre><code>	let robustOptimizer = ParallelOptimizer
-        <vectorn<double>
-          &gt;( algorithm: .inequality, numberOfStarts: 30, maxIterations: 1500, tolerance: 1e-6 )
-          <pre><code>let startTime = Date()
-let result = try await robustOptimizer.optimize(
-	objective: objectiveWithCosts,
-	searchRegion: (
-		lower: VectorN(repeating: 0.0, count: numAssets),
-		upper: VectorN(repeating: 0.05, count: numAssets)  // Max 5% per asset
-	),
-	constraints: allConstraints80
-)
-let elapsedTime = Date().timeIntervalSince(startTime)
-
-print("Multi-Start Optimization (30 starts):")
-print("  Best Sharpe ratio: \((-result.objectiveValue).number())")
-print("  Success rate: \(result.successRate.percent())")
-print("  Total time: \((elapsedTime / 60).number(1)) minutes")
-
-// Calculate turnover
-var totalTurnover = 0.0
-var numPositions = 0
-for i in 0..
-              <numassets { let change="abs(result.solution[i]" - currentholdings[i]) totalturnover +="change" if result.solution[i]>
-                 0.001 { numPositions += 1 } } print("\nPortfolio Characteristics:") print(" Active positions: \(numPositions)/\(numAssets)") print(" Total turnover: \(totalTurnover.percent(1))") print(" Trading costs: $\((portfolioValue * totalTurnover * transactionCostBps / 10000).currency(0))") // Show top 10 positions let topPositions = result.solution.toArray() .enumerated() .sorted { $0.element &gt; $1.element } .prefix(10) print("\nTop 10 Positions:") for (i, (idx, weight)) in topPositions.enumerated() { print(" \(i+1). Asset \(idx): \(weight.percent(2))") } 
-              </numassets></code></pre>} catch { print(“Robust optimization failed: (error)”) } 
-        </vectorn<double></code></pre>} 
-    <strong>Results</strong>:
-    <ul>
-      <li>Best Sharpe ratio found: <strong>1.08</strong> (14% better than single-start average)</li>
-      <li>Consistent across rebalancing periods</li>
-      <li>Success rate: 85% of starts converged</li>
-      <li>Computation time: 12 minutes (acceptable for quarterly rebalancing)</li>
-      <li><strong>Annual alpha improvement: +$16M</strong> (0.8% on $2B AUM)</li>
-    </ul>
-    <hr />
-    <h2>Try It Yourself</h2>
-    <details>
-      <summary>Click to expand full playground code</summary>
-      <pre><code class="language-swift">import BusinessMath
-import Foundation
-let assets = [“US Stocks”, “Intl Stocks”, “Bonds”, “Real Estate”] let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09]) let riskFreeRate = 0.03
-<p></p><p>// Covariance matrix let covarianceMatrix = [ [0.0400, 0.0150, 0.0020, 0.0180], // US Stocks [0.0150, 0.0625, 0.0015, 0.0200], // Intl Stocks [0.0020, 0.0015, 0.0036, 0.0010], // Bonds [0.0180, 0.0200, 0.0010, 0.0400] // Real Estate ]</p></code>
-        <div>
-          <code class="language-swift"><p>// Objective: Maximize Sharpe ratio let portfolioObjective: @Sendable (VectorN
+        <h3>Algorithm Selection</h3>ParallelOptimizer supports multiple base algorithms:
+        <pre><code class="language-swift">public enum Algorithm {<br />	case gradientDescent(learningRate: Double)<br />	case newtonRaphson<br />	case constrained<br />	case inequality<br />}<br /><br />// Choose based on problem characteristics<br />let optimizer = ParallelOptimizer
+            <vectorn<double>
+              &gt;(
+              <br /> algorithm: .inequality, // For problems with inequality constraints
+              <br /> numberOfStarts: 20
+              <br />)
+              <br />
+              <br />// Or use gradient descent for unconstrained problems
+              <br />let unconstrainedOptimizer = ParallelOptimizer
+              <vectorn<double>
+                &gt;(
+                <br /> algorithm: .gradientDescent(learningRate: 0.01),
+                <br /> numberOfStarts: 20
+                <br />)
+                <br />
+              </vectorn<double>
+            </vectorn<double></code></pre>
+        <h3>Performance Characteristics</h3>
+        <strong>Speedup</strong> depends on:
+        <ol>
+          <li><strong>Number of CPU cores</strong>: 8-core M3 can run 8 optimizations simultaneously</li>
+          <li><strong>Objective function cost</strong>: Expensive functions (&gt;10ms) benefit most</li>
+          <li><strong>Number of starting points</strong>: 20 starts on 8 cores ≈ 2.5× speedup</li>
+        </ol>
+        <strong>Typical Results</strong> (M3 MacBook Pro, 8 cores):
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Starting Points</th>
+              <th scope="col">Sequential Time</th>
+              <th scope="col">Parallel Time</th>
+              <th scope="col">Speedup</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>5 starts</td>
+              <td>15s</td>
+              <td>5s</td>
+              <td>3.0×</td>
+            </tr>
+            <tr>
+              <td>10 starts</td>
+              <td>30s</td>
+              <td>8s</td>
+              <td>3.75×</td>
+            </tr>
+            <tr>
+              <td>20 starts</td>
+              <td>60s</td>
+              <td>15s</td>
+              <td>4.0×</td>
+            </tr>
+            <tr>
+              <td>50 starts</td>
+              <td>150s</td>
+              <td>35s</td>
+              <td>4.3×</td>
+            </tr>
+          </tbody>
+        </table>
+        <strong>Key Insight</strong>: Speedup plateaus around number of physical cores (8 for M3).
+        <hr />
+        <h2>When to Use Multi-Start Optimization</h2>
+        <h3>Strong Candidates</h3>
+        <strong>Use multi-start when</strong>:
+        <ul>
+          <li>Objective has multiple local minima</li>
+          <li>Problem is non-convex</li>
+          <li>Single-start results vary significantly with initial guess</li>
+          <li>Solution quality is critical (willing to spend more time)</li>
+        </ul>
+        <strong>Examples</strong>:
+        <ul>
+          <li>Portfolio optimization with transaction costs</li>
+          <li>Facility location problems</li>
+          <li>Machine learning hyperparameter tuning</li>
+          <li>Supply chain network design</li>
+        </ul>
+        <h3>Weak Candidates</h3>
+        <strong>Don’t use multi-start when</strong>:
+        <ul>
+          <li>Problem is convex (single local minimum = global minimum)</li>
+          <li>Objective is very expensive (&gt;1 minute per evaluation)</li>
+          <li>Quick approximate solution is acceptable</li>
+          <li>Single-start consistently finds good solutions</li>
+        </ul>
+        <strong>Examples</strong>:
+        <ul>
+          <li>Simple least-squares regression (convex)</li>
+          <li>Linear programming (convex)</li>
+          <li>Unconstrained quadratic problems (convex)</li>
+        </ul>
+        <h3>Hybrid Approach</h3>
+        <strong>Pattern</strong>: Use multi-start to find good region, then refine with single-start.
+        <pre><code class="language-swift">Task {<br />	do {<br />		// Phase 1: Broad search with low accuracy<br />		let explorationOptimizer = ParallelOptimizer
+            <vectorn<double>
+              &gt;(
+              <br /> algorithm: .gradientDescent(learningRate: 0.01),
+              <br /> numberOfStarts: 50,
+              <br /> maxIterations: 100, // Low iterations
+              <br /> tolerance: 1e-3 // Loose tolerance
+              <br /> )
+              <br />
+              <br /> let roughSolution = try await explorationOptimizer.optimize(
+              <br /> objective: portfolioObjective,
+              <br /> searchRegion: searchRegion,
+              <br /> constraints: constraints
+              <br /> )
+              <br />
+              <br /> print(“Phase 1 (exploration): Sharpe ((-roughSolution.objectiveValue).number())”)
+              <br />
+              <br /> // Phase 2: Refine best solution with high accuracy
+              <br /> let refinementOptimizer = AdaptiveOptimizer
+              <vectorn<double>
+                &gt;(
+                <br /> maxIterations: 2000,
+                <br /> tolerance: 1e-8
+                <br /> )
+                <br />
+                <br /> let finalSolution = try refinementOptimizer.optimize(
+                <br /> objective: portfolioObjective,
+                <br /> initialGuess: roughSolution.solution,
+                <br /> constraints: constraints
+                <br /> )
+                <br />
+                <br /> print(“Phase 2 (refinement): Sharpe ((-finalSolution.objectiveValue).number())”)
+                <br /> } catch {
+                <br /> print(“Hybrid optimization failed: (error)”)
+                <br /> }
+                <br />}
+                <br />
+              </vectorn<double>
+            </vectorn<double></code></pre>
+        <hr />
+        <h2>Real-World Application</h2>
+        <h3>Investment Firm: Quarterly Rebalancing</h3>
+        <strong>Company</strong>: Mid-sized investment firm managing $2B across 80 assets 
+        <strong>Challenge</strong>: Optimize portfolio quarterly, accounting for:
+        <ul>
+          <li>Non-linear transaction costs</li>
+          <li>Tax-loss harvesting opportunities</li>
+          <li>Regulatory diversification requirements</li>
+        </ul>
+        <strong>Problem Characteristics</strong>:
+        <ul>
+          <li>80 variables (asset weights)</li>
+          <li>Non-convex objective (transaction costs create discontinuities)</li>
+          <li>50+ constraints (position limits, sector allocations, tax rules)</li>
+        </ul>
+        <strong>Single-Start Results</strong> (10 trials from different starting points):
+        <ul>
+          <li>Best Sharpe ratio: 0.94</li>
+          <li>Worst Sharpe ratio: 0.78</li>
+          <li>Average: 0.85</li>
+          <li><strong>High variance suggests local minima problem</strong></li>
+        </ul>
+        <strong>Multi-Start Solution</strong>:
+        <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />// Simplified 80-asset portfolio problem<br />let numAssets = 80<br />let portfolioValue = 2_000_000_000.0  // $2B AUM<br /><br />// Generate realistic expected returns (4% to 15%, mean ~9%)<br />let expectedReturns80 = VectorN((0..
+            <numassets).map { i in<br>
+               0.04 + 0.11 * Double.random(in: 0…1)
+              <br />})
+              <br />
+              <br />// Simplified covariance: diagonal-dominant with moderate correlations
+              <br />var covariance80 = [[Double]](
+              <br /> repeating: [Double](repeating: 0.0, count: numAssets),
+              <br /> count: numAssets
+              <br />)
+              <br />for i in 0..
+              <numassets {<br>
+                 let volatility = 0.10 + 0.30 * Double.random(in: 0…1) // 10-40% volatility
+                <br /> covariance80[i][i] = volatility * volatility
+                <br />
+                <br /> // Add some correlation with nearby assets
+                <br /> for j in (i+1)..
+                <min(i+5, numassets) {<br>
+                   let correlation = 0.3 * Double.random(in: 0…1)
+                  <br /> let vol_i = sqrt(covariance80[i][i])
+                  <br /> let vol_j = 0.10 + 0.30 * Double.random(in: 0…1)
+                  <br /> covariance80[j][j] = vol_j * vol_j
+                  <br /> covariance80[i][j] = correlation * vol_i * vol_j
+                  <br /> covariance80[j][i] = covariance80[i][j]
+                  <br /> }
+                  <br />}
+                  <br />
+                  <br />// Current holdings (starting point before rebalancing)
+                  <br />let currentHoldings = VectorN((0..
+                  <numassets).map { _ in<br>
+                     0.005 + 0.015 * Double.random(in: 0…1) // 0.5% to 2% per asset
+                    <br />}).simplexProjection() // Normalize to sum to 1
+                    <br />
+                    <br />// Objective with transaction costs
+                    <br />let transactionCostBps = 5.0 // 5 basis points per trade
+                    <br />let riskFreeRate80 = 0.03
+                    <br />
+                    <br />let objectiveWithCosts: @Sendable (VectorN
+                    <double>
+                      ) -&gt; Double = { weights in
+                      <br /> // Expected return
+                      <br /> let expectedReturn = weights.dot(expectedReturns80)
+                      <br />
+                      <br /> // Portfolio variance
+                      <br /> var variance = 0.0
+                      <br /> for i in 0..
+                      <numassets {<br>
+                         for j in 0..
+                        <numassets {<br>
+                           variance += weights[i] * weights[j] * covariance80[i][j]
+                          <br /> }
+                          <br /> }
+                          <br /> let risk = sqrt(variance)
+                          <br />
+                          <br /> // Transaction costs (creates non-convexity)
+                          <br /> var totalTurnover = 0.0
+                          <br /> for i in 0..
+                          <numassets {<br>
+                             totalTurnover += abs(weights[i] - currentHoldings[i])
+                            <br /> }
+                            <br /> let transactionCost = (transactionCostBps / 10000.0) * totalTurnover
+                            <br />
+                            <br /> // Net return after costs
+                            <br /> let netReturn = expectedReturn - transactionCost
+                            <br /> let sharpeRatio = (netReturn - riskFreeRate80) / risk
+                            <br />
+                            <br /> return -sharpeRatio // Minimize negative Sharpe
+                            <br />}
+                            <br />
+                            <br />// Constraints
+                            <br />let budgetConstraint80 = MultivariateConstraint
+                            <vectorn<double>
+                              &gt;.budgetConstraint
+                              <br />let longOnlyConstraints80 = MultivariateConstraint
+                              <vectorn<double>
+                                &gt;.nonNegativity(dimension: numAssets)
+                                <br />
+                                <br />// Position limits: no more than 5% per asset (diversification requirement)
+                                <br />let positionLimits80 = (0..
+                                <numassets).map { i in<br>
+                                   MultivariateConstraint
+                                  <vectorn<double>
+                                    &gt;.inequality { w in
+                                    <br /> w[i] - 0.05 // w[i] ≤ 5%
+                                    <br /> }
+                                    <br />}
+                                    <br />
+                                    <br />let allConstraints80 = [budgetConstraint80] + longOnlyConstraints80 + positionLimits80
+                                    <br />
+                                    <br />// Multi-start optimization
+                                    <br />Task {
+                                    <br /> do {
+                                    <br /> print(String(repeating: “=”, count: 70))
+                                    <br /> print(“REAL-WORLD EXAMPLE: 80-ASSET PORTFOLIO REBALANCING”)
+                                    <br /> print(String(repeating: “=”, count: 70))
+                                    <br /> print(“Portfolio value: $((portfolioValue / 1_000_000_000).number(1))B”)
+                                    <br /> print(“Number of assets: (numAssets)”)
+                                    <br /> print(“Transaction costs: (transactionCostBps) bps”)
+                                    <br /> print()
+                                    <br />
+                                    <br /> let robustOptimizer = ParallelOptimizer
+                                    <vectorn<double>
+                                      &gt;(
+                                      <br /> algorithm: .inequality,
+                                      <br /> numberOfStarts: 30,
+                                      <br /> maxIterations: 1500,
+                                      <br /> tolerance: 1e-6
+                                      <br /> )
+                                      <br />
+                                      <br /> let startTime = Date()
+                                      <br /> let result = try await robustOptimizer.optimize(
+                                      <br /> objective: objectiveWithCosts,
+                                      <br /> searchRegion: (
+                                      <br /> lower: VectorN(repeating: 0.0, count: numAssets),
+                                      <br /> upper: VectorN(repeating: 0.05, count: numAssets) // Max 5% per asset
+                                      <br /> ),
+                                      <br /> constraints: allConstraints80
+                                      <br /> )
+                                      <br /> let elapsedTime = Date().timeIntervalSince(startTime)
+                                      <br />
+                                      <br /> print(“Multi-Start Optimization (30 starts):”)
+                                      <br /> print(” Best Sharpe ratio: ((-result.objectiveValue).number())”)
+                                      <br /> print(” Success rate: (result.successRate.percent())”)
+                                      <br /> print(” Total time: ((elapsedTime / 60).number(1)) minutes”)
+                                      <br />
+                                      <br /> // Calculate turnover
+                                      <br /> var totalTurnover = 0.0
+                                      <br /> var numPositions = 0
+                                      <br /> for i in 0..
+                                      <numassets {<br>
+                                         let change = abs(result.solution[i] - currentHoldings[i])
+                                        <br /> totalTurnover += change
+                                        <br /> if result.solution[i] &gt; 0.001 {
+                                        <br /> numPositions += 1
+                                        <br /> }
+                                        <br /> }
+                                        <br />
+                                        <br /> print(”\nPortfolio Characteristics:”)
+                                        <br /> print(” Active positions: (numPositions)/(numAssets)”)
+                                        <br /> print(” Total turnover: (totalTurnover.percent(1))”)
+                                        <br /> print(” Trading costs: $((portfolioValue * totalTurnover * transactionCostBps / 10000).currency(0))”)
+                                        <br />
+                                        <br /> // Show top 10 positions
+                                        <br /> let topPositions = result.solution.toArray()
+                                        <br /> .enumerated()
+                                        <br /> .sorted { $0.element &gt; $1.element }
+                                        <br /> .prefix(10)
+                                        <br />
+                                        <br /> print(”\nTop 10 Positions:”)
+                                        <br /> for (i, (idx, weight)) in topPositions.enumerated() {
+                                        <br /> print(” (i+1). Asset (idx): (weight.percent(2))”)
+                                        <br /> }
+                                        <br />
+                                        <br /> } catch {
+                                        <br /> print(“Robust optimization failed: (error)”)
+                                        <br /> }
+                                        <br />}
+                                        <br />
+                                      </numassets>
+                                    </vectorn<double>
+                                  </vectorn<double>
+                                </numassets).map>
+                              </vectorn<double>
+                            </vectorn<double>
+                          </numassets>
+                        </numassets>
+                      </numassets>
+                    </double>
+                  </numassets).map>
+                </min(i+5,>
+              </numassets>
+            </numassets).map></code></pre>
+        <strong>Results</strong>:
+        <ul>
+          <li>Best Sharpe ratio found: <strong>1.08</strong> (14% better than single-start average)</li>
+          <li>Consistent across rebalancing periods</li>
+          <li>Success rate: 85% of starts converged</li>
+          <li>Computation time: 12 minutes (acceptable for quarterly rebalancing)</li>
+          <li><strong>Annual alpha improvement: +$16M</strong> (0.8% on $2B AUM)</li>
+        </ul>
+        <hr />
+        <h2>Try It Yourself</h2>
+        <details>
+          <summary>Click to expand full playground code</summary> 
+          <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />let assets = ["US Stocks", "Intl Stocks", "Bonds", "Real Estate"]<br />let expectedReturns = VectorN([0.10, 0.12, 0.04, 0.09])<br />let riskFreeRate = 0.03<br /><br />// Covariance matrix<br />let covarianceMatrix = [<br />	[0.0400, 0.0150, 0.0020, 0.0180],  // US Stocks<br />	[0.0150, 0.0625, 0.0015, 0.0200],  // Intl Stocks<br />	[0.0020, 0.0015, 0.0036, 0.0010],  // Bonds<br />	[0.0180, 0.0200, 0.0010, 0.0400]   // Real Estate<br />]<br /><br />// Objective: Maximize Sharpe ratio<br />let portfolioObjective: @Sendable (VectorN
               <double>
-                ) -&gt; Double = { weights in let expectedReturn = weights.dot(expectedReturns)
-              </double></p><pre><code>var variance = 0.0 for i in 0..
-                <weights.dimension { for j in 0..<weights.dimension { variance +="weights[i]" * weights[j] * covariancematrix[i][j] } }< p>
-                  <p>let risk = sqrt(variance) let sharpeRatio = (expectedReturn - riskFreeRate) / risk</p>
-                </weights.dimension></code><p><code>return -sharpeRatio // Minimize negative = maximize positive </code></p></pre>}<p></p></code>
-        </div><p>// Constraints: budget + long-only let budgetConstraint = MultivariateConstraint
-          <vectorn<double>
-            &gt;.budgetConstraint let longOnlyConstraints = MultivariateConstraint
-            <vectorn<double>
-              &gt;.nonNegativity(dimension: assets.count) let constraints: [MultivariateConstraint
-              <vectorn<double>
-                &gt;] = [budgetConstraint] + longOnlyConstraints
-              </vectorn<double>
-            </vectorn<double>
-          </vectorn<double></p><p>// Create parallel multi-start optimizer let parallelOptimizer = ParallelOptimizer
-          <vectorn<double>
-            &gt;( algorithm: .inequality, // Use inequality-constrained optimizer numberOfStarts: 20, // Try 20 different starting points maxIterations: 1000, tolerance: 1e-6 )
-          </vectorn<double></p><p>// Define search region for random starting points let searchRegion = ( lower: VectorN(repeating: 0.0, count: assets.count), upper: VectorN(repeating: 1.0, count: assets.count) )</p>
-        <div>
-          <p>// Run optimization in parallel (async/await) // Note: Playgrounds require Task wrapper for async code Task { do { let result = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</p>
-          <pre><code>	print(“Parallel Multi-Start Optimization:”) print(”  Attempts: (result.allResults.count)”) print(”  Converged: (result.allResults.filter(.converged).count)”) print(”  Success rate: (result.successRate.percent())”) print(”  Best Sharpe ratio: ((-result.objectiveValue).number())”)<pre><code>print(”\nBest Solution:”) for (asset, weight) in zip(assets, result.solution.toArray()) { if weight &gt; 0.01 { print(”  (asset): (weight.percent())”) } } </code></pre>} catch { print(“Optimization failed: (error)”) }<p></p><p>// MARK: - Single-Start vs. Multi-Start Optimization // Single-start optimization (baseline) let singleStartOptimizer = AdaptiveOptimizer
-                <vectorn<double>
-                  &gt;()
-                </vectorn<double></p><p>let singleResult = try singleStartOptimizer.optimize( objective: portfolioObjective, initialGuess: VectorN.equalWeights(dimension: assets.count), constraints: constraints )</p><p>print(“Single-Start Result:”) print(” Sharpe ratio: ((-singleResult.objectiveValue).number())”) print(” Algorithm: (singleResult.algorithmUsed)”) print()</p></code>
-            <div>
-              <code><p>// Multi-start optimization do { let multiStartResult = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</p><pre><code>print(”\nMulti-Start Result (20 starting points):”) print(”  Best Sharpe ratio: ((-multiStartResult.objectiveValue).number())”) print(”  Success rate: (multiStartResult.successRate.percent())”)<p></p></code><p><code>// Compare let improvement = (-multiStartResult.objectiveValue) / (-singleResult.objectiveValue) - 1.0 print(”\nImprovement: ((improvement.percent(1)))”) </code></p></pre>} catch { print(“Multi-start optimization failed: (error)”) }<p></p></code>
-            </div>
-            <div>
-              <p>// MARK: - Analyzing Result Distribution do { // Run multi-start optimization let result = try await parallelOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )</p>
-              <pre><code>// Analyze distribution of objectives found let objectives = result.allResults.map(.value) let sortedObjectives = objectives.sorted()<p></p><p>print(“Result Distribution:”) print(” Best: (sortedObjectives.first?.number() ?? “N/A”)”) print(” Median: (sortedObjectives[sortedObjectives.count / 2].number())”) print(” Worst: (sortedObjectives.last?.number() ?? “N/A”)”) print(” Range: ((sortedObjectives.last! - sortedObjectives.first!).number())”)</p><p>// Show how many found the global optimum (within 1% of best) let globalThreshold = sortedObjectives.first! * 1.01 let globalCount = sortedObjectives.filter { $0 &lt;= globalThreshold }.count</p></code><p><code>print(”\nFound global optimum: (globalCount)/(sortedObjectives.count) attempts”) print(” (((Double(globalCount) / Double(sortedObjectives.count)).percent(0)))”) </code></p></pre>} catch { print(“Analysis failed: (error)”) }
-              <p></p>
-            </div><p>// MARK: - Choosing Number of Starting Points // Test different numbers of starting points for numStarts in [5, 10, 20, 50] { do { let optimizer = ParallelOptimizer
-              <vectorn<double>
-                &gt;( algorithm: .inequality, numberOfStarts: numStarts, maxIterations: 500, tolerance: 1e-5 )
-              </vectorn<double></p><pre><code>	let startTime = Date() let result = try await optimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints ) let elapsedTime = Date().timeIntervalSince(startTime)<pre><code>print("\n\(numStarts) starting points:")
-print("  Best objective: \(result.objectiveValue.number())")
-print("  Success rate: \(result.successRate.percent())")
-print("  Time: \(elapsedTime.number(2))s")
-print("  Time per start: \((elapsedTime / Double(numStarts)).number(2))s")
-</code></pre>} catch { print(”\n(numStarts) starting points: FAILED”) } </code></pre>}<p></p>
-            <div>
-              <p>// MARK: - Hybrid Approach do { // Phase 1: Broad search with low accuracy let explorationOptimizer = ParallelOptimizer
-                <vectorn<double>
-                  &gt;( algorithm: .gradientDescent(learningRate: 0.01), numberOfStarts: 50, maxIterations: 100, // Low iterations tolerance: 1e-3 // Loose tolerance )
-                </vectorn<double></p>
-              <pre><code>let roughSolution = try await explorationOptimizer.optimize( objective: portfolioObjective, searchRegion: searchRegion, constraints: constraints )<p></p><p>print(“Phase 1 (exploration): Sharpe ((-roughSolution.objectiveValue).number())”)</p><p>// Phase 2: Refine best solution with high accuracy let refinementOptimizer = AdaptiveOptimizer
+                ) -&gt; Double = { weights in
+                <br /> let expectedReturn = weights.dot(expectedReturns)
+                <br />
+                <br /> var variance = 0.0
+                <br /> for i in 0..
+                <weights.dimension {<br>
+                   for j in 0..
+                  <weights.dimension {<br>
+                     variance += weights[i] * weights[j] * covarianceMatrix[i][j]
+                    <br /> }
+                    <br /> }
+                    <br />
+                    <br /> let risk = sqrt(variance)
+                    <br /> let sharpeRatio = (expectedReturn - riskFreeRate) / risk
+                    <br />
+                    <br /> return -sharpeRatio // Minimize negative = maximize positive
+                    <br />}
+                    <br />
+                    <br />// Constraints: budget + long-only
+                    <br />let budgetConstraint = MultivariateConstraint
                     <vectorn<double>
-                      &gt;( maxIterations: 2000, tolerance: 1e-8 )
-                    </vectorn<double></p><p>let finalSolution = try refinementOptimizer.optimize( objective: portfolioObjective, initialGuess: roughSolution.solution, constraints: constraints )</p></code><p><code>print(“Phase 2 (refinement): Sharpe ((-finalSolution.objectiveValue).number())”) </code></p></pre>} catch { print(“Hybrid optimization failed: (error)”) }
-              <p></p>
-            </div><p>// MARK: - Real-World Example 80-Asset Portfolio Rebalancing // Simplified 80-asset portfolio problem let numAssets = 80 let portfolioValue = 2_000_000_000.0  // $2B AUM</p><p>// Generate realistic expected returns (4% to 15%, mean ~9%) let expectedReturns80 = VectorN((0..
-              <numassets).map { i in 0.04 + 0.11 * double.random(in: 0…1) })< p></numassets).map></p><p>// Simplified covariance: diagonal-dominant with moderate correlations var covariance80 = [[Double]]( repeating: [Double](repeating: 0.0, count: numAssets), count: numAssets ) for i in 0..
-              <numassets { let volatility="0.10" + 0.30 * double.random(in: 0…1) 10-40% volatility covariance80[i][i]="volatility" * volatility<pre>
-                <code>// Add some correlation with nearby assets for j in (i+1)..
-                  <min(i+5, numassets) { let correlation="0.3" * double.random(in: 0…1) let vol_i="sqrt(covariance80[i][i])" let vol_j="0.10" + 0.30 * double.random(in: 0…1) covariance80[j][j]="vol_j" * vol_j covariance80[i][j]="correlation" * vol_i * vol_j covariance80[j][i]="covariance80[i][j]" }< code></min(i+5,></code>
-              </numassets></p></pre>
-          <code>}<p></p><p>// Current holdings (starting point before rebalancing) let currentHoldings = VectorN((0..
-              <numassets).map { _ in 0.005 + 0.015 * double.random(in: 0…1) 0.5% to 2% per asset }).simplexprojection() normalize to sum to 1< p></numassets).map></p><p>// Objective with transaction costs let transactionCostBps = 5.0 // 5 basis points per trade let riskFreeRate80 = 0.03</p></code>
-          <div>
-            <code><p>let covariance80Locked = covariance80 let objectiveWithCosts: @Sendable (VectorN
-                <double>
-                  ) -&gt; Double = { weights in // Expected return let expectedReturn = weights.dot(expectedReturns80)
-                </double></p><pre><code>// Portfolio variance var variance = 0.0 for i in 0..
-                  <numassets { for j in 0..<numassets { variance +="weights[i]" * weights[j] * covariance80locked[i][j] } } let risk="sqrt(variance)</p">
-                    <p>// Transaction costs (creates non-convexity) var totalTurnover = 0.0 for i in 0..
-                      <numassets { totalturnover +="abs(weights[i]" - currentholdings[i]) } let transactioncost="(transactionCostBps" 10000.0) * totalturnover< p></numassets></p>
-                    <p>// Net return after costs let netReturn = expectedReturn - transactionCost let sharpeRatio = (netReturn - riskFreeRate80) / risk</p>
-                  </numassets></code><p><code>return -sharpeRatio // Minimize negative Sharpe </code></p></pre>}<p></p></code>
-          </div>
-          <p>// Constraints let budgetConstraint80 = MultivariateConstraint
-            <vectorn<double>
-              &gt;.budgetConstraint let longOnlyConstraints80 = MultivariateConstraint
-              <vectorn<double>
-                &gt;.nonNegativity(dimension: numAssets)
-              </vectorn<double>
-            </vectorn<double></p>
-          <p>// Position limits: no more than 5% per asset (diversification requirement) let positionLimits80 = (0..
-            <numassets).map { i in multivariateconstraint<vectorn<double>
-              &gt;.inequality { w in w[i] - 0.05 // w[i] ≤ 5% } }
-            </numassets).map></p>
-          <p>let allConstraints80 = [budgetConstraint80] + longOnlyConstraints80 + positionLimits80</p>
-          <div>
-            <p>// Multi-start optimization do { print(String(repeating: “=”, count: 70)) print(“REAL-WORLD EXAMPLE: 80-ASSET PORTFOLIO REBALANCING”) print(String(repeating: “=”, count: 70)) print(“Portfolio value: $((portfolioValue / 1_000_000_000).number(1))B”) print(“Number of assets: (numAssets)”) print(“Transaction costs: (transactionCostBps) bps”) print()</p>
-            <pre><code>let robustOptimizer = ParallelOptimizer
-                <vectorn<double>
-                  &gt;( algorithm: .inequality, numberOfStarts: 30, maxIterations: 1500, tolerance: 1e-6 )
-                  <p></p>
-                  <p>let startTime = Date() let result = try await robustOptimizer.optimize( objective: objectiveWithCosts, searchRegion: ( lower: VectorN(repeating: 0.0, count: numAssets), upper: VectorN(repeating: 0.05, count: numAssets) // Max 5% per asset ), constraints: allConstraints80 ) let elapsedTime = Date().timeIntervalSince(startTime)</p>
-                  <p>print(“Multi-Start Optimization (30 starts):”) print(” Best Sharpe ratio: ((-result.objectiveValue).number())”) print(” Success rate: (result.successRate.percent())”) print(” Total time: ((elapsedTime / 60).number(1)) minutes”)</p>
-                  <p>// Calculate turnover var totalTurnover = 0.0 var numPositions = 0 for i in 0..
-                    <numassets { let change="abs(result.solution[i]" - currentholdings[i]) totalturnover +="change" if result.solution[i]>
-                       0.001 { numPositions += 1 } }
-                    </numassets></p>
-                  <p>print(”\nPortfolio Characteristics:”) print(” Active positions: (numPositions)/(numAssets)”) print(” Total turnover: (totalTurnover.percent(1))”) print(” Trading costs: $((portfolioValue * totalTurnover * transactionCostBps / 10000).currency(0))”)</p>
-                  <p>// Show top 10 positions let topPositions = result.solution.toArray() .enumerated() .sorted { $0.element &gt; $1.element } .prefix(10)</p>
-                </vectorn<double></code><p><code>print(”\nTop 10 Positions:”) for (i, (idx, weight)) in topPositions.enumerated() { print(” (i+1). Asset (idx): (weight.percent(2))”) } </code></p></pre>} catch { print(“Robust optimization failed: (error)”) } 
-          </div>
-        </div></pre>}
-      <p></p>
-      <p>// Keep playground alive long enough for async task to complete RunLoop.main.run(until: Date().addingTimeInterval(30)) </p>
-    </details>
-    <p></p>
-    <p>→ Full API Reference: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.10-ParallelOptimization.md">BusinessMath Docs – Parallel Optimization</a></p>
-    <h3>Experiments to Try</h3>
-    <ol>
-      <li><strong>Starting Point Sensitivity</strong>: Run single-start from 10 different random starting points. How much does the result vary?</li>
-      <li><strong>Scaling Study</strong>: Compare 5, 10, 20, 50 starting points. When do diminishing returns start?</li>
-      <li><strong>Algorithm Comparison</strong>: Try different base algorithms (.gradientDescent vs .inequality vs .constrained). Which works best for your problem?</li>
-      <li><strong>Search Region Impact</strong>: Try narrow vs wide search regions. Does a tighter region around a good initial guess help?</li>
-    </ol>
-    <hr />
-    <h2>Next Steps</h2>
-    <strong>Next Week</strong>: Week 10 explores 
-    <strong>Advanced Optimization Algorithms</strong> including L-BFGS for large-scale problems, conjugate gradient methods, and simulated annealing for global optimization.
-    <p></p>
-    <p><strong>Case Study Coming</strong>: Week 11 includes <strong>Real-Time Portfolio Optimization</strong> with streaming market data and dynamic constraints.
-      <hr /><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Completed</strong>: [4/6]</p>
-    <p><strong>Topics Covered</strong>: Multi-start optimization • Parallel execution • Swift concurrency • Global optimization • Success rate analysis</p>
-    <p><strong>Playgrounds</strong>: [Week 1-9 available] • [Next: Advanced algorithms]</p>
-    <hr />
-    <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: optimization, concurrency</p>
+                      &gt;.budgetConstraint
+                      <br />let longOnlyConstraints = MultivariateConstraint
+                      <vectorn<double>
+                        &gt;.nonNegativity(dimension: assets.count)
+                        <br />let constraints: [MultivariateConstraint
+                        <vectorn<double>
+                          &gt;] = [budgetConstraint] + longOnlyConstraints
+                          <br />
+                          <br />// Create parallel multi-start optimizer
+                          <br />let parallelOptimizer = ParallelOptimizer
+                          <vectorn<double>
+                            &gt;(
+                            <br /> algorithm: .inequality, // Use inequality-constrained optimizer
+                            <br /> numberOfStarts: 20, // Try 20 different starting points
+                            <br /> maxIterations: 1000,
+                            <br /> tolerance: 1e-6
+                            <br />)
+                            <br />
+                            <br />// Define search region for random starting points
+                            <br />let searchRegion = (
+                            <br /> lower: VectorN(repeating: 0.0, count: assets.count),
+                            <br /> upper: VectorN(repeating: 1.0, count: assets.count)
+                            <br />)
+                            <br />
+                            <br />// Run optimization in parallel (async/await)
+                            <br />// Note: Playgrounds require Task wrapper for async code
+                            <br />Task {
+                            <br /> do {
+                            <br /> let result = try await parallelOptimizer.optimize(
+                            <br /> objective: portfolioObjective,
+                            <br /> searchRegion: searchRegion,
+                            <br /> constraints: constraints
+                            <br /> )
+                            <br />
+                            <br /> print("Parallel Multi-Start Optimization:")
+                            <br /> print(" Attempts: \(result.allResults.count)")
+                            <br /> print(" Converged: \(result.allResults.filter(\.converged).count)")
+                            <br /> print(" Success rate: \(result.successRate.percent())")
+                            <br /> print(" Best Sharpe ratio: \((-result.objectiveValue).number())")
+                            <br />
+                            <br /> print("\nBest Solution:")
+                            <br /> for (asset, weight) in zip(assets, result.solution.toArray()) {
+                            <br /> if weight &gt; 0.01 {
+                            <br /> print(" \(asset): \(weight.percent())")
+                            <br /> }
+                            <br /> }
+                            <br /> } catch {
+                            <br /> print("Optimization failed: \(error)")
+                            <br /> }
+                            <br />
+                            <br />
+                            <br /> // MARK: - Single-Start vs. Multi-Start Optimization
+                            <br /> // Single-start optimization (baseline)
+                            <br /> let singleStartOptimizer = AdaptiveOptimizer
+                            <vectorn<double>
+                              &gt;()
+                              <br />
+                              <br /> let singleResult = try singleStartOptimizer.optimize(
+                              <br /> objective: portfolioObjective,
+                              <br /> initialGuess: VectorN.equalWeights(dimension: assets.count),
+                              <br /> constraints: constraints
+                              <br /> )
+                              <br />
+                              <br /> print("Single-Start Result:")
+                              <br /> print(" Sharpe ratio: \((-singleResult.objectiveValue).number())")
+                              <br /> print(" Algorithm: \(singleResult.algorithmUsed)")
+                              <br /> print()
+                              <br />
+                              <br /> // Multi-start optimization
+                              <br /> do {
+                              <br /> let multiStartResult = try await parallelOptimizer.optimize(
+                              <br /> objective: portfolioObjective,
+                              <br /> searchRegion: searchRegion,
+                              <br /> constraints: constraints
+                              <br /> )
+                              <br />
+                              <br /> print("\nMulti-Start Result (20 starting points):")
+                              <br /> print(" Best Sharpe ratio: \((-multiStartResult.objectiveValue).number())")
+                              <br /> print(" Success rate: \(multiStartResult.successRate.percent())")
+                              <br />
+                              <br /> // Compare
+                              <br /> let improvement = (-multiStartResult.objectiveValue) / (-singleResult.objectiveValue) - 1.0
+                              <br /> print("\nImprovement: \((improvement.percent(1)))")
+                              <br /> } catch {
+                              <br /> print("Multi-start optimization failed: \(error)")
+                              <br /> }
+                              <br />
+                              <br /> // MARK: - Analyzing Result Distribution
+                              <br /> do {
+                              <br /> // Run multi-start optimization
+                              <br /> let result = try await parallelOptimizer.optimize(
+                              <br /> objective: portfolioObjective,
+                              <br /> searchRegion: searchRegion,
+                              <br /> constraints: constraints
+                              <br /> )
+                              <br />
+                              <br /> // Analyze distribution of objectives found
+                              <br /> let objectives = result.allResults.map(\.value)
+                              <br /> let sortedObjectives = objectives.sorted()
+                              <br />
+                              <br /> print("Result Distribution:")
+                              <br /> print(" Best: \(sortedObjectives.first?.number() ?? "N/A")")
+                              <br /> print(" Median: \(sortedObjectives[sortedObjectives.count / 2].number())")
+                              <br /> print(" Worst: \(sortedObjectives.last?.number() ?? "N/A")")
+                              <br /> print(" Range: \((sortedObjectives.last! - sortedObjectives.first!).number())")
+                              <br />
+                              <br /> // Show how many found the global optimum (within 1% of best)
+                              <br /> let globalThreshold = sortedObjectives.first! * 1.01
+                              <br /> let globalCount = sortedObjectives.filter { $0 &lt;= globalThreshold }.count
+                              <br />
+                              <br /> print("\nFound global optimum: \(globalCount)/\(sortedObjectives.count) attempts")
+                              <br /> print(" (\((Double(globalCount) / Double(sortedObjectives.count)).percent(0)))")
+                              <br /> } catch {
+                              <br /> print("Analysis failed: \(error)")
+                              <br /> }
+                              <br />
+                              <br /> // MARK: - Choosing Number of Starting Points
+                              <br /> // Test different numbers of starting points
+                              <br /> for numStarts in [5, 10, 20, 50] {
+                              <br /> do {
+                              <br /> let optimizer = ParallelOptimizer
+                              <vectorn<double>
+                                &gt;(
+                                <br /> algorithm: .inequality,
+                                <br /> numberOfStarts: numStarts,
+                                <br /> maxIterations: 500,
+                                <br /> tolerance: 1e-5
+                                <br /> )
+                                <br />
+                                <br /> let startTime = Date()
+                                <br /> let result = try await optimizer.optimize(
+                                <br /> objective: portfolioObjective,
+                                <br /> searchRegion: searchRegion,
+                                <br /> constraints: constraints
+                                <br /> )
+                                <br /> let elapsedTime = Date().timeIntervalSince(startTime)
+                                <br />
+                                <br /> print("\n\(numStarts) starting points:")
+                                <br /> print(" Best objective: \(result.objectiveValue.number())")
+                                <br /> print(" Success rate: \(result.successRate.percent())")
+                                <br /> print(" Time: \(elapsedTime.number(2))s")
+                                <br /> print(" Time per start: \((elapsedTime / Double(numStarts)).number(2))s")
+                                <br /> } catch {
+                                <br /> print("\n\(numStarts) starting points: FAILED")
+                                <br /> }
+                                <br /> }
+                                <br /> 
+                                <br /> // MARK: - Hybrid Approach
+                                <br /> do {
+                                <br /> // Phase 1: Broad search with low accuracy
+                                <br /> let explorationOptimizer = ParallelOptimizer
+                                <vectorn<double>
+                                  &gt;(
+                                  <br /> algorithm: .gradientDescent(learningRate: 0.01),
+                                  <br /> numberOfStarts: 50,
+                                  <br /> maxIterations: 100, // Low iterations
+                                  <br /> tolerance: 1e-3 // Loose tolerance
+                                  <br /> )
+                                  <br />
+                                  <br /> let roughSolution = try await explorationOptimizer.optimize(
+                                  <br /> objective: portfolioObjective,
+                                  <br /> searchRegion: searchRegion,
+                                  <br /> constraints: constraints
+                                  <br /> )
+                                  <br />
+                                  <br /> print("Phase 1 (exploration): Sharpe \((-roughSolution.objectiveValue).number())")
+                                  <br />
+                                  <br /> // Phase 2: Refine best solution with high accuracy
+                                  <br /> let refinementOptimizer = AdaptiveOptimizer
+                                  <vectorn<double>
+                                    &gt;(
+                                    <br /> maxIterations: 2000,
+                                    <br /> tolerance: 1e-8
+                                    <br /> )
+                                    <br />
+                                    <br /> let finalSolution = try refinementOptimizer.optimize(
+                                    <br /> objective: portfolioObjective,
+                                    <br /> initialGuess: roughSolution.solution,
+                                    <br /> constraints: constraints
+                                    <br /> )
+                                    <br />
+                                    <br /> print("Phase 2 (refinement): Sharpe \((-finalSolution.objectiveValue).number())")
+                                    <br /> } catch {
+                                    <br /> print("Hybrid optimization failed: \(error)")
+                                    <br /> }
+                                    <br /> 
+                                    <br /> // MARK: - Real-World Example 80-Asset Portfolio Rebalancing
+                                    <br /> // Simplified 80-asset portfolio problem
+                                    <br /> let numAssets = 80
+                                    <br /> let portfolioValue = 2_000_000_000.0 // $2B AUM
+                                    <br />
+                                    <br /> // Generate realistic expected returns (4% to 15%, mean ~9%)
+                                    <br /> let expectedReturns80 = VectorN((0..
+                                    <numassets).map { i in<br>
+                                       0.04 + 0.11 * Double.random(in: 0...1)
+                                      <br /> })
+                                      <br />
+                                      <br /> // Simplified covariance: diagonal-dominant with moderate correlations
+                                      <br /> var covariance80 = [[Double]](
+                                      <br /> repeating: [Double](repeating: 0.0, count: numAssets),
+                                      <br /> count: numAssets
+                                      <br /> )
+                                      <br /> for i in 0..
+                                      <numassets {<br>
+                                         let volatility = 0.10 + 0.30 * Double.random(in: 0...1) // 10-40% volatility
+                                        <br /> covariance80[i][i] = volatility * volatility
+                                        <br />
+                                        <br /> // Add some correlation with nearby assets
+                                        <br /> for j in (i+1)..
+                                        <min(i+5, numassets) {<br>
+                                           let correlation = 0.3 * Double.random(in: 0...1)
+                                          <br /> let vol_i = sqrt(covariance80[i][i])
+                                          <br /> let vol_j = 0.10 + 0.30 * Double.random(in: 0...1)
+                                          <br /> covariance80[j][j] = vol_j * vol_j
+                                          <br /> covariance80[i][j] = correlation * vol_i * vol_j
+                                          <br /> covariance80[j][i] = covariance80[i][j]
+                                          <br /> }
+                                          <br /> }
+                                          <br />
+                                          <br /> // Current holdings (starting point before rebalancing)
+                                          <br /> let currentHoldings = VectorN((0..
+                                          <numassets).map { _ in<br>
+                                             0.005 + 0.015 * Double.random(in: 0...1) // 0.5% to 2% per asset
+                                            <br /> }).simplexProjection() // Normalize to sum to 1
+                                            <br />
+                                            <br /> // Objective with transaction costs
+                                            <br /> let transactionCostBps = 5.0 // 5 basis points per trade
+                                            <br /> let riskFreeRate80 = 0.03
+                                            <br /> 
+                                            <br /> let covariance80Locked = covariance80
+                                            <br /> let objectiveWithCosts: @Sendable (VectorN
+                                            <double>
+                                              ) -&gt; Double = { weights in
+                                              <br /> // Expected return
+                                              <br /> let expectedReturn = weights.dot(expectedReturns80)
+                                              <br />
+                                              <br /> // Portfolio variance
+                                              <br /> var variance = 0.0
+                                              <br /> for i in 0..
+                                              <numassets {<br>
+                                                 for j in 0..
+                                                <numassets {<br>
+                                                   variance += weights[i] * weights[j] * covariance80Locked[i][j]
+                                                  <br /> }
+                                                  <br /> }
+                                                  <br /> let risk = sqrt(variance)
+                                                  <br />
+                                                  <br /> // Transaction costs (creates non-convexity)
+                                                  <br /> var totalTurnover = 0.0
+                                                  <br /> for i in 0..
+                                                  <numassets {<br>
+                                                     totalTurnover += abs(weights[i] - currentHoldings[i])
+                                                    <br /> }
+                                                    <br /> let transactionCost = (transactionCostBps / 10000.0) * totalTurnover
+                                                    <br />
+                                                    <br /> // Net return after costs
+                                                    <br /> let netReturn = expectedReturn - transactionCost
+                                                    <br /> let sharpeRatio = (netReturn - riskFreeRate80) / risk
+                                                    <br />
+                                                    <br /> return -sharpeRatio // Minimize negative Sharpe
+                                                    <br /> }
+                                                    <br />
+                                                    <br /> // Constraints
+                                                    <br /> let budgetConstraint80 = MultivariateConstraint
+                                                    <vectorn<double>
+                                                      &gt;.budgetConstraint
+                                                      <br /> let longOnlyConstraints80 = MultivariateConstraint
+                                                      <vectorn<double>
+                                                        &gt;.nonNegativity(dimension: numAssets)
+                                                        <br />
+                                                        <br /> // Position limits: no more than 5% per asset (diversification requirement)
+                                                        <br /> let positionLimits80 = (0..
+                                                        <numassets).map { i in<br>
+                                                           MultivariateConstraint
+                                                          <vectorn<double>
+                                                            &gt;.inequality { w in
+                                                            <br /> w[i] - 0.05 // w[i] ≤ 5%
+                                                            <br /> }
+                                                            <br /> }
+                                                            <br />
+                                                            <br /> let allConstraints80 = [budgetConstraint80] + longOnlyConstraints80 + positionLimits80
+                                                            <br />
+                                                            <br /> // Multi-start optimization
+                                                            <br /> do {
+                                                            <br /> print(String(repeating: "=", count: 70))
+                                                            <br /> print("REAL-WORLD EXAMPLE: 80-ASSET PORTFOLIO REBALANCING")
+                                                            <br /> print(String(repeating: "=", count: 70))
+                                                            <br /> print("Portfolio value: $\((portfolioValue / 1_000_000_000).number(1))B")
+                                                            <br /> print("Number of assets: \(numAssets)")
+                                                            <br /> print("Transaction costs: \(transactionCostBps) bps")
+                                                            <br /> print()
+                                                            <br />
+                                                            <br /> let robustOptimizer = ParallelOptimizer
+                                                            <vectorn<double>
+                                                              &gt;(
+                                                              <br /> algorithm: .inequality,
+                                                              <br /> numberOfStarts: 30,
+                                                              <br /> maxIterations: 1500,
+                                                              <br /> tolerance: 1e-6
+                                                              <br /> )
+                                                              <br />
+                                                              <br /> let startTime = Date()
+                                                              <br /> let result = try await robustOptimizer.optimize(
+                                                              <br /> objective: objectiveWithCosts,
+                                                              <br /> searchRegion: (
+                                                              <br /> lower: VectorN(repeating: 0.0, count: numAssets),
+                                                              <br /> upper: VectorN(repeating: 0.05, count: numAssets) // Max 5% per asset
+                                                              <br /> ),
+                                                              <br /> constraints: allConstraints80
+                                                              <br /> )
+                                                              <br /> let elapsedTime = Date().timeIntervalSince(startTime)
+                                                              <br />
+                                                              <br /> print("Multi-Start Optimization (30 starts):")
+                                                              <br /> print(" Best Sharpe ratio: \((-result.objectiveValue).number())")
+                                                              <br /> print(" Success rate: \(result.successRate.percent())")
+                                                              <br /> print(" Total time: \((elapsedTime / 60).number(1)) minutes")
+                                                              <br />
+                                                              <br /> // Calculate turnover
+                                                              <br /> var totalTurnover = 0.0
+                                                              <br /> var numPositions = 0
+                                                              <br /> for i in 0..
+                                                              <numassets {<br>
+                                                                 let change = abs(result.solution[i] - currentHoldings[i])
+                                                                <br /> totalTurnover += change
+                                                                <br /> if result.solution[i] &gt; 0.001 {
+                                                                <br /> numPositions += 1
+                                                                <br /> }
+                                                                <br /> }
+                                                                <br />
+                                                                <br /> print("\nPortfolio Characteristics:")
+                                                                <br /> print(" Active positions: \(numPositions)/\(numAssets)")
+                                                                <br /> print(" Total turnover: \(totalTurnover.percent(1))")
+                                                                <br /> print(" Trading costs: $\((portfolioValue * totalTurnover * transactionCostBps / 10000).currency(0))")
+                                                                <br />
+                                                                <br /> // Show top 10 positions
+                                                                <br /> let topPositions = result.solution.toArray()
+                                                                <br /> .enumerated()
+                                                                <br /> .sorted { $0.element &gt; $1.element }
+                                                                <br /> .prefix(10)
+                                                                <br />
+                                                                <br /> print("\nTop 10 Positions:")
+                                                                <br /> for (i, (idx, weight)) in topPositions.enumerated() {
+                                                                <br /> print(" \(i+1). Asset \(idx): \(weight.percent(2))")
+                                                                <br /> }
+                                                                <br />
+                                                                <br /> } catch {
+                                                                <br /> print("Robust optimization failed: \(error)")
+                                                                <br /> }
+                                                                <br />}
+                                                                <br />
+                                                                <br />// Keep playground alive long enough for async task to complete
+                                                                <br />RunLoop.main.run(until: Date().addingTimeInterval(30))
+                                                                <br />
+                                                              </numassets>
+                                                            </vectorn<double>
+                                                          </vectorn<double>
+                                                        </numassets).map>
+                                                      </vectorn<double>
+                                                    </vectorn<double>
+                                                  </numassets>
+                                                </numassets>
+                                              </numassets>
+                                            </double>
+                                          </numassets).map>
+                                        </min(i+5,>
+                                      </numassets>
+                                    </numassets).map>
+                                  </vectorn<double>
+                                </vectorn<double>
+                              </vectorn<double>
+                            </vectorn<double>
+                          </vectorn<double>
+                        </vectorn<double>
+                      </vectorn<double>
+                    </vectorn<double>
+                  </weights.dimension>
+                </weights.dimension>
+              </double></code></pre>
+        </details> → Full API Reference: 
+        <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.10-ParallelOptimization.md">BusinessMath Docs – Parallel Optimization</a>
+        <h3>Experiments to Try</h3>
+        <ol>
+          <li><strong>Starting Point Sensitivity</strong>: Run single-start from 10 different random starting points. How much does the result vary?</li>
+          <li><strong>Scaling Study</strong>: Compare 5, 10, 20, 50 starting points. When do diminishing returns start?</li>
+          <li><strong>Algorithm Comparison</strong>: Try different base algorithms (.gradientDescent vs .inequality vs .constrained). Which works best for your problem?</li>
+          <li><strong>Search Region Impact</strong>: Try narrow vs wide search regions. Does a tighter region around a good initial guess help?</li>
+        </ol>
+        <hr />
+        <h2>Next Steps</h2>
+        <strong>Next Week</strong>: Week 10 explores 
+        <strong>Advanced Optimization Algorithms</strong> including L-BFGS for large-scale problems, conjugate gradient methods, and simulated annealing for global optimization. 
+        <p></p>
+        <p><strong>Case Study Coming</strong>: Week 11 includes <strong>Real-Time Portfolio Optimization</strong> with streaming market data and dynamic constraints.
+          <hr /><strong>Series</strong>: [Week 9 of 12] | <strong>Topic</strong>: [Part 5 - Business Applications] | <strong>Completed</strong>: [4/6]</p>
+        <p><strong>Topics Covered</strong>: Multi-start optimization • Parallel execution • Swift concurrency • Global optimization • Success rate analysis</p>
+        <p><strong>Playgrounds</strong>: [Week 1-9 available] • [Next: Advanced algorithms]</p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: optimization, concurrency</p>
+    </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">

@@ -1,5 +1,5 @@
 ---
-layout: ProjectLayout
+layout: BlogPostLayout
 tags: project, swift, basic, apple, interpreter, apple-ii
 image:
 imageDescription:
@@ -10,11 +10,11 @@ lastModified: 2026-04-01
 published: true
 ---
 
-I first used an Apple IIe in an afterschool program when I was seven. I learned the rudiments of BASIC and wrote a bunch of spaghetti GOTOs. The computer sat on a folding table in a room that smelled like carpet glue, and the monitor glowed green, and I was absolutely certain that I was a hacker.
+I first used an Apple IIe in an afterschool program when I was seven. I learned the rudiments of BASIC and wrote a bunch of spaghetti GOTOs. The computer sat in the library with a bright orange carpet, the monitor glowed green, and I was absolutely certain that I was a hacker.
 
 I woke up this morning — April 1, 2026, Apple's 50th birthday — and thought it'd be nice to write a little "happy birthday" BASIC program and throw it up on social media. Quick, easy, fun.
 
-```
+```basic
 10 REM *** HAPPY BIRTHDAY APPLE ***
 20 PRINT "HAPPY BIRTHDAY TO YOU..."
 30 PRINT "HAPPY BIRTHDAY TO YOU..."
@@ -43,27 +43,23 @@ It supports the real Applesoft BASIC feature set:
 - Screen: **HOME**, **HTAB/VTAB**, **TAB**, **SPC**
 - **DEF FN** — user-defined functions
 
-127 tests. Zero warnings. No force unwraps. I followed my own [development guidelines](https://github.com/jpurnell/development-guidelines) — Design-First TDD, the whole process. The irony of applying rigorous modern software engineering practices to a language famous for GOTO spaghetti is not lost on me.
+127 tests. Zero warnings. No force unwraps. I followed my own [development guidelines](https://justinpurnell.com/projects/development-guidelines) — Design-First TDD, the whole process. The irony of applying rigorous modern software engineering practices to a language famous for GOTO spaghetti is not lost on me.
 
 ## Steve Jobs' Horoscope
 
 The best sample program isn't mine. In the summer of 1975 — a year before Apple existed — a twenty-year-old Steve Jobs was working at Atari and moonlighting under the name "All-One Farm Design." He wrote a program called Astrochart that computed planetary positions for astrological natal charts. He used the fraction 71/4068 as his degree-to-radian conversion factor because it could be computed with integer division. The program used the B1950 astronomical epoch and included a correction for lunar evection. Jobs' own birth data — February 24, 1955, 7:15 PM, San Francisco — was hardcoded as the default.
 
+
 Earlier this year, [Adafruit recreated the program](https://blog.adafruit.com/2026/01/06/we-recreated-steve-jobss-1975-atari-horoscope-program-and-you-can-run-it/) from Jobs' original handwritten equations, which had been [auctioned at RR Auction](https://www.rrauction.com/auctions/lot-detail/347697406735003-steve-jobs-hand-annotated-atari-horoscope-program-archive/). Their recreation is 210 lines of Applesoft BASIC, and it runs on our interpreter:
 
-```
+```text
 ASTROCHART RESULTS
-==================
-
 DATE: 2/24/1955
 TIME: 19:15
 LAT:37.77 LONG:-122.42
-
 BODY     LONG  SIGN DEG
-------------------------
 ASC      162 VIR 12'1
 MC       258 SAG 18'55
-------------------------
 SUN     273  CAP 3'3
 MOON    124  LEO 4'26
 MERCURY 64   GEM 4'48
@@ -71,9 +67,7 @@ VENUS   111  CAN 21'6
 MARS    167  VIR 17'50
 JUPITER 12   ARI 12'51
 SATURN  236  SCO 26'37
-------------------------
 ERROR: +/- 2-3 DEG
-
 'BECAUSE IT IS.' -1975
 ```
 
