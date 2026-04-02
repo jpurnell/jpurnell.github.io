@@ -31,17 +31,14 @@ public struct CV: StaticPage {
             Group {
                 let summaryArray = cv.summaries.sorted(by: { $0.priority }).filter({ $0.summaryType == .cv })
                 if let summary = summaryArray.last,
-                   let first = summary.summary.first,
-                   let last = summary.summary.last {
+                   let first = summary.summary.first {
                     Text(markdown: first)
                         .class("mainText")
                     List {
-                        ForEach(summary.summary.dropFirst().dropLast()) { line in
+                        ForEach(summary.summary.dropFirst()) { line in
                             Text(markdown: line)
                         }
                     }
-                    Text(markdown: last)
-                        .class("mainText")
                 }
             }
 
