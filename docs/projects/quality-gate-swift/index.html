@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Modular linting that catches recursion bugs, Swift 6 concurrency traps, and unsafe pointer escapes — built on the same QualityChecker protocol as everything else." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Three New Auditors for quality-gate-swift, or Why Modular Linters Win | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/projects/quality-gate-swift" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Three New Auditors for quality-gate-swift, or Why Modular Linters Win" />
+    <meta name="twitter:title" content="Three New Auditors for quality-gate-swift, or Why Modular Linters Win" />
+    <meta property="og:description" content="Modular linting that catches recursion bugs, Swift 6 concurrency traps, and unsafe pointer escapes — built on the same QualityChecker protocol as everything else." />
+    <meta name="twitter:description" content="Modular linting that catches recursion bugs, Swift 6 concurrency traps, and unsafe pointer escapes — built on the same QualityChecker protocol as everything else." />
+    <meta property="og:url" content="https://www.justinpurnell.com/projects/quality-gate-swift" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "address" : {
+    "@type" : "PostalAddress",
+    "addressCountry" : "US",
+    "addressLocality" : "New York",
+    "addressRegion" : "NY"
+  },
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University",
+      "url" : "https://www.princeton.edu"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth",
+      "url" : "https://www.tuck.dartmouth.edu"
+    }
+  ],
+  "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+  "hasCredential" : [
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "A.B. in Economics",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Princeton University"
+      }
+    },
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "Masters in Business Administration",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Tuck School of Business at Dartmouth"
+      }
+    }
+  ],
+  "hasOccupation" : [
+    {
+      "@type" : "Occupation",
+      "description" : "Search fund formed to acquire and operate a profitable business",
+      "name" : "Founder",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led re-platforming of 70+ global e-commerce sites across 40+ hospitality brands",
+      "name" : "Head of Product",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "Fairfield, NJ"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Directed business development initiatives for NBCUniversal Digital",
+      "name" : "Interim Vice President, Strategy & Business Development",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led retention initiatives increasing customer Lifetime Value by 40% at Seeso",
+      "name" : "Director, Content Strategy & Operations",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Published 400+ research reports covering Energy, Gaming, Lodging & Leisure high yield credit",
+      "name" : "Credit Analyst & Risk Manager",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    }
+  ],
+  "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development",
+    "E-Commerce",
+    "Credit Analysis",
+    "Search Funds",
+    "Streaming Media",
+    "Team Leadership"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners",
+    "url" : "https://www.ledgepartners.com"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Organization",
+  "description" : "Search fund formed to acquire and operate profitable businesses with a focus on operational efficiency and technology enablement.",
+  "foundingDate" : "2023-11-07",
+  "name" : "Ledge Partners",
+  "url" : "https://www.ledgepartners.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/projects/quality-gate-swift",
+      "name" : "Three New Auditors for quality-gate-swift, or Why Modular Linters Win",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Three New Auditors for quality-gate-swift, or Why Modular Linters Win</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">10 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>Modular linting that catches recursion bugs, Swift 6 concurrency traps, and unsafe pointer escapes — built on the same QualityChecker protocol as everything else.</strong>
+          <hr />A while back I wrote about the <a href="/projects/development-guidelines">development-guidelines repo</a> — the system I use to keep AI assistants productive across sessions. One of its load-bearing pieces is <code>quality-gate</code>: a single command that runs every quality check before a commit can land. Build, test, safety audit, doc lint, doc coverage, dead-code detection. If any of them fails, the commit doesn’t happen.</p>
+        <p>This week I added three new checkers, and I want to talk about why the modularity of the quality gate made it almost trivial to do — and what each new auditor catches.</p>
+        <h2>The Trigger</h2>I ran a usage analysis on my recent Claude Code sessions. One bullet jumped out:
+        <blockquote>
+          <strong>Buggy first-pass code requiring rework.</strong> Generated code frequently has subtle bugs (recursion, memory, concurrency) that you catch later.
+          <ul>
+            <li>Convenience inits had infinite recursion flagged by SourceKit</li>
+            <li>Accelerate FFT backend had pointer-escape memory corruption blocking tests</li>
+          </ul>
+        </blockquote>Three distinct bug classes, three real incidents. Each one cost a session — sometimes more — to track down. SourceKit catches some of these eventually, the Swift 6 strict-concurrency build catches others, and Accelerate’s pointer issues only surfaced under load. None of them were caught at quality-gate time, which is exactly when I want them caught.
+        <p></p>
+        <p>So I built three new auditors.</p>
+        <h2>The Tools</h2>
+        <h3>1. RecursionAuditor</h3>Catches infinite-recursion bugs that compile cleanly.
+        <pre><code class="language-swift">// ❌ Convenience init forwarding to itself with identical labels<br />class Foo {<br />    init(name: String, age: Int) { self.name = name; self.age = age }<br />    convenience init(name: String) {<br />        self.init(name: name)   // ← infinite recursion<br />    }<br />}<br /><br />// ❌ Computed property referencing itself<br />struct Foo {<br />    var value: Int { value }<br />}<br /><br />// ❌ Function with no base case<br />func loop(_ n: Int) -&gt; Int {<br />    return loop(n)<br />}<br /><br />// ❌ Mutual recursion across files (caught via project-wide call graph)<br />// A.swift<br />func a() { b() }<br />// B.swift<br />func b() { a() }<br /></code></pre>The mutual cycle detector builds a project-wide call graph keyed by qualified name (
+        <code>Type.method(label:)</code>) and runs Tarjan’s strongly-connected-components algorithm. A cycle is reported only if 
+        <strong>none</strong> of its participants have a guard-driven base case. Both intra-file and cross-file cycles are detected.
+        <p></p>
+        <p>The base case heuristic was originally “any guard statement in the body.” That worked for the test fixtures. But the first time I ran the auditor against <code>quality-gate-swift</code> itself, it flagged its own SwiftSyntax visitor — a legitimate recursive-descent walker where the base case is “the AST is finite,” not a syntactic guard. So I tightened the heuristic to also recognize bare <code>return</code> statements and returns of literal/identifier expressions as evidence of a non-recursing path. Real dogfooding caught a real false positive before it shipped.</p>
+        <p><strong>8 rule IDs.</strong> All 35 tests passing.</p>
+        <h3>2. ConcurrencyAuditor</h3>Catches Swift 6 strict-concurrency bugs that compile cleanly but trap at runtime.
+        <pre><code class="language-swift">// ❌ @unchecked Sendable with no justification<br />final class Cache: @unchecked Sendable {<br />    var entries: [String: Int] = [:]<br />}<br /><br />// ✅ With justification — accepted<br />// Justification: synchronized via NSLock; see Cache.swift:42<br />final class Cache: @unchecked Sendable {<br />    var entries: [String: Int] = [:]<br />}<br /><br />// ❌ Sendable class with mutable state (private doesn’t change the rules)<br />final class Foo: Sendable {<br />    private var x = 0<br />}<br /><br />// ❌ Task in actor capturing self without an explicit hop<br />actor A {<br />    var x = 0<br />    func f() {<br />        Task {<br />            self.x += 1   // races — runs off-actor<br />        }<br />    }<br />}<br /><br />// ❌ @MainActor deinit touches stored state — runtime trap in Swift 6<br />@MainActor<br />class A {<br />    var x = 0<br />    deinit { print(x) }<br />}<br /><br />// ❌ @preconcurrency import of a first-party module<br />@preconcurrency import MyAppCore   // your own code; fix it instead<br /></code></pre>The auditor maintains an explicit isolation context stack: 
+        <code>.none</code>, 
+        <code>.mainActor</code>, 
+        <code>.actor(name:)</code>. The rules consult the top of the stack to decide whether to fire. Type declarations (
+        <code>class</code>, 
+        <code>struct</code>, 
+        <code>enum</code>) reset isolation to 
+        <code>.none</code> unless they have an explicit 
+        <code>@MainActor</code> attribute, so a class lexically nested inside an actor does 
+        <strong>not</strong> inherit actor isolation. Functions and deinits inherit from the parent unless they override.
+        <p></p>
+        <p>The escape hatch for the “unsafe” rules is a justification comment immediately above the declaration. Adjacency is strict: a blank line, a block comment, or a comment below the decl all fail to suppress. The mechanism is searchable, auditable, and CI-friendly.</p>
+        <p>For the <code>@preconcurrency import</code> rule, the CLI parses <code>Package.swift</code> once at startup and extracts every <code>.target(name:)</code> literal. First-party modules get flagged; third-party modules pass through. You can also allowlist specific first-party modules during a transition.</p>
+        <p><strong>8 rule IDs.</strong> All 65 tests passing.</p>
+        <h3>3. PointerEscapeAuditor</h3>Catches 
+        <code>Unsafe<em>Pointer</em></code>
+        <em> values that escape the <code>withUnsafe</code></em> closure scope that owns their underlying memory.
+        <p></p>
+        <p>This is the auditor I wish I’d had a year ago.</p>
+        <pre><code class="language-swift">// ❌ The motivating incident, paraphrased<br />final class FFTBackend {<br />    var workspace: UnsafeMutablePointer
+            <dspsplitcomplex>
+              ?
+              <br />
+              <br /> func setup(input: [Float]) {
+              <br /> input.withUnsafeBufferPointer { buf in
+              <br /> self.workspace = buf.baseAddress.map { /* … 
+              <em>/ }<br /> // ↑ pointer escapes the with-block; the memory is gone<br /> // after this closure returns. Compiles cleanly.<br /> }<br /> }<br />}<br /></em>
+            </dspsplitcomplex></code></pre>
+        <em>The result of the original incident was intermittent memory corruption that manifested as test failures only under load. PointerEscapeAuditor catches this exact pattern — and eight other escape shapes — at quality-gate time:<pre><code>error: pointer escapes by being stored in a property<br />       FFTBackend.swift:14:13<br />       rule: pointer-escape.stored-in-property<br />       fix:  Store the pointee value or a Sendable copy instead.<br /></code></pre>The auditor walks every <code>withUnsafe</code></em> call site, tracks the closure parameter (
+        <code>$0</code>, named, or 
+        <code>_</code>), and checks for nine kinds of escape. It handles:
+        <ul>
+          <li><strong>Direct return</strong> of the pointer, whether explicit or implicit-return</li>
+          <li><strong>Wrapped return</strong> through struct initializers, tuples, array literals, <code>Any</code> boxes, or ternary branches</li>
+          <li><strong>Assignment</strong> to outer variables, globals, static properties, instance properties</li>
+          <li><strong>Append/insert</strong> into outer collections</li>
+          <li><strong>Inout-style</strong> sinks where the pointer co-occurs with <code>&amp;outerVar</code> in the same call</li>
+          <li><strong>Closure capture</strong> stored in an outer variable (error tier) or passed to <code>Task { … }</code> / <code>DispatchQueue.async { … }</code> (warning tier)</li>
+          <li><strong>Unmanaged retain leaks</strong> where <code>Unmanaged.passRetained</code> has no matching <code>.release()</code></li>
+          <li><strong>OpaquePointer round-trips</strong> outside the with-block</li>
+        </ul>It also handles aliasing (
+        <code>let alias = ptr; return alias</code>) and shadowing (
+        <code>let ptr = 5</code> rebinds the name). Nested with-blocks push their bound names onto a stack so the inner closure can flag escape of the 
+        <em>outer</em> pointer.
+        <p></p>
+        <p>The pointer-identity tracker is heuristic but precise about value vs. pointer access: <code>ptr.pointee</code> is a value (not flagged), <code>ptr.baseAddress</code> is a pointer (flagged), <code>ptr + 1</code> is a pointer (flagged), <code>ptr.reduce(0, +)</code> is a value (not flagged).</p>
+        <p>For genuinely safe escape destinations — specific vDSP entry points, certain <code>CFData</code> accessors — there’s a user-supplied allowlist. Rather than ship a global list that drifts, you opt in per project:</p>
+        <pre><code class="language-yaml">pointerEscape:<br />  allowedEscapeFunctions:<br />    - vDSP_fft_zip<br />    - vDSP_fft_zop<br /></code></pre>
+        <strong>9 rule IDs.</strong> All 55 tests passing.
+        <h2>Why the Modularity Mattered</h2>Here’s the thing I really want to highlight: each of these auditors slotted into 
+        <code>quality-gate-swift</code> in a few hundred lines of code, with no changes to the existing checkers and no changes to the CLI runtime.
+        <p></p>
+        <p>The whole architecture is:</p>
+        <pre><code class="language-swift">public protocol QualityChecker: Sendable {<br />    var id: String { get }<br />    var name: String { get }<br />    func check(configuration: Configuration) async throws -&gt; CheckResult<br />}<br /></code></pre>That’s it. Implement 
+        <code>QualityChecker</code>, conform to 
+        <code>Sendable</code>, return a 
+        <code>CheckResult</code> with diagnostics. Register the new module in the CLI’s 
+        <code>allCheckers</code> list. Done. The reporters (terminal, JSON, SARIF), the configuration loader, the parallel runner, the exit-code wiring — all of it works automatically.
+        <p></p>
+        <p>Adding the three new auditors followed the same shape as the existing six:</p>
+        <ol>
+          <li><strong>Design proposal</strong> → architecture, rule list, test strategy, open questions. Reviewed before any code.</li>
+          <li><strong>RED</strong> → write the failing test suite. One file per rule. Red and green fixtures paired.</li>
+          <li><strong>GREEN</strong> → implement until tests pass. Iterate against failures.</li>
+          <li><strong>DOCUMENT</strong> → DocC catalog with rule table and narrative guide.</li>
+          <li><strong>REGISTER</strong> → wire into the CLI, add YAML config, parse Package.swift if needed.</li>
+          <li><strong>DOGFOOD</strong> → run against the package itself, fix any false positives the test suite missed.</li>
+        </ol>Each of those steps was a separate commit. The whole sequence — three full auditors from design to shipped — landed on 
+        <code>main</code> over two days. 
+        <strong>The package now has 375 tests across 47 suites, all passing.</strong>
+        <p></p>
+        <p>The reason this scales is the protocol. Every checker is a black box from the CLI’s perspective. If I want to add a tenth auditor next month — say, one that catches <code>try? someThrowingFunction()</code> followed by force-unwrap, or one that detects <code>Result.success(())</code> patterns that should be <code>Void</code>-returning — I don’t have to touch any existing file. I write a new module, conform to <code>QualityChecker</code>, register it in one line, and ship.</p>
+        <h2>What I Found Dogfooding</h2>The first run of RecursionAuditor against 
+        <code>quality-gate-swift</code> itself flagged nine warnings, all in 
+        <code>PointerEscapeAnalyzer.swift</code>. They were in functions like 
+        <code>processItem</code>, 
+        <code>walkBodyItems</code>, 
+        <code>analyzeWithBlock</code> — the recursive descent visitor. They genuinely do form a mutual cycle. None of them have a guard statement.
+        <p></p>
+        <p>But they’re not infinite recursion. They terminate because the AST is finite.</p>
+        <p>This is the classic visitor-pattern false positive. The naive heuristic flagged it. I tightened the heuristic to also accept bare <code>return</code> statements and returns of non-call expressions as evidence of a non-recursing path. The visitor functions all have early returns after each branch matches. That’s a base case, structurally — the function returns without recursing if the input doesn’t match a recursive type.</p>
+        <p>The fix took fifteen lines. Re-running the auditor: zero diagnostics. Fixing the false positive in the auditor itself, against my own codebase, before shipping it to other projects, is exactly what dogfooding is for.</p>
+        <h2>Configuration</h2>
+        <code>.quality-gate.yml</code> now supports nested config sections for the new auditors:
+        <pre><code class="language-yaml">enabledCheckers:<br />  - build<br />  - test<br />  - safety<br />  - doc-lint<br />  - doc-coverage<br />  - unreachable<br />  - recursion<br />  - concurrency<br />  - pointer-escape<br /><br />concurrency:<br />  justificationKeyword: “Justification:”<br />  allowPreconcurrencyImports:<br />    - SomeLegacyDependency<br /><br />pointerEscape:<br />  allowedEscapeFunctions:<br />    - vDSP_fft_zip<br /></code></pre>Defaults are sensible for every field. If you don’t have a config file at all, every checker runs with reasonable defaults. If you have an existing config, the new fields are silently filled in.
+        <h2>Try It</h2>Clone 
+        <a href="https://github.com/jpurnell/quality-gate-swift">quality-gate-swift</a>, build it, point it at any Swift package:
+        <pre><code class="language-bash">git clone https://github.com/jpurnell/quality-gate-swift<br />cd quality-gate-swift<br />swift build -c release<br />.build/release/quality-gate –check recursion concurrency pointer-escape<br /></code></pre>Or run the whole gate, which is what I do before every commit:
+        <pre><code class="language-bash">quality-gate<br /></code></pre>Each new auditor has a DocC catalog explaining every rule with red/green examples, the suppression mechanism, and the limitations. ConcurrencyAuditor and PointerEscapeAuditor each have full narrative guides walking through the bug each rule catches and the recommended fix.
+        <h2>The Lesson</h2>Modular linting wins because the cost of adding a new check should be proportional to the complexity of the check, not the complexity of integrating it. When the integration cost is high, you don’t add checks. You write down the rule in a style guide, you tell yourself you’ll remember, and the bugs ship anyway.
+        <p></p>
+        <p>When the integration cost is one new file and one line in a CLI registration, you add the check. And then the bugs don’t ship.</p>
+        <p>That’s the real argument for protocol-oriented quality tooling: it lowers the friction of catching the next class of bug to the point where you actually do it.
+          <hr /><strong>Source</strong>: <a href="https://github.com/jpurnell/quality-gate-swift">github.com/jpurnell/quality-gate-swift</a></p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: project, swift, apple, development, tooling</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
