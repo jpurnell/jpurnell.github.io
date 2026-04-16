@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="How a security audit revealed that the real risk in LLM-assisted development isn’t bad code — it’s documentation that silently rots while the code races ahead." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Your AI Wrote the Code. Who's Checking the Documentation? | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/projects/quality-gate-status-auditor" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Your AI Wrote the Code. Who's Checking the Documentation?" />
+    <meta name="twitter:title" content="Your AI Wrote the Code. Who's Checking the Documentation?" />
+    <meta property="og:description" content="How a security audit revealed that the real risk in LLM-assisted development isn’t bad code — it’s documentation that silently rots while the code races ahead." />
+    <meta name="twitter:description" content="How a security audit revealed that the real risk in LLM-assisted development isn’t bad code — it’s documentation that silently rots while the code races ahead." />
+    <meta property="og:url" content="https://www.justinpurnell.com/projects/quality-gate-status-auditor" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "address" : {
+    "@type" : "PostalAddress",
+    "addressCountry" : "US",
+    "addressLocality" : "New York",
+    "addressRegion" : "NY"
+  },
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University",
+      "url" : "https://www.princeton.edu"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth",
+      "url" : "https://www.tuck.dartmouth.edu"
+    }
+  ],
+  "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+  "hasCredential" : [
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "A.B. in Economics",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Princeton University"
+      }
+    },
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "Masters in Business Administration",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Tuck School of Business at Dartmouth"
+      }
+    }
+  ],
+  "hasOccupation" : [
+    {
+      "@type" : "Occupation",
+      "description" : "Search fund formed to acquire and operate a profitable business",
+      "name" : "Founder",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led re-platforming of 70+ global e-commerce sites across 40+ hospitality brands",
+      "name" : "Head of Product",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "Fairfield, NJ"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Directed business development initiatives for NBCUniversal Digital",
+      "name" : "Interim Vice President, Strategy & Business Development",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led retention initiatives increasing customer Lifetime Value by 40% at Seeso",
+      "name" : "Director, Content Strategy & Operations",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Published 400+ research reports covering Energy, Gaming, Lodging & Leisure high yield credit",
+      "name" : "Credit Analyst & Risk Manager",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    }
+  ],
+  "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development",
+    "E-Commerce",
+    "Credit Analysis",
+    "Search Funds",
+    "Streaming Media",
+    "Team Leadership"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners",
+    "url" : "https://www.ledgepartners.com"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Organization",
+  "description" : "Search fund formed to acquire and operate profitable businesses with a focus on operational efficiency and technology enablement.",
+  "foundingDate" : "2023-11-07",
+  "name" : "Ledge Partners",
+  "url" : "https://www.ledgepartners.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/projects/quality-gate-status-auditor",
+      "name" : "Your AI Wrote the Code. Who's Checking the Documentation?",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Your AI Wrote the Code. Who's Checking the Documentation?</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>How a security audit revealed that the real risk in LLM-assisted development isn’t bad code — it’s documentation that silently rots while the code races ahead.</strong>
+          <hr />Here’s a story about how a routine security scan led to building an entirely new class of quality tooling — and why it matters more in the age of AI-assisted development than it ever did before.</p>
+        <h2>The Foxguard Report</h2>I ran 
+        <a href="https://github.com/PwnKit-Labs/foxguard">Foxguard</a>, a Rust-based SAST scanner, against 
+        <a href="https://github.com/jpurnell/BusinessMath">BusinessMath</a> — my Swift financial mathematics library. Four findings came back: one real path-traversal vulnerability in 
+        <code>AuditTrail.swift</code>, and three false positives where 
+        <code>fatalError(“Failed: (error)”)</code> messages were flagged as SQL injection.
+        <p></p>
+        <p>The real finding was straightforward: a <code>FileManager</code> operation accepting a <code>URL</code> parameter without sanitizing path traversal sequences. Fixed it with <code>URL.standardized</code> plus an <code>isFileURL</code> guard. Committed, moved on.</p>
+        <p>The false positives were more interesting. Foxguard uses tree-sitter for AST parsing — fast, cross-language, but context-blind. It sees “string interpolation inside a function call” and can’t distinguish a crash message from a database query. Three out of four findings were noise.</p>
+        <h2>The Decision Not to Integrate</h2>My first instinct was to add Foxguard to 
+        <a href="https://github.com/jpurnell/quality-gate-swift">quality-gate-swift</a>, the CLI tool I use to enforce zero-warning quality gates across all my Swift projects. But the more I looked at it, the more I realized I was solving the wrong problem.
+        <p></p>
+        <p>Foxguard has 10 Swift rules. They were added 11 days before my audit. Semgrep’s public registry has effectively zero community Swift rules. The Swift security scanning ecosystem is nearly empty.</p>
+        <p>So instead of integrating someone else’s tool with a 75% false-positive rate, I built a <code>SecurityVisitor</code> inside quality-gate-swift’s existing <code>SafetyAuditor</code> module. Ten rules mapped to OWASP Mobile Top 10 and CWE identifiers, implemented with SwiftSyntax for full AST context. The key differentiator: it knows that <code>fatalError(”…(error)”)</code> is a crash message, not a SQL query, because it can see the enclosing function name in the typed AST.</p>
+        <p>Then I published the same rules as <a href="https://github.com/jpurnell/swift-security-rules">Semgrep-compatible YAML</a> — because if the community has almost no Swift security rules, someone should fix that, and the high-precision implementation can stay proprietary while the patterns are democratized.</p>
+        <h2>The Real Finding</h2>But the security rules weren’t the insight. The insight came when I ran 
+        <code>quality-gate –check status</code> against quality-gate-swift’s own Master Plan — the document that tracks what’s built, what’s in progress, and what’s planned.
+        <p></p>
+        <p>It said <code>SafetyAuditor — Stub only</code>.</p>
+        <p>SafetyAuditor had 1,186 lines of production code, 83 tests across two visitor passes, and 10 OWASP-mapped security rules. It had been fully implemented for weeks. The Master Plan — the document that any new contributor (human or AI) reads first to understand the project — was lying.</p>
+        <p>Not just about SafetyAuditor. About six modules. About the CLI. About the entire roadmap. The code had raced ahead while the documentation stood still.</p>
+        <h2>Why This Matters More With AI</h2>Here’s the thing about human developers: they navigate by intuition as much as documentation. A senior engineer opens the 
+        <code>Sources/</code> directory, sees 14 modules, and understands the project is mature. The Master Plan saying “Stub only” is clearly wrong, and they mentally correct for it.
+        <p></p>
+        <p>An AI assistant reads the Master Plan literally. If it says “Stub only,” the AI treats the module as unbuilt. It might propose reimplementing something that already exists. It might skip the module entirely when making architectural decisions. It might tell you the project is 30% complete when it’s actually 95% complete.</p>
+        <p>In an era where developers increasingly rely on AI for code review, architectural guidance, and implementation planning, <strong>documentation drift isn’t just misleading — it’s actively dangerous.</strong> The AI doesn’t know to distrust the docs.</p>
+        <p>This is doubly true when the AI is also <em>writing</em> the code. Sessions move fast. Features land in hours that used to take days. The code accelerates, but the documentation is updated only when someone remembers — and with AI doing the heavy lifting, the human who should remember is often not reading every diff line by line.</p>
+        <h2>Building the StatusAuditor</h2>So I built a checker that catches this automatically.
+        <p></p>
+        <p>StatusAuditor reads the Master Plan’s checkbox entries, parses the roadmap phases, extracts test counts from descriptions, and reads the “Last Updated” date. Then it collects actual project state from the file system: source line counts, test file counts, Package.swift targets. It cross-validates the two, and any contradiction becomes a diagnostic.</p>
+        <p>Eight rules:</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Rule</th>
+              <th scope="col">What it catches</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>module-marked-incomplete</code></td>
+              <td>Module has real code but Master Plan says <code>[ ]</code></td>
+            </tr>
+            <tr>
+              <td><code>module-marked-complete-missing</code></td>
+              <td>Master Plan says <code>[x]</code> but module doesn’t exist</td>
+            </tr>
+            <tr>
+              <td><code>stub-description-mismatch</code></td>
+              <td>Description says “Stub only” but module is implemented</td>
+            </tr>
+            <tr>
+              <td><code>test-count-drift</code></td>
+              <td>Documented test count differs from actual by &gt;10%</td>
+            </tr>
+            <tr>
+              <td><code>roadmap-phase-stale</code></td>
+              <td>Phase marked “CURRENT” but all items checked complete</td>
+            </tr>
+            <tr>
+              <td><code>last-updated-stale</code></td>
+              <td>“Last Updated” date exceeds 90-day threshold</td>
+            </tr>
+            <tr>
+              <td><code>phantom-module</code></td>
+              <td>Package.swift target not documented in Master Plan</td>
+            </tr>
+            <tr>
+              <td><code>doc-doc-conflict</code></td>
+              <td>Master Plan and Implementation Checklist disagree</td>
+            </tr>
+          </tbody>
+        </table>The first run against quality-gate-swift found the six “Stub only” entries, a test count that said 54 when the actual count was 465, and a roadmap phase marked “CURRENT” with all items complete. All real. All the kind of drift that an AI assistant would take at face value.
+        <h2>The Fix Mode</h2>Detection alone doesn’t help existing projects clean up. So StatusAuditor also implements 
+        <code>FixableChecker</code> — a new protocol in quality-gate-swift that lets checkers repair what they find.
+        <pre><code class="language-bash"># See what’s drifted<br />quality-gate –check status<br /><br /># Preview fixes without writing<br />quality-gate –check status –fix –dry-run<br /><br /># Apply surgical patches (backups created automatically)<br />quality-gate –check status –fix<br /><br /># Generate a Master Plan from scratch for new projects<br />quality-gate –check status –bootstrap<br /></code></pre>The fix mode is surgical: it patches checkboxes, test counts, phase labels, and “Last Updated” dates. It doesn’t touch human-authored prose. It creates timestamped backups before modifying anything.
+        <p></p>
+        <p>For projects that never had proper status documentation — or where drift is so severe that patching would be worse than starting over — <code>–bootstrap</code> generates a complete Master Plan from actual Package.swift targets and source file analysis.</p>
+        <h2>The Propagation Problem</h2>Then I ran it against all 18 of my projects. Six had template placeholder entries (
+        <code>[Feature 1]</code>, 
+        <code>[Feature 2]</code>) that were never customized. Several had feature-based checklists (“Docker + Redis deployment”) that the auditor initially mis-flagged as missing modules.
+        <p></p>
+        <p>That false-positive run was productive. It led to a <code>looksLikeModuleName</code> heuristic that distinguishes PascalCase SPM module names from feature descriptions with spaces and punctuation. I captured the false-positive patterns as real-world integration tests — snapshot fixtures from actual projects that any future heuristic change is validated against.</p>
+        <p>But the bigger realization was about propagation. Fixing quality-gate-swift’s own heuristic doesn’t help BusinessMath or CoverLetterWriter unless those projects are <em>running the latest version of the tool</em>.</p>
+        <h2>Always Build from Main</h2>The solution was a reusable GitHub Actions workflow that every project calls with one line:
+        <pre><code class="language-yaml">jobs:<br />  quality-gate:<br />    uses: jpurnell/quality-gate-swift/.github/workflows/quality-gate-reusable.yml@main<br /></code></pre>The workflow clones and builds quality-gate-swift from 
+        <code>main</code> on every CI run. No version pins. No release tags to bump. No cached binaries to go stale.
+        <p></p>
+        <p>When I add a new rule, fix a heuristic, or add a new checker, every consuming project picks it up on its next CI run. The bar only rises, and it rises everywhere simultaneously.</p>
+        <p>This costs ~25 seconds of build time per CI run. That’s the price of continuous improvement. I’ll take it over the alternative, which is 18 projects running 18 different versions of the quality gate with 18 different sets of rules.</p>
+        <p>The development-guidelines template repo — the source of truth for all my projects’ workflows — now has its own CI that builds and tests quality-gate-swift weekly. If the tool breaks, the template catches it before any consuming project does.</p>
+        <h2>The Closed Loop</h2>Here’s what the system looks like now:
+        <ol>
+          <li><strong>SecurityVisitor</strong> catches OWASP vulnerabilities in code.</li>
+          <li><strong>StatusAuditor</strong> catches drift between documentation and code.</li>
+          <li><strong>MemoryBuilder validation</strong> catches drift between AI memory files and code.</li>
+          <li><strong>Real-world integration tests</strong> catch false positives before they ship.</li>
+          <li><strong>Reusable CI workflow</strong> propagates all improvements automatically.</li>
+          <li><strong>Toolchain validation</strong> in the template repo catches breakage upstream.</li>
+        </ol>Every representation of project state — human-facing docs, AI-facing memory, code itself — is validated against reality. Nothing can silently drift.
+        <h2>The Lesson</h2>In traditional development, documentation drift is annoying but survivable. Developers learn to distrust the README and read the code instead.
+        <p></p>
+        <p>In AI-assisted development, documentation drift is structural failure. The AI <em>is</em> reading the README. It <em>is</em> trusting the Master Plan. It <em>is</em> making decisions based on what the documentation says, not what the code does. And if you’re moving fast with AI help, the gap between documentation and reality grows faster than it ever did with human-only development.</p>
+        <p>The fix isn’t “be more disciplined about updating docs.” Humans have been failing at that for decades. The fix is the same as every other quality problem: <strong>automate the check, run it in CI, and don’t let the build pass when reality and documentation disagree.</strong></p>
+        <p>That’s what StatusAuditor does. And because it’s built on the same <code>QualityChecker</code> protocol as every other checker, it was one new module, one line of CLI registration, and one reusable workflow away from running across every project I maintain.</p>
+        <p>The bar only rises.
+          <hr /><strong>Source</strong>: <a href="https://github.com/jpurnell/quality-gate-swift">github.com/jpurnell/quality-gate-swift</a> <strong>Community rules</strong>: <a href="https://github.com/jpurnell/swift-security-rules">github.com/jpurnell/swift-security-rules</a></p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: project, swift, apple, development, tooling, security</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
