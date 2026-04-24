@@ -21,8 +21,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode.app
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Show toolchain
+        run: xcrun swift --version
 
       - name: Clean build folder
         run: rm -rf .build
@@ -32,6 +36,9 @@ jobs:
 
       - name: Build Swift project
         run: swift build -c release
+
+      - name: Run tests
+        run: swift test
 
       - name: Run static site generator
         run: swift run -c release IgniteStarter
