@@ -175,6 +175,33 @@ public struct MainLayout: Layout {
                 }
             }
 
+            // JSON-LD — Article schema for blog posts and project pages
+            if page.url.path.contains("/projects/") || page.url.path.contains("/BusinessMath/"),
+               !page.title.isEmpty,
+               page.title != "Projects" {
+                StructuredData("Article", properties: [
+                    "headline": page.title,
+                    "description": page.description,
+                    "url": page.url.absoluteString,
+                    "author": [
+                        "@type": "Person",
+                        "name": "Justin Purnell",
+                        "url": "https://www.justinpurnell.com",
+                        "jobTitle": "Founder, Ledge Partners",
+                        "sameAs": socialLinkList.map(\.link)
+                    ] as [String: Any],
+                    "publisher": [
+                        "@type": "Person",
+                        "name": "Justin Purnell",
+                        "url": "https://www.justinpurnell.com"
+                    ] as [String: String],
+                    "mainEntityOfPage": [
+                        "@type": "WebPage",
+                        "@id": page.url.absoluteString
+                    ] as [String: String]
+                ] as [String: Any])
+            }
+
             StructuredData.webSite(
                 name: "Justin Purnell",
                 url: "https://www.justinpurnell.com",
