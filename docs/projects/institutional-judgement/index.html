@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Every software team makes judgment calls. A quality gate flags a warning, and someone decides to ship anyway. A safety check fails, and a senior engineer overrides it with “we’ll fix it next sprint.” These decisions — the overrides, the exemptions, the calculated risks — are where institutional knowledge lives and dies." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Building an Institutional Judgment System: How We Taught an Organization to Learn from Its Own Decisions | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/projects/institutional-judgement" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Building an Institutional Judgment System: How We Taught an Organization to Learn from Its Own Decisions" />
+    <meta name="twitter:title" content="Building an Institutional Judgment System: How We Taught an Organization to Learn from Its Own Decisions" />
+    <meta property="og:description" content="Every software team makes judgment calls. A quality gate flags a warning, and someone decides to ship anyway. A safety check fails, and a senior engineer overrides it with “we’ll fix it next sprint.” These decisions — the overrides, the exemptions, the calculated risks — are where institutional knowledge lives and dies." />
+    <meta name="twitter:description" content="Every software team makes judgment calls. A quality gate flags a warning, and someone decides to ship anyway. A safety check fails, and a senior engineer overrides it with “we’ll fix it next sprint.” These decisions — the overrides, the exemptions, the calculated risks — are where institutional knowledge lives and dies." />
+    <meta property="og:url" content="https://www.justinpurnell.com/projects/institutional-judgement" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "address" : {
+    "@type" : "PostalAddress",
+    "addressCountry" : "US",
+    "addressLocality" : "New York",
+    "addressRegion" : "NY"
+  },
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University",
+      "url" : "https://www.princeton.edu"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth",
+      "url" : "https://www.tuck.dartmouth.edu"
+    }
+  ],
+  "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+  "hasCredential" : [
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "A.B. in Economics",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Princeton University"
+      }
+    },
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "Masters in Business Administration",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Tuck School of Business at Dartmouth"
+      }
+    }
+  ],
+  "hasOccupation" : [
+    {
+      "@type" : "Occupation",
+      "description" : "Search fund formed to acquire and operate a profitable business",
+      "name" : "Founder",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led re-platforming of 70+ global e-commerce sites across 40+ hospitality brands",
+      "name" : "Head of Product",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "Fairfield, NJ"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Directed business development initiatives for NBCUniversal Digital",
+      "name" : "Interim Vice President, Strategy & Business Development",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led retention initiatives increasing customer Lifetime Value by 40% at Seeso",
+      "name" : "Director, Content Strategy & Operations",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Published 400+ research reports covering Energy, Gaming, Lodging & Leisure high yield credit",
+      "name" : "Credit Analyst & Risk Manager",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    }
+  ],
+  "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development",
+    "E-Commerce",
+    "Credit Analysis",
+    "Search Funds",
+    "Streaming Media",
+    "Team Leadership"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners",
+    "url" : "https://www.ledgepartners.com"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Organization",
+  "description" : "Search fund formed to acquire and operate profitable businesses with a focus on operational efficiency and technology enablement.",
+  "foundingDate" : "2023-11-07",
+  "name" : "Ledge Partners",
+  "url" : "https://www.ledgepartners.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Article",
+  "author" : {
+    "@type" : "Person",
+    "jobTitle" : "Founder, Ledge Partners",
+    "name" : "Justin Purnell",
+    "sameAs" : [
+      "https://www.linkedin.com/in/justinpurnell/",
+      "https://www.instagram.com/jpurnell/",
+      "https://mastodon.social/@jpurnell",
+      "https://bsky.app/profile/justinpurnell.com",
+      "https://www.threads.net/@jpurnell",
+      "https://www.facebook.com/jpurnell",
+      "https://twitter.com/jpurnell"
+    ],
+    "url" : "https://www.justinpurnell.com"
+  },
+  "description" : "Every software team makes judgment calls. A quality gate flags a warning, and someone decides to ship anyway. A safety check fails, and a senior engineer overrides it with “we’ll fix it next sprint.” These decisions — the overrides, the exemptions, the calculated risks — are where institutional knowledge lives and dies.",
+  "headline" : "Building an Institutional Judgment System: How We Taught an Organization to Learn from Its Own Decisions",
+  "mainEntityOfPage" : {
+    "@id" : "https://www.justinpurnell.com/projects/institutional-judgement",
+    "@type" : "WebPage"
+  },
+  "publisher" : {
+    "@type" : "Person",
+    "name" : "Justin Purnell",
+    "url" : "https://www.justinpurnell.com"
+  },
+  "url" : "https://www.justinpurnell.com/projects/institutional-judgement"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/projects/institutional-judgement",
+      "name" : "Building an Institutional Judgment System: How We Taught an Organization to Learn from Its Own Decisions",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Building an Institutional Judgment System: How We Taught an Organization to Learn from Its Own Decisions</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p>Every software team makes judgment calls. A quality gate flags a warning, and someone decides to ship anyway. A safety check fails, and a senior engineer overrides it with “we’ll fix it next sprint.” These decisions — the overrides, the exemptions, the calculated risks — are where institutional knowledge lives and dies.</p>
+        <p>The problem is that most organizations treat these moments as noise. The override happens, the build ships, and the reasoning evaporates. Three months later, a different engineer faces the same trade-off with zero context about what happened last time.</p>
+        <p>We built a system to fix that.</p>
+        <h2>The Institutional Judgment System</h2>The Institutional Judgment System (IJS) is a four-layer feedback loop built in Swift that captures override decisions, analyzes them statistically, detects recurring patterns, and feeds that institutional memory back into every subsequent quality gate run.
+        <p></p>
+        <p>It’s not a linter. It’s not a policy engine. It’s an organizational immune system.</p>
+        <h3>The Core Insight</h3>Ray Dalio’s 
+        <em>Principles</em> describes a five-step process for organizational learning: Goals, Problems, Diagnosis, Design, Doing. Most engineering tools stop at Problems — they tell you something is wrong. The IJS maps every override and failure through the full five-step model, tracking not just 
+        <em>what</em> went wrong but 
+        <em>which thinking capability</em> broke down.
+        <p></p>
+        <p>When an engineer overrides a safety check, the IJS requires:</p>
+        <ul>
+          <li>A <strong>root cause analysis</strong> that separates the proximate cause (what happened) from the root cause (what decision process failed)</li>
+          <li>A <strong>risk tier</strong> that determines who has authority to make this call</li>
+          <li><strong>Mandatory red-team dissent</strong> — even if you’re right to override, you must articulate the counterargument</li>
+        </ul>This isn’t bureaucracy. It’s calibration.
+        <h2>Four Layers, One Feedback Loop</h2>
+        <h3>Layer 1: Sensor</h3>The Sensor layer captures the raw data of institutional decisions. When a quality gate runs and someone overrides a failure, the system records a 
+        <code>JudgmentCalibration</code> — a structured artifact that includes the override reasoning, the risk tier, the root cause analysis, and the red-team dissent.
+        <p></p>
+        <p>Root cause adjectives describe <em>processes</em>, not people. “Rushed” or “underspecified” — never “incompetent.” This is a deliberate design choice that enables institutional learning without blame assignment.</p>
+        <p>The <code>DecisionResponsibilityMatrix</code> prevents what we call “decision compression” — the tendency for one person to occupy every role (architect, reviewer, override authority, final sign-off) on a quick fix. The matrix assigns distinct individuals to distinct responsibilities based on risk tier.</p>
+        <h3>Layer 2: Aggregator</h3>The Aggregator layer collects telemetry into a persistent corpus. A 
+        <code>TelemetryWriter</code> actor handles concurrent file I/O, writing metadata, calibrations, and daily snapshots to a deterministic directory hierarchy organized by project, date, and timestamp.
+        <p></p>
+        <p>Configuration lives in <code>.quality-gate.yml</code> alongside the existing quality gate config. The system auto-detects CI environments (GitHub Actions, Jenkins, etc.) and adjusts behavior accordingly.</p>
+        <p>The key design constraint: every write is lossless. ISO 8601 dates, sorted JSON keys, human-readable paths. The corpus is designed to be inspected by humans, not just consumed by machines.</p>
+        <h3>Layer 3: Refiner</h3>This is where the system starts thinking. The Refiner layer performs statistical analysis over the corpus to generate an 
+        <code>InstitutionalPulse</code> — a weekly summary of organizational learning.
+        <p></p>
+        <p>The Pulse contains:</p>
+        <ul>
+          <li><strong>Trend analyses</strong> with confidence intervals (via BusinessMath’s statistical library)</li>
+          <li><strong>Statistical anomalies</strong> detected at 90th, 95th, and 99th percentile thresholds using z-scores</li>
+          <li><strong>Violation clusters</strong> — recurring patterns of the same rule being overridden across projects</li>
+          <li><strong>Calibration summaries</strong> — human-readable bullet points of the week’s key decisions</li>
+        </ul>Every statistical result carries a 
+        <code>StatisticalValidity</code> classification based on the Central Limit Theorem: fewer than 3 samples is “insufficient,” 3-29 is “preliminary,” and 30+ is “valid.” This prevents the system from over-reacting to small sample sizes — a principle borrowed from how NASA’s Artemis II program handles sensor data.
+        <h3>Layer 4: PolicyDiscovery</h3>The final layer closes the loop. When a new quality gate run happens, the 
+        <code>PolicyDiscoveryAuditor</code> compares the current failures against the most recent Pulse. It asks three questions:
+        <ol>
+          <li><strong>Cluster match:</strong> Does this failure match a known violation cluster? If the same rule has been failing and getting overridden for weeks, that’s institutional drift.</li>
+          <li><strong>Anomaly pattern:</strong> Does this checker’s failure rate deviate from the statistical baseline? A sudden spike in safety violations might indicate a systemic issue, not a one-off.</li>
+          <li><strong>Unaddressed policy:</strong> Was a policy change proposed in response to this pattern, and has it still not been implemented? Unaddressed proposals are institutional debt.</li>
+        </ol>Each match produces a 
+        <code>ConsistencyFinding</code> with a risk weight, and the 
+        <code>ConsistencyScorer</code> computes an overall consistency score from 1.0 (fully consistent with institutional history) downward. The scoring uses validity-aware discounting — findings based on 3 data points get 0.25x the deduction weight of findings based on 30+.
+        <p></p>
+        <p>The result: every quality gate run now includes an institutional consistency score. A score of 0.85 means “you’re mostly consistent with what the organization has been doing.” A score of 0.4 means “this looks like drift — the Pulse shows recurring patterns you should know about.”</p>
+        <h2>The Ethical Context Layer</h2>Building the IJS raised an obvious question: if we can detect institutional patterns in override decisions, can we detect ethical patterns in the code itself?
+        <p></p>
+        <p>The <code>ContextAuditor</code> is a SwiftSyntax-based checker that scans for four categories of ethical risk:</p>
+        <ul>
+          <li><strong>Missing consent guards</strong> — Accessing location, contacts, camera, health data, calendar, or photos without a prior consent check in the enclosing function</li>
+          <li><strong>Unguarded analytics</strong> — Tracking user behavior without an opt-out guard</li>
+          <li><strong>Automated decisions without review</strong> — Machine learning predictions feeding directly into deny/block/suspend actions without a human review step</li>
+          <li><strong>Surveillance patterns</strong> — Background location tracking without a disclosure annotation</li>
+        </ul>Each rule can be suppressed with a justification annotation (
+        <code>// CONSENT: User opted in via Settings &gt; Privacy</code>). The requirement for justification text is intentional — silent suppression is not allowed.
+        <p></p>
+        <p>The ContextAuditor is designed as a separate, easily-disableable module. If its findings are consistently ignored, the correct response is to disable it — not force compliance. An ignored checker is worse than no checker because it trains people to skip gate output entirely. This philosophy — advisory tools should earn their keep or get removed — runs through the entire system.</p>
+        <h2>What We Learned Building It</h2>
+        <h3>1. Memory files beat documentation</h3>The IJS generates 
+        <code>.claude/memory</code> files automatically via a 
+        <code>MemoryBuilder</code> tool. Six extractors pull project profile, architecture, conventions, active work, ADR summaries, and environment info into structured memory files that Claude Code loads at session start. Generated files are tagged with frontmatter so they can be safely regenerated without destroying manually-written memory.
+        <p></p>
+        <p>This turned out to be more valuable than traditional documentation. Documentation tells you what the code does. Memory tells the AI what it needs to know to help you effectively.</p>
+        <h3>2. Statistical validity changes everything</h3>The single most important design decision was carrying 
+        <code>StatisticalValidity</code> through every analysis result. Early in development, the system would flag “anomalies” based on 2 data points — statistically meaningless noise that eroded trust. Adding CLT-based validity classification (insufficient/preliminary/valid) and discounting scores by validity eliminated false signals and made the output trustworthy.
+        <h3>3. Exemptions need justification, not approval</h3>We initially considered an approval workflow for consistency exemptions. In practice, what matters is the 
+        <em>justification</em>, not the 
+        <em>approval</em>. A documented exemption saying “This cluster match is expected because we’re mid-migration” is more valuable than a rubber-stamped approval. The justification enables future sessions to evaluate whether the exemption is still valid.
+        <h3>4. The five-step model works for software decisions</h3>Mapping overrides to Dalio’s five-step model (Goals, Problems, Diagnosis, Design, Doing) revealed patterns we wouldn’t have seen otherwise. Teams that consistently fail at the “Diagnosis” stage — they see the problem but don’t correctly identify the root cause — need different interventions than teams failing at “Design” — they diagnose correctly but choose poor solutions.
+        <p></p>
+        <p>This taxonomy turns vague “we need to do better” conversations into specific “our diagnosis capability needs calibration” actions.</p>
+        <h2>By the Numbers</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IJS types (Sensor + Aggregator + Refiner + PolicyDiscovery)</td>
+              <td>33</td>
+            </tr>
+            <tr>
+              <td>IJS tests</td>
+              <td>258</td>
+            </tr>
+            <tr>
+              <td>quality-gate-swift checkers</td>
+              <td>17</td>
+            </tr>
+            <tr>
+              <td>quality-gate-swift tests</td>
+              <td>614</td>
+            </tr>
+            <tr>
+              <td>MemoryBuilder extractors</td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td>ContextAuditor ethical rules</td>
+              <td>4</td>
+            </tr>
+          </tbody>
+        </table>The entire IJS — from Sensor to PolicyDiscovery — was built using strict test-driven development. Tests were written first, confirmed failing, then implementation was written to make them pass. Every phase followed the same cycle: Design → RED → GREEN → REFACTOR → DOCUMENT → VERIFY.
+        <h2>What’s Next</h2>The IJS infrastructure is complete. The feedback loop runs: quality gate → telemetry → corpus → Pulse → consistency audit → enriched gate output. The next questions are operational:
+        <ul>
+          <li>How do teams respond when they see a consistency score of 0.6?</li>
+          <li>Do violation clusters actually shrink over time when made visible?</li>
+          <li>Does mandatory red-team dissent improve override quality, or does it become rote?</li>
+        </ul>These are human questions, not engineering ones. The system provides the data. The organization provides the judgment.
+        <p></p>
+        <p>That’s the point. The Institutional Judgment System doesn’t replace human judgment — it makes it visible, trackable, and improvable. Every override is a learning event. Every Pulse is a progress report. Every consistency score is a mirror.</p>
+        <p>The question was never “how do we prevent bad decisions?” It was “how do we help an organization learn from the decisions it’s already making?”
+          <hr /><em>Built with Swift 6, strict concurrency, SwiftSyntax, BusinessMath, and a deep suspicion of silent overrides.</em></p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: project, swift, apple, development, tooling</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
