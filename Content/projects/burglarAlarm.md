@@ -7,7 +7,7 @@ title: Burglar Alarm
 link:
 date: 2007-07-23 00:00
 lastModified: 2025-03-11
-published: true
+published: false
 ---
 These files detail the breadboard connections you'll want to use for a 2-sensor burglar alarm with 2 LEDs and a buzzer. 
 
