@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="SwiftMCPServer is a ground-up Swift implementation of the Model Context Protocol, giving macOS developers a native, type-safe foundation for exposing tools and resources to AI agents — built with a design-first workflow before a single session was logged." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Building a Native Swift MCP Server: Protocol-First Infrastructure for AI Tooling | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/swiftmcpserver" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Building a Native Swift MCP Server: Protocol-First Infrastructure for AI Tooling" />
+    <meta name="twitter:title" content="Building a Native Swift MCP Server: Protocol-First Infrastructure for AI Tooling" />
+    <meta property="og:description" content="SwiftMCPServer is a ground-up Swift implementation of the Model Context Protocol, giving macOS developers a native, type-safe foundation for exposing tools and resources to AI agents — built with a design-first workflow before a single session was logged." />
+    <meta name="twitter:description" content="SwiftMCPServer is a ground-up Swift implementation of the Model Context Protocol, giving macOS developers a native, type-safe foundation for exposing tools and resources to AI agents — built with a design-first workflow before a single session was logged." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftmcpserver" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "address" : {
+    "@type" : "PostalAddress",
+    "addressCountry" : "US",
+    "addressLocality" : "New York",
+    "addressRegion" : "NY"
+  },
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University",
+      "url" : "https://www.princeton.edu"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth",
+      "url" : "https://www.tuck.dartmouth.edu"
+    }
+  ],
+  "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+  "hasCredential" : [
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "A.B. in Economics",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Princeton University"
+      }
+    },
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "Masters in Business Administration",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Tuck School of Business at Dartmouth"
+      }
+    }
+  ],
+  "hasOccupation" : [
+    {
+      "@type" : "Occupation",
+      "description" : "Search fund formed to acquire and operate a profitable business",
+      "name" : "Founder",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led re-platforming of 70+ global e-commerce sites across 40+ hospitality brands",
+      "name" : "Head of Product",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "Fairfield, NJ"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Directed business development initiatives for NBCUniversal Digital",
+      "name" : "Interim Vice President, Strategy & Business Development",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led retention initiatives increasing customer Lifetime Value by 40% at Seeso",
+      "name" : "Director, Content Strategy & Operations",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Published 400+ research reports covering Energy, Gaming, Lodging & Leisure high yield credit",
+      "name" : "Credit Analyst & Risk Manager",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    }
+  ],
+  "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development",
+    "E-Commerce",
+    "Credit Analysis",
+    "Search Funds",
+    "Streaming Media",
+    "Team Leadership"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners",
+    "url" : "https://www.ledgepartners.com"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Organization",
+  "description" : "Search fund formed to acquire and operate profitable businesses with a focus on operational efficiency and technology enablement.",
+  "foundingDate" : "2023-11-07",
+  "name" : "Ledge Partners",
+  "url" : "https://www.ledgepartners.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/showcase/swiftmcpserver",
+      "name" : "Building a Native Swift MCP Server: Protocol-First Infrastructure for AI Tooling",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Building a Native Swift MCP Server: Protocol-First Infrastructure for AI Tooling</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftMCPServer</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p></p>
+        <blockquote>
+          SwiftMCPServer is a ground-up Swift implementation of the Model Context Protocol, giving macOS developers a native, type-safe foundation for exposing tools and resources to AI agents — built with a design-first workflow before a single session was logged.
+        </blockquote>
+        <h2>Problem</h2>The Model Context Protocol (MCP) has emerged as a standard interface for connecting AI models to external tools, data sources, and capabilities. But for Swift developers building on macOS, the existing ecosystem offered little beyond thin wrappers or cross-language bridges. There was no idiomatic, native Swift library that could leverage the full concurrency model introduced in Swift 6, enforce type safety at the protocol boundary, or integrate naturally into Swift toolchains and package ecosystems. 
+        <p></p>
+        <p>The challenge was to build that foundation — not just a working implementation, but one with enough architectural clarity to serve as infrastructure others could build upon.</p>
+        <h2>Approach</h2>The project spans roughly three weeks of active development (March 19 to April 10, 2026), shaped by a deliberately design-first workflow before implementation began in earnest.
+        <p></p>
+        <p>A formal design proposal and a <code>CLAUDE.md</code> file were committed early, establishing the project’s architectural contract upfront. The <code>CLAUDE.md</code> codified a structured development workflow with explicit sections: Session Start procedures, Development Workflow, Key Rules, a Quality Gate, and a References index. This isn’t boilerplate — it reflects a discipline of treating the working environment itself as an artifact worth designing.</p>
+        <p>The dependency selection tells a clear architectural story. <code>swift-nio</code> and <code>swift-nio-ssl</code> anchor the networking layer in Apple’s battle-tested async I/O framework, providing non-blocking transport without reinventing low-level primitives. <code>swift-crypto</code> handles any cryptographic requirements in a cross-platform-safe way. <code>swift-sdk</code> ties the implementation into the broader Swift ecosystem. <code>swift-docc-plugin</code> signals that documentation is treated as a first-class deliverable, not an afterthought.</p>
+        <p>The package targets the Swift 6.0 toolchain, which means the codebase is written to satisfy Swift’s strict concurrency checking — a meaningful constraint that forces explicit reasoning about actor isolation and data races at compile time rather than runtime.</p>
+        <h2>Results</h2>Across 14 commits from a single contributor, the project moved from initial scaffolding to a structured, tested Swift package. The presence of a 
+        <code>SwiftMCPServerTests</code> target confirms that test coverage was built into the package structure from the start rather than bolted on later.
+        <p></p>
+        <p>The repository ships with:</p>
+        <ul>
+          <li>A complete Swift Package Manager manifest targeting macOS with Swift 6.0 toolchain compliance</li>
+          <li>A networking layer built on SwiftNIO with SSL support</li>
+          <li>A formal design proposal document establishing protocol architecture</li>
+          <li>A <code>CLAUDE.md</code> development guide covering workflow, rules, quality gates, and references</li>
+          <li>A DocC-compatible documentation target</li>
+        </ul>The 14-commit history over 22 days reflects a focused, deliberate pace — not a sprint, but a methodical build where each commit represents considered progress against a pre-established design.
+        <h2>Judgment Calls</h2>The most revealing decision here is sequencing: the design proposal and 
+        <code>CLAUDE.md</code> came first. On a solo project with no external deadline pressure, it would be easy to justify jumping straight to code. Instead, the developer invested in defining the working environment, the architectural boundaries, and the quality gate before implementation began. That’s a signal about how the work is understood — not as a series of features to ship, but as a system to reason about carefully.
+        <p></p>
+        <p>Choosing SwiftNIO over higher-level abstractions like URLSession or async/await HTTP clients is another meaningful call. SwiftNIO operates closer to the metal, requiring more explicit management of pipelines and handlers, but it provides the control and performance characteristics appropriate for a protocol server that may handle many concurrent MCP sessions. The SSL layer via <code>swift-nio-ssl</code> suggests the server is designed to operate in real networked environments, not just local IPC.</p>
+        <p>Targeting Swift 6.0’s strict concurrency model is a forward-looking commitment. It constrains what you can write — but the constraint is the point. Infrastructure that other developers will build on top of needs to be safe by construction, not safe by convention. Accepting the compiler’s stricter concurrency rules upfront means that downstream consumers inherit those guarantees without having to think about them.</p>
+        <p>Finally, including <code>swift-docc-plugin</code> from the beginning signals that this project is designed to be understood by others. Documentation tooling added retroactively often produces documentation that reads retroactively. Including it in the initial package manifest is a quiet statement that the API surface is meant to be legible.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/swiftmcpserver-stats.svg" alt="SwiftMCPServer statistics" class="img-fluid" />
+        <img src="/images/showcase/swiftmcpserver-commits.svg" alt="SwiftMCPServer commit history" class="img-fluid" />
+        <img src="/images/showcase/swiftmcpserver-releases.svg" alt="SwiftMCPServer release history" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftmcpserver, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

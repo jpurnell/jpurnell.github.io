@@ -9,6 +9,7 @@ public struct SiteHeader: HTML {
         NavigationBar(logo: nil, items: {
             Link("Home", target: "/")
             Link("About", target: About())
+            Link("Showcase", target: Showcase())
             Link("CV", target: CV())
             Link("BusinessMath", target: BusinessMath())
             Link("NeXT", target: NeXT())

@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A focused five-hour sprint that produced a fully architected, multi-target Swift package exposing structured search operator logic to MCP-compatible AI tooling." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>SearchOperatorCore: Building a Structured Search Intelligence Layer for AI Agents | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/searchoperatorcore" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="SearchOperatorCore: Building a Structured Search Intelligence Layer for AI Agents" />
+    <meta name="twitter:title" content="SearchOperatorCore: Building a Structured Search Intelligence Layer for AI Agents" />
+    <meta property="og:description" content="A focused five-hour sprint that produced a fully architected, multi-target Swift package exposing structured search operator logic to MCP-compatible AI tooling." />
+    <meta name="twitter:description" content="A focused five-hour sprint that produced a fully architected, multi-target Swift package exposing structured search operator logic to MCP-compatible AI tooling." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/searchoperatorcore" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "address" : {
+    "@type" : "PostalAddress",
+    "addressCountry" : "US",
+    "addressLocality" : "New York",
+    "addressRegion" : "NY"
+  },
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University",
+      "url" : "https://www.princeton.edu"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth",
+      "url" : "https://www.tuck.dartmouth.edu"
+    }
+  ],
+  "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+  "hasCredential" : [
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "A.B. in Economics",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Princeton University"
+      }
+    },
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "Masters in Business Administration",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Tuck School of Business at Dartmouth"
+      }
+    }
+  ],
+  "hasOccupation" : [
+    {
+      "@type" : "Occupation",
+      "description" : "Search fund formed to acquire and operate a profitable business",
+      "name" : "Founder",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led re-platforming of 70+ global e-commerce sites across 40+ hospitality brands",
+      "name" : "Head of Product",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "Fairfield, NJ"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Directed business development initiatives for NBCUniversal Digital",
+      "name" : "Interim Vice President, Strategy & Business Development",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led retention initiatives increasing customer Lifetime Value by 40% at Seeso",
+      "name" : "Director, Content Strategy & Operations",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Published 400+ research reports covering Energy, Gaming, Lodging & Leisure high yield credit",
+      "name" : "Credit Analyst & Risk Manager",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    }
+  ],
+  "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development",
+    "E-Commerce",
+    "Credit Analysis",
+    "Search Funds",
+    "Streaming Media",
+    "Team Leadership"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners",
+    "url" : "https://www.ledgepartners.com"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Organization",
+  "description" : "Search fund formed to acquire and operate profitable businesses with a focus on operational efficiency and technology enablement.",
+  "foundingDate" : "2023-11-07",
+  "name" : "Ledge Partners",
+  "url" : "https://www.ledgepartners.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/showcase/searchoperatorcore",
+      "name" : "SearchOperatorCore: Building a Structured Search Intelligence Layer for AI Agents",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">SearchOperatorCore: Building a Structured Search Intelligence Layer for AI Agents</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SearchOperatorCore</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p></p>
+        <blockquote>
+          A focused five-hour sprint that produced a fully architected, multi-target Swift package exposing structured search operator logic to MCP-compatible AI tooling.
+        </blockquote>
+        <h2>Problem</h2>Modern AI assistants are capable of web search, but they often search the way a casual user would — broad queries, minimal refinement, no systematic use of the operator syntax that search engines have supported for decades. There’s no clean, reusable layer that encodes knowledge of operators like 
+        <code>site:</code>, 
+        <code>filetype:</code>, 
+        <code>intitle:</code>, and their equivalents across engines, and makes that knowledge available to agents in a structured, programmable way. 
+        <p></p>
+        <p>SearchOperatorCore was created to fill that gap: a Swift-native library that models search operators as first-class constructs, paired with an MCP server that exposes the functionality to any compatible AI client.</p>
+        <h2>Approach</h2>The project was built in a single day — first commit at 3:43 AM UTC, latest at 8:51 AM UTC on April 3, 2026 — across four commits from a single contributor. That compressed timeline demanded clarity before code, which is reflected in the deliberate multi-target architecture and the presence of both a 
+        <code>CLAUDE.md</code> and a formal design proposal before any implementation began.
+        <p></p>
+        <p>The package is structured into four distinct targets:</p>
+        <ul>
+          <li><strong>SearchOperatorCore</strong> — the pure logic library, platform-independent and dependency-light, modeling operators, query composition, and engine-specific behavior</li>
+          <li><strong>SearchOperatorMCP</strong> — the MCP protocol binding layer, translating core types into tool definitions compatible with the Model Context Protocol</li>
+          <li><strong>SearchOperatorMCPServer</strong> — the runnable server binary that hosts the MCP interface</li>
+          <li><strong>SearchOperatorCLI</strong> — a command-line interface built with <code>swift-argument-parser</code>, enabling direct use and local testing without an AI client in the loop</li>
+        </ul>Dependencies were chosen deliberately: 
+        <code>SwiftMCPServer</code> and 
+        <code>swift-sdk</code> handle the MCP machinery, 
+        <code>swift-argument-parser</code> keeps the CLI layer clean and well-typed, and 
+        <code>swift-docc-plugin</code> signals that documentation was treated as a first-class deliverable, not an afterthought. The project targets Swift 6.0 and macOS, leaning into strict concurrency guarantees from the start rather than retrofitting them later.
+        <p></p>
+        <p>The <code>CLAUDE.md</code> file and the architecture sections it contains — covering Build &amp; Test, Architecture, Development Guidelines, Deployment, and Coding Rules — represent a working agreement written before the implementation was complete. This is design-first discipline: the constraints were committed before much of the code was.</p>
+        <h2>Results</h2>In under five hours of elapsed time, the project shipped:
+        <ul>
+          <li>A four-commit, single-branch history with a coherent progression from design to implementation</li>
+          <li>A five-target Swift package with clean separation between core logic, protocol binding, server runtime, and CLI</li>
+          <li>One formal design proposal documenting the architecture</li>
+          <li>A <code>CLAUDE.md</code> defining build, test, deployment, and coding conventions</li>
+          <li>A <code>SearchOperatorCoreTests</code> target establishing the test infrastructure for the library layer</li>
+          <li>A deployable MCP server binary ready to be registered with compatible AI clients</li>
+        </ul>
+        <h2>Judgment Calls</h2>Several decisions here reflect craft beyond just shipping code.
+        <p></p>
+        <p><strong>The CLI target wasn’t an afterthought.</strong> Building <code>SearchOperatorCLI</code> alongside the MCP server means the core logic can be exercised, debugged, and demonstrated without any AI tooling in the loop. It’s the kind of decision that reflects experience with developer ergonomics — the library should be useful to a human before it’s useful to a model.</p>
+        <p><strong>Swift 6.0 strict concurrency from day one.</strong> Choosing Swift 6.0’s concurrency model on a greenfield project is a meaningful commitment. It rules out certain shortcuts and forces cleaner isolation boundaries, which matters for a server process handling tool calls from an AI client. Taking that constraint early rather than inheriting it as technical debt is a deliberate architectural choice.</p>
+        <p><strong>Documentation as a dependency.</strong> The inclusion of <code>swift-docc-plugin</code> in a project built in a single morning says something about how the work is being approached. This isn’t a prototype — it’s a library intended to be understood and extended, and the tooling reflects that intention from the first commit.</p>
+        <p><strong>Design-first in a solo sprint.</strong> Writing a formal design proposal and a comprehensive <code>CLAUDE.md</code> before completing the implementation — even when working alone, even under time pressure — is the kind of discipline that pays off when a project needs to be revisited weeks or months later, or handed off. The documentation isn’t for now; it’s for next time.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/searchoperatorcore-stats.svg" alt="SearchOperatorCore statistics" class="img-fluid" />
+        <img src="/images/showcase/searchoperatorcore-commits.svg" alt="SearchOperatorCore commit history" class="img-fluid" />
+        <img src="/images/showcase/searchoperatorcore-releases.svg" alt="SearchOperatorCore release history" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: searchoperatorcore, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

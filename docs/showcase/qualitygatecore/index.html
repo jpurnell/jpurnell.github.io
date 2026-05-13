@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A modular CLI engine that enforces production-quality Swift standards across local workflows, CI/CD pipelines, and AI-assisted development — built plugin by plugin, proposal by proposal." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>QualityGateCore: Automating Zero-Warnings Swift Discipline at Scale | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/qualitygatecore" rel="canonical" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="QualityGateCore: Automating Zero-Warnings Swift Discipline at Scale" />
+    <meta name="twitter:title" content="QualityGateCore: Automating Zero-Warnings Swift Discipline at Scale" />
+    <meta property="og:description" content="A modular CLI engine that enforces production-quality Swift standards across local workflows, CI/CD pipelines, and AI-assisted development — built plugin by plugin, proposal by proposal." />
+    <meta name="twitter:description" content="A modular CLI engine that enforces production-quality Swift standards across local workflows, CI/CD pipelines, and AI-assisted development — built plugin by plugin, proposal by proposal." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/qualitygatecore" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Person",
+  "address" : {
+    "@type" : "PostalAddress",
+    "addressCountry" : "US",
+    "addressLocality" : "New York",
+    "addressRegion" : "NY"
+  },
+  "alumniOf" : [
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Princeton University",
+      "url" : "https://www.princeton.edu"
+    },
+    {
+      "@type" : "CollegeOrUniversity",
+      "name" : "Tuck School of Business at Dartmouth",
+      "url" : "https://www.tuck.dartmouth.edu"
+    }
+  ],
+  "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+  "hasCredential" : [
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "A.B. in Economics",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Princeton University"
+      }
+    },
+    {
+      "@type" : "EducationalOccupationalCredential",
+      "credentialCategory" : "degree",
+      "name" : "Masters in Business Administration",
+      "recognizedBy" : {
+        "@type" : "CollegeOrUniversity",
+        "name" : "Tuck School of Business at Dartmouth"
+      }
+    }
+  ],
+  "hasOccupation" : [
+    {
+      "@type" : "Occupation",
+      "description" : "Search fund formed to acquire and operate a profitable business",
+      "name" : "Founder",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led re-platforming of 70+ global e-commerce sites across 40+ hospitality brands",
+      "name" : "Head of Product",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "Fairfield, NJ"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Directed business development initiatives for NBCUniversal Digital",
+      "name" : "Interim Vice President, Strategy & Business Development",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Led retention initiatives increasing customer Lifetime Value by 40% at Seeso",
+      "name" : "Director, Content Strategy & Operations",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    },
+    {
+      "@type" : "Occupation",
+      "description" : "Published 400+ research reports covering Energy, Gaming, Lodging & Leisure high yield credit",
+      "name" : "Credit Analyst & Risk Manager",
+      "occupationLocation" : {
+        "@type" : "City",
+        "name" : "New York, NY"
+      }
+    }
+  ],
+  "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+  "jobTitle" : "Founder",
+  "knowsAbout" : [
+    "Product Strategy",
+    "AI/ML",
+    "Digital Transformation",
+    "Corporate Finance",
+    "Swift Development",
+    "E-Commerce",
+    "Credit Analysis",
+    "Search Funds",
+    "Streaming Media",
+    "Team Leadership"
+  ],
+  "name" : "Justin Purnell",
+  "sameAs" : [
+    "https://www.linkedin.com/in/justinpurnell/",
+    "https://www.instagram.com/jpurnell/",
+    "https://mastodon.social/@jpurnell",
+    "https://bsky.app/profile/justinpurnell.com",
+    "https://www.threads.net/@jpurnell",
+    "https://www.facebook.com/jpurnell",
+    "https://twitter.com/jpurnell"
+  ],
+  "url" : "https://www.justinpurnell.com",
+  "worksFor" : {
+    "@type" : "Organization",
+    "name" : "Ledge Partners",
+    "url" : "https://www.ledgepartners.com"
+  }
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "Organization",
+  "description" : "Search fund formed to acquire and operate profitable businesses with a focus on operational efficiency and technology enablement.",
+  "foundingDate" : "2023-11-07",
+  "name" : "Ledge Partners",
+  "url" : "https://www.ledgepartners.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "WebSite",
+  "description" : "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal.",
+  "name" : "Justin Purnell",
+  "url" : "https://www.justinpurnell.com"
+}
+</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@type" : "BreadcrumbList",
+  "itemListElement" : [
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com",
+      "name" : "Home",
+      "position" : 1
+    },
+    {
+      "@type" : "ListItem",
+      "item" : "https://www.justinpurnell.com/showcase/qualitygatecore",
+      "name" : "QualityGateCore: Automating Zero-Warnings Swift Discipline at Scale",
+      "position" : 2
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">QualityGateCore: Automating Zero-Warnings Swift Discipline at Scale</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">QualityGateCore</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p></p>
+        <blockquote>
+          A modular CLI engine that enforces production-quality Swift standards across local workflows, CI/CD pipelines, and AI-assisted development — built plugin by plugin, proposal by proposal.
+        </blockquote>
+        <h2>Problem</h2>Swift’s compiler is strict by design, but strictness alone doesn’t enforce discipline across a growing codebase. Teams accumulate warnings, skip doc coverage, let concurrency hazards slip through, and ship with untested edge cases — not because they don’t care, but because there’s no automated gate stopping them at commit time. 
+        <p></p>
+        <p>Existing tools address fragments of this problem. DocC lints documentation. Swiftlint flags style issues. Build logs surface warnings. But nothing unified these signals into a single, structured, CI/CD-ready verdict. The gap was especially acute for AI-assisted development workflows, where agents need machine-readable output and well-described tool interfaces to reason about code health.</p>
+        <p>QualityGateCore was built to close that gap: a single Swift CLI that runs every meaningful quality check, emits structured output, and integrates cleanly into both human and automated workflows.</p>
+        <h2>Approach</h2>The project’s MASTER_PLAN.md establishes a clear mission — “Zero Warnings/Errors quality gates for Swift projects, with structured output for CI/CD integration and SPM plugin support” — and the architecture follows that mission with unusual fidelity.
+        <p></p>
+        <p>Rather than building a monolith, the developer structured QualityGateCore as a constellation of independently testable auditor plugins. The target list tells the story: <code>SafetyAuditor</code>, <code>ConcurrencyAuditor</code>, <code>UnreachableCodeAuditor</code>, <code>RecursionAuditor</code>, <code>PointerEscapeAuditor</code>, <code>FloatingPointSafetyAuditor</code>, <code>MemoryLifecycleGuard</code>, <code>AccessibilityAuditor</code>, <code>LoggingAuditor</code>, <code>TestQualityAuditor</code>, <code>DependencyAuditor</code>, <code>ReleaseReadinessAuditor</code>, <code>MCPReadinessAuditor</code>, and <code>StochasticDeterminismAuditor</code> — each a discrete target with its own test suite. This is plugin-based architecture as a first principle, not a refactor.</p>
+        <p>The toolchain reflects the problem domain precisely. <code>swift-syntax</code> powers static analysis of Swift ASTs. <code>indexstore-db</code> enables symbol-level querying across the project graph. <code>Yams</code> drives YAML configuration parsing for <code>.quality-gate.yml</code> project settings. <code>swift-argument-parser</code> handles the CLI surface. The dependency list reads like a deliberate inventory, not accumulation.</p>
+        <p>Design artifacts are the most revealing signal of working style. With <strong>28 design proposals</strong> and a confirmed design-first workflow, the developer was clearly writing proposals before writing code — treating architecture decisions as documents worth preserving and revisiting. This kind of structured thinking before implementation is especially valuable in a tool with this many moving parts.</p>
+        <p>Claude Code sessions were used sparingly and purposefully: 3 sessions, 32 messages, 8 commits, all three fully achieving their stated goal. Two friction signals — one buggy code incident, one wrong approach — were resolved within sessions rather than abandoned, which reflects a debugging posture rather than a restart posture.</p>
+        <h2>Results</h2>QualityGateCore reached its v1.0.0 release on May 12, 2026, approximately nine weeks after the first commit on March 13. In that window, 64 commits landed across the project’s single working branch, reflecting steady, focused progress rather than burst-and-pause development.
+        <p></p>
+        <p>The shipped package includes:</p>
+        <ul>
+          <li><strong>22 distinct auditor modules</strong>, each with a corresponding test target</li>
+          <li><strong>Three output formats</strong>: terminal-readable, JSON, and SARIF for GitHub Code Scanning integration</li>
+          <li><strong>Both SPM plugin types</strong>: <code>CommandPlugin</code> for local use and <code>BuildToolPlugin</code> for pipeline enforcement</li>
+          <li><strong>MCP-ready tool descriptions</strong> via <code>MCPReadinessAuditor</code>, positioning the tool for AI agent workflows</li>
+          <li><strong>Built-in doc tooling</strong> absorbing <code>docc-lint</code> and <code>swift-doc-gaps</code> capabilities rather than depending on them externally</li>
+        </ul>The 
+        <code>QualityGateTestKit</code> target deserves specific mention — it signals that the developer built a reusable testing harness for the auditors themselves, treating testability of the framework as a first-class concern rather than an afterthought.
+        <h2>Judgment Calls</h2>Several decisions reveal craft worth noting.
+        <p></p>
+        <p><strong>Absorbing rather than depending.</strong> The MASTER_PLAN.md explicitly calls out absorbing <code>docc-lint</code> and <code>swift-doc-gaps</code> capabilities as built-in functionality. This is a deliberate inversion of the usual impulse to reach for existing packages. By internalizing those capabilities, the tool gains a unified configuration surface, consistent output format, and no fragile external version pinning.</p>
+        <p><strong><code>StochasticDeterminismAuditor</code> is the most interesting target name in the list.</strong> Including an auditor specifically for stochastic determinism — likely targeting randomness, shuffled outputs, or non-reproducible test behavior — suggests the developer was thinking about a category of bugs that most quality tools ignore entirely. That’s domain-specific judgment, not framework-following.</p>
+        <p><strong><code>MCPReadinessAuditor</code> as a first-class concern.</strong> Most tool authors would treat AI-agent compatibility as documentation work. Including it as an auditor module means the tool can evaluate itself and other projects for MCP readiness — a recursive, forward-looking design choice that reflects awareness of where developer tooling is heading.</p>
+        <p><strong>28 proposals before v1.0.0.</strong> In a nine-week project, writing 28 design documents is not overhead — it’s the mechanism by which a 22-module system stays coherent. Each proposal likely corresponds to a module boundary, an API decision, or a behavior contract. The discipline to write before building is what makes the plugin architecture feel designed rather than grown.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/qualitygatecore-stats.svg" alt="QualityGateCore statistics" class="img-fluid" />
+        <img src="/images/showcase/qualitygatecore-commits.svg" alt="QualityGateCore commit history" class="img-fluid" />
+        <img src="/images/showcase/qualitygatecore-releases.svg" alt="QualityGateCore release history" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: qualitygatecore, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

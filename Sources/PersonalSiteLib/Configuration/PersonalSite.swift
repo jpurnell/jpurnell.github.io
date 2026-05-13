@@ -46,6 +46,7 @@ public struct PersonalSite: Site {
         CV()
         Portfolio()
         Projects()
+        Showcase()
         NeXT()
     }
 
@@ -54,6 +55,7 @@ public struct PersonalSite: Site {
         AboutLayout()
         ProjectLayout()
         BlogPostLayout()
+        ShowcaseLayout()
     }
 
     public init() {}
