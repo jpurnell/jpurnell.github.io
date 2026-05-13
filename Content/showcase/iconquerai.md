@@ -3,11 +3,11 @@ title: IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift G
 description: A focused Swift package that delivers reproducible, in-process computer opponents across Apple's entire platform family — without a single network call or LLM dependency in sight.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, iconquerai, selfReflection
+tags: showcase, project, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: IconquerAI
-published: true
+published: false
 ---
 
 # IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift Game Engine

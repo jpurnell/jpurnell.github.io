@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="In under three weeks and 65 commits, a solo developer designed and shipped a pure-Swift, deterministic game engine that can be consumed by any client — SwiftUI app, CLI, or future server — without touching a single line of UI code." />
+    <meta name="description" content="In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerCLILib: Building a Headless Rules Engine for a Risk-Style Strategy Game | Justin Purnell</title>
+    <title>Wiring a Terminal Into a Game Ecosystem: IconquerCLILib | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -56,10 +56,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerCLILib: Building a Headless Rules Engine for a Risk-Style Strategy Game" />
-    <meta name="twitter:title" content="IconquerCLILib: Building a Headless Rules Engine for a Risk-Style Strategy Game" />
-    <meta property="og:description" content="In under three weeks and 65 commits, a solo developer designed and shipped a pure-Swift, deterministic game engine that can be consumed by any client — SwiftUI app, CLI, or future server — without touching a single line of UI code." />
-    <meta name="twitter:description" content="In under three weeks and 65 commits, a solo developer designed and shipped a pure-Swift, deterministic game engine that can be consumed by any client — SwiftUI app, CLI, or future server — without touching a single line of UI code." />
+    <meta property="og:title" content="Wiring a Terminal Into a Game Ecosystem: IconquerCLILib" />
+    <meta name="twitter:title" content="Wiring a Terminal Into a Game Ecosystem: IconquerCLILib" />
+    <meta property="og:description" content="In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool." />
+    <meta name="twitter:description" content="In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerclilib" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -230,7 +230,7 @@
     {
       "@type" : "ListItem",
       "item" : "https://www.justinpurnell.com/showcase/iconquerclilib",
-      "name" : "IconquerCLILib: Building a Headless Rules Engine for a Risk-Style Strategy Game",
+      "name" : "Wiring a Terminal Into a Game Ecosystem: IconquerCLILib",
       "position" : 2
     }
   ]
@@ -257,41 +257,33 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerCLILib: Building a Headless Rules Engine for a Risk-Style Strategy Game</h1>
+      <h1 class="mainTitle">Wiring a Terminal Into a Game Ecosystem: IconquerCLILib</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">IconquerCLILib</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p></p>
         <blockquote>
-          In under three weeks and 65 commits, a solo developer designed and shipped a pure-Swift, deterministic game engine that can be consumed by any client — SwiftUI app, CLI, or future server — without touching a single line of UI code.
+          In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool.
         </blockquote>
-        <h2>Problem</h2>Turn-based strategy games are deceptively complex to implement well. The logic that governs troop movement, battle resolution, territory control, and win conditions tends to become tightly coupled to the UI layer that displays it — making the engine untestable, non-portable, and brittle to iterate on. 
+        <h2>Problem</h2>iConquer is an ambitious, multi-package Swift strategy game modeled on the classic Risk board game. The ecosystem already included a rules engine (IconquerCore), match orchestration (IconquerMatch), AI strategies (IconquerAI), networking (IconquerClient), and even a Model Context Protocol integration (IconquerMCP). What it lacked was a playable front door that didn’t require launching a full SwiftUI application. 
         <p></p>
-        <p>For a Risk-style game called iConquer, the challenge was to invert that pattern entirely: extract every rule into a headless, platform-agnostic core that any future client could consume. The CLI target (<code>iconquer-cli</code>) and the sibling SwiftUI app (<code>../iconquer/</code>) both needed to share the same engine without the engine knowing anything about either of them. And beyond portability, the game rules themselves needed to be <em>trustworthy</em> — faithfully reproducing documented iConquer behavior, with battle outcomes that could be independently verified.</p>
-        <h2>Approach</h2>The project is structured as a Swift Package with three targets: 
-        <code>IconquerCLILib</code> (the engine), 
-        <code>iconquer-cli</code> (a thin CLI consumer), and 
-        <code>IconquerCLITests</code> (the test suite). The package runs on macOS, targets Swift Tools version 6.2, and takes on only two dependencies — 
-        <code>swift-argument-parser</code> for the CLI layer and 
-        <code>swift-docc-plugin</code> for documentation — keeping the core strictly dependency-free.
+        <p>IconquerCLILib fills that gap. Its mission, as stated in the project’s own MASTER_PLAN.md, is to wire together the full iConquer package ecosystem into a playable terminal experience — animated dice rolls, colored territory maps, interactive command parsing — while also serving as a reusable library for the SwiftUI app itself. That dual-target design (a thin <code>iconquer-cli</code> executable backed by a full-featured <code>IconquerCLILib</code> library) was a deliberate architectural commitment made from the start.</p>
+        <p>The tool serves three distinct audiences: developers and testers who want to play without the GUI, AI researchers running batch simulations against the game engine, and the SwiftUI app itself, which reuses the library’s agent factories and prompt builders.</p>
+        <h2>Approach</h2>The project launched on April 8, 2026 and shipped v0.5.0 by April 24 — a focused sixteen-day sprint. The pace was enabled by a design-first workflow: before any significant feature landed, a design proposal document was written and the project maintained a CLAUDE.md that structured sessions around explicit architecture sections covering Session Start, Development Workflow, Key Rules, a Quality Gate, and References. This isn’t documentation written after the fact — it shaped how each session was entered and exited.
         <p></p>
-        <p>The architectural spine of the engine is a commitment to pure value semantics. The top-level game state is represented as <code>struct Game</code>, with <code>Sendable</code> conformance throughout. There is no shared mutable state, no singleton, no delegate pattern — a design choice that makes the engine inherently thread-safe and fully testable without mocking infrastructure.</p>
-        <p>The most distinctive technical decision was pinning battle resolution to a <strong>deterministic seeded RNG</strong>. This makes the engine oracle-testable: a TypeScript parity harness can drive the same seed, execute the same sequence of moves, and verify identical outcomes. This approach treats correctness not as a matter of developer confidence but as a provable, cross-language property.</p>
-        <p>A <code>CLAUDE.md</code> file and a design proposal artifact reflect a deliberate design-first workflow. Before code was written, the architecture was documented — session start procedures, development workflow conventions, quality gates, and references to the canonical rules document at <code>../iconquer/RULES.md</code>. The MASTER_PLAN serves as the authoritative contract between the engine and its consumers.</p>
-        <h2>Results</h2>
-        <ul>
-          <li><strong>65 commits</strong> across a <strong>16-day window</strong> (April 8–24, 2026), averaging roughly four commits per day on a solo project</li>
-          <li><strong>5 versioned releases</strong> shipped: v0.1.0 through v0.5.0, indicating a disciplined incremental release cadence rather than a single big-bang drop</li>
-          <li>A fully functional Swift Package consumable by the sibling SwiftUI app and any future client (server, alternate UI) without modification</li>
-          <li>A CLI target that exercises the engine end-to-end without coupling to it</li>
-          <li>Documentation infrastructure via <code>swift-docc-plugin</code> wired in from the start</li>
-        </ul>
-        <h2>Judgment Calls</h2>Several decisions here reveal craft beyond mere output.
+        <p>The library was built on Swift 6.2 with two primary dependencies: <code>swift-argument-parser</code> for the CLI interface and <code>swift-docc-plugin</code> for documentation generation. The target split — <code>IconquerCLILib</code>, <code>iconquer-cli</code>, and <code>IconquerCLITests</code> — enforced a clean separation of concerns from day one, ensuring the logic layer could be consumed by the SwiftUI app without pulling in executable-level concerns.</p>
+        <p>AI opponent integration was handled through a uniform <code>PlayerAgent</code> protocol inherited from IconquerMatch, behind which three distinct backends are plugged: Ollama for local LLM inference, Apple Intelligence, and MCP-connected agents. This protocol boundary meant that adding or swapping AI backends didn’t ripple through the game loop or TUI rendering code.</p>
+        <p>The pluggable map system deserves mention: map definitions load from either bundled resources or custom JSON files, with validation, giving the tool flexibility for both standard play and researcher-defined scenarios.</p>
+        <h2>Results</h2>Across sixteen days, the project accumulated 65 commits on a single branch and shipped five tagged releases: v0.1.0 through v0.5.0. The release cadence — roughly one minor version every three days — indicates a disciplined iterative rhythm rather than a single large dump at the end.
         <p></p>
-        <p><strong>Separating the library from the CLI at the package level.</strong> Rather than building the CLI as the primary target and extracting logic later, the developer inverted the dependency from the first commit. <code>IconquerCLILib</code> is the real deliverable; <code>iconquer-cli</code> is just one proof of consumption. This is the kind of structural decision that’s easy to skip under deadline pressure and expensive to retrofit.</p>
-        <p><strong>The seeded RNG for parity testing.</strong> Most game engine developers trust their own test suite. Designing for a cross-language oracle — where a TypeScript harness must independently reproduce the same battle outcomes from the same seed — is a significantly higher bar for correctness. It forces the RNG to be a first-class, documented interface rather than an implementation detail.</p>
-        <p><strong><code>Sendable</code> throughout from day one.</strong> Swift 6’s strict concurrency checking makes retrofitting <code>Sendable</code> onto an existing codebase painful. Committing to pure value semantics and <code>Sendable</code> conformance at the outset, before any UI or async code was layered on, reflects awareness of where the Swift ecosystem is heading and avoids a class of future technical debt entirely.</p>
-        <p><strong>A Claude Code session that encountered friction and mostly achieved its goals.</strong> One multi-task AI-assisted session logged two instances of buggy code requiring correction, with an outcome marked <code>mostly_achieved</code>. Rather than hiding this, it’s worth noting: the developer recognized the bugs, corrected course, and continued. That’s the working style the commit history reflects — steady, iterative, quality-gated progress over the full 16-day arc.</p>
+        <p>The shipped surface area is substantial: interactive play with animated dice rolls and colored territory maps, a Simulate mode for batch AI-vs-AI runs, a Replay mode for re-watching recorded matches, and an MCP Play mode for agent-driven games via the Model Context Protocol. Each of these modes is a distinct game-management capability beyond simple play.</p>
+        <p>The library target also serves as a reuse artifact for the broader iConquer SwiftUI application, meaning the work done here compounds value across the ecosystem rather than living only in the terminal.</p>
+        <h2>Judgment Calls</h2>Several decisions here reflect genuine craft rather than default choices.
+        <p></p>
+        <p><strong>The library/executable split.</strong> Making <code>IconquerCLILib</code> the real target rather than building logic directly into the executable was a consequential choice. It anticipates future consumers — specifically the SwiftUI app — and prevents the terminal-specific code from becoming a dead end. It’s the kind of structural decision that feels unnecessary on day one and essential on day sixty.</p>
+        <p><strong>Three AI backends behind one protocol.</strong> Supporting Ollama, Apple Intelligence, and MCP agents could easily have produced three different code paths through the game loop. Routing all three through the <code>PlayerAgent</code> protocol from IconquerMatch kept the game loop clean and made each backend independently swappable. The design proposal artifact in the repository suggests this was an explicit architectural decision rather than something that emerged organically.</p>
+        <p><strong>Game modes as first-class citizens.</strong> Shipping Simulate, Replay, and MCP Play alongside standard interactive play signals that the tool was designed for the full range of its target users — not just the developer who wanted a quick way to test the rules engine. AI researchers running batch simulations need Simulate mode; replay and MCP support serve different but equally specific needs. The breadth of modes, achieved in sixteen days, points to a developer who planned the feature surface before writing the first line.</p>
+        <p><strong>Working with buggy code deliberately.</strong> The Claude Code session log records two friction events tagged as <code>buggy_code</code> within a single multi-task session that nonetheless achieved a <code>mostly_achieved</code> outcome. Six commits came out of six messages — a high commit-to-message ratio that suggests the session was focused and outcomes were pushed to completion even when the code misbehaved, rather than abandoned mid-stream.</p>
       </div>
       <div class="showcase-infographics">
         <img src="/images/showcase/iconquerclilib-stats.svg" alt="IconquerCLILib statistics" class="img-fluid" />
@@ -299,7 +291,7 @@
         <img src="/images/showcase/iconquerclilib-releases.svg" alt="IconquerCLILib release history" class="img-fluid" />
       </div>
       <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iconquerclilib, selfReflection</p>
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">

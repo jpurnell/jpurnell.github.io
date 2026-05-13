@@ -1,9 +1,9 @@
 ---
 title: IconquerCore: A Headless Rules Engine Built to Last
-description: A pure-Swift, platform-agnostic game logic library that separates strategy game rules from any UI concern — designed for testability, parity verification, and long-term client flexibility.
-date: 2026-05-12 15:56
-lastModified: 2026-05-12
-tags: showcase, project, iconquercore, selfReflection
+description: A pure-Swift strategy game engine designed for correctness, portability, and long-term client independence — built with a design-first discipline that shows in every architectural choice.
+date: 2026-05-13 16:37
+lastModified: 2026-05-13
+tags: showcase, project, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: IconquerCore
@@ -12,40 +12,38 @@ published: true
 
 # IconquerCore: A Headless Rules Engine Built to Last
 
-> A pure-Swift, platform-agnostic game logic library that separates strategy game rules from any UI concern — designed for testability, parity verification, and long-term client flexibility.
+> A pure-Swift strategy game engine designed for correctness, portability, and long-term client independence — built with a design-first discipline that shows in every architectural choice.
 
 ## Problem
 
-Strategy games live and die by the correctness of their rules. For a Risk-style turn-based game like iConquer, the logic governing troop placement, combat resolution, continent bonuses, and turn sequencing is complex enough that entangling it with UI code creates a maintenance trap: bugs become hard to isolate, rule changes ripple unpredictably through the interface, and testing requires spinning up a full application.
+Turn-based strategy games carry a hidden complexity tax: the rules *are* the product. In a Risk-style game like iConquer, the difference between a faithful simulation and a buggy one isn't a visual glitch — it's a game that plays wrong. Territory ownership, troop reinforcement, dice combat resolution, card redemption — each mechanic interlocks with the others, and any stateful coupling between UI and rules logic makes testing nearly impossible.
 
-The challenge IconquerCore addresses is architectural as much as technical. The question wasn't just "how do we implement these rules?" but "where do they live, and how do we know they're correct?" The answer needed to accommodate a SwiftUI app today and leave the door open for a CLI, a server, or an alternate client tomorrow.
+IconquerCore was built to solve that problem at the root. Rather than embedding game logic inside a SwiftUI app where it would be entangled with view state, rendering cycles, and platform assumptions, the engine was extracted into a standalone Swift Package — headless, dependency-free, and designed to be consumed by any client. The primary consumer is the `iconquer` SwiftUI app in a sibling repository, but the architecture deliberately leaves the door open: a CLI, a server, an alternate UI, or a cross-platform port could all adopt the same engine without modification.
 
 ## Approach
 
-The solution is a headless rules engine — no UI code, no platform-specific dependencies beyond SPM platform declarations, no shared mutable state. The library targets macOS, iOS, tvOS, and visionOS simultaneously, a commitment enforced structurally rather than by convention.
+IconquerCore is structured around a single organizing principle: **pure value semantics**. The central `Game` type is a `struct`, not a class. `Sendable` conformance is enforced throughout. There is no shared mutable state — a game tick takes a value in and produces a value out, making every state transition explicit and reproducible.
 
-The core architectural bet is on pure value semantics. `struct Game` and `Sendable` conformance throughout the codebase mean that game state can be passed, copied, and tested without any of the spooky-action-at-a-distance that comes with reference types and shared mutation. Every game state transition is a function from old state to new state — straightforward to reason about, straightforward to test.
+The most consequential architectural decision was the deterministic seeded RNG. Dice rolls are the heartbeat of a Risk-style game, and non-determinism is the enemy of correctness. By pinning randomness to a seeded generator, IconquerCore makes it possible to drive the engine from a TypeScript oracle for cross-language parity tests — an unusual but powerful technique that catches behavioral divergence rather than just internal consistency.
 
-The most distinctive technical decision is the deterministic seeded RNG. Combat in a Risk-style game involves dice rolls, which are inherently random — but non-determinism is the enemy of reliable testing. By pinning randomness to a seeded generator, IconquerCore makes it possible for a TypeScript oracle to drive parity tests, verifying that the Swift implementation and an independent reference implementation produce identical outcomes from identical seeds. This is a serious investment in correctness.
+The project is built against Swift Tools Version 6.0 and targets macOS, iOS, tvOS, and visionOS simultaneously, with `swift-docc-plugin` as the sole dependency. That last detail is a statement: the only external code in the dependency graph is a documentation tool. The engine itself is self-contained.
 
-The project uses Swift Package Manager with Swift 6.0 tooling and pulls in `swift-docc-plugin`, signaling that documentation is treated as a first-class output alongside the library itself.
-
-A `CLAUDE.md` file and a design-first workflow — with at least one formal design proposal on record — indicate that architectural decisions were written down before code was written. The presence of a `MASTER_PLAN.md` as the authoritative mission document reinforces this: the project has a declared purpose, and the implementation is held accountable to it.
+A `CLAUDE.md` file and a formal design proposal establish a design-first workflow. Architecture sections covering session start protocol, development workflow, key rules, quality gates, and references indicate that decisions were documented *before* code was written — not reconstructed afterward.
 
 ## Results
 
-In roughly a month of development — first commit April 7, 2026, latest commit May 6, 2026 — IconquerCore reached four public releases: v0.1.0, v0.2.0, v0.3.0, and v0.3.1. Four releases in thirty days across 31 commits reflects a steady, iterative cadence rather than a single big-bang push.
+IconquerCore reached four public releases in under a month — v0.1.0 through v0.3.1 — across 31 commits from a single contributor. The release cadence reflects deliberate versioning: major behavioral additions landed as minor bumps (v0.2.0, v0.3.0), while v0.3.1 suggests a stabilization pass. The `IconquerCoreTests` target is a first-class citizen of the package, not an afterthought.
 
-The library ships with a dedicated test target (`IconquerCoreTests`) and is already integrated as the logic backbone for the sibling `iconquer` SwiftUI app. The separation of concerns is complete enough that the engine could be consumed by any future client without modification.
+The engine ships with no UI code, no platform-specific dependencies beyond SPM platform declarations, and full multi-platform support across Apple's four current targets. Documentation infrastructure is in place via DocC.
 
 ## Judgment Calls
 
-Several decisions here reveal craft beyond the mechanical work of writing Swift.
+Several decisions in IconquerCore reveal the kind of craft that doesn't show up in feature lists.
 
-**The TypeScript parity oracle is the most interesting one.** Rather than relying solely on unit tests within the Swift ecosystem, the architecture anticipates cross-language verification. Seeding the RNG for determinism is not a difficult thing to implement, but it requires recognizing early that you'll want it — and it signals that the developer was thinking about proof of correctness, not just the appearance of it.
+**Extracting the engine before the app shipped.** Pulling game logic into a separate package at the start of a solo project requires discipline. The short-term cost is real — you're building infrastructure instead of features — but it pays off every time a rule needs to change or a bug needs to be isolated. The architecture anticipates maintenance, not just launch.
 
-**Value semantics as a hard constraint, not a preference.** Choosing `struct`-based state and `Sendable` throughout is a discipline that pays dividends over time — easier concurrency, easier testing, easier reasoning. The fact that this is documented in the mission plan rather than left as an implicit convention means it's enforced rather than aspirational.
+**The TypeScript parity oracle.** This is the most distinctive technical choice in the project. Rather than testing the engine only against itself, the seeded RNG enables cross-language behavioral verification. If the TypeScript oracle and the Swift engine disagree on a dice outcome or a combat result given the same seed, something is wrong — and the source of truth is the documented rules, not either implementation. This is a rigorous approach to correctness that goes well beyond conventional unit testing.
 
-**The headless-first architecture.** Splitting game logic into a separate library before the UI is mature is a judgment call that most solo developers don't make — it's easier to build everything in one target and extract later. Building headless from day one means the SwiftUI app is a consumer of the engine rather than a host for it, and that boundary will be much cheaper to maintain than to retrofit.
+**`Sendable` everywhere, from day one.** Swift 6's strict concurrency checking makes retroactive `Sendable` conformance painful. Designing for it at project inception — particularly with pure value semantics across all game state — means IconquerCore is ready for structured concurrency without retrofit work. For a game engine that might eventually run on a server or in a background actor, this is forward-looking.
 
-**Documentation as a release artifact.** Including `swift-docc-plugin` in a solo game project library isn't obvious. It suggests the developer is building IconquerCore as if other clients — and other developers — will consume it, even if that's speculative today. That kind of future-proofing is a choice, not an accident.
+**One dependency, and it's for docs.** Keeping `swift-docc-plugin` as the only external dependency is a conscious choice to minimize the attack surface and eliminate transitive version conflicts forever. The engine's correctness cannot be broken by an upstream package update.

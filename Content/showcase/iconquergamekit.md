@@ -3,7 +3,7 @@ title: IconquerGameKit: Laying the Foundation for a Cross-Platform Game Logic Li
 description: A freshly minted Swift 6.2 package that establishes the scaffolding for shared game logic across Apple's entire platform ecosystem.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, iconquergamekit, selfReflection
+tags: showcase, project, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: IconquerGameKit
@@ -20,7 +20,7 @@ Building a game that runs well on iPhone, Apple TV, Mac, Apple Watch, and Vision
 
 ## Approach
 
-James initialized IconquerGameKit as a modern Swift package targeting Swift 6.2, the toolchain's latest structured-concurrency-era release. Rather than scoping the library narrowly, he declared support for all five of Apple's current platforms — macOS, iOS, tvOS, watchOS, and visionOS — from the outset. That upfront declaration is itself an architectural commitment: every API surface added to the library will need to justify its presence across the full matrix, discouraging the kind of platform-creep that tends to make shared libraries quietly un-shareable.
+Justin initialized IconquerGameKit as a modern Swift package targeting Swift 6.2, the toolchain's latest structured-concurrency-era release. Rather than scoping the library narrowly, he declared support for all five of Apple's current platforms — macOS, iOS, tvOS, watchOS, and visionOS — from the outset. That upfront declaration is itself an architectural commitment: every API surface added to the library will need to justify its presence across the full matrix, discouraging the kind of platform-creep that tends to make shared libraries quietly un-shareable.
 
 The package ships with two targets baked in from the first commit: `IconquerGameKit` (the production library) and `IconquerGameKitTests` (its test suite). Standing up the test target at project creation, before any feature code exists, signals an intention to treat testability as a property of the architecture rather than something retrofitted later.
 

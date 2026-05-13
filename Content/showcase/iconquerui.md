@@ -3,11 +3,11 @@ title: IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up
 description: A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, iconquerui, selfReflection
+tags: showcase, project, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: IconquerUI
-published: true
+published: false
 ---
 
 # IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up

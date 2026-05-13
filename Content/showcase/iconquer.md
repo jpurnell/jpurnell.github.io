@@ -3,10 +3,10 @@ title: Rebuilding a 2002 Classic: iConquer's Swift Resurrection
 description: Justin Purnell is methodically resurrecting a beloved Mac strategy game as a portfolio-quality SwiftUI project, using a TypeScript reference implementation as a behavioral specification and 39 design proposals as the backbone of a design-first TDD discipline.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, mlxtest, selfReflection
+tags: showcase, project, selfReflection, iConquer
 layout: ShowcaseLayout
 style: caseStudy
-project: MLXTest
+project: iConquer
 published: true
 ---
 

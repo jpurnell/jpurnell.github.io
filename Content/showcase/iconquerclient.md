@@ -3,11 +3,11 @@ title: IconquerClient: A Cross-Platform Swift Networking Client Built for Modern
 description: In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, iconquerclient, selfReflection
+tags: showcase, project, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: IconquerClient
-published: true
+published: false
 ---
 
 # IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems

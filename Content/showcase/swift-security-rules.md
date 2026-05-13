@@ -7,7 +7,7 @@ tags: showcase, project, swift-security-rules, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: swift-security-rules
-published: true
+published: false
 ---
 
 # Swift Security Rules: Laying the Groundwork for Automated Security Linting

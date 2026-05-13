@@ -7,7 +7,7 @@ tags: showcase, project, narbis, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: narbis
-published: true
+published: false
 ---
 
 # Narbis: A Sovereign HRV Coherence Library for the Full Apple Ecosystem

@@ -1,51 +1,47 @@
 ---
-title: IconquerMatch: A Pure-Swift Rules Engine Built to Be Consumed, Not Seen
-description: A headless, value-semantic game logic library for a Risk-style strategy game, designed from the start to serve multiple clients without coupling to any of them.
-date: 2026-05-12 15:56
-lastModified: 2026-05-12
-tags: showcase, project, iconquermatch, selfReflection
+title: IconquerMatch: Orchestrating Turn-Based Strategy From First Principles
+description: A focused Swift 6 library that separates match lifecycle management from game rules, giving the iConquer ecosystem a single, agent-agnostic conductor for running games end-to-end.
+date: 2026-05-13 16:37
+lastModified: 2026-05-13
+tags: showcase, project, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: IconquerMatch
 published: true
 ---
 
-# IconquerMatch: A Pure-Swift Rules Engine Built to Be Consumed, Not Seen
+# IconquerMatch: Orchestrating Turn-Based Strategy From First Principles
 
-> A headless, value-semantic game logic library for a Risk-style strategy game, designed from the start to serve multiple clients without coupling to any of them.
+> A focused Swift 6 library that separates match lifecycle management from game rules, giving the iConquer ecosystem a single, agent-agnostic conductor for running games end-to-end.
 
 ## Problem
 
-Turn-based strategy games carry significant rules complexity — territory adjacency, troop reinforcement, multi-phase combat resolution, ownership transitions — and that logic has a habit of becoming entangled with the UI layer that first gives it form. For a SwiftUI app like *iConquer*, letting game rules live inside view models or app-level state machines is the path of least resistance and, eventually, the path of most regret.
+Turn-based strategy games carry a deceptive complexity beneath their familiar surface. The rules of play — territory ownership, troop counts, attack resolution — are one problem. But *running* a game is another problem entirely: who moves next, how long they have to decide, what happens when an AI agent goes silent, and how the full sequence of decisions gets preserved for replay or analysis. Without a clear boundary between these concerns, that orchestration logic tends to leak into every consumer of the rules engine, creating duplication and fragility.
 
-J. Purnell set out to invert that pressure. The goal was a library — `IconquerMatch`, the rules engine — that knows nothing about screens, nothing about platform affordances, and nothing about any specific client. The SwiftUI companion app at `../iconquer/` would consume it. A CLI could consume it. A server could consume it. None of that future optionality would require touching the engine itself.
+IconquerMatch was built to draw that boundary cleanly for iConquer, a Risk-style turn-based strategy game. It sits as the middle layer in a three-tier architecture — between `IconquerCore` (the rules engine that knows nothing about runtime) and any consumer application: the `IconquerCLI` terminal client, the SwiftUI app running headless matches in the background, or test harnesses simulating thousands of games with mock agents. The library's job is narrow and explicit: bind players to seats, request moves from agents within deadlines, validate and apply those moves through Core, record everything, and produce a final result.
 
 ## Approach
 
-The project is a Swift Package (tools version 6.0) targeting macOS, iOS, tvOS, and visionOS simultaneously — a platform matrix that itself enforces the discipline of writing no UI code, since tvOS and visionOS have different interaction models and no shared UIKit surface. The package declares two targets: `IconquerMatch` for the engine itself, and `IconquerMatchTests` for its verification suite. The only dependency is `swift-docc-plugin`, which signals that documentation is considered a first-class deliverable, not an afterthought.
+Justin Purnell established a design-first workflow before writing production code. A single formal design proposal preceded implementation, and a `CLAUDE.md` file was committed alongside the source — encoding session start procedures, development workflow conventions, quality gates, and references. This is a deliberate working style: the architectural thinking is written down and version-controlled, not just held in the developer's head.
 
-The architectural decisions documented in the project's `MASTER_PLAN.md` are precise and load-bearing:
+The central abstraction is `PlayerAgent`, a protocol that decouples move production from match orchestration entirely. Whether a move comes from a human waiting at a terminal, a local deterministic AI, an LLM-backed agent, or an MCP agent over a network connection, `MatchRunner` neither knows nor cares. The protocol surface is the only contract.
 
-- **Pure value semantics.** `struct Game` and `Sendable` conformance throughout — no shared mutable state, no reference types threading through game logic. This makes the engine trivially serializable, trivially testable, and safe to use in any concurrency context Swift 6 introduces.
-- **Deterministic RNG.** Combat in a Risk-style game depends on dice rolls. Rather than accepting nondeterminism as a testing obstacle, Purnell pinned the engine to a seeded random number generator. This enables a TypeScript oracle to produce identical battle outcomes and drive cross-language parity tests — a sophisticated hedge against subtle implementation drift.
-- **Headless by contract.** The engine contains no UI code and no platform-specific code beyond the SPM platform declarations. The boundary is enforced at the package level, not by convention.
+Layered onto this is `SeatBinding`, which maps players to agents and carries fallback policy — defining what happens when an agent fails to respond: forfeit, retry, or substitute. Combined with deadline-based move requests, this design prevents a class of failure modes (hung games from slow or unresponsive AI) that only surface at runtime and are painful to debug after the fact. The deadline mechanism was a first-class design decision, not a patch.
 
-A `CLAUDE.md` file is present and the project follows a design-first workflow, with one formal design proposal on record. The `CLAUDE.md` captures session start procedures, development workflow, key rules references, a quality gate checklist, and pointers to canonical references — infrastructure that treats the development process itself as something worth specifying.
+Full move recording via `MoveRecord` was built in from the start rather than added as an afterthought. Every move in a match is captured, enabling replay, analysis, and parity testing across agent implementations. The library targets macOS, iOS, tvOS, and visionOS, and is authored in Swift 6 with `swift-docc-plugin` as its only dependency — a deliberately minimal footprint.
 
 ## Results
 
-The project reached its initial release, `v0.1.0`, within a 16-day development window spanning April 8 to April 24, 2026. Five commits represent a focused, deliberate build — not a sprawling exploratory history, but a sequence of intentional steps from blank package to versioned release. The library is live and available for the `../iconquer/` SwiftUI app to consume.
-
-The test target, `IconquerMatchTests`, ships alongside the engine. Given the seeded-RNG architecture, those tests can assert deterministic outcomes against known dice sequences — a higher standard of correctness than most game logic suites achieve.
+IconquerMatch shipped its initial release — v0.1.0 — sixteen days after the first commit, across five focused commits by a single contributor. The library is live on one branch with a clean release tag. The `IconquerMatch` and `IconquerMatchTests` targets are both present, establishing the testing surface for future agent simulation work. The Swift 6 toolchain adoption means the library is positioned for strict concurrency correctness, which matters for a component that will eventually coordinate async move requests across multiple agents simultaneously.
 
 ## Judgment Calls
 
-Several decisions here reflect craft rather than just capability.
+Several decisions in this project reflect craft rather than just output.
 
-**Naming the boundary before writing the code.** The `MASTER_PLAN.md` mission statement explicitly names what the engine is *not* — no UI, no platform-specific code, no shared mutable state — before it describes what it is. This is architectural thinking as negative space: knowing what to leave out is often harder than knowing what to include.
+**The three-tier split itself.** Separating `IconquerCore`, `IconquerMatch`, and consumer applications into distinct packages is a choice with real cost — more moving parts, more explicit interfaces — and real payoff: consumers like `IconquerCLI` and the SwiftUI app can delegate entirely to `MatchRunner` without reimplementing any orchestration logic. The design proposal artifact suggests this boundary was deliberated, not stumbled into.
 
-**The TypeScript oracle is the interesting part.** Seeding an RNG for testability is a well-known technique. Designing that seed to be reproducible from a *different language runtime* — so a TypeScript oracle can drive parity tests against the Swift engine — is a substantially more committed version of the same idea. It anticipates the possibility of a web client or server-side logic written outside the Apple ecosystem, and it builds the verification infrastructure now rather than scrambling for it later.
+**`PlayerAgent` as a protocol, not a class hierarchy.** Making the agent abstraction a protocol means any type can produce moves — including test doubles, mock agents, and future LLM or MCP integrations — without inheriting from a base class. This is the kind of decision that looks obvious in retrospect and is easy to get wrong under time pressure.
 
-**Swift 6 and `Sendable` as a forcing function.** Opting into Swift 6's strict concurrency model isn't just forward compatibility — it's a constraint that makes the pure-value-semantics commitment legible to the compiler. Any future contributor who tries to introduce shared mutable state will get a build error, not a code review comment. The architecture is enforced, not merely documented.
+**Deadline and fallback policy as first-class domain concepts.** It would have been simpler to not build deadlines in at v0.1.0 and handle the "slow AI" problem later. Purnell treated it as a correctness requirement from the start. `SeatBinding` carrying explicit fallback policy (forfeit, retry, substitute) means the library's behavior under failure is defined and testable, not undefined and surprising.
 
-**DocC as a dependency.** Including `swift-docc-plugin` in a library with no external users yet is a statement about what kind of library this is intended to become. It treats documentation as part of the API surface, not an optional extra to add once the library gains adoption.
+**`CLAUDE.md` as a workflow artifact.** Committing a file that encodes session start procedures, development conventions, and quality gates into the repository itself signals a developer who thinks about the conditions under which good work gets done — not just the work itself. It makes the project's working agreements explicit and reviewable.

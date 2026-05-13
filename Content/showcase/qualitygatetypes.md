@@ -7,7 +7,7 @@ tags: showcase, project, qualitygatetypes, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: QualityGateTypes
-published: true
+published: false
 ---
 
 # QualityGateTypes: Shared Type Foundation for a Quality Gate Ecosystem
