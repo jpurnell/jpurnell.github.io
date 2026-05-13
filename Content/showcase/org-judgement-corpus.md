@@ -3,10 +3,10 @@ title: Building a Judgment Corpus Tool for Organizational Data
 description: A focused Swift utility for constructing and managing a corpus of labeled judgments, built and committed in under four minutes.
 date: 2026-05-12 15:57
 lastModified: 2026-05-12
-tags: showcase, project, org-judgement-corpus, selfReflection
+tags: showcase, org-judgement, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: org-judgement-corpus
+project: Internal Infrastructure
 published: true
 ---
 

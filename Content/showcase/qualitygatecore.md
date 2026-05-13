@@ -3,10 +3,10 @@ title: QualityGateCore: Building a Plugin-Driven Quality Enforcement Engine for 
 description: A deep technical look at how a disciplined design-first workflow produced a modular, CI-ready quality gate system spanning 20+ auditors, multiple output formats, and Swift 6.2's full concurrency model.
 date: 2026-05-13 15:44
 lastModified: 2026-05-13
-tags: showcase, project, qualitygatecore, selfReflection
+tags: showcase, project, QualityGate, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: deepDive
-project: QualityGateCore
+project: Internal Infrastructure
 published: true
 ---
 

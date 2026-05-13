@@ -3,10 +3,10 @@ title: Wiring a Terminal Into a Game Ecosystem: IconquerCLILib
 description: In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool.
 date: 2026-05-13 16:38
 lastModified: 2026-05-13
-tags: showcase, project, iConquer, selfReflection
+tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: IconquerCLILib
+project: iConquer
 published: true
 ---
 

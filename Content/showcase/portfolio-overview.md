@@ -5,7 +5,7 @@ date: 2026-05-13 16:41
 lastModified: 2026-05-13
 tags: showcase, portfolio, overview
 layout: ShowcaseLayout
-projects: ApplesoftBASICLib, ApplesoftBASICApp, GeoSEOMCP, MLXTest, IconquerCLILib, IconquerCore, IconquerMatch, IconquerMCP, PersonalSiteLib, org-judgement-corpus, ProjectShowcase, QualityGateCore, reunions2025, SearchOperatorCore, Potrace, SwiftCLIKit, MCPClient, SwiftMCPServer, SwiftSVG, WineTaster 4
+projects: ApplesoftBASIC, GeoSEOMCP, Iconquer, Website, org-judgement, ProjectShowcase, Quality Gate, reunions2025, SearchOperatorCore, Potrace, SwiftCLIKit, MCPClient, SwiftMCPServer, SwiftSVG, WineTaster 4
 published: true
 ---
 

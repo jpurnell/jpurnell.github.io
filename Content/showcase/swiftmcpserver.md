@@ -3,10 +3,10 @@ title: Building a Native Swift MCP Server: Protocol-First Infrastructure for AI 
 description: SwiftMCPServer is a ground-up Swift implementation of the Model Context Protocol, giving macOS developers a native, type-safe foundation for exposing tools and resources to AI agents — built with a design-first workflow before a single session was logged.
 date: 2026-05-12 15:58
 lastModified: 2026-05-12
-tags: showcase, project, swiftmcpserver, selfReflection
+tags: showcase, project, swiftmcpserver, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: SwiftMCPServer
+project: Internal Infrastructure
 published: true
 ---
 

@@ -3,7 +3,7 @@ title: Narbis: A Sovereign HRV Coherence Library for the Full Apple Ecosystem
 description: A solo developer built a cross-platform Swift biofeedback library from scratch in under three weeks, translating a patented HRV algorithm into a design-first, offline-capable SDK targeting iOS, watchOS, visionOS, and Android.
 date: 2026-05-12 15:57
 lastModified: 2026-05-12
-tags: showcase, project, narbis, selfReflection
+tags: showcase, narbis, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: narbis

@@ -3,11 +3,11 @@ title: SwiftSVG: A Swift-Native SVG Toolkit for Apple Platforms
 description: A focused Swift package targeting macOS and iOS, laying the groundwork for first-class SVG handling without dependency on third-party rendering layers.
 date: 2026-05-12 15:58
 lastModified: 2026-05-12
-tags: showcase, project, swiftsvg, selfReflection
+tags: showcase, swiftsvg, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: SwiftSVG
-published: true
+published: false
 ---
 
 # SwiftSVG: A Swift-Native SVG Toolkit for Apple Platforms

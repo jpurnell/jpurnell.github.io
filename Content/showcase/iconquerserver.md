@@ -3,11 +3,11 @@ title: IconquerServer: Laying the Foundation for a Swift NIO Game Backend
 description: A focused greenfield sprint that stood up a documented, tested Swift server target in under 25 minutes, establishing the architectural bones for a multiplayer game backend.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, iConquer, selfReflection
+tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: IconquerServer
-published: false
+project: iConquer
+published: true
 ---
 
 # IconquerServer: Laying the Foundation for a Swift NIO Game Backend

@@ -1,6 +1,6 @@
 ---
 layout: ProjectLayout
-tags: project, burglar alarm, python, pico
+tags: project, python, pico
 image: 
 imageDescription: 
 title: Draft No. 4

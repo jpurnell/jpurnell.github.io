@@ -3,14 +3,14 @@ title: IJSCore: Encoding Institutional Judgment into the Development Loop
 description: A single-day architectural sprint that transformed a theoretical framework for AI-assisted governance into a portable, file-based Swift library — before a single production session began.
 date: 2026-05-12 15:57
 lastModified: 2026-05-12
-tags: showcase, project, ijscore, selfReflection
+tags: showcase, project, infrastructure, org-judgement, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: IJSCore
+project: Internal Infrastructure
 published: true
 ---
 
-# IJSCore: Encoding Institutional Judgment into the Development Loop
+# Encoding Institutional Values into the Development Loop
 
 > A single-day architectural sprint that transformed a theoretical framework for AI-assisted governance into a portable, file-based Swift library — before a single production session began.
 

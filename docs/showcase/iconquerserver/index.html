@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
+    <meta name="description" content="A focused greenfield sprint that stood up a documented, tested Swift server target in under 25 minutes, establishing the architectural bones for a multiplayer game backend." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Building a Personal Site as a Swift Package: Owning the Stack End to End | Justin Purnell</title>
+    <title>IconquerServer: Laying the Foundation for a Swift NIO Game Backend | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
-    <link href="https://www.justinpurnell.com/showcase/personalsitelib" rel="canonical" />
+    <link href="https://www.justinpurnell.com/showcase/iconquerserver" rel="canonical" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -56,11 +56,11 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Building a Personal Site as a Swift Package: Owning the Stack End to End" />
-    <meta name="twitter:title" content="Building a Personal Site as a Swift Package: Owning the Stack End to End" />
-    <meta property="og:description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
-    <meta name="twitter:description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
-    <meta property="og:url" content="https://www.justinpurnell.com/showcase/personalsitelib" />
+    <meta property="og:title" content="IconquerServer: Laying the Foundation for a Swift NIO Game Backend" />
+    <meta name="twitter:title" content="IconquerServer: Laying the Foundation for a Swift NIO Game Backend" />
+    <meta property="og:description" content="A focused greenfield sprint that stood up a documented, tested Swift server target in under 25 minutes, establishing the architectural bones for a multiplayer game backend." />
+    <meta name="twitter:description" content="A focused greenfield sprint that stood up a documented, tested Swift server target in under 25 minutes, establishing the architectural bones for a multiplayer game backend." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerserver" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:dnt" content="on" />
@@ -229,8 +229,8 @@
     },
     {
       "@type" : "ListItem",
-      "item" : "https://www.justinpurnell.com/showcase/personalsitelib",
-      "name" : "Building a Personal Site as a Swift Package: Owning the Stack End to End",
+      "item" : "https://www.justinpurnell.com/showcase/iconquerserver",
+      "name" : "IconquerServer: Laying the Foundation for a Swift NIO Game Backend",
       "position" : 2
     }
   ]
@@ -257,37 +257,42 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Building a Personal Site as a Swift Package: Owning the Stack End to End</h1>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Website</p>
+      <h1 class="mainTitle">IconquerServer: Laying the Foundation for a Swift NIO Game Backend</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p></p>
         <blockquote>
-          Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem.
+          A focused greenfield sprint that stood up a documented, tested Swift server target in under 25 minutes, establishing the architectural bones for a multiplayer game backend.
         </blockquote>
-        <h2>Problem</h2>Most developer personal sites are built on commodity tooling — static site generators with opinionated templates, JavaScript build pipelines, or hosted platforms that abstract away the underlying machinery. For a Swift developer, this creates a persistent friction: the language you think in every day has nothing to do with the tools generating your public presence. The challenge Justin set out to address was less about shipping a website and more about whether a Swift package could become the authoritative publishing layer for justinpurnell.com — something he could reason about, test, and extend using the same mental models he applies everywhere else.
-        <h2>Approach</h2>The project is built on 
-        <a href="https://github.com/twostraws/Ignite">Ignite</a>, Paul Hudson’s Swift-based static site generator, which gives the package a foundation for rendering HTML through a declarative Swift API. Justin structured the work as a proper Swift package with Swift Tools Version 5.9, targeting both macOS and iOS and splitting concerns across three targets: 
-        <code>PersonalSiteLib</code> for the core content and component library, 
-        <code>IgniteStarter</code> for the site entry point, and 
-        <code>PersonalSiteTests</code> for a test suite that treats the site’s output as something worth verifying rather than just eyeballing. 
+        <h2>Problem</h2>Multiplayer game servers have a well-known bootstrapping problem: the gap between “idea” and “something that actually compiles, accepts connections, and can be reasoned about” is wide enough to kill momentum before any real work begins. IconquerServer needed a clean starting point — a Swift Package Manager project that wired together the right primitives (non-blocking I/O, structured argument parsing, and structured logging) without accumulating early technical debt that would fight the team later.
+        <h2>Approach</h2>The project was structured around Swift Package Manager with a Tools version of 6.0, targeting macOS. The dependency selection reflects deliberate choices about the server’s long-term shape:
+        <ul>
+          <li><strong>SwiftNIO</strong> anchors the I/O layer, providing the event-loop foundation that a game server’s real-time demands will eventually require — connection handling, framing, and back-pressure all live here rather than in hand-rolled socket code.</li>
+          <li><strong>swift-argument-parser</strong> was pulled in early, signaling an intent to run this server as a proper command-line process with inspectable, documented flags — not a hardcoded binary.</li>
+          <li><strong>swift-log</strong> establishes a logging abstraction from day one, meaning future backend implementations (os_log, file sinks, remote aggregation) can be swapped without touching call sites.</li>
+          <li><strong>swift-docc-plugin</strong> inclusion at the project’s inception is a quiet but meaningful statement: documentation is infrastructure, not an afterthought.</li>
+        </ul>The package defines three targets — 
+        <code>IconquerServer</code> (the library core), 
+        <code>iconquer-server</code> (the executable entry point), and 
+        <code>IconquerServerTests</code> — a separation that keeps the testable logic decoupled from the binary surface.
+        <h2>Results</h2>Within a 21-minute window (first commit at 01:37 UTC, second at 01:58 UTC on April 24, 2026), the project went from nothing to a structured, multi-target Swift package with a coherent dependency graph. Two commits represent the complete founding of the repository: an initial scaffold followed by a refinement pass. The test target was established as a first-class citizen alongside the library and executable, rather than bolted on later. 
         <p></p>
-        <p>The architecture reflects a library-first instinct — rather than treating the site as a single monolithic build script, Justin extracted reusable components into <code>PersonalSiteLib</code>, making the rendering logic something that can be tested in isolation. With 198 commits across roughly eighteen months from a single primary contributor, the history reads as sustained, deliberate iteration rather than bursts of activity followed by neglect.</p>
-        <p>Toward the tail end of the project, Justin brought Claude Code into select sessions — eight in total, producing 70 messages and a single committed change. The session type breakdown is telling: three iterative refinement sessions, two single-task sessions, two multi-task sessions, and one exploratory session. This is not someone who handed the project to an AI assistant; it is someone who used one as a sounding board on specific problems while keeping authorship firmly in hand.</p>
-        <h2>Results</h2>The project shipped and remains actively maintained, with the latest commit dated April 30, 2026 — roughly eighteen months of continuous development. The 
-        <code>PersonalSiteTests</code> target exists and is structured into the package manifest, establishing that the site’s rendered output has test coverage, a commitment most personal site projects never make. The two-target split between library and site entry point means the component architecture is real, not cosmetic. The single branch and consistent commit cadence across 198 commits suggest a developer who works in a stable main-line flow, integrating frequently rather than accumulating long-lived feature branches.
-        <h2>Judgment Calls</h2>The decisions here that reveal craft are the ones Justin did not have to make. Nobody required him to structure a personal site as a package with a separate library target. Nobody required a test suite. Nobody required Swift tooling at all — Hugo or Astro would have been faster to bootstrap and easier to hand off.
+        <p>No fabricated metrics apply here — this is a project at its earliest breath. What shipped is architecture: a skeleton that makes the right things easy and the wrong things inconvenient.</p>
+        <h2>Judgment Calls</h2>Several decisions in this brief window reveal thinking beyond “get it running”:
         <p></p>
-        <p>The choice to use Ignite specifically is worth noting: it is a relatively young framework that prioritizes Swift idioms over ecosystem maturity. Betting on it signals a preference for conceptual coherence over safety-in-numbers, and it means Justin has had to work closer to the framework’s edges, contributing to his understanding of how the rendering pipeline behaves rather than just consuming a stable API.</p>
-        <p>The Claude Code usage pattern tells a subtler story about judgment. Eight sessions over the life of a 198-commit project, with 70 messages and only one resulting commit, and a friction log that honestly records wrong approaches, misunderstood tone, and buggy code alongside four fully-achieved outcomes — this is a developer who knows when to use a tool and what to do when it fails. He did not throw the tool away when the outputs were wrong; he refined, redirected, and evaluated. That pattern of treating AI assistance as a collaborator to calibrate rather than an oracle to accept is itself a craft decision, and the friction data makes it legible.</p>
+        <p><strong>Separating library from executable.</strong> Splitting <code>IconquerServer</code> and <code>iconquer-server</code> into distinct targets is easy to skip when moving fast. It wasn’t skipped. This means game logic and server primitives will remain testable without spinning up a process, and the executable stays thin.</p>
+        <p><strong>SwiftNIO at the foundation, not added later.</strong> Retrofitting an event-loop model onto a server built around synchronous assumptions is painful work. Choosing NIO as the base layer before any feature code exists means the concurrency model is consistent from the first handler written.</p>
+        <p><strong>swift-docc-plugin from commit one.</strong> Documentation tooling is frequently “we’ll add that when we’re further along.” Including it in the initial manifest removes that future negotiation entirely — the infrastructure to generate and publish docs exists the moment the project does.</p>
+        <p><strong>No CLAUDE.md, no design proposals — and that’s appropriate.</strong> At two commits and 21 minutes old, this project doesn’t yet need formal process scaffolding. The judgment here is knowing what <em>not</em> to formalize yet, keeping the project light enough to move fast while the shape of the problem is still being discovered.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/website-stats.svg" alt="Website statistics" class="img-fluid" />
-        <img src="/images/showcase/website-commits.svg" alt="Website commit history" class="img-fluid" />
-        <img src="/images/showcase/website-releases.svg" alt="Website release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
       </div>
       <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: website, selfReflection</p>
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">

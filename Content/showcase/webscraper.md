@@ -3,10 +3,10 @@ title: Auditing the Invisible: Building a GEO Compliance Tool for the AI Search 
 description: A solo developer designed and shipped a full-stack Swift web application that audits how businesses appear in AI-generated search results — before most of the industry had a name for the problem.
 date: 2026-05-12 15:58
 lastModified: 2026-05-12
-tags: showcase, project, webscraper, selfReflection
+tags: showcase, GEO-SEO, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: WebScraper
+project: GEO Auditor
 published: true
 ---
 

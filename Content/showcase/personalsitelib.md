@@ -3,10 +3,10 @@ title: Building a Personal Site as a Swift Package: Owning the Stack End to End
 description: Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else's problem.
 date: 2026-05-12 15:57
 lastModified: 2026-05-12
-tags: showcase, project, personalsitelib, selfReflection
+tags: showcase, website, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: PersonalSiteLib
+project: Website
 published: true
 ---
 

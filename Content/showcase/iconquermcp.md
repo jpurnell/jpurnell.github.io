@@ -3,11 +3,11 @@ title: IconquerMCP: Bridging a Strategy Game Engine to the Model Context Protoco
 description: In under 48 hours across three commits, a focused MCP server wrapper was designed and shipped to expose a pure-Swift Risk-style game engine as a tool-callable interface — complete with a design-first workflow and two versioned releases.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, iConquer, selfReflection
+tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: IconquerMCP
-published: false
+project: iConquer
+published: true
 ---
 
 # IconquerMCP: Bridging a Strategy Game Engine to the Model Context Protocol

@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
+    <meta name="description" content="A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Building a Personal Site as a Swift Package: Owning the Stack End to End | Justin Purnell</title>
+    <title>IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
-    <link href="https://www.justinpurnell.com/showcase/personalsitelib" rel="canonical" />
+    <link href="https://www.justinpurnell.com/showcase/iconquerui" rel="canonical" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -56,11 +56,11 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Building a Personal Site as a Swift Package: Owning the Stack End to End" />
-    <meta name="twitter:title" content="Building a Personal Site as a Swift Package: Owning the Stack End to End" />
-    <meta property="og:description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
-    <meta name="twitter:description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
-    <meta property="og:url" content="https://www.justinpurnell.com/showcase/personalsitelib" />
+    <meta property="og:title" content="IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up" />
+    <meta name="twitter:title" content="IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up" />
+    <meta property="og:description" content="A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem." />
+    <meta name="twitter:description" content="A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerui" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:dnt" content="on" />
@@ -229,8 +229,8 @@
     },
     {
       "@type" : "ListItem",
-      "item" : "https://www.justinpurnell.com/showcase/personalsitelib",
-      "name" : "Building a Personal Site as a Swift Package: Owning the Stack End to End",
+      "item" : "https://www.justinpurnell.com/showcase/iconquerui",
+      "name" : "IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up",
       "position" : 2
     }
   ]
@@ -257,37 +257,36 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Building a Personal Site as a Swift Package: Owning the Stack End to End</h1>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Website</p>
+      <h1 class="mainTitle">IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p></p>
         <blockquote>
-          Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem.
+          A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem.
         </blockquote>
-        <h2>Problem</h2>Most developer personal sites are built on commodity tooling — static site generators with opinionated templates, JavaScript build pipelines, or hosted platforms that abstract away the underlying machinery. For a Swift developer, this creates a persistent friction: the language you think in every day has nothing to do with the tools generating your public presence. The challenge Justin set out to address was less about shipping a website and more about whether a Swift package could become the authoritative publishing layer for justinpurnell.com — something he could reason about, test, and extend using the same mental models he applies everywhere else.
-        <h2>Approach</h2>The project is built on 
-        <a href="https://github.com/twostraws/Ignite">Ignite</a>, Paul Hudson’s Swift-based static site generator, which gives the package a foundation for rendering HTML through a declarative Swift API. Justin structured the work as a proper Swift package with Swift Tools Version 5.9, targeting both macOS and iOS and splitting concerns across three targets: 
-        <code>PersonalSiteLib</code> for the core content and component library, 
-        <code>IgniteStarter</code> for the site entry point, and 
-        <code>PersonalSiteTests</code> for a test suite that treats the site’s output as something worth verifying rather than just eyeballing. 
+        <h2>Problem</h2>Modern Swift applications increasingly need to run across Apple’s full platform spectrum — Mac, iPhone, Apple TV, and Apple Vision Pro — without maintaining separate UI codebases. For the Iconquer app, this fragmentation posed a real challenge: how do you build UI components that feel native and appropriate on each platform while keeping the underlying logic unified and testable? The answer was to extract UI concerns into a dedicated package, IconquerUI, purpose-built for cross-platform consistency from day one.
+        <h2>Approach</h2>The project was structured as a Swift Package Manager library targeting Swift Tools version 6.2, the current frontier of Swift’s concurrency and strict-mode capabilities. Rather than bolting on platform support later, the package manifest was written from the start to declare explicit support for macOS, iOS, tvOS, and visionOS — a decision that forces architectural discipline early, since any platform-specific assumption surfaces immediately as a build error on the unsupported targets. 
         <p></p>
-        <p>The architecture reflects a library-first instinct — rather than treating the site as a single monolithic build script, Justin extracted reusable components into <code>PersonalSiteLib</code>, making the rendering logic something that can be tested in isolation. With 198 commits across roughly eighteen months from a single primary contributor, the history reads as sustained, deliberate iteration rather than bursts of activity followed by neglect.</p>
-        <p>Toward the tail end of the project, Justin brought Claude Code into select sessions — eight in total, producing 70 messages and a single committed change. The session type breakdown is telling: three iterative refinement sessions, two single-task sessions, two multi-task sessions, and one exploratory session. This is not someone who handed the project to an AI assistant; it is someone who used one as a sounding board on specific problems while keeping authorship firmly in hand.</p>
-        <h2>Results</h2>The project shipped and remains actively maintained, with the latest commit dated April 30, 2026 — roughly eighteen months of continuous development. The 
-        <code>PersonalSiteTests</code> target exists and is structured into the package manifest, establishing that the site’s rendered output has test coverage, a commitment most personal site projects never make. The two-target split between library and site entry point means the component architecture is real, not cosmetic. The single branch and consistent commit cadence across 198 commits suggest a developer who works in a stable main-line flow, integrating frequently rather than accumulating long-lived feature branches.
-        <h2>Judgment Calls</h2>The decisions here that reveal craft are the ones Justin did not have to make. Nobody required him to structure a personal site as a package with a separate library target. Nobody required a test suite. Nobody required Swift tooling at all — Hugo or Astro would have been faster to bootstrap and easier to hand off.
+        <p>The package exposes two targets: <code>IconquerUI</code>, the library itself, and <code>IconquerUITests</code>, a dedicated test target. This separation signals an intent to treat the UI layer as a verifiable unit rather than a collection of visual intuitions. The single-repository, single-contributor structure kept decision-making tight and iteration fast across the four-week development window.</p>
+        <h2>Results</h2>Over 27 days — from the first commit on April 10, 2026 to the most recent on May 7, 2026 — the developer moved from an empty repository to a tagged release: 
+        <strong>IconquerUI v0.1.0</strong>. Eight commits mark a disciplined, incremental build rather than a single large dump of code. The package is live, versioned, and consumable by the parent Iconquer application or any downstream Swift project that declares it as a dependency.
         <p></p>
-        <p>The choice to use Ignite specifically is worth noting: it is a relatively young framework that prioritizes Swift idioms over ecosystem maturity. Betting on it signals a preference for conceptual coherence over safety-in-numbers, and it means Justin has had to work closer to the framework’s edges, contributing to his understanding of how the rendering pipeline behaves rather than just consuming a stable API.</p>
-        <p>The Claude Code usage pattern tells a subtler story about judgment. Eight sessions over the life of a 198-commit project, with 70 messages and only one resulting commit, and a friction log that honestly records wrong approaches, misunderstood tone, and buggy code alongside four fully-achieved outcomes — this is a developer who knows when to use a tool and what to do when it fails. He did not throw the tool away when the outputs were wrong; he refined, redirected, and evaluated. That pattern of treating AI assistance as a collaborator to calibrate rather than an oracle to accept is itself a craft decision, and the friction data makes it legible.</p>
+        <p>The test target shipped alongside the library itself, meaning the v0.1.0 release is not just functional code but testable code — a meaningful distinction for a UI package where regressions can be subtle and platform-specific.</p>
+        <h2>Judgment Calls</h2>
+        <strong>Targeting visionOS from the start.</strong> It would have been easy to treat visionOS as a future concern. Instead it was included in the initial platform matrix alongside iOS, macOS, and tvOS. This is a bet that spatial computing is a first-class deployment target for Iconquer, not an afterthought — and structuring for it early avoids the painful refactoring that comes from retrofitting a platform into an already-settled component architecture.
+        <p></p>
+        <p><strong>Swift 6.2 toolchain.</strong> Adopting the leading-edge tools version means opting into Swift’s strictest concurrency checking. For a UI library that will be consumed across asynchronous rendering contexts on multiple platforms, this is the right kind of early pain — catching data-race hazards at compile time rather than in production.</p>
+        <p><strong>Library over framework.</strong> Packaging this as a Swift library rather than a standalone framework keeps it lightweight and composable. Consumers get what they need without carrying unnecessary overhead, and the package remains easy to audit and extend as the Iconquer product evolves.</p>
+        <p><strong>Separating UI from app logic in the repository structure.</strong> The name <code>IconquerUI</code> against the broader <code>IconquerApp</code> path suggests a deliberate layering: the application shell lives in one place, the reusable interface primitives in another. Even at v0.1.0, this boundary is worth establishing — it’s the difference between a project that scales and one that becomes a monolith.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/website-stats.svg" alt="Website statistics" class="img-fluid" />
-        <img src="/images/showcase/website-commits.svg" alt="Website commit history" class="img-fluid" />
-        <img src="/images/showcase/website-releases.svg" alt="Website release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
       </div>
       <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: website, selfReflection</p>
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">

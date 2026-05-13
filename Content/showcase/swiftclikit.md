@@ -3,10 +3,10 @@ title: SwiftCLIKit: Building a Native macOS CLI Framework from First Principles
 description: A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow.
 date: 2026-05-12 15:58
 lastModified: 2026-05-12
-tags: showcase, project, swiftclikit, selfReflection
+tags: showcase, project, swiftclikit, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: SwiftCLIKit
+project: Internal Infrastructure
 published: true
 ---
 

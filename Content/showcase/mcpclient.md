@@ -3,10 +3,10 @@ title: Building a Production-Grade Swift MCP Client from First Principles
 description: In under three weeks and 16 commits, a solo developer shipped three versioned releases of a zero-dependency, Swift 6-native Model Context Protocol client that runs across every Apple platform and on the server.
 date: 2026-05-12 15:58
 lastModified: 2026-05-12
-tags: showcase, project, mcpclient, selfReflection
+tags: showcase, mcpclient, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: MCPClient
+project: Internal Infrastructure
 published: true
 ---
 

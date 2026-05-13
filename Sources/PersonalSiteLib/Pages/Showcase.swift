@@ -42,6 +42,7 @@ public struct Showcase: StaticPage {
         }
 
         let styles = Set(projects.compactMap { $0.metadata["style"] as? String }).sorted()
+        let projectNames = Set(projects.compactMap { $0.metadata["project"] as? String }).sorted()
 
         Section {
             Link("All", target: "#")
@@ -53,6 +54,20 @@ public struct Showcase: StaticPage {
                     .class("card-filter-btn")
                     .data("group", "style")
                     .data("value", style)
+            }
+        }
+        .class("card-filter-controls")
+
+        Section {
+            Link("All", target: "#")
+                .class("card-filter-btn", "active")
+                .data("group", "project")
+
+            for name in projectNames {
+                Link(name, target: "#")
+                    .class("card-filter-btn")
+                    .data("group", "project")
+                    .data("value", name)
             }
         }
         .class("card-filter-controls")
@@ -94,6 +109,7 @@ public struct Showcase: StaticPage {
                     .cardStyle(.bordered)
                     .class("grid-card", "filterable-card")
                     .data("style", article.metadata["style"] as? String ?? "")
+                    .data("project", article.metadata["project"] as? String ?? "")
                 }
             }
             .columns(2)
@@ -104,12 +120,7 @@ public struct Showcase: StaticPage {
     }
 
     private func articleTitle(for article: Article) -> String {
-        let raw = article.metadata["title"] as? String ?? article.title
-        if let project = article.metadata["project"] as? String,
-           raw.count > 60 {
-            return project
-        }
-        return raw
+        article.metadata["title"] as? String ?? article.title
     }
 
     private func styleDisplayName(_ style: String) -> String {

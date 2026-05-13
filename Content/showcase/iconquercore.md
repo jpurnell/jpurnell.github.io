@@ -3,10 +3,10 @@ title: IconquerCore: A Headless Rules Engine Built to Last
 description: A pure-Swift strategy game engine designed for correctness, portability, and long-term client independence — built with a design-first discipline that shows in every architectural choice.
 date: 2026-05-13 16:37
 lastModified: 2026-05-13
-tags: showcase, project, iConquer, selfReflection
+tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: IconquerCore
+project: iConquer
 published: true
 ---
 

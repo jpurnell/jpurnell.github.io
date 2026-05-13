@@ -3,10 +3,10 @@ title: IconquerGameKit: Laying the Foundation for a Cross-Platform Game Logic Li
 description: A freshly minted Swift 6.2 package that establishes the scaffolding for shared game logic across Apple's entire platform ecosystem.
 date: 2026-05-12 15:56
 lastModified: 2026-05-12
-tags: showcase, project, iConquer, selfReflection
+tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: IconquerGameKit
+project: iConquer
 published: true
 ---
 

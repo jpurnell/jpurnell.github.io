@@ -3,10 +3,10 @@ title: Bringing Applesoft BASIC Back to Life on Apple Silicon
 description: A solo developer built a native macOS wrapper for the classic Applesoft BASIC interpreter in a single focused evening of work.
 date: 2026-05-12 15:55
 lastModified: 2026-05-12
-tags: showcase, project, applesoftbasicapp, selfReflection
+tags: showcase, project, applesoftbasic, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: ApplesoftBASICApp
+project: ApplesoftBASIC
 published: true
 ---
 

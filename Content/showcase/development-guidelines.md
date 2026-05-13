@@ -3,14 +3,14 @@ title: development-guidelines: Systematizing Craft Across a Swift Development Pr
 description: A living reference document that encodes hard-won engineering standards — from observability contracts to quality gates — into a single authoritative source that governs every Swift project in the portfolio.
 date: 2026-05-13 16:39
 lastModified: 2026-05-13
-tags: showcase, project, development-guidelines, selfReflection
+tags: showcase, project, infrastructure, Quality Gate, development-guidelines, selfReflection
 layout: ShowcaseLayout
 style: deepDive
-project: development-guidelines
+project: Internal Infrastructure
 published: true
 ---
 
-# development-guidelines: Systematizing Craft Across a Swift Development Practice
+# Systematizing Craft Across a Swift Development Practice
 
 > A living reference document that encodes hard-won engineering standards — from observability contracts to quality gates — into a single authoritative source that governs every Swift project in the portfolio.
 

@@ -3,10 +3,10 @@ title: SearchOperatorCore: Building a Structured Search Intelligence Layer for A
 description: A focused five-hour sprint that produced a fully architected, multi-target Swift package exposing structured search operator logic to MCP-compatible AI tooling.
 date: 2026-05-12 15:57
 lastModified: 2026-05-12
-tags: showcase, project, searchoperatorcore, selfReflection
+tags: showcase, project, GEO-SEO, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: SearchOperatorCore
+project: Search Operator
 published: true
 ---
 

@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
+    <meta name="description" content="In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Building a Personal Site as a Swift Package: Owning the Stack End to End | Justin Purnell</title>
+    <title>IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
-    <link href="https://www.justinpurnell.com/showcase/personalsitelib" rel="canonical" />
+    <link href="https://www.justinpurnell.com/showcase/iconquerclient" rel="canonical" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -56,11 +56,11 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Building a Personal Site as a Swift Package: Owning the Stack End to End" />
-    <meta name="twitter:title" content="Building a Personal Site as a Swift Package: Owning the Stack End to End" />
-    <meta property="og:description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
-    <meta name="twitter:description" content="Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem." />
-    <meta property="og:url" content="https://www.justinpurnell.com/showcase/personalsitelib" />
+    <meta property="og:title" content="IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems" />
+    <meta name="twitter:title" content="IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems" />
+    <meta property="og:description" content="In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target." />
+    <meta name="twitter:description" content="In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerclient" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:dnt" content="on" />
@@ -229,8 +229,8 @@
     },
     {
       "@type" : "ListItem",
-      "item" : "https://www.justinpurnell.com/showcase/personalsitelib",
-      "name" : "Building a Personal Site as a Swift Package: Owning the Stack End to End",
+      "item" : "https://www.justinpurnell.com/showcase/iconquerclient",
+      "name" : "IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems",
       "position" : 2
     }
   ]
@@ -257,37 +257,36 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Building a Personal Site as a Swift Package: Owning the Stack End to End</h1>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Website</p>
+      <h1 class="mainTitle">IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p></p>
         <blockquote>
-          Justin Purnell spent eighteen months turning his personal website into a fully Swift-native publishing system, accumulating 198 commits that trace a developer who refuses to treat infrastructure as someone else’s problem.
+          In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target.
         </blockquote>
-        <h2>Problem</h2>Most developer personal sites are built on commodity tooling — static site generators with opinionated templates, JavaScript build pipelines, or hosted platforms that abstract away the underlying machinery. For a Swift developer, this creates a persistent friction: the language you think in every day has nothing to do with the tools generating your public presence. The challenge Justin set out to address was less about shipping a website and more about whether a Swift package could become the authoritative publishing layer for justinpurnell.com — something he could reason about, test, and extend using the same mental models he applies everywhere else.
-        <h2>Approach</h2>The project is built on 
-        <a href="https://github.com/twostraws/Ignite">Ignite</a>, Paul Hudson’s Swift-based static site generator, which gives the package a foundation for rendering HTML through a declarative Swift API. Justin structured the work as a proper Swift package with Swift Tools Version 5.9, targeting both macOS and iOS and splitting concerns across three targets: 
-        <code>PersonalSiteLib</code> for the core content and component library, 
-        <code>IgniteStarter</code> for the site entry point, and 
-        <code>PersonalSiteTests</code> for a test suite that treats the site’s output as something worth verifying rather than just eyeballing. 
+        <h2>Problem</h2>Networked applications across Apple’s platform family often repeat the same boilerplate: connection management, logging integration, async coordination. When the Iconquer ecosystem needed a dedicated client library, the goal was to build something reusable and portable — not another one-off networking layer buried inside a single app target. The challenge was delivering a clean abstraction over Swift NIO’s event-driven I/O that felt natural to Swift 6 consumers across every relevant Apple platform.
+        <h2>Approach</h2>The library was structured as a focused Swift Package Manager package, targeting Swift tools version 6.2 and declaring explicit platform support for macOS, iOS, tvOS, and visionOS from the outset. Rather than writing a bespoke I/O layer, the project reached for 
+        <code>swift-nio</code> as the async networking foundation — a deliberate choice that trades a lighter dependency footprint for production-grade event loop management and connection handling without reinventing low-level primitives. 
         <p></p>
-        <p>The architecture reflects a library-first instinct — rather than treating the site as a single monolithic build script, Justin extracted reusable components into <code>PersonalSiteLib</code>, making the rendering logic something that can be tested in isolation. With 198 commits across roughly eighteen months from a single primary contributor, the history reads as sustained, deliberate iteration rather than bursts of activity followed by neglect.</p>
-        <p>Toward the tail end of the project, Justin brought Claude Code into select sessions — eight in total, producing 70 messages and a single committed change. The session type breakdown is telling: three iterative refinement sessions, two single-task sessions, two multi-task sessions, and one exploratory session. This is not someone who handed the project to an AI assistant; it is someone who used one as a sounding board on specific problems while keeping authorship firmly in hand.</p>
-        <h2>Results</h2>The project shipped and remains actively maintained, with the latest commit dated April 30, 2026 — roughly eighteen months of continuous development. The 
-        <code>PersonalSiteTests</code> target exists and is structured into the package manifest, establishing that the site’s rendered output has test coverage, a commitment most personal site projects never make. The two-target split between library and site entry point means the component architecture is real, not cosmetic. The single branch and consistent commit cadence across 198 commits suggest a developer who works in a stable main-line flow, integrating frequently rather than accumulating long-lived feature branches.
-        <h2>Judgment Calls</h2>The decisions here that reveal craft are the ones Justin did not have to make. Nobody required him to structure a personal site as a package with a separate library target. Nobody required a test suite. Nobody required Swift tooling at all — Hugo or Astro would have been faster to bootstrap and easier to hand off.
+        <p>Alongside <code>swift-nio</code>, <code>swift-log</code> was brought in as the observability backbone. Tying log output to the standard Swift logging ecosystem means consumers can route IconquerClient’s diagnostic output through their own logging handlers — a small but meaningful integration point for library users who care about operational visibility.</p>
+        <p>Documentation was treated as a first-class concern from the start: the inclusion of <code>swift-docc-plugin</code> signals an intent to ship developer-facing docs as part of the build pipeline, not as an afterthought.</p>
+        <p>The package is organized into two targets — <code>IconquerClient</code> and <code>IconquerClientTests</code> — keeping the production surface clean and the test boundary explicit.</p>
+        <h2>Results</h2>Over a 13-day development window spanning late April to early May 2026, the library landed across three commits on a single focused branch. The dual-target structure is in place, cross-platform declarations are established, and the dependency graph is locked to three well-maintained Swift open-source packages. The library is positioned for consumption by any Apple-platform application that needs to communicate with Iconquer services, with a public API ready to be documented via DocC.
+        <h2>Judgment Calls</h2>Several decisions here reflect library-authorship thinking rather than application-building instincts.
         <p></p>
-        <p>The choice to use Ignite specifically is worth noting: it is a relatively young framework that prioritizes Swift idioms over ecosystem maturity. Betting on it signals a preference for conceptual coherence over safety-in-numbers, and it means Justin has had to work closer to the framework’s edges, contributing to his understanding of how the rendering pipeline behaves rather than just consuming a stable API.</p>
-        <p>The Claude Code usage pattern tells a subtler story about judgment. Eight sessions over the life of a 198-commit project, with 70 messages and only one resulting commit, and a friction log that honestly records wrong approaches, misunderstood tone, and buggy code alongside four fully-achieved outcomes — this is a developer who knows when to use a tool and what to do when it fails. He did not throw the tool away when the outputs were wrong; he refined, redirected, and evaluated. That pattern of treating AI assistance as a collaborator to calibrate rather than an oracle to accept is itself a craft decision, and the friction data makes it legible.</p>
+        <p><strong>Choosing swift-nio over URLSession.</strong> For a library targeting all four Apple platforms, URLSession would have been the path of least resistance. Reaching for swift-nio instead suggests the client is doing something closer to the metal — likely persistent connections, custom protocols, or multiplexed I/O — where URLSession’s abstractions would have gotten in the way.</p>
+        <p><strong>Adopting Swift 6 tooling immediately.</strong> Swift 6’s strict concurrency model is stricter to satisfy but produces libraries that are genuinely safer for consumers running their own actor-isolated or structured-concurrency code. Opting into tools version 6.2 early means IconquerClient’s public API is designed for Swift concurrency from day one, rather than inheriting the technical debt of an async retrofit.</p>
+        <p><strong>Four-platform declaration upfront.</strong> Listing macOS, iOS, tvOS, and visionOS in the manifest before the library was fully built is a constraint that keeps cross-platform compatibility honest throughout development. It’s easier to declare broad support early and let the compiler enforce it than to bolt on platform support after the fact.</p>
+        <p><strong>Documentation infrastructure on day one.</strong> Adding <code>swift-docc-plugin</code> in the initial dependency set rather than the final one is a subtle tell about working style — documentation isn’t a polish pass, it’s part of the definition of done.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/website-stats.svg" alt="Website statistics" class="img-fluid" />
-        <img src="/images/showcase/website-commits.svg" alt="Website commit history" class="img-fluid" />
-        <img src="/images/showcase/website-releases.svg" alt="Website release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
       </div>
       <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: website, selfReflection</p>
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">

@@ -3,10 +3,10 @@ title: Building a Retrocomputing Bridge: ApplesoftBASIC for Modern Apple Platfor
 description: A Swift 6 library that brings Applesoft BASIC interpretation to macOS and iOS, designed and documented with architectural rigor from the very first commit.
 date: 2026-05-12 15:55
 lastModified: 2026-05-12
-tags: showcase, project, applesoftbasiclib, selfReflection
+tags: showcase, project, applesoftbasic, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: ApplesoftBASICLib
+project: ApplesoftBASIC
 published: true
 ---
 

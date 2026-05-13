@@ -3,10 +3,10 @@ title: IconquerMatch: Orchestrating Turn-Based Strategy From First Principles
 description: A focused Swift 6 library that separates match lifecycle management from game rules, giving the iConquer ecosystem a single, agent-agnostic conductor for running games end-to-end.
 date: 2026-05-13 16:37
 lastModified: 2026-05-13
-tags: showcase, project, iConquer, selfReflection
+tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: IconquerMatch
+project: iConquer
 published: true
 ---
 

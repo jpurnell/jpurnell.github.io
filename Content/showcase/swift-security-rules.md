@@ -3,10 +3,10 @@ title: Swift Security Rules: Laying the Groundwork for Automated Security Lintin
 description: A newly initialized project signals intent to bring structured, automated security rule enforcement to Swift codebases.
 date: 2026-05-12 15:57
 lastModified: 2026-05-12
-tags: showcase, project, swift-security-rules, selfReflection
+tags: showcase, Quality Gate, swift-security-rules, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: swift-security-rules
+project: Internal Infrastructure
 published: false
 ---
 

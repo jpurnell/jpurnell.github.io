@@ -3,10 +3,10 @@ title: QualityGateTypes: Shared Type Foundation for a Quality Gate Ecosystem
 description: A focused Swift package that establishes the common type vocabulary powering a macOS quality gate toolchain.
 date: 2026-05-12 15:57
 lastModified: 2026-05-12
-tags: showcase, project, qualitygatetypes, selfReflection
+tags: showcase, project, Quality Gate, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
-project: QualityGateTypes
+project: Internal Infrastructure
 published: false
 ---
 
