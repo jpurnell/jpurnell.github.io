@@ -3,8 +3,10 @@ import Ignite
 
 /// Article page layout for developer showcase entries, displaying project narratives and SVG infographics.
 public struct ShowcaseLayout: ArticlePage {
+    /// Creates a new showcase article layout.
     public init() {}
 
+    /// The rendered showcase entry with narrative content and SVG infographics.
     public var body: some HTML {
         Text(article.metadata["title"] as? String ?? article.title)
             .font(.title1)
@@ -28,21 +30,26 @@ public struct ShowcaseLayout: ArticlePage {
         }
         .style(.marginBottom, "2em")
 
-        Text(markdown: article.text)
-            .frame(width: .percent(70%), maxWidth: .px(800))
-            .class("blurb")
+        Section {
+            article.text
+        }
+        .frame(width: .percent(70%), maxWidth: .px(800))
+        .class("blurb")
 
         if let project = article.metadata["project"] as? String {
             Section {
                 Image("/images/showcase/\(slug(from: project))-stats.svg",
                       description: "\(project) statistics")
                     .resizable()
+                    .accessibilityLabel("\(project) statistics infographic")
                 Image("/images/showcase/\(slug(from: project))-commits.svg",
                       description: "\(project) commit history")
                     .resizable()
+                    .accessibilityLabel("\(project) commit history chart")
                 Image("/images/showcase/\(slug(from: project))-releases.svg",
                       description: "\(project) release history")
                     .resizable()
+                    .accessibilityLabel("\(project) release history chart")
             }
             .class("showcase-infographics")
         }

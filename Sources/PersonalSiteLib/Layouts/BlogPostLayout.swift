@@ -3,8 +3,10 @@ import Ignite
 
 /// Article page layout for blog posts, displaying title, date, series, reading time, content, and tags.
 public struct BlogPostLayout: ArticlePage {
+    /// Creates a new blog post layout.
     public init() {}
 
+    /// The rendered blog post with title, date, series, reading time, and tags.
     public var body: some HTML {
         Text(article.metadata["title"] as? String ?? article.title)
             .font(.title1)
@@ -28,9 +30,11 @@ public struct BlogPostLayout: ArticlePage {
         }
         .style(.marginBottom, "2em")
 
-        Text(markdown: article.text)
-            .frame(width: .percent(70%), maxWidth: .px(800))
-            .class("blurb")
+        Section {
+            article.text
+        }
+        .frame(width: .percent(70%), maxWidth: .px(800))
+        .class("blurb")
 
         if !(article.tags?.isEmpty ?? true) {
             Divider()

@@ -1,19 +1,23 @@
 import Foundation
 import Ignite
 
+/// The BusinessMath landing page with filterable blog post grid.
 public struct BusinessMath: StaticPage {
+    /// Page title used in the `<title>` tag.
     public var title = "BusinessMath"
     @Environment(\.articles) var articles
 
+    /// Creates a new BusinessMath page.
     public init() {}
 
+    /// The BusinessMath content with intro article and filterable card grid.
     public var body: some HTML {
         ForEach(articles.all.filter({ $0.title == "Welcome to BusinessMath: A 12-Week Journey" })) { article in
             Text {
                 Link("BusinessMath", target: "https://www.github.com/jpurnell/BusinessMath")
             }.font(.title1).class("mainTitle")
             Divider()
-            Text(markdown: article.text).frame(width: .percent(70%), maxWidth: .px(800))
+            Section { article.text }.frame(width: .percent(70%), maxWidth: .px(800))
         }
 
         let blogPosts = articles.all
