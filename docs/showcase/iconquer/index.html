@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquer" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,33 +262,30 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          Justin Purnell is methodically resurrecting a beloved Mac strategy game as a portfolio-quality SwiftUI project, using a TypeScript reference implementation as a behavioral specification and 39 design proposals as the backbone of a design-first TDD discipline.
+          <p>Justin Purnell is methodically resurrecting a beloved Mac strategy game as a portfolio-quality SwiftUI project, using a TypeScript reference implementation as a behavioral specification and 39 design proposals as the backbone of a design-first TDD discipline.</p>
         </blockquote>
-        <h2>Problem</h2>iConquer was a Risk-style turn-based strategy game released for Mac OS X around 2002 by Kavasoft. The original Objective-C source is gone. What remains is institutional memory, original art assets, and a working TypeScript port living inside the same repository. For players who grew up with the original, the game simply doesn’t exist on modern Apple hardware in any native form. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>iConquer was a Risk-style turn-based strategy game released for Mac OS X around 2002 by Kavasoft. The original Objective-C source is gone. What remains is institutional memory, original art assets, and a working TypeScript port living inside the same repository. For players who grew up with the original, the game simply doesn’t exist on modern Apple hardware in any native form.</p>
         <p>The challenge Justin set out to solve wasn’t just a port — it was a faithful recreation with a clear upgrade path. The Swift rebuild needed to honor the original’s plug-in architecture for maps and AI players, reuse the existing assets, and target iOS 26’s Liquid Glass design language, all while remaining rigorous enough to stand as a portfolio demonstration of how serious software is actually built.</p>
-        <h2>Approach</h2>The project’s most distinctive structural decision is using the TypeScript implementation as a 
-        <em>behavioral specification</em>. Rather than guessing at the original game’s rules from memory or documentation, the TypeScript port provides ground truth: if the Swift code disagrees with the TypeScript reference, the Swift code is wrong. This creates an unusually concrete target for correctness in a domain — turn-based game logic — where edge cases multiply fast.
-        <p></p>
+        <h2>Approach</h2>
+        <p>The project’s most distinctive structural decision is using the TypeScript implementation as a <em>behavioral specification</em>. Rather than guessing at the original game’s rules from memory or documentation, the TypeScript port provides ground truth: if the Swift code disagrees with the TypeScript reference, the Swift code is wrong. This creates an unusually concrete target for correctness in a domain — turn-based game logic — where edge cases multiply fast.</p>
         <p>Justin codified the entire development methodology in a <code>CLAUDE.md</code> file and a <code>MASTER_PLAN.md</code>, establishing a design-first workflow enforced through 39 design proposals generated before implementation begins. Architecture sections cover Session Start, Development Workflow, Key Rules, Quality Gates, and References — meaning no session starts without a plan and no plan ships without passing its gate.</p>
         <p>The Swift package targets Swift 6.3, with dedicated <code>MLXTest</code> and <code>MLXTestTests</code> targets that reflect the TDD commitment baked into the project’s stated identity. The repository sits at 61 commits across two contributors over roughly two months, a pace consistent with deliberate, proposal-driven work rather than exploratory hacking.</p>
         <p>Across 11 Claude Code sessions totaling 575 messages, the working pattern skewed heavily toward <code>multi_task</code> and <code>iterative_refinement</code> session types — five and two respectively — which aligns with the design-first philosophy: sessions aren’t one-off queries but sustained collaborative work toward a pre-defined architectural target.</p>
-        <h2>Results</h2>In under two months the project moved from first commit to a repository carrying 39 completed design proposals, a full dual-target Swift package structure, and a working TypeScript reference implementation serving as a living specification. Four of eleven AI-assisted sessions were fully achieved; five were mostly achieved — a 9-of-11 meaningful-progress rate that speaks to how well-scoped individual sessions were when proposals preceded them.
-        <p></p>
+        <h2>Results</h2>
+        <p>In under two months the project moved from first commit to a repository carrying 39 completed design proposals, a full dual-target Swift package structure, and a working TypeScript reference implementation serving as a living specification. Four of eleven AI-assisted sessions were fully achieved; five were mostly achieved — a 9-of-11 meaningful-progress rate that speaks to how well-scoped individual sessions were when proposals preceded them.</p>
         <p>The plug-in architecture for maps and AI players — a differentiating feature of the original 2002 design — has been preserved as a first-class concern in the rebuild, not deferred to a future milestone. iOS 26 Liquid Glass styling is named as a concrete target, tying the project’s visual ambition to a specific platform release.</p>
         <h2>Judgment Calls</h2>
-        <strong>Using TypeScript as a spec, not a codebase to translate.</strong> Justin could have treated the TypeScript port as code to mechanically transliterate into Swift. Instead, it functions as a behavioral oracle — a decision that keeps the Swift implementation idiomatic while maintaining correctness guarantees. This is the kind of architectural judgment that distinguishes an engineer from a transcriptionist.
-        <p></p>
+        <p><strong>Using TypeScript as a spec, not a codebase to translate.</strong> Justin could have treated the TypeScript port as code to mechanically transliterate into Swift. Instead, it functions as a behavioral oracle — a decision that keeps the Swift implementation idiomatic while maintaining correctness guarantees. This is the kind of architectural judgment that distinguishes an engineer from a transcriptionist.</p>
         <p><strong>39 proposals before shipping.</strong> A design-first workflow of this scale is a bet that clarity upfront pays compounding dividends. The session friction data supports the wager: the most common friction types were <code>buggy_code</code> (10 instances) and <code>wrong_approach</code> (5) — implementation-layer problems, not architectural confusion. The proposals appear to be doing their job of keeping the big decisions settled.</p>
         <p><strong>Preserving the plug-in architecture from a 22-year-old design.</strong> Rather than simplifying the original’s extensibility model to hit MVP faster, Justin chose to treat it as a non-negotiable feature. That’s a statement about what kind of software this is: not a demo, but a platform.</p>
         <p><strong>Naming this a portfolio project in the mission statement itself.</strong> The MASTER_PLAN.md explicitly describes iConquer as “a portfolio-quality SwiftUI project demonstrating Design-First TDD.” That self-awareness shapes every decision downstream — the bar isn’t “does it run,” it’s “does it demonstrate craft.” The 39 proposals, the behavioral specification strategy, and the Quality Gate in CLAUDE.md are all downstream consequences of that single honest commitment.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: selfReflection, iConquer</p>
@@ -300,7 +298,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/projects/showcase-tutorial" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -293,8 +294,9 @@
       <h1 class="mainTitle">Generate a Developer Showcase for Your Swift Projects in 5 Minutes</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">5 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p><strong>Turn any git repository into a narrative portfolio page with structured facts, AI-written prose, and SVG infographics.</strong>
-          <hr />ProjectShowcase is a Swift CLI that walks your project directory, extracts everything worth knowing – git history, package manifest, test results, design docs – and feeds it through Claude to produce a polished markdown write-up. Here’s how to go from zero to published portfolio page.</p>
+        <p><strong>Turn any git repository into a narrative portfolio page with structured facts, AI-written prose, and SVG infographics.</strong></p>
+        <hr />
+        <p>ProjectShowcase is a Swift CLI that walks your project directory, extracts everything worth knowing – git history, package manifest, test results, design docs – and feeds it through Claude to produce a polished markdown write-up. Here’s how to go from zero to published portfolio page.</p>
         <h2>Prerequisites</h2>
         <ul>
           <li>Swift 5.9+ (macOS 13+)</li>
@@ -302,20 +304,26 @@
           <li>A git repository with at least a few commits</li>
         </ul>
         <h2>Step 1: Install ProjectShowcase</h2>
-        <pre><code class="language-bash">git clone https://github.com/jpurnell/project-showcase.git<br />cd project-showcase<br />swift build<br /></code></pre>The executable lands at 
-        <code>.build/debug/showcase</code>.
+        <pre><code class="language-bash">git clone https://github.com/jpurnell/project-showcase.git
+cd project-showcase
+swift build
+</code></pre>
+        <p>The executable lands at <code>.build/debug/showcase</code>.</p>
         <h2>Step 2: Gather Facts</h2>
-        <pre><code class="language-bash">.build/debug/showcase gather ~/path/to/your/project –output card.json<br /></code></pre>This produces a 
-        <code>ProjectCard</code> JSON file containing everything the tool could find about your project:
+        <pre><code class="language-bash">.build/debug/showcase gather ~/path/to/your/project --output card.json
+</code></pre>
+        <p>This produces a <code>ProjectCard</code> JSON file containing everything the tool could find about your project:</p>
         <ul>
           <li><strong>Git facts</strong> – commit count, contributor list, first/last commit dates, recent commit messages, tags and releases</li>
           <li><strong>Package manifest</strong> – dependencies, targets, Swift tools version (also supports Node, Python, Rust, and Go)</li>
           <li><strong>Design artifacts</strong> – whether you have a CLAUDE.md, development-guidelines, design proposals, and architecture notes</li>
-          <li><strong>Test results</strong> – pass/fail counts and suite names (add <code>–run-tests</code> to execute your test suite during gather)</li>
-        </ul>If your project has Claude Code usage data, point to it with 
-        <code>–insights-path</code> to include session metrics.
+          <li><strong>Test results</strong> – pass/fail counts and suite names (add <code>--run-tests</code> to execute your test suite during gather)</li>
+        </ul>
+        <p>If your project has Claude Code usage data, point to it with <code>--insights-path</code> to include session metrics.</p>
         <h2>Step 3: Generate Narrative</h2>
-        <pre><code class="language-bash">.build/debug/showcase narrate card.json –audience selfReflection –style caseStudy –output narrative.json<br /></code></pre>This sends your ProjectCard to Claude, which returns structured narrative content shaped by your audience and style choices.
+        <pre><code class="language-bash">.build/debug/showcase narrate card.json --audience selfReflection --style caseStudy --output narrative.json
+</code></pre>
+        <p>This sends your ProjectCard to Claude, which returns structured narrative content shaped by your audience and style choices.</p>
         <table class="table">
           <thead>
             <tr>
@@ -326,7 +334,7 @@
           </thead>
           <tbody>
             <tr>
-              <td><code>–audience</code></td>
+              <td><code>--audience</code></td>
               <td><code>hiringManager</code> (default)</td>
               <td>Job applications, LinkedIn</td>
             </tr>
@@ -346,7 +354,7 @@
               <td>Personal sites, dev blogs</td>
             </tr>
             <tr>
-              <td><code>–style</code></td>
+              <td><code>--style</code></td>
               <td><code>caseStudy</code> (default)</td>
               <td>Problem/solution storytelling</td>
             </tr>
@@ -361,35 +369,74 @@
               <td>Full technical walkthrough</td>
             </tr>
           </tbody>
-        </table>I recommend 
-        <code>selfReflection</code> for personal sites – it produces prose that reads like you wrote it, not like a recruiter pitch.
+        </table>
+        <p>I recommend <code>selfReflection</code> for personal sites – it produces prose that reads like you wrote it, not like a recruiter pitch.</p>
         <h2>Step 4: Render to Markdown</h2>
-        <pre><code class="language-bash">.build/debug/showcase render narrative.json –output ./content/<br /></code></pre>This takes the NarrativeResult JSON and renders it to a markdown file with YAML frontmatter:
-        <pre><code class="language-yaml">—<br />title: “Your Project Title”<br />description: “One-line summary”<br />date: 2026-05-12 12:00<br />lastModified: 2026-05-12<br />tags: showcase, project, yourproject, selfReflection<br />layout: ShowcaseLayout<br />style: caseStudy<br />project: YourProject<br />published: true<br />—<br /></code></pre>The output file is named after your project (
-        <code>your-project.md</code>) and placed in the output directory.
+        <pre><code class="language-bash">.build/debug/showcase render narrative.json --output ./content/
+</code></pre>
+        <p>This takes the NarrativeResult JSON and renders it to a markdown file with YAML frontmatter:</p>
+        <pre><code class="language-yaml">---
+title: "Your Project Title"
+description: "One-line summary"
+date: 2026-05-12 12:00
+lastModified: 2026-05-12
+tags: showcase, project, yourproject, selfReflection
+layout: ShowcaseLayout
+style: caseStudy
+project: YourProject
+published: true
+---
+</code></pre>
+        <p>The output file is named after your project (<code>your-project.md</code>) and placed in the output directory.</p>
         <h2>Step 5: Generate Infographics</h2>
-        <pre><code class="language-bash">.build/debug/showcase infographics card.json –output ./assets/<br /></code></pre>This generates three SVG files from your ProjectCard data:
+        <pre><code class="language-bash">.build/debug/showcase infographics card.json --output ./assets/
+</code></pre>
+        <p>This generates three SVG files from your ProjectCard data:</p>
         <ul>
           <li><strong><code>your-project-stats.svg</code></strong> – Key metrics at a glance: commit count, contributors, dependencies, test counts</li>
           <li><strong><code>your-project-commits.svg</code></strong> – Commit activity timeline showing development cadence</li>
           <li><strong><code>your-project-releases.svg</code></strong> – Release history with version tags and dates</li>
-        </ul>The SVGs are self-contained – no external dependencies, ready to embed in any web page or markdown file.
-        <h2>Or: All-in-One</h2>If you just want to go from project directory to finished markdown in one command:
-        <pre><code class="language-bash">.build/debug/showcase refresh ~/path/to/project <br />  –audience selfReflection <br />  –style caseStudy <br />  –output ./content/<br /></code></pre>This runs gather, narrate, and render in sequence. Same options as the individual commands.
-        <h2>Batch Processing</h2>For multiple projects, gather the cards first, then narrate in a second pass:
-        <pre><code class="language-bash">for proj in ~/projects/<em>/; do<br /> .build/debug/showcase gather “$proj” <br /> –output “/tmp/cards/$(basename “$proj”)-card.json”<br />done<br /><br />for card in /tmp/cards/</em>-card.json; do<br />  .build/debug/showcase narrate “$card” <br />    –audience selfReflection <br />    –style caseStudy <br />    –output “/tmp/narratives/$(basename “$card” -card.json)-narrative.json”<br />done<br /><br />for narrative in /tmp/narratives/<em>-narrative.json; do<br /> .build/debug/showcase render “$narrative” –output ./content/<br />done<br /></em></code></pre>
-        <em>The gather step is purely local – no API calls, fast enough to run against dozens of repositories. The narrate step calls Claude once per project.<h2>Portfolio Overview</h2>Once you have cards for multiple projects, generate a cross-project overview:</em>
-        <pre><em><code class="language-bash">.build/debug/showcase portfolio /tmp/cards/</code></em><code class="language-bash">.json <br />  –audience selfReflection <br />  –output ./content/<br /></code></pre>This produces a 
-        <code>portfolio-overview.md</code> that weaves your projects into a single narrative – connecting themes across repositories, highlighting your strongest work, and presenting aggregate stats. Useful as a landing page or an “about my work” section.
-        <h2>Pro Tip: MASTER_PLAN.md</h2>If your projects use 
-        <a href="https://github.com/jpurnell/development-guidelines">development-guidelines</a> with a filled-in 
-        <code>MASTER_PLAN.md</code>, the gather step extracts your 
-        <strong>Mission</strong>, 
-        <strong>Target Users</strong>, and 
-        <strong>Key Differentiators</strong> sections and includes them as authoritative context in the ProjectCard. When the narrate step runs, Claude uses these as ground truth instead of guessing what your project does.
-        <p></p>
-        <p>The difference is significant. Without a MASTER_PLAN, the narrative is inferred from commit messages and file structure – accurate but generic. With one, the narrative knows <em>why</em> the project exists and <em>who</em> it’s for, and the prose reflects that.
-          <hr /><strong>Source</strong>: <a href="https://github.com/jpurnell/project-showcase">github.com/jpurnell/project-showcase</a></p>
+        </ul>
+        <p>The SVGs are self-contained – no external dependencies, ready to embed in any web page or markdown file.</p>
+        <h2>Or: All-in-One</h2>
+        <p>If you just want to go from project directory to finished markdown in one command:</p>
+        <pre><code class="language-bash">.build/debug/showcase refresh ~/path/to/project \
+  --audience selfReflection \
+  --style caseStudy \
+  --output ./content/
+</code></pre>
+        <p>This runs gather, narrate, and render in sequence. Same options as the individual commands.</p>
+        <h2>Batch Processing</h2>
+        <p>For multiple projects, gather the cards first, then narrate in a second pass:</p>
+        <pre><code class="language-bash">for proj in ~/projects/*/; do
+  .build/debug/showcase gather "$proj" \
+    --output "/tmp/cards/$(basename "$proj")-card.json"
+done
+
+for card in /tmp/cards/*-card.json; do
+  .build/debug/showcase narrate "$card" \
+    --audience selfReflection \
+    --style caseStudy \
+    --output "/tmp/narratives/$(basename "$card" -card.json)-narrative.json"
+done
+
+for narrative in /tmp/narratives/*-narrative.json; do
+  .build/debug/showcase render "$narrative" --output ./content/
+done
+</code></pre>
+        <p>The gather step is purely local – no API calls, fast enough to run against dozens of repositories. The narrate step calls Claude once per project.</p>
+        <h2>Portfolio Overview</h2>
+        <p>Once you have cards for multiple projects, generate a cross-project overview:</p>
+        <pre><code class="language-bash">.build/debug/showcase portfolio /tmp/cards/*.json \
+  --audience selfReflection \
+  --output ./content/
+</code></pre>
+        <p>This produces a <code>portfolio-overview.md</code> that weaves your projects into a single narrative – connecting themes across repositories, highlighting your strongest work, and presenting aggregate stats. Useful as a landing page or an “about my work” section.</p>
+        <h2>Pro Tip: MASTER_PLAN.md</h2>
+        <p>If your projects use <a href="https://github.com/jpurnell/development-guidelines">development-guidelines</a> with a filled-in <code>MASTER_PLAN.md</code>, the gather step extracts your <strong>Mission</strong>, <strong>Target Users</strong>, and <strong>Key Differentiators</strong> sections and includes them as authoritative context in the ProjectCard. When the narrate step runs, Claude uses these as ground truth instead of guessing what your project does.</p>
+        <p>The difference is significant. Without a MASTER_PLAN, the narrative is inferred from commit messages and file structure – accurate but generic. With one, the narrative knows <em>why</em> the project exists and <em>who</em> it’s for, and the prose reflects that.</p>
+        <hr />
+        <p><strong>Source</strong>: <a href="https://github.com/jpurnell/project-showcase">github.com/jpurnell/project-showcase</a></p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: tutorial, swift, cli, portfolio, project</p>
@@ -402,7 +449,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

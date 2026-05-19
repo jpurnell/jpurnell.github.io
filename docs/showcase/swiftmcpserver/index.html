@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/swiftmcpserver" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,21 +262,19 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          SwiftMCPServer is a ground-up Swift implementation of the Model Context Protocol, giving macOS developers a native, type-safe foundation for exposing tools and resources to AI agents — built with a design-first workflow before a single session was logged.
+          <p>SwiftMCPServer is a ground-up Swift implementation of the Model Context Protocol, giving macOS developers a native, type-safe foundation for exposing tools and resources to AI agents — built with a design-first workflow before a single session was logged.</p>
         </blockquote>
-        <h2>Problem</h2>The Model Context Protocol (MCP) has emerged as a standard interface for connecting AI models to external tools, data sources, and capabilities. But for Swift developers building on macOS, the existing ecosystem offered little beyond thin wrappers or cross-language bridges. There was no idiomatic, native Swift library that could leverage the full concurrency model introduced in Swift 6, enforce type safety at the protocol boundary, or integrate naturally into Swift toolchains and package ecosystems. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>The Model Context Protocol (MCP) has emerged as a standard interface for connecting AI models to external tools, data sources, and capabilities. But for Swift developers building on macOS, the existing ecosystem offered little beyond thin wrappers or cross-language bridges. There was no idiomatic, native Swift library that could leverage the full concurrency model introduced in Swift 6, enforce type safety at the protocol boundary, or integrate naturally into Swift toolchains and package ecosystems.</p>
         <p>The challenge was to build that foundation — not just a working implementation, but one with enough architectural clarity to serve as infrastructure others could build upon.</p>
-        <h2>Approach</h2>The project spans roughly three weeks of active development (March 19 to April 10, 2026), shaped by a deliberately design-first workflow before implementation began in earnest.
-        <p></p>
+        <h2>Approach</h2>
+        <p>The project spans roughly three weeks of active development (March 19 to April 10, 2026), shaped by a deliberately design-first workflow before implementation began in earnest.</p>
         <p>A formal design proposal and a <code>CLAUDE.md</code> file were committed early, establishing the project’s architectural contract upfront. The <code>CLAUDE.md</code> codified a structured development workflow with explicit sections: Session Start procedures, Development Workflow, Key Rules, a Quality Gate, and a References index. This isn’t boilerplate — it reflects a discipline of treating the working environment itself as an artifact worth designing.</p>
         <p>The dependency selection tells a clear architectural story. <code>swift-nio</code> and <code>swift-nio-ssl</code> anchor the networking layer in Apple’s battle-tested async I/O framework, providing non-blocking transport without reinventing low-level primitives. <code>swift-crypto</code> handles any cryptographic requirements in a cross-platform-safe way. <code>swift-sdk</code> ties the implementation into the broader Swift ecosystem. <code>swift-docc-plugin</code> signals that documentation is treated as a first-class deliverable, not an afterthought.</p>
         <p>The package targets the Swift 6.0 toolchain, which means the codebase is written to satisfy Swift’s strict concurrency checking — a meaningful constraint that forces explicit reasoning about actor isolation and data races at compile time rather than runtime.</p>
-        <h2>Results</h2>Across 14 commits from a single contributor, the project moved from initial scaffolding to a structured, tested Swift package. The presence of a 
-        <code>SwiftMCPServerTests</code> target confirms that test coverage was built into the package structure from the start rather than bolted on later.
-        <p></p>
+        <h2>Results</h2>
+        <p>Across 14 commits from a single contributor, the project moved from initial scaffolding to a structured, tested Swift package. The presence of a <code>SwiftMCPServerTests</code> target confirms that test coverage was built into the package structure from the start rather than bolted on later.</p>
         <p>The repository ships with:</p>
         <ul>
           <li>A complete Swift Package Manager manifest targeting macOS with Swift 6.0 toolchain compliance</li>
@@ -283,18 +282,18 @@
           <li>A formal design proposal document establishing protocol architecture</li>
           <li>A <code>CLAUDE.md</code> development guide covering workflow, rules, quality gates, and references</li>
           <li>A DocC-compatible documentation target</li>
-        </ul>The 14-commit history over 22 days reflects a focused, deliberate pace — not a sprint, but a methodical build where each commit represents considered progress against a pre-established design.
-        <h2>Judgment Calls</h2>The most revealing decision here is sequencing: the design proposal and 
-        <code>CLAUDE.md</code> came first. On a solo project with no external deadline pressure, it would be easy to justify jumping straight to code. Instead, the developer invested in defining the working environment, the architectural boundaries, and the quality gate before implementation began. That’s a signal about how the work is understood — not as a series of features to ship, but as a system to reason about carefully.
-        <p></p>
+        </ul>
+        <p>The 14-commit history over 22 days reflects a focused, deliberate pace — not a sprint, but a methodical build where each commit represents considered progress against a pre-established design.</p>
+        <h2>Judgment Calls</h2>
+        <p>The most revealing decision here is sequencing: the design proposal and <code>CLAUDE.md</code> came first. On a solo project with no external deadline pressure, it would be easy to justify jumping straight to code. Instead, the developer invested in defining the working environment, the architectural boundaries, and the quality gate before implementation began. That’s a signal about how the work is understood — not as a series of features to ship, but as a system to reason about carefully.</p>
         <p>Choosing SwiftNIO over higher-level abstractions like URLSession or async/await HTTP clients is another meaningful call. SwiftNIO operates closer to the metal, requiring more explicit management of pipelines and handlers, but it provides the control and performance characteristics appropriate for a protocol server that may handle many concurrent MCP sessions. The SSL layer via <code>swift-nio-ssl</code> suggests the server is designed to operate in real networked environments, not just local IPC.</p>
         <p>Targeting Swift 6.0’s strict concurrency model is a forward-looking commitment. It constrains what you can write — but the constraint is the point. Infrastructure that other developers will build on top of needs to be safe by construction, not safe by convention. Accepting the compiler’s stricter concurrency rules upfront means that downstream consumers inherit those guarantees without having to think about them.</p>
         <p>Finally, including <code>swift-docc-plugin</code> from the beginning signals that this project is designed to be understood by others. Documentation tooling added retroactively often produces documentation that reads retroactively. Including it in the initial package manifest is a quiet statement that the API surface is meant to be legible.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftmcpserver, infrastructure, selfReflection</p>
@@ -307,7 +306,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

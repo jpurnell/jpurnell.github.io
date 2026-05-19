@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/development-guidelines" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,14 +262,11 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">6 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A living reference document that encodes hard-won engineering standards — from observability contracts to quality gates — into a single authoritative source that governs every Swift project in the portfolio.
+          <p>A living reference document that encodes hard-won engineering standards — from observability contracts to quality gates — into a single authoritative source that governs every Swift project in the portfolio.</p>
         </blockquote>
-        <h2>Architecture</h2>The 
-        <code>development-guidelines</code> repository occupies an unusual position in a developer’s toolkit: it is infrastructure for thought, not infrastructure for computation. Rather than shipping code, it ships 
-        <em>decisions</em> — the kind that would otherwise be reinvented inconsistently across a dozen projects or buried in the memory of a single developer. 
-        <p></p>
+        <h2>Architecture</h2>
+        <p>The <code>development-guidelines</code> repository occupies an unusual position in a developer’s toolkit: it is infrastructure for thought, not infrastructure for computation. Rather than shipping code, it ships <em>decisions</em> — the kind that would otherwise be reinvented inconsistently across a dozen projects or buried in the memory of a single developer.</p>
         <p>The structural architecture of the document is deliberate. Sections are not organized by topic area alone but by <em>moment of use</em>. The <code>Session Start</code> section exists because the first five minutes of a working session are the most cognitively expensive — context must be reconstructed, scope must be established, and tools must be oriented. By placing that section first, the guidelines function as a pre-flight checklist rather than a reference manual. Developers (including the author) consult it reflexively rather than occasionally.</p>
         <p>The five primary sections — Session Start, Development Workflow, Key Rules, Observability (Consumer-Facing Apps), and Quality Gate — reflect a philosophy that guidance should arrive precisely when it is needed:</p>
         <ul>
@@ -277,26 +275,22 @@
           <li><strong>Key Rules</strong> → at decision forks where bad habits surface</li>
           <li><strong>Observability</strong> → when consumer-facing concerns cross the threshold into production</li>
           <li><strong>Quality Gate</strong> → before any commit is made</li>
-        </ul>The 
-        <code>CLAUDE.md</code> file is worth examining as an architectural choice in its own right. Its presence signals that the guidelines were designed not only for human consumption but for AI-assisted development sessions. The document teaches a collaborator — human or AI — how to behave within the developer’s system. This is a meaningful abstraction: instead of re-explaining preferences in every session, the 
-        <code>CLAUDE.md</code> externalizes them into a persistent, versioned contract.
-        <p></p>
+        </ul>
+        <p>The <code>CLAUDE.md</code> file is worth examining as an architectural choice in its own right. Its presence signals that the guidelines were designed not only for human consumption but for AI-assisted development sessions. The document teaches a collaborator — human or AI — how to behave within the developer’s system. This is a meaningful abstraction: instead of re-explaining preferences in every session, the <code>CLAUDE.md</code> externalizes them into a persistent, versioned contract.</p>
         <p>The Observability section’s scoping to “Consumer-Facing Apps” is a subtle but important architectural decision. It resists the temptation to write universal rules, acknowledging that instrumentation requirements differ categorically between internal tooling and shipped products. This kind of contextual scoping prevents over-engineering in low-stakes contexts while enforcing rigor where users are affected.</p>
-        <h2>Implementation</h2>The 53 commits across 5 branches over roughly two months tell a story of iterative refinement rather than big-bang authorship. Documentation projects often collapse into a single burst of writing followed by drift; the branching history here suggests the author treated the guidelines with the same version discipline applied to production code — changes were isolated, reviewed against a baseline, and merged deliberately.
-        <p></p>
+        <h2>Implementation</h2>
+        <p>The 53 commits across 5 branches over roughly two months tell a story of iterative refinement rather than big-bang authorship. Documentation projects often collapse into a single burst of writing followed by drift; the branching history here suggests the author treated the guidelines with the same version discipline applied to production code — changes were isolated, reviewed against a baseline, and merged deliberately.</p>
         <p>The 15 Claude Code sessions that contributed 5 commits and 152 messages illuminate how the guidelines themselves were stress-tested. A common pattern in documentation work is writing rules in the abstract and never confronting them under real conditions. Instead, the author used AI-assisted sessions as a live testing environment: the AI would attempt to operate within the guidelines, and friction in those sessions became signal about where the guidelines were ambiguous or incomplete.</p>
         <p>The friction data from those sessions is instructive. The four <code>wrong_approach</code> incidents and three <code>buggy_code</code> incidents are not indictments of the tooling — they are data points about where the guidelines had gaps. When an AI collaborator repeatedly misreads intent, the most productive response is not to correct the AI but to clarify the rule. The two <code>file_sync_issues</code> and <code>authentication_error</code> incidents point toward operational concerns that may have surfaced in the Session Start or Development Workflow sections as guard-rails.</p>
         <p>The <code>excessive_changes</code> and <code>user_rejected_action</code> incidents are particularly telling. They suggest moments where the scope of a proposed change exceeded what the guidelines implicitly authorized — a signal that the Key Rules section needed tighter constraints on change surface area. Good guidelines anticipate the failure modes of their consumers.</p>
         <p>The nine <code>fully_achieved</code> outcomes across 15 sessions — with four <code>mostly_achieved</code> — represents a strong success rate for a living document still under active development.</p>
-        <h2>Testing Strategy</h2>Testing a guidelines document requires a different mental model than testing software. There are no unit tests for prose. Instead, quality is validated through 
-        <em>application</em> — each session in which a developer (or an AI collaborator) attempts to follow the guidelines and encounters ambiguity is effectively a failing test case.
-        <p></p>
+        <h2>Testing Strategy</h2>
+        <p>Testing a guidelines document requires a different mental model than testing software. There are no unit tests for prose. Instead, quality is validated through <em>application</em> — each session in which a developer (or an AI collaborator) attempts to follow the guidelines and encounters ambiguity is effectively a failing test case.</p>
         <p>The Quality Gate section functions as the document’s most explicit testing contract. It defines pass/fail criteria for commits, which means every commit to every governed project is an integration test of the guidelines themselves. If the Quality Gate is consistently bypassed, it fails. If it blocks legitimate work, it fails in the other direction. The commit history — 53 commits over two months — suggests the gate has been calibrated to permit steady forward progress without becoming friction.</p>
         <p>The multi-task session type dominates the Claude Code usage (9 of 15 sessions), which is a meaningful signal. Multi-task sessions are the highest-fidelity test of guidelines coherence: they require a collaborator to maintain consistent behavior across context switches, which exposes inconsistencies between sections. Single-task and quick-question sessions, by contrast, exercise the guidelines in narrow slices.</p>
         <p>The References section — while its contents are not enumerated here — represents an important quality mechanism: grounding the guidelines in external authority. Internal rules that cite no external sources are vulnerable to drift; rules that point to established community standards inherit their legitimacy and are harder to rationalize away under deadline pressure.</p>
-        <h2>Lessons</h2>The development of 
-        <code>development-guidelines</code> produced transferable insights that show up across the broader Swift portfolio.
-        <p></p>
+        <h2>Lessons</h2>
+        <p>The development of <code>development-guidelines</code> produced transferable insights that show up across the broader Swift portfolio.</p>
         <p><strong>Externalizing implicit knowledge is engineering work.</strong> The act of writing down a rule forces precision that verbal or habitual knowledge never demands. Several Key Rules in the document likely exist because the author encountered a recurring mistake and chose to encode the fix rather than rely on memory. This discipline — treating documentation as a first-class artifact — is the same judgment that produces well-commented public APIs.</p>
         <p><strong>The <code>CLAUDE.md</code> pattern scales.</strong> Having discovered that a persistent context file meaningfully improves AI-assisted session quality, the author has a replicable mechanism for any project where AI collaboration is anticipated. Rather than starting each session from scratch, future projects can open with a trained collaborator.</p>
         <p><strong>Friction is specification.</strong> The 16 friction events across 15 sessions were not waste — they were requirements discovery. Each <code>wrong_approach</code> incident identified a gap between what the guidelines said and what a capable reader would do. This reframe — treating misunderstandings as spec failures rather than user failures — transfers directly to API design, onboarding documentation, and code review culture.</p>
@@ -304,9 +298,9 @@
         <p><strong>Living documents require commit discipline.</strong> The five-branch structure on a documentation repository is not bureaucracy — it is the mechanism that keeps guidelines authoritative. When changes are proposed on branches rather than committed directly to main, they can be reviewed against the current standard before becoming the new standard. This is the same discipline that prevents production bugs; it happens to work equally well for preventing documentation drift.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: infrastructure, Quality Gate, development-guidelines, selfReflection</p>
@@ -319,7 +313,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

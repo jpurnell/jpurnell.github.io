@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquermcp" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,18 +262,13 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          In under 48 hours across three commits, a focused MCP server wrapper was designed and shipped to expose a pure-Swift Risk-style game engine as a tool-callable interface — complete with a design-first workflow and two versioned releases.
+          <p>In under 48 hours across three commits, a focused MCP server wrapper was designed and shipped to expose a pure-Swift Risk-style game engine as a tool-callable interface — complete with a design-first workflow and two versioned releases.</p>
         </blockquote>
-        <h2>Problem</h2>The 
-        <code>IconquerCore</code> rules engine — a headless, pure-Swift implementation of iConquer — was built to be consumed by any client willing to speak Swift Package Manager. But as AI-assisted tooling matured, a new class of consumer emerged: language models that interact with software not through APIs or SDKs, but through the Model Context Protocol. Without an MCP-compatible surface, the game engine was invisible to that ecosystem. IconquerMCP was created to close that gap, giving LLM-based clients the ability to invoke game logic as structured tools without touching the underlying engine’s internals.
-        <h2>Approach</h2>The project was structured from the start as a thin integration layer rather than a reimplementation. By taking a hard dependency on 
-        <code>SwiftMCPServer</code> alongside 
-        <code>swift-docc-plugin</code>, the design kept the translation concerns — marshaling tool calls, serializing game state, routing requests — cleanly separated from the rules logic living in 
-        <code>IconquerCore</code>. Swift 6.2 tooling was targeted from the outset, and the 
-        <code>Sendable</code>-everywhere constraint already present in the core engine made the concurrency story straightforward to carry forward into the MCP surface. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>The <code>IconquerCore</code> rules engine — a headless, pure-Swift implementation of iConquer — was built to be consumed by any client willing to speak Swift Package Manager. But as AI-assisted tooling matured, a new class of consumer emerged: language models that interact with software not through APIs or SDKs, but through the Model Context Protocol. Without an MCP-compatible surface, the game engine was invisible to that ecosystem. IconquerMCP was created to close that gap, giving LLM-based clients the ability to invoke game logic as structured tools without touching the underlying engine’s internals.</p>
+        <h2>Approach</h2>
+        <p>The project was structured from the start as a thin integration layer rather than a reimplementation. By taking a hard dependency on <code>SwiftMCPServer</code> alongside <code>swift-docc-plugin</code>, the design kept the translation concerns — marshaling tool calls, serializing game state, routing requests — cleanly separated from the rules logic living in <code>IconquerCore</code>. Swift 6.2 tooling was targeted from the outset, and the <code>Sendable</code>-everywhere constraint already present in the core engine made the concurrency story straightforward to carry forward into the MCP surface.</p>
         <p>The CLAUDE.md file and a design proposal artifact signal a deliberate design-first workflow: architecture questions were answered on paper before they were answered in code. The CLAUDE.md captures the session contract — development workflow, key rules, quality gates, and references — which served as the authoritative guide for how work would proceed. With only three commits over roughly 36 hours, the project moved from initial scaffolding to two tagged releases without accumulating speculative code or exploratory dead ends.</p>
         <p>The target split between <code>IconquerMCP</code> (the library), <code>iconquer-mcp</code> (the executable), and <code>IconquerMCPTests</code> reflects a deliberate layering: testable logic lives in the library target, the executable is purely a composition root, and tests can exercise tool behavior without standing up the full server process.</p>
         <h2>Results</h2>
@@ -282,17 +278,17 @@
           <li><strong>macOS-targeted MCP server</strong> ready to expose iConquer game mechanics as callable tools to any MCP-compatible client</li>
           <li><strong>Full SPM integration</strong> with documented targets, making the package straightforwardly consumable by downstream tooling or CI</li>
         </ul>
-        <h2>Judgment Calls</h2>Several decisions here reveal craft beyond simple execution.
-        <p></p>
+        <h2>Judgment Calls</h2>
+        <p>Several decisions here reveal craft beyond simple execution.</p>
         <p><strong>Choosing a wrapper over a rewrite.</strong> Rather than re-expose game logic directly in the MCP layer, the architecture preserves the boundary between protocol translation and rules computation. The engine remains pure and portable; the MCP server remains thin and focused. This matters because <code>IconquerCore</code> is explicitly designed to serve multiple future clients — a CLI, an alternate UI, a server — and conflating it with MCP concerns would have undermined that.</p>
         <p><strong>Design artifacts before implementation.</strong> The presence of a formal design proposal and a populated CLAUDE.md, in a project with only three commits, means the ratio of thinking to typing was intentionally high. The architecture sections in CLAUDE.md — covering session start, development workflow, key rules, and quality gates — read as a checklist built for correctness, not for speed. That’s a signal about how the developer approaches scope management under time pressure.</p>
         <p><strong>Swift 6.2 and Sendable from the start.</strong> Adopting Swift 6.2’s strict concurrency model on a project this young is a forward-looking bet. By aligning the MCP wrapper with the same <code>Sendable</code>-everywhere posture as the core engine, the codebase avoids the common technical debt of retrofitting concurrency safety onto an interface layer that grew up without it.</p>
         <p><strong>Versioning at v0.1.0 and v0.2.0 within 36 hours.</strong> The two releases aren’t just tags — they indicate that something meaningful changed between them, and that the developer chose to communicate that change through versioned artifacts rather than treating early work as undifferentiated. For a tool consumed by other systems, version discipline from day one is a quality signal, not a formality.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
@@ -305,7 +301,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

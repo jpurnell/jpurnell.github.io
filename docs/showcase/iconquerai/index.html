@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquerai" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,45 +262,30 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A focused Swift package that delivers reproducible, in-process computer opponents across Apple’s entire platform family — without a single network call or LLM dependency in sight.
+          <p>A focused Swift package that delivers reproducible, in-process computer opponents across Apple’s entire platform family — without a single network call or LLM dependency in sight.</p>
         </blockquote>
-        <h2>Problem</h2>As the Iconquer game ecosystem grew into a multi-repo architecture — a core engine, a CLI simulator, an MCP bridge for LLM opponents — one gap remained: reliable, deterministic computer opponents that could run entirely in-process. The CLI’s 
-        <code>simulate</code> mode needed opponents it could trust across seeds. Future tournament harnesses needed strategies they could replay. And the eventual 
-        <code>IconquerApp</code> needed computer players that would work offline on every Apple platform, from iOS to visionOS, without requiring an active model server or network connection. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>As the Iconquer game ecosystem grew into a multi-repo architecture — a core engine, a CLI simulator, an MCP bridge for LLM opponents — one gap remained: reliable, deterministic computer opponents that could run entirely in-process. The CLI’s <code>simulate</code> mode needed opponents it could trust across seeds. Future tournament harnesses needed strategies they could replay. And the eventual <code>IconquerApp</code> needed computer players that would work offline on every Apple platform, from iOS to visionOS, without requiring an active model server or network connection.</p>
         <p>The challenge wasn’t just implementing game AI. It was drawing the right boundary. LLM-driven players exist in the ecosystem — but they live in <code>IconquerMCP</code>, connecting to the engine over the Model Context Protocol. IconquerAI’s mandate was the opposite: pure Swift, zero network paths, zero third-party LLM SDKs. Getting that separation right from the start would determine whether the package stayed composable or became a liability.</p>
-        <h2>Approach</h2>Justin grounded the package in a single protocol — 
-        <code>PlayerStrategy</code> — and made a deliberate call to mark it 
-        <code>async</code> from day one. The 
-        <code>PlayerStrategy</code> conformers shipping now (Random, Greedy) don’t need async, but the protocol doesn’t force a migration later when a strategy backed by CoreML or MLX inference arrives. That forward compatibility was baked in before a line of strategy logic was written.
-        <p></p>
+        <h2>Approach</h2>
+        <p>Justin grounded the package in a single protocol — <code>PlayerStrategy</code> — and made a deliberate call to mark it <code>async</code> from day one. The <code>PlayerStrategy</code> conformers shipping now (Random, Greedy) don’t need async, but the protocol doesn’t force a migration later when a strategy backed by CoreML or MLX inference arrives. That forward compatibility was baked in before a line of strategy logic was written.</p>
         <p>The return type was equally considered. Strategies emit <code>[GameMove]</code> rather than mutating state directly. This action-enum pattern had been deferred from Phase 1 of <code>IconquerCore</code> and finally landed in <code>IconquerCore@v0.2.0</code>; IconquerAI was designed explicitly around it. The driver applies moves; strategies only reason about them. That separation keeps strategies testable in isolation and prevents any strategy from becoming a hidden mutation path into game state.</p>
         <p>The dependency list reflects the package’s philosophy: <code>mlx-swift</code> for when on-device ML strategies arrive, and <code>swift-docc-plugin</code> to keep documentation a first-class artifact. Swift Tools version 6.0 and explicit platform declarations (<code>macOS</code>, <code>iOS</code>, <code>tvOS</code>, <code>visionOS</code>) signal that cross-platform correctness is a constraint, not an afterthought.</p>
         <p>Three design proposals preceded implementation, and a <code>CLAUDE.md</code> drove a design-first workflow — with architecture sections covering session startup, development workflow, key rules, a quality gate, and references. This isn’t documentation written after the fact; it’s the scaffolding decisions were made inside.</p>
-        <h2>Results</h2>IconquerAI shipped 
-        <code>v0.1.0</code> across 18 commits from a single contributor over roughly five weeks (April 8 to May 11, 2026). The package delivers its core targets — 
-        <code>IconquerAI</code> (the strategy library), 
-        <code>iconquer-train</code> (a training harness), 
-        <code>iconquer-dashboard</code>, and 
-        <code>IconquerAITests</code> — against a Swift 6.0 toolchain with strict concurrency enabled. It is consumed by 
-        <code>IconquerCLI</code> for simulation mode and positioned for integration into 
-        <code>IconquerApp</code> and Phase 3+ tournament infrastructure.
-        <p></p>
+        <h2>Results</h2>
+        <p>IconquerAI shipped <code>v0.1.0</code> across 18 commits from a single contributor over roughly five weeks (April 8 to May 11, 2026). The package delivers its core targets — <code>IconquerAI</code> (the strategy library), <code>iconquer-train</code> (a training harness), <code>iconquer-dashboard</code>, and <code>IconquerAITests</code> — against a Swift 6.0 toolchain with strict concurrency enabled. It is consumed by <code>IconquerCLI</code> for simulation mode and positioned for integration into <code>IconquerApp</code> and Phase 3+ tournament infrastructure.</p>
         <p>The <code>IconquerAITests</code> target provides the test baseline against which the determinism guarantee is validated: strategies seeded with the same RNG value produce the same game moves, enabling reproducible simulation runs.</p>
         <h2>Judgment Calls</h2>
-        <strong>Async on a protocol that doesn’t need it yet.</strong> Making 
-        <code>PlayerStrategy</code> async when Random and Greedy strategies are synchronous computations is a bet on future work. Justin made it anyway, explicitly to avoid a protocol migration when CoreML or MLX inference enters the picture. That’s the kind of call that looks unnecessary until the moment it proves essential.
-        <p></p>
+        <p><strong>Async on a protocol that doesn’t need it yet.</strong> Making <code>PlayerStrategy</code> async when Random and Greedy strategies are synchronous computations is a bet on future work. Justin made it anyway, explicitly to avoid a protocol migration when CoreML or MLX inference enters the picture. That’s the kind of call that looks unnecessary until the moment it proves essential.</p>
         <p><strong>The “blast radius of a fan” boundary.</strong> The MASTER_PLAN is candid about the design philosophy: LLM dependencies, network code, third-party model SDKs — none of it belongs here. The phrase “blast radius of a fan” captures how Justin thinks about coupling. If something in the LLM or network layer fails, breaks, or changes API, IconquerAI shouldn’t feel it. The boundary isn’t just architectural taste; it’s a reliability and maintenance argument.</p>
         <p><strong>Deferring action types until the core was ready.</strong> <code>[GameMove]</code> as a return type required <code>IconquerCore@v0.2.0</code> to exist first. Rather than inventing a parallel representation or coupling strategies to mutable state, Justin waited for the right primitive to land in the engine before designing around it. The patience shows.</p>
         <p><strong>A single Claude Code session, honestly annotated.</strong> The recorded session logged friction — one misunderstood request, one wrong approach — and landed on <code>mostly_achieved</code>. That kind of honest accounting in a <code>CLAUDE.md</code>-driven workflow suggests a developer who uses tooling to accelerate judgment, not to obscure where judgment was still required.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
@@ -312,7 +298,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

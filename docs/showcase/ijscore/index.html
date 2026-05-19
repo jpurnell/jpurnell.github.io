@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/ijscore" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,37 +262,37 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A single-day architectural sprint that transformed a theoretical framework for AI-assisted governance into a portable, file-based Swift library — before a single production session began.
+          <p>A single-day architectural sprint that transformed a theoretical framework for AI-assisted governance into a portable, file-based Swift library — before a single production session began.</p>
         </blockquote>
-        <h2>Problem</h2>AI-assisted development introduces a subtle and compounding failure mode: each new session starts cold. Without persistent memory of past decisions, overrides, and rationale, AI agents and human practitioners alike fall into what the project’s MASTER_PLAN.md explicitly names “contextual naivety” and “confident wrongness.” The wrong answer is delivered with full confidence because the system has no memory that this ground was already contested and resolved. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>AI-assisted development introduces a subtle and compounding failure mode: each new session starts cold. Without persistent memory of past decisions, overrides, and rationale, AI agents and human practitioners alike fall into what the project’s MASTER_PLAN.md explicitly names “contextual naivety” and “confident wrongness.” The wrong answer is delivered with full confidence because the system has no memory that this ground was already contested and resolved.</p>
         <p>The broader quality-gate-swift ecosystem had quality gates, but those gates were capturing ephemeral events — a failed check, a manual override, a stakeholder approval. None of that signal was being transformed into durable organizational wisdom. The telemetry existed; the feedback loop did not.</p>
-        <h2>Approach</h2>JPurnell’s response was architectural before it was technical. Seven design proposals were drafted and committed as first-class artifacts, establishing a design-first workflow that forced every implementation decision to be preceded by a written rationale. The MASTER_PLAN.md was treated not as documentation written after the fact, but as the governing contract for the system’s mission and scope.
-        <p></p>
+        <h2>Approach</h2>
+        <p>JPurnell’s response was architectural before it was technical. Seven design proposals were drafted and committed as first-class artifacts, establishing a design-first workflow that forced every implementation decision to be preceded by a written rationale. The MASTER_PLAN.md was treated not as documentation written after the fact, but as the governing contract for the system’s mission and scope.</p>
         <p>The system is structured around three named roles — Decision Owners, Practitioners, and Red-Team Reviewers — plus a fourth constituency that distinguishes this project from conventional tooling: AI Agents, treated as first-class consumers of institutional context. Designing explicitly for MCP-ready agents shaped every interface decision.</p>
         <p>The toolchain reflects deliberate constraints. Swift 6.0 enforces strict concurrency correctness from the start. Yams handles YAML serialization, keeping all artifacts in human-readable Markdown and JSON — a specific architectural choice that ensures no proprietary database lock-in and compatibility with any LLM, cloud or local. swift-argument-parser covers the CLI surface for <code>ijs-telemetry</code>, while swift-docc-plugin signals an intent to treat documentation as a shipped artifact, not an afterthought. The separation into <code>IJSCore</code> (library), <code>ijs-telemetry</code> (CLI), and <code>IJSCoreTests</code> (test target) draws clean boundaries between the domain logic, the operator interface, and the verification layer.</p>
         <p>The conceptual foundation is explicit: Wingard’s five-dimension Judgment System Audit and Dalio’s believability-weighted feedback loops are encoded as automated, enforceable tooling rather than left as management philosophy. The Institutional Pulse document — a summarized artifact distilled from accumulated telemetry and overrides — becomes the mechanism by which lessons re-enter future sessions.</p>
-        <h2>Results</h2>The entire foundation was laid in a single four-hour working session on April 28, 2026, across 7 commits from first to final. What shipped in that window:
+        <h2>Results</h2>
+        <p>The entire foundation was laid in a single four-hour working session on April 28, 2026, across 7 commits from first to final. What shipped in that window:</p>
         <ul>
           <li>A defined package architecture with three targets covering library, CLI, and test surface</li>
           <li>Seven design proposals establishing the rationale layer before implementation</li>
           <li>A MASTER_PLAN.md that functions as a living governance document, not just a readme</li>
           <li>A CLAUDE.md defining session start protocol, development workflow, quality gate rules, and key references — ensuring the system can onboard an AI agent with institutional context from commit one</li>
           <li>Swift 6.0 strict concurrency compliance as a baseline, not a retrofit</li>
-        </ul>The project is macOS-native and dependency-minimal, with all state represented as files that can be read, diffed, and committed.
+        </ul>
+        <p>The project is macOS-native and dependency-minimal, with all state represented as files that can be read, diffed, and committed.</p>
         <h2>Judgment Calls</h2>
-        <strong>Designing for AI agents as first-class users.</strong> Most tooling treats AI assistants as consumers of documentation. IJSCore inverts this: the Institutional Pulse exists specifically to be ingested at session start, and the CLAUDE.md defines exactly how that ingestion should work. This required deciding, before writing implementation code, what an AI agent actually needs to recover context — and then building toward that answer.
-        <p></p>
+        <p><strong>Designing for AI agents as first-class users.</strong> Most tooling treats AI assistants as consumers of documentation. IJSCore inverts this: the Institutional Pulse exists specifically to be ingested at session start, and the CLAUDE.md defines exactly how that ingestion should work. This required deciding, before writing implementation code, what an AI agent actually needs to recover context — and then building toward that answer.</p>
         <p><strong>File-based portability as a hard constraint.</strong> Choosing Markdown and JSON over any structured database was a deliberate trade-off: some query expressiveness in exchange for complete portability, LLM compatibility, and auditability through standard version control. That constraint shapes every data model decision downstream.</p>
         <p><strong>Seven design proposals before seven commits.</strong> The 1:1 ratio of design artifacts to commits in the initial sprint is not coincidence — it reflects a working style where written architectural thinking precedes code. In a project whose entire mission is preventing “confident wrongness,” it would be internally inconsistent to ship without recorded rationale. The design-first workflow is itself a demonstration of the system’s values.</p>
         <p><strong>Encoding named frameworks rather than inventing new ones.</strong> Rather than creating a novel governance vocabulary from scratch, JPurnell grounded the audit dimensions in Wingard’s Judgment System Audit and the feedback-weighting in Dalio’s believability model. This decision trades novelty for credibility and communicability — practitioners and decision owners can cross-reference the source frameworks rather than learning a proprietary lexicon.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: infrastructure, org-judgement, selfReflection</p>
@@ -304,7 +305,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

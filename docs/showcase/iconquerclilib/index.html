@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquerclilib" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,34 +262,33 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool.
+          <p>In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool.</p>
         </blockquote>
-        <h2>Problem</h2>iConquer is an ambitious, multi-package Swift strategy game modeled on the classic Risk board game. The ecosystem already included a rules engine (IconquerCore), match orchestration (IconquerMatch), AI strategies (IconquerAI), networking (IconquerClient), and even a Model Context Protocol integration (IconquerMCP). What it lacked was a playable front door that didn’t require launching a full SwiftUI application. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>iConquer is an ambitious, multi-package Swift strategy game modeled on the classic Risk board game. The ecosystem already included a rules engine (IconquerCore), match orchestration (IconquerMatch), AI strategies (IconquerAI), networking (IconquerClient), and even a Model Context Protocol integration (IconquerMCP). What it lacked was a playable front door that didn’t require launching a full SwiftUI application.</p>
         <p>IconquerCLILib fills that gap. Its mission, as stated in the project’s own MASTER_PLAN.md, is to wire together the full iConquer package ecosystem into a playable terminal experience — animated dice rolls, colored territory maps, interactive command parsing — while also serving as a reusable library for the SwiftUI app itself. That dual-target design (a thin <code>iconquer-cli</code> executable backed by a full-featured <code>IconquerCLILib</code> library) was a deliberate architectural commitment made from the start.</p>
         <p>The tool serves three distinct audiences: developers and testers who want to play without the GUI, AI researchers running batch simulations against the game engine, and the SwiftUI app itself, which reuses the library’s agent factories and prompt builders.</p>
-        <h2>Approach</h2>The project launched on April 8, 2026 and shipped v0.5.0 by April 24 — a focused sixteen-day sprint. The pace was enabled by a design-first workflow: before any significant feature landed, a design proposal document was written and the project maintained a CLAUDE.md that structured sessions around explicit architecture sections covering Session Start, Development Workflow, Key Rules, a Quality Gate, and References. This isn’t documentation written after the fact — it shaped how each session was entered and exited.
-        <p></p>
+        <h2>Approach</h2>
+        <p>The project launched on April 8, 2026 and shipped v0.5.0 by April 24 — a focused sixteen-day sprint. The pace was enabled by a design-first workflow: before any significant feature landed, a design proposal document was written and the project maintained a CLAUDE.md that structured sessions around explicit architecture sections covering Session Start, Development Workflow, Key Rules, a Quality Gate, and References. This isn’t documentation written after the fact — it shaped how each session was entered and exited.</p>
         <p>The library was built on Swift 6.2 with two primary dependencies: <code>swift-argument-parser</code> for the CLI interface and <code>swift-docc-plugin</code> for documentation generation. The target split — <code>IconquerCLILib</code>, <code>iconquer-cli</code>, and <code>IconquerCLITests</code> — enforced a clean separation of concerns from day one, ensuring the logic layer could be consumed by the SwiftUI app without pulling in executable-level concerns.</p>
         <p>AI opponent integration was handled through a uniform <code>PlayerAgent</code> protocol inherited from IconquerMatch, behind which three distinct backends are plugged: Ollama for local LLM inference, Apple Intelligence, and MCP-connected agents. This protocol boundary meant that adding or swapping AI backends didn’t ripple through the game loop or TUI rendering code.</p>
         <p>The pluggable map system deserves mention: map definitions load from either bundled resources or custom JSON files, with validation, giving the tool flexibility for both standard play and researcher-defined scenarios.</p>
-        <h2>Results</h2>Across sixteen days, the project accumulated 65 commits on a single branch and shipped five tagged releases: v0.1.0 through v0.5.0. The release cadence — roughly one minor version every three days — indicates a disciplined iterative rhythm rather than a single large dump at the end.
-        <p></p>
+        <h2>Results</h2>
+        <p>Across sixteen days, the project accumulated 65 commits on a single branch and shipped five tagged releases: v0.1.0 through v0.5.0. The release cadence — roughly one minor version every three days — indicates a disciplined iterative rhythm rather than a single large dump at the end.</p>
         <p>The shipped surface area is substantial: interactive play with animated dice rolls and colored territory maps, a Simulate mode for batch AI-vs-AI runs, a Replay mode for re-watching recorded matches, and an MCP Play mode for agent-driven games via the Model Context Protocol. Each of these modes is a distinct game-management capability beyond simple play.</p>
         <p>The library target also serves as a reuse artifact for the broader iConquer SwiftUI application, meaning the work done here compounds value across the ecosystem rather than living only in the terminal.</p>
-        <h2>Judgment Calls</h2>Several decisions here reflect genuine craft rather than default choices.
-        <p></p>
+        <h2>Judgment Calls</h2>
+        <p>Several decisions here reflect genuine craft rather than default choices.</p>
         <p><strong>The library/executable split.</strong> Making <code>IconquerCLILib</code> the real target rather than building logic directly into the executable was a consequential choice. It anticipates future consumers — specifically the SwiftUI app — and prevents the terminal-specific code from becoming a dead end. It’s the kind of structural decision that feels unnecessary on day one and essential on day sixty.</p>
         <p><strong>Three AI backends behind one protocol.</strong> Supporting Ollama, Apple Intelligence, and MCP agents could easily have produced three different code paths through the game loop. Routing all three through the <code>PlayerAgent</code> protocol from IconquerMatch kept the game loop clean and made each backend independently swappable. The design proposal artifact in the repository suggests this was an explicit architectural decision rather than something that emerged organically.</p>
         <p><strong>Game modes as first-class citizens.</strong> Shipping Simulate, Replay, and MCP Play alongside standard interactive play signals that the tool was designed for the full range of its target users — not just the developer who wanted a quick way to test the rules engine. AI researchers running batch simulations need Simulate mode; replay and MCP support serve different but equally specific needs. The breadth of modes, achieved in sixteen days, points to a developer who planned the feature surface before writing the first line.</p>
         <p><strong>Working with buggy code deliberately.</strong> The Claude Code session log records two friction events tagged as <code>buggy_code</code> within a single multi-task session that nonetheless achieved a <code>mostly_achieved</code> outcome. Six commits came out of six messages — a high commit-to-message ratio that suggests the session was focused and outcomes were pushed to completion even when the code misbehaved, rather than abandoned mid-stream.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
@@ -301,7 +301,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

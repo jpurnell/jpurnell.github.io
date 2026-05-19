@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/BusinessMath/week-03/04-fri-case-capital-equipment" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -292,21 +293,22 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Case Study: Capital Equipment Purchase Decision</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">17 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">15 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p><strong>Capstone #2 – Combining TVM + Depreciation + Financial Analysis</strong>
-          <hr /></p>
-        <h2>The Business Challenge</h2>TechMfg Inc., a manufacturing company, is evaluating a $500,000 investment in new automated production equipment. The CFO needs to answer:
+        <p><strong>Capstone #2 – Combining TVM + Depreciation + Financial Analysis</strong></p>
+        <hr />
+        <h2>The Business Challenge</h2>
+        <p>TechMfg Inc., a manufacturing company, is evaluating a $500,000 investment in new automated production equipment. The CFO needs to answer:</p>
         <ol>
           <li><strong>Is this a good investment?</strong> (NPV, IRR, Payback Period)</li>
           <li><strong>How does it affect our financial statements?</strong> (Depreciation, ROI, ROA)</li>
           <li><strong>Should we lease or buy?</strong> (Compare alternatives)</li>
           <li><strong>What if our assumptions are wrong?</strong> (Sensitivity analysis)</li>
-        </ol>Think of this as a real half-million dollar capital budgeting decision. Get it right, and you boost productivity and profitability for years.
+        </ol>
+        <p>Think of this as a real half-million dollar capital budgeting decision. Get it right, and you boost productivity and profitability for years.</p>
         <hr />
         <h2>The Requirements</h2>
-        <strong>Stakeholders</strong>: CFO, Operations VP, Finance Committee
-        <p></p>
+        <p><strong>Stakeholders</strong>: CFO, Operations VP, Finance Committee</p>
         <p><strong>Key Questions</strong>:</p>
         <ul>
           <li>What’s the NPV and IRR of this investment?</li>
@@ -315,7 +317,7 @@
           <li>What if production volume is 20% lower than expected?</li>
           <li>Should we lease instead?</li>
         </ul>
-        <strong>Success Criteria</strong>:
+        <p><strong>Success Criteria</strong>:</p>
         <ul>
           <li>Complete financial analysis</li>
           <li>NPV-based recommendation</li>
@@ -324,48 +326,379 @@
         </ul>
         <hr />
         <h2>The Solution</h2>
-        <h3>Part 1: Setup and Assumptions</h3>First, define the investment parameters:
-        <pre><code class="language-swift">import BusinessMath<br /><br />print(”=== CAPITAL EQUIPMENT DECISION ANALYSIS ===\n”)<br /><br />// Equipment Details<br />let purchasePrice = 500_000.0<br />let usefulLife = 7  // years<br />let salvageValue = 50_000.0<br /><br />// Operating Assumptions<br />let annualProductionIncrease = 100_000.0  // units<br />let contributionMarginPerUnit = 6.0  // $ per unit<br />let annualMaintenanceCost = 15_000.0<br /><br />// Financial Assumptions<br />let discountRate = 0.10  // 10% WACC<br />let taxRate = 0.25  // 25% corporate tax rate<br /><br />print(“Equipment Investment:”)<br />print(”- Purchase Price: (purchasePrice.currency())”)<br />print(”- Useful Life: (usefulLife) years”)<br />print(”- Salvage Value: (salvageValue.currency())”)<br />print()<br />print(“Operating Assumptions:”)<br />print(”- Annual Production Increase: (annualProductionIncrease.number(0)) units”)<br />print(”- Contribution Margin: (contributionMarginPerUnit.currency())/unit”)<br />print(”- Annual Maintenance: (annualMaintenanceCost.currency())”)<br />print()<br />print(“Financial Assumptions:”)<br />print(”- Discount Rate (WACC): (discountRate.formatted(.percent))”)<br />print(”- Tax Rate: (taxRate.formatted(.percent))”)<br />print()<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>=== CAPITAL EQUIPMENT DECISION ANALYSIS ===<br /><br />Equipment Investment:<br />- Purchase Price: $500,000.00<br />- Useful Life: 7 years<br />- Salvage Value: $50,000.00<br /><br />Operating Assumptions:<br />- Annual Production Increase: 100,000 units<br />- Contribution Margin: $6.00/unit<br />- Annual Maintenance: $15,000.00<br /><br />Financial Assumptions:<br />- Discount Rate (WACC): 10%<br />- Tax Rate: 25%<br /></code></pre>
+        <h3>Part 1: Setup and Assumptions</h3>
+        <p>First, define the investment parameters:</p>
+        <pre><code class="language-swift">import BusinessMath
+
+print("=== CAPITAL EQUIPMENT DECISION ANALYSIS ===\n")
+
+// Equipment Details
+let purchasePrice = 500_000.0
+let usefulLife = 7  // years
+let salvageValue = 50_000.0
+
+// Operating Assumptions
+let annualProductionIncrease = 100_000.0  // units
+let contributionMarginPerUnit = 6.0  // $ per unit
+let annualMaintenanceCost = 15_000.0
+
+// Financial Assumptions
+let discountRate = 0.10  // 10% WACC
+let taxRate = 0.25  // 25% corporate tax rate
+
+print("Equipment Investment:")
+print("- Purchase Price: \(purchasePrice.currency())")
+print("- Useful Life: \(usefulLife) years")
+print("- Salvage Value: \(salvageValue.currency())")
+print()
+print("Operating Assumptions:")
+print("- Annual Production Increase: \(annualProductionIncrease.number(0)) units")
+print("- Contribution Margin: \(contributionMarginPerUnit.currency())/unit")
+print("- Annual Maintenance: \(annualMaintenanceCost.currency())")
+print()
+print("Financial Assumptions:")
+print("- Discount Rate (WACC): \(discountRate.formatted(.percent))")
+print("- Tax Rate: \(taxRate.formatted(.percent))")
+print()
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>=== CAPITAL EQUIPMENT DECISION ANALYSIS ===
+
+Equipment Investment:
+- Purchase Price: $500,000.00
+- Useful Life: 7 years
+- Salvage Value: $50,000.00
+
+Operating Assumptions:
+- Annual Production Increase: 100,000 units
+- Contribution Margin: $6.00/unit
+- Annual Maintenance: $15,000.00
+
+Financial Assumptions:
+- Discount Rate (WACC): 10%
+- Tax Rate: 25%
+</code></pre>
         <hr />
-        <h3>Part 2: Calculate Annual Cash Flows</h3>Determine cash inflows and outflows for each year:
-        <pre><code class="language-swift">print(“PART 1: Annual Cash Flow Analysis\n”)<br /><br />// Annual contribution margin from increased production<br />let annualRevenueBenefit = Double(annualProductionIncrease) * contributionMarginPerUnit<br />print(“Annual Revenue Benefit: (annualRevenueBenefit.currency())”)<br /><br />// Net annual operating cash flow (before tax)<br />let annualOperatingCashFlow = annualRevenueBenefit - annualMaintenanceCost<br />print(“Annual Operating Cash Flow (pre-tax): (annualOperatingCashFlow.currency())”)<br /><br />// Calculate depreciation using straight-line method<br />let annualDepreciation = (purchasePrice - salvageValue) / Double(usefulLife)<br />print(“Annual Depreciation (straight-line): (annualDepreciation.currency())”)<br /><br />// Taxable income = Operating cash flow - Depreciation<br />let annualTaxableIncome = annualOperatingCashFlow - annualDepreciation<br />print(“Annual Taxable Income: (annualTaxableIncome.currency())”)<br /><br />// Taxes<br />let annualTaxes = annualTaxableIncome * taxRate<br />print(“Annual Taxes: (annualTaxes.currency())”)<br /><br />// After-tax cash flow = Operating cash flow - Taxes<br />// (Note: Depreciation is added back because it’s non-cash)<br />let annualAfterTaxCashFlow = annualOperatingCashFlow - annualTaxes<br />print(“Annual After-Tax Cash Flow: (annualAfterTaxCashFlow.currency())”)<br />print()<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>PART 1: Annual Cash Flow Analysis<br /><br />Annual Revenue Benefit: $600,000.00<br />Annual Operating Cash Flow (pre-tax): $585,000.00<br />Annual Depreciation (straight-line): $64,285.71<br />Annual Taxable Income: $520,714.29<br />Annual Taxes: $130,178.57<br />Annual After-Tax Cash Flow: $454,821.43<br /></code></pre>
-        <strong>The insight</strong>: Equipment generates $585k annually before tax, but depreciation creates a tax shield that reduces taxes by ~$16k per year.
+        <h3>Part 2: Calculate Annual Cash Flows</h3>
+        <p>Determine cash inflows and outflows for each year:</p>
+        <pre><code class="language-swift">print("PART 1: Annual Cash Flow Analysis\n")
+
+// Annual contribution margin from increased production
+let annualRevenueBenefit = Double(annualProductionIncrease) * contributionMarginPerUnit
+print("Annual Revenue Benefit: \(annualRevenueBenefit.currency())")
+
+// Net annual operating cash flow (before tax)
+let annualOperatingCashFlow = annualRevenueBenefit - annualMaintenanceCost
+print("Annual Operating Cash Flow (pre-tax): \(annualOperatingCashFlow.currency())")
+
+// Calculate depreciation using straight-line method
+let annualDepreciation = (purchasePrice - salvageValue) / Double(usefulLife)
+print("Annual Depreciation (straight-line): \(annualDepreciation.currency())")
+
+// Taxable income = Operating cash flow - Depreciation
+let annualTaxableIncome = annualOperatingCashFlow - annualDepreciation
+print("Annual Taxable Income: \(annualTaxableIncome.currency())")
+
+// Taxes
+let annualTaxes = annualTaxableIncome * taxRate
+print("Annual Taxes: \(annualTaxes.currency())")
+
+// After-tax cash flow = Operating cash flow - Taxes
+// (Note: Depreciation is added back because it's non-cash)
+let annualAfterTaxCashFlow = annualOperatingCashFlow - annualTaxes
+print("Annual After-Tax Cash Flow: \(annualAfterTaxCashFlow.currency())")
+print()
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>PART 1: Annual Cash Flow Analysis
+
+Annual Revenue Benefit: $600,000.00
+Annual Operating Cash Flow (pre-tax): $585,000.00
+Annual Depreciation (straight-line): $64,285.71
+Annual Taxable Income: $520,714.29
+Annual Taxes: $130,178.57
+Annual After-Tax Cash Flow: $454,821.43
+</code></pre>
+        <p><strong>The insight</strong>: Equipment generates $585k annually before tax, but depreciation creates a tax shield that reduces taxes by ~$16k per year.</p>
         <hr />
-        <h3>Part 3: NPV and IRR Analysis</h3>Build the complete cash flow profile and evaluate:
-        <pre><code class="language-swift">print(“PART 2: NPV and IRR Analysis\n”)<br /><br />// Build cash flow array<br />var cashFlows = [-purchasePrice]  // Year 0: Initial investment<br /><br />// Years 1-7: Annual after-tax cash flows<br />for _ in 1…usefulLife {<br />    cashFlows.append(annualAfterTaxCashFlow)<br />}<br /><br />// Year 7: Add salvage value (assume no tax on salvage for simplicity)<br />cashFlows[cashFlows.count - 1] += salvageValue<br /><br />print(“Cash Flow Profile:”)<br />for (year, cf) in cashFlows.enumerated() {<br />    let sign = cf &gt;= 0 ? “+” : “”<br />    print(”  Year (year): (sign)(cf.currency())”)<br />}<br />print()<br /><br />// Calculate NPV<br />let npvValue = npv(discountRate: discountRate, cashFlows: cashFlows)<br />print(“Net Present Value (NPV): (npvValue.currency())”)<br /><br />if npvValue &gt; 0 {<br />    print(“✓ ACCEPT: Positive NPV creates value”)<br />} else {<br />    print(“✗ REJECT: Negative NPV destroys value”)<br />}<br />print()<br /><br />// Calculate IRR<br />let irrValue = try! irr(cashFlows: cashFlows)<br />print(“Internal Rate of Return (IRR): (irrValue.formatted(.percent.precision(.fractionLength(2))))”)<br /><br />if irrValue &gt; discountRate {<br />    print(“✓ ACCEPT: IRR ((irrValue.formatted(.percent))) &gt; WACC ((discountRate.formatted(.percent)))”)<br />} else {<br />    print(“✗ REJECT: IRR &lt; WACC”)<br />}<br />print()<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>PART 2: NPV and IRR Analysis<br /><br />Cash Flow Profile:<br />  Year 0: ($500,000.00)<br />  Year 1: +$454,821.43<br />  Year 2: +$454,821.43<br />  Year 3: +$454,821.43<br />  Year 4: +$454,821.43<br />  Year 5: +$454,821.43<br />  Year 6: +$454,821.43<br />  Year 7: +$504,821.43  (includes $50k salvage)<br /><br />Net Present Value (NPV): $1,739,919.11<br />✓ ACCEPT: Positive NPV creates value<br /><br />Internal Rate of Return (IRR): 90.05%<br />✓ ACCEPT: IRR (90.049037%) &gt; WACC (10%)<br /></code></pre>
-        <strong>The insight</strong>: This is an EXCELLENT investment. NPV of $1.7M and IRR of 90% far exceed hurdle rate.
+        <h3>Part 3: NPV and IRR Analysis</h3>
+        <p>Build the complete cash flow profile and evaluate:</p>
+        <pre><code class="language-swift">print("PART 2: NPV and IRR Analysis\n")
+
+// Build cash flow array
+var cashFlows = [-purchasePrice]  // Year 0: Initial investment
+
+// Years 1-7: Annual after-tax cash flows
+for _ in 1...usefulLife {
+    cashFlows.append(annualAfterTaxCashFlow)
+}
+
+// Year 7: Add salvage value (assume no tax on salvage for simplicity)
+cashFlows[cashFlows.count - 1] += salvageValue
+
+print("Cash Flow Profile:")
+for (year, cf) in cashFlows.enumerated() {
+    let sign = cf &gt;= 0 ? "+" : ""
+    print("  Year \(year): \(sign)\(cf.currency())")
+}
+print()
+
+// Calculate NPV
+let npvValue = npv(discountRate: discountRate, cashFlows: cashFlows)
+print("Net Present Value (NPV): \(npvValue.currency())")
+
+if npvValue &gt; 0 {
+    print("✓ ACCEPT: Positive NPV creates value")
+} else {
+    print("✗ REJECT: Negative NPV destroys value")
+}
+print()
+
+// Calculate IRR
+let irrValue = try! irr(cashFlows: cashFlows)
+print("Internal Rate of Return (IRR): \(irrValue.formatted(.percent.precision(.fractionLength(2))))")
+
+if irrValue &gt; discountRate {
+    print("✓ ACCEPT: IRR (\(irrValue.formatted(.percent))) &gt; WACC (\(discountRate.formatted(.percent)))")
+} else {
+    print("✗ REJECT: IRR &lt; WACC")
+}
+print()
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>PART 2: NPV and IRR Analysis
+
+Cash Flow Profile:
+  Year 0: ($500,000.00)
+  Year 1: +$454,821.43
+  Year 2: +$454,821.43
+  Year 3: +$454,821.43
+  Year 4: +$454,821.43
+  Year 5: +$454,821.43
+  Year 6: +$454,821.43
+  Year 7: +$504,821.43  (includes $50k salvage)
+
+Net Present Value (NPV): $1,739,919.11
+✓ ACCEPT: Positive NPV creates value
+
+Internal Rate of Return (IRR): 90.05%
+✓ ACCEPT: IRR (90.049037%) &gt; WACC (10%)
+</code></pre>
+        <p><strong>The insight</strong>: This is an EXCELLENT investment. NPV of $1.7M and IRR of 90% far exceed hurdle rate.</p>
         <hr />
-        <h3>Part 4: Payback Period</h3>How long until we recover the investment?
-        <pre><code class="language-swift">print(“PART 3: Payback Period Analysis\n”)<br /><br />var cumulativeCashFlow = -purchasePrice<br />var paybackYear = 0<br /><br />print(“Cumulative Cash Flow:”)<br />for (year, cf) in cashFlows.enumerated() {<br />    if year == 0 {<br />        cumulativeCashFlow = cf<br />    } else {<br />        cumulativeCashFlow += cf<br />    }<br /><br />    print(”  Year (year): (cumulativeCashFlow.currency())”)<br /><br />    if cumulativeCashFlow &gt;= 0 &amp;&amp; paybackYear == 0 {<br />        paybackYear = year<br />    }<br />}<br /><br />if paybackYear &gt; 0 {<br />    print(”\nPayback Period: ~(paybackYear) years”)<br />    print(“✓ Investment recovered in (paybackYear) years (well within (usefulLife) year life)”)<br />} else {<br />    print(”\n⚠️ Investment not recovered within useful life”)<br />}<br />print()<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>PART 3: Payback Period Analysis<br /><br />Cumulative Cash Flow:<br />  Year 0: ($500,000.00)<br />  Year 1: ($45,178.57)<br />  Year 2: $409,642.86<br />  Year 3: $864,464.29<br />  Year 4: $1,319,285.71<br />  Year 5: $1,774,107.14<br />  Year 6: $2,228,928.57<br />  Year 7: $2,733,750.00<br /><br />Payback Period: ~2 years<br />✓ Investment recovered in 2 years (well within 7 year life)<br /></code></pre>
+        <h3>Part 4: Payback Period</h3>
+        <p>How long until we recover the investment?</p>
+        <pre><code class="language-swift">print("PART 3: Payback Period Analysis\n")
+
+var cumulativeCashFlow = -purchasePrice
+var paybackYear = 0
+
+print("Cumulative Cash Flow:")
+for (year, cf) in cashFlows.enumerated() {
+    if year == 0 {
+        cumulativeCashFlow = cf
+    } else {
+        cumulativeCashFlow += cf
+    }
+
+    print("  Year \(year): \(cumulativeCashFlow.currency())")
+
+    if cumulativeCashFlow &gt;= 0 &amp;&amp; paybackYear == 0 {
+        paybackYear = year
+    }
+}
+
+if paybackYear &gt; 0 {
+    print("\nPayback Period: ~\(paybackYear) years")
+    print("✓ Investment recovered in \(paybackYear) years (well within \(usefulLife) year life)")
+} else {
+    print("\n⚠️ Investment not recovered within useful life")
+}
+print()
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>PART 3: Payback Period Analysis
+
+Cumulative Cash Flow:
+  Year 0: ($500,000.00)
+  Year 1: ($45,178.57)
+  Year 2: $409,642.86
+  Year 3: $864,464.29
+  Year 4: $1,319,285.71
+  Year 5: $1,774,107.14
+  Year 6: $2,228,928.57
+  Year 7: $2,733,750.00
+
+Payback Period: ~2 years
+✓ Investment recovered in 2 years (well within 7 year life)
+</code></pre>
         <hr />
-        <h3>Part 5: Financial Statement Impact</h3>How does this affect ROA and profitability?
-        <pre><code class="language-swift">print(“PART 4: Financial Statement Impact\n”)<br /><br />// Assume current company metrics<br />let currentAssets = 5_000_000.0<br />let currentNetIncome = 750_000.0<br /><br />// Year 1 impact<br />let newAssets = currentAssets + (purchasePrice - annualDepreciation)  // Equipment at book value<br />let newNetIncome = currentNetIncome + annualTaxableIncome - annualTaxes  // Add equipment contribution<br /><br />// Calculate ROA before and after<br />let roaBefore = currentNetIncome / currentAssets<br />let roaAfter = newNetIncome / newAssets<br /><br />print(“Return on Assets (ROA):”)<br />print(”  Before investment: (roaBefore.formatted(.percent.precision(.fractionLength(2))))”)<br />print(”  After investment (Year 1): (roaAfter.formatted(.percent.precision(.fractionLength(2))))”)<br /><br />let roaChange = roaAfter - roaBefore<br />if roaChange &gt; 0 {<br />    print(”  ✓ ROA improves by (roaChange.formatted(.percent.precision(.fractionLength(2))))”)<br />} else {<br />    print(”  ⚠️ ROA declines by (abs(roaChange).formatted(.percent.precision(.fractionLength(2))))”)<br />}<br />print()<br /><br />// Profit increase<br />let profitIncrease = annualTaxableIncome - annualTaxes<br />print(“Annual Profit Increase: (profitIncrease.currency())”)<br />print(“Profit increase as % of investment: ((profitIncrease / purchasePrice).percent())”)<br />print()<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>PART 4: Financial Statement Impact<br /><br />Return on Assets (ROA):<br />  Before investment: 15.00%<br />  After investment (Year 1): 20.98%<br />  ✓ ROA improves by 5.98%<br /><br />Annual Profit Increase: $390,535.71<br />Profit increase as % of investment: 78.11%<br /></code></pre>
+        <h3>Part 5: Financial Statement Impact</h3>
+        <p>How does this affect ROA and profitability?</p>
+        <pre><code class="language-swift">print("PART 4: Financial Statement Impact\n")
+
+// Assume current company metrics
+let currentAssets = 5_000_000.0
+let currentNetIncome = 750_000.0
+
+// Year 1 impact
+let newAssets = currentAssets + (purchasePrice - annualDepreciation)  // Equipment at book value
+let newNetIncome = currentNetIncome + annualTaxableIncome - annualTaxes  // Add equipment contribution
+
+// Calculate ROA before and after
+let roaBefore = currentNetIncome / currentAssets
+let roaAfter = newNetIncome / newAssets
+
+print("Return on Assets (ROA):")
+print("  Before investment: \(roaBefore.formatted(.percent.precision(.fractionLength(2))))")
+print("  After investment (Year 1): \(roaAfter.formatted(.percent.precision(.fractionLength(2))))")
+
+let roaChange = roaAfter - roaBefore
+if roaChange &gt; 0 {
+    print("  ✓ ROA improves by \(roaChange.formatted(.percent.precision(.fractionLength(2))))")
+} else {
+    print("  ⚠️ ROA declines by \(abs(roaChange).formatted(.percent.precision(.fractionLength(2))))")
+}
+print()
+
+// Profit increase
+let profitIncrease = annualTaxableIncome - annualTaxes
+print("Annual Profit Increase: \(profitIncrease.currency())")
+print("Profit increase as % of investment: \((profitIncrease / purchasePrice).percent())")
+print()
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>PART 4: Financial Statement Impact
+
+Return on Assets (ROA):
+  Before investment: 15.00%
+  After investment (Year 1): 20.98%
+  ✓ ROA improves by 5.98%
+
+Annual Profit Increase: $390,535.71
+Profit increase as % of investment: 78.11%
+</code></pre>
         <hr />
-        <h3>Part 6: Sensitivity Analysis</h3>What if our assumptions are wrong?
-        <pre><code class="language-swift">print(“PART 5: Sensitivity Analysis\n”)<br /><br />print(“NPV Sensitivity to Production Volume:”)<br />let volumeScenarios = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2]  // 70% to 120% of base<br /><br />for multiplier in volumeScenarios {<br />	let adjustedUnits = Int(Double(annualProductionIncrease) * multiplier)<br />	let adjustedRevenue = Double(adjustedUnits) * contributionMarginPerUnit<br />	let adjustedOperatingCF = adjustedRevenue - annualMaintenanceCost<br />	let adjustedTaxableIncome = adjustedOperatingCF - annualDepreciation<br />	let adjustedTaxes = adjustedTaxableIncome * taxRate<br />	let adjustedAfterTaxCF = adjustedOperatingCF - adjustedTaxes<br /><br />	var adjustedCashFlows = [-purchasePrice]<br />	for _ in 1…usefulLife {<br />		adjustedCashFlows.append(adjustedAfterTaxCF)<br />	}<br />	adjustedCashFlows[adjustedCashFlows.count - 1] += salvageValue<br /><br />	let adjustedNPV = npv(discountRate: discountRate, cashFlows: adjustedCashFlows)<br />	let decision = adjustedNPV &gt; 0 ? “Accept ✓” : “Reject ✗”<br /><br />	print(”  (multiplier.percent(0)) volume: (adjustedNPV.currency(0)) - (decision)”)<br />}<br />print()<br /><br />print(“NPV Sensitivity to Discount Rate:”)<br />let rateScenarios = [0.08, 0.10, 0.12, 0.15, 0.20]<br /><br />for rate in rateScenarios {<br />	let npvAtRate = npv(discountRate: rate, cashFlows: cashFlows)<br />	let decision = npvAtRate &gt; 0 ? “Accept ✓” : “Reject ✗”<br />	print(”  (rate.percent(0)): (npvAtRate.currency(0)) - (decision)”)<br />}<br />print()<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>PART 5: Sensitivity Analysis<br /><br />NPV Sensitivity to Production Volume:<br />  70% volume: $1,082,683 - Accept ✓<br />  80% volume: $1,301,761 - Accept ✓<br />  90% volume: $1,520,840 - Accept ✓<br />  100% volume: $1,739,919 - Accept ✓<br />  110% volume: $1,958,998 - Accept ✓<br />  120% volume: $2,178,077 - Accept ✓<br /><br />NPV Sensitivity to Discount Rate:<br />  8%: $1,897,143 - Accept ✓<br />  10%: $1,739,919 - Accept ✓<br />  12%: $1,598,312 - Accept ✓<br />  15%: $1,411,045 - Accept ✓<br />  20%: $1,153,400 - Accept ✓<br /></code></pre>
-        <strong>The insight</strong>: Investment remains attractive even if volume drops 30% or discount rate doubles. This is a ROBUST investment.
+        <h3>Part 6: Sensitivity Analysis</h3>
+        <p>What if our assumptions are wrong?</p>
+        <pre><code class="language-swift">print("PART 5: Sensitivity Analysis\n")
+
+print("NPV Sensitivity to Production Volume:")
+let volumeScenarios = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2]  // 70% to 120% of base
+
+for multiplier in volumeScenarios {
+	let adjustedUnits = Int(Double(annualProductionIncrease) * multiplier)
+	let adjustedRevenue = Double(adjustedUnits) * contributionMarginPerUnit
+	let adjustedOperatingCF = adjustedRevenue - annualMaintenanceCost
+	let adjustedTaxableIncome = adjustedOperatingCF - annualDepreciation
+	let adjustedTaxes = adjustedTaxableIncome * taxRate
+	let adjustedAfterTaxCF = adjustedOperatingCF - adjustedTaxes
+
+	var adjustedCashFlows = [-purchasePrice]
+	for _ in 1...usefulLife {
+		adjustedCashFlows.append(adjustedAfterTaxCF)
+	}
+	adjustedCashFlows[adjustedCashFlows.count - 1] += salvageValue
+
+	let adjustedNPV = npv(discountRate: discountRate, cashFlows: adjustedCashFlows)
+	let decision = adjustedNPV &gt; 0 ? "Accept ✓" : "Reject ✗"
+
+	print("  \(multiplier.percent(0)) volume: \(adjustedNPV.currency(0)) - \(decision)")
+}
+print()
+
+print("NPV Sensitivity to Discount Rate:")
+let rateScenarios = [0.08, 0.10, 0.12, 0.15, 0.20]
+
+for rate in rateScenarios {
+	let npvAtRate = npv(discountRate: rate, cashFlows: cashFlows)
+	let decision = npvAtRate &gt; 0 ? "Accept ✓" : "Reject ✗"
+	print("  \(rate.percent(0)): \(npvAtRate.currency(0)) - \(decision)")
+}
+print()
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>PART 5: Sensitivity Analysis
+
+NPV Sensitivity to Production Volume:
+  70% volume: $1,082,683 - Accept ✓
+  80% volume: $1,301,761 - Accept ✓
+  90% volume: $1,520,840 - Accept ✓
+  100% volume: $1,739,919 - Accept ✓
+  110% volume: $1,958,998 - Accept ✓
+  120% volume: $2,178,077 - Accept ✓
+
+NPV Sensitivity to Discount Rate:
+  8%: $1,897,143 - Accept ✓
+  10%: $1,739,919 - Accept ✓
+  12%: $1,598,312 - Accept ✓
+  15%: $1,411,045 - Accept ✓
+  20%: $1,153,400 - Accept ✓
+</code></pre>
+        <p><strong>The insight</strong>: Investment remains attractive even if volume drops 30% or discount rate doubles. This is a ROBUST investment.</p>
         <hr />
-        <h3>Part 6: Lease vs. Buy Comparison</h3>Should we lease instead?
-        <pre><code class="language-swift">print(“PART 6: Lease vs. Buy Comparison\n”)<br /><br />// Lease terms<br />let annualLeasePayment = 95_000.0<br />let leaseMaintenanceIncluded = true  // Lessor covers maintenance<br /><br />print(“Lease Option:”)<br />print(”- Annual Lease Payment: (annualLeasePayment.currency())”)<br />print(”- Maintenance: Included”)<br />print()<br /><br />// Lease cash flows (after-tax)<br />let leaseMaintenanceSaving = leaseMaintenanceIncluded ? annualMaintenanceCost : 0<br />let leaseOperatingCF = annualRevenueBenefit - annualLeasePayment + leaseMaintenanceSaving<br /><br />// Lease payments are tax-deductible<br />let leaseTaxableIncome = leaseOperatingCF<br />let leaseTaxes = leaseTaxableIncome * taxRate<br />let leaseAfterTaxCF = leaseOperatingCF - leaseTaxes<br /><br />var leaseCashFlows: [Double] = []<br />for _ in 1…usefulLife {<br />    leaseCashFlows.append(leaseAfterTaxCF)<br />}<br /><br />let leaseNPV = npv(discountRate: discountRate, cashFlows: leaseCashFlows)<br /><br />print(“Lease NPV: (leaseNPV.currency())”)<br />print(“Buy NPV: (npvValue.currency())”)<br />print()<br /><br />if npvValue &gt; leaseNPV {<br />    let advantage = npvValue - leaseNPV<br />    print(“✓ RECOMMENDATION: Buy”)<br />    print(”  Buying creates (advantage.currency()) more value than leasing”)<br />} else {<br />    let advantage = leaseNPV - npvValue<br />    print(“✓ RECOMMENDATION: Lease”)<br />    print(”  Leasing creates (advantage.currency()) more value than buying”)<br />}<br />print()<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>PART 6: Lease vs. Buy Comparison<br /><br />Lease Option:<br />- Annual Lease Payment: $95,000.00<br />- Maintenance: Included<br /><br />Lease NPV: $2,088,551.67<br />Buy NPV: $1,739,919.11<br /><br />✓ RECOMMENDATION: Lease<br />  Leasing creates $348,632.57 more value than buying<br /></code></pre>
-        <strong>The insight</strong>: Despite buying having excellent returns, leasing is BETTER because maintenance is included and there’s no upfront capital outlay.
+        <h3>Part 6: Lease vs. Buy Comparison</h3>
+        <p>Should we lease instead?</p>
+        <pre><code class="language-swift">print("PART 6: Lease vs. Buy Comparison\n")
+
+// Lease terms
+let annualLeasePayment = 95_000.0
+let leaseMaintenanceIncluded = true  // Lessor covers maintenance
+
+print("Lease Option:")
+print("- Annual Lease Payment: \(annualLeasePayment.currency())")
+print("- Maintenance: Included")
+print()
+
+// Lease cash flows (after-tax)
+let leaseMaintenanceSaving = leaseMaintenanceIncluded ? annualMaintenanceCost : 0
+let leaseOperatingCF = annualRevenueBenefit - annualLeasePayment + leaseMaintenanceSaving
+
+// Lease payments are tax-deductible
+let leaseTaxableIncome = leaseOperatingCF
+let leaseTaxes = leaseTaxableIncome * taxRate
+let leaseAfterTaxCF = leaseOperatingCF - leaseTaxes
+
+var leaseCashFlows: [Double] = []
+for _ in 1...usefulLife {
+    leaseCashFlows.append(leaseAfterTaxCF)
+}
+
+let leaseNPV = npv(discountRate: discountRate, cashFlows: leaseCashFlows)
+
+print("Lease NPV: \(leaseNPV.currency())")
+print("Buy NPV: \(npvValue.currency())")
+print()
+
+if npvValue &gt; leaseNPV {
+    let advantage = npvValue - leaseNPV
+    print("✓ RECOMMENDATION: Buy")
+    print("  Buying creates \(advantage.currency()) more value than leasing")
+} else {
+    let advantage = leaseNPV - npvValue
+    print("✓ RECOMMENDATION: Lease")
+    print("  Leasing creates \(advantage.currency()) more value than buying")
+}
+print()
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>PART 6: Lease vs. Buy Comparison
+
+Lease Option:
+- Annual Lease Payment: $95,000.00
+- Maintenance: Included
+
+Lease NPV: $2,088,551.67
+Buy NPV: $1,739,919.11
+
+✓ RECOMMENDATION: Lease
+  Leasing creates $348,632.57 more value than buying
+</code></pre>
+        <p><strong>The insight</strong>: Despite buying having excellent returns, leasing is BETTER because maintenance is included and there’s no upfront capital outlay.</p>
         <hr />
         <h2>The Results</h2>
         <h3>Business Value</h3>
-        <strong>Financial Impact</strong>:
+        <p><strong>Financial Impact</strong>:</p>
         <ul>
           <li><strong>Buy option NPV</strong>: $1.74M (excellent)</li>
           <li><strong>Lease option NPV</strong>: $2.09M (even better!)</li>
@@ -373,13 +706,13 @@
           <li><strong>Payback</strong>: ~2 years (if buying)</li>
           <li><strong>ROA improvement</strong>: +5.98%</li>
         </ul>
-        <strong>Risk Analysis</strong>:
+        <p><strong>Risk Analysis</strong>:</p>
         <ul>
           <li>Investment robust to 30% volume decline</li>
           <li>Remains profitable even if discount rate doubles</li>
           <li>Low sensitivity to key assumptions</li>
         </ul>
-        <strong>Technical Achievement</strong>:
+        <p><strong>Technical Achievement</strong>:</p>
         <ul>
           <li>Combined TVM, depreciation, and financial ratios</li>
           <li>Complete capital budgeting analysis</li>
@@ -388,14 +721,14 @@
         </ul>
         <hr />
         <h2>What Worked</h2>
-        <strong>Integration Success</strong>:
+        <p><strong>Integration Success</strong>:</p>
         <ul>
           <li>TVM functions (<code>npv</code>, <code>irr</code>) handled multi-year cash flows perfectly</li>
           <li>Depreciation calculations integrated cleanly</li>
           <li>Financial ratio analysis (ROA) showed statement impact</li>
           <li>Sensitivity analysis used data tables (from Week 2)</li>
         </ul>
-        <strong>Decision Quality</strong>:
+        <p><strong>Decision Quality</strong>:</p>
         <ul>
           <li>Clear recommendation (Lease)</li>
           <li>Quantified value difference ($349k advantage)</li>
@@ -404,13 +737,13 @@
         </ul>
         <hr />
         <h2>What Didn’t Work</h2>
-        <strong>Initial Challenges</strong>:
+        <p><strong>Initial Challenges</strong>:</p>
         <ul>
           <li>First version forgot to include salvage value in final year cash flow</li>
           <li>Tax calculations were confusing until we separated operating CF from taxable income</li>
           <li>Lease analysis initially didn’t account for maintenance savings</li>
         </ul>
-        <strong>Lessons Learned</strong>:
+        <p><strong>Lessons Learned</strong>:</p>
         <ul>
           <li>Capital budgeting requires careful cash flow modeling</li>
           <li>Tax effects materially impact decisions (depreciation tax shield)</li>
@@ -418,8 +751,7 @@
         </ul>
         <hr />
         <h2>The Insight</h2>
-        <strong>Capital budgeting decisions require combining multiple financial concepts.</strong>
-        <p></p>
+        <p><strong>Capital budgeting decisions require combining multiple financial concepts.</strong></p>
         <p>You can’t just calculate NPV in isolation. You need:</p>
         <ul>
           <li><strong>TVM analysis</strong>: NPV, IRR, payback</li>
@@ -427,15 +759,262 @@
           <li><strong>Financial statement impact</strong>: How does this affect reported earnings and ratios?</li>
           <li><strong>Sensitivity analysis</strong>: What if we’re wrong?</li>
           <li><strong>Alternative comparison</strong>: Lease vs. buy, new vs. used, etc.</li>
-        </ul>BusinessMath makes these integrated analyses straightforward with composable functions.
+        </ul>
+        <p>BusinessMath makes these integrated analyses straightforward with composable functions.</p>
         <blockquote>
-          <strong>Key Takeaway</strong>: Real business decisions require combining multiple analytical tools. Libraries should make integration seamless.
+          <p><strong>Key Takeaway</strong>: Real business decisions require combining multiple analytical tools. Libraries should make integration seamless.</p>
         </blockquote>
         <hr />
         <h2>Try It Yourself</h2>
-        <details>
+        <details> 
           <summary>Click to expand full playground code</summary> 
-          <pre><code class="language-swift">import BusinessMath<br /><br />print("=== CAPITAL EQUIPMENT DECISION ANALYSIS ===\n")<br /><br />// Equipment Details<br />let purchasePrice = 500_000.0<br />let usefulLife = 7  // years<br />let salvageValue = 50_000.0<br /><br />// Operating Assumptions<br />let annualProductionIncrease = 100_000.0  // units<br />let contributionMarginPerUnit = 6.0  // $ per unit<br />let annualMaintenanceCost = 15_000.0<br /><br />// Financial Assumptions<br />let discountRate = 0.10  // 10% WACC<br />let taxRate = 0.25  // 25% corporate tax rate<br /><br />print("Equipment Investment:")<br />print("- Purchase Price: \(purchasePrice.currency())")<br />print("- Useful Life: \(usefulLife) years")<br />print("- Salvage Value: \(salvageValue.currency())")<br />print()<br />print("Operating Assumptions:")<br />print("- Annual Production Increase: \(annualProductionIncrease.number(0)) units")<br />print("- Contribution Margin: \(contributionMarginPerUnit.currency())/unit")<br />print("- Annual Maintenance: \(annualMaintenanceCost.currency())")<br />print()<br />print("Financial Assumptions:")<br />print("- Discount Rate (WACC): \(discountRate.formatted(.percent))")<br />print("- Tax Rate: \(taxRate.formatted(.percent))")<br />print()<br /><br /><br />print("PART 1: Annual Cash Flow Analysis\n")<br /><br />// Annual contribution margin from increased production<br />let annualRevenueBenefit = Double(annualProductionIncrease) * contributionMarginPerUnit<br />print("Annual Revenue Benefit: \(annualRevenueBenefit.currency())")<br /><br />// Net annual operating cash flow (before tax)<br />let annualOperatingCashFlow = annualRevenueBenefit - annualMaintenanceCost<br />print("Annual Operating Cash Flow (pre-tax): \(annualOperatingCashFlow.currency())")<br /><br />// Calculate depreciation using straight-line method<br />let annualDepreciation = (purchasePrice - salvageValue) / Double(usefulLife)<br />print("Annual Depreciation (straight-line): \(annualDepreciation.currency())")<br /><br />// Taxable income = Operating cash flow - Depreciation<br />let annualTaxableIncome = annualOperatingCashFlow - annualDepreciation<br />print("Annual Taxable Income: \(annualTaxableIncome.currency())")<br /><br />// Taxes<br />let annualTaxes = annualTaxableIncome * taxRate<br />print("Annual Taxes: \(annualTaxes.currency())")<br /><br />// After-tax cash flow = Operating cash flow - Taxes<br />// (Note: Depreciation is added back because it's non-cash)<br />let annualAfterTaxCashFlow = annualOperatingCashFlow - annualTaxes<br />print("Annual After-Tax Cash Flow: \(annualAfterTaxCashFlow.currency())")<br />print()<br /><br />print("PART 2: NPV and IRR Analysis\n")<br /><br />// Build cash flow array<br />var cashFlows = [-purchasePrice]  // Year 0: Initial investment<br /><br />// Years 1-7: Annual after-tax cash flows<br />for _ in 1...usefulLife {<br />	cashFlows.append(annualAfterTaxCashFlow)<br />}<br /><br />// Year 7: Add salvage value (assume no tax on salvage for simplicity)<br />cashFlows[cashFlows.count - 1] += salvageValue<br /><br />print("Cash Flow Profile:")<br />for (year, cf) in cashFlows.enumerated() {<br />	let sign = cf &gt;= 0 ? "+" : ""<br />	print("  Year \(year): \(sign)\(cf.currency())")<br />}<br />print()<br /><br />// Calculate NPV<br />let npvValue = npv(discountRate: discountRate, cashFlows: cashFlows)<br />print("Net Present Value (NPV): \(npvValue.currency())")<br /><br />if npvValue &gt; 0 {<br />	print("✓ ACCEPT: Positive NPV creates value")<br />} else {<br />	print("✗ REJECT: Negative NPV destroys value")<br />}<br />print()<br /><br />// Calculate IRR<br />let irrValue = try! irr(cashFlows: cashFlows)<br />print("Internal Rate of Return (IRR): \(irrValue.formatted(.percent.precision(.fractionLength(2))))")<br /><br />if irrValue &gt; discountRate {<br />	print("✓ ACCEPT: IRR (\(irrValue.formatted(.percent))) &gt; WACC (\(discountRate.formatted(.percent)))")<br />} else {<br />	print("✗ REJECT: IRR &lt; WACC")<br />}<br />print()<br /><br /><br />print("PART 3: Payback Period Analysis\n")<br /><br />var cumulativeCashFlow = -purchasePrice<br />var paybackYear = 0<br /><br />print("Cumulative Cash Flow:")<br />for (year, cf) in cashFlows.enumerated() {<br />	if year == 0 {<br />		cumulativeCashFlow = cf<br />	} else {<br />		cumulativeCashFlow += cf<br />	}<br /><br />	print("  Year \(year): \(cumulativeCashFlow.currency())")<br /><br />	if cumulativeCashFlow &gt;= 0 &amp;&amp; paybackYear == 0 {<br />		paybackYear = year<br />	}<br />}<br /><br />if paybackYear &gt; 0 {<br />	print("\nPayback Period: ~\(paybackYear) years")<br />	print("✓ Investment recovered in \(paybackYear) years (well within \(usefulLife) year life)")<br />} else {<br />	print("\n⚠️ Investment not recovered within useful life")<br />}<br />print()<br /><br /><br />print("PART 4: Financial Statement Impact\n")<br /><br />// Assume current company metrics<br />let currentAssets = 5_000_000.0<br />let currentNetIncome = 750_000.0<br /><br />// Year 1 impact<br />let newAssets = currentAssets + (purchasePrice - annualDepreciation)  // Equipment at book value<br />let newNetIncome = currentNetIncome + annualTaxableIncome - annualTaxes  // Add equipment contribution<br /><br />// Calculate ROA before and after<br />let roaBefore = currentNetIncome / currentAssets<br />let roaAfter = newNetIncome / newAssets<br /><br />print("Return on Assets (ROA):")<br />print("  Before investment: \(roaBefore.formatted(.percent.precision(.fractionLength(2))))")<br />print("  After investment (Year 1): \(roaAfter.formatted(.percent.precision(.fractionLength(2))))")<br /><br />let roaChange = roaAfter - roaBefore<br />if roaChange &gt; 0 {<br />	print("  ✓ ROA improves by \(roaChange.formatted(.percent.precision(.fractionLength(2))))")<br />} else {<br />	print("  ⚠️ ROA declines by \(abs(roaChange).formatted(.percent.precision(.fractionLength(2))))")<br />}<br />print()<br /><br />// Profit increase<br />let profitIncrease = annualTaxableIncome - annualTaxes<br />print("Annual Profit Increase: \(profitIncrease.currency())")<br />print("Profit increase as % of investment: \((profitIncrease / purchasePrice).percent())")<br />print()<br /><br /><br />print("PART 5: Sensitivity Analysis\n")<br /><br />print("NPV Sensitivity to Production Volume:")<br />let volumeScenarios = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2]  // 70% to 120% of base<br /><br />for multiplier in volumeScenarios {<br />	let adjustedUnits = Int(Double(annualProductionIncrease) * multiplier)<br />	let adjustedRevenue = Double(adjustedUnits) * contributionMarginPerUnit<br />	let adjustedOperatingCF = adjustedRevenue - annualMaintenanceCost<br />	let adjustedTaxableIncome = adjustedOperatingCF - annualDepreciation<br />	let adjustedTaxes = adjustedTaxableIncome * taxRate<br />	let adjustedAfterTaxCF = adjustedOperatingCF - adjustedTaxes<br /><br />	var adjustedCashFlows = [-purchasePrice]<br />	for _ in 1...usefulLife {<br />		adjustedCashFlows.append(adjustedAfterTaxCF)<br />	}<br />	adjustedCashFlows[adjustedCashFlows.count - 1] += salvageValue<br /><br />	let adjustedNPV = npv(discountRate: discountRate, cashFlows: adjustedCashFlows)<br />	let decision = adjustedNPV &gt; 0 ? "Accept ✓" : "Reject ✗"<br /><br />	print("  \(multiplier.percent(0)) volume: \(adjustedNPV.currency(0)) - \(decision)")<br />}<br />print()<br /><br />print("NPV Sensitivity to Discount Rate:")<br />let rateScenarios = [0.08, 0.10, 0.12, 0.15, 0.20]<br /><br />for rate in rateScenarios {<br />	let npvAtRate = npv(discountRate: rate, cashFlows: cashFlows)<br />	let decision = npvAtRate &gt; 0 ? "Accept ✓" : "Reject ✗"<br />	print("  \(rate.percent(0)): \(npvAtRate.currency(0)) - \(decision)")<br />}<br />print()<br /><br /><br />print("PART 6: Lease vs. Buy Comparison\n")<br /><br />// Lease terms<br />let annualLeasePayment = 95_000.0<br />let leaseMaintenanceIncluded = true  // Lessor covers maintenance<br /><br />print("Lease Option:")<br />print("- Annual Lease Payment: \(annualLeasePayment.currency())")<br />print("- Maintenance: Included")<br />print()<br /><br />// Lease cash flows (after-tax)<br />let leaseMaintenanceSaving = leaseMaintenanceIncluded ? annualMaintenanceCost : 0<br />let leaseOperatingCF = annualRevenueBenefit - annualLeasePayment + leaseMaintenanceSaving<br /><br />// Lease payments are tax-deductible<br />let leaseTaxableIncome = leaseOperatingCF<br />let leaseTaxes = leaseTaxableIncome * taxRate<br />let leaseAfterTaxCF = leaseOperatingCF - leaseTaxes<br /><br />var leaseCashFlows: [Double] = []<br />for _ in 1...usefulLife {<br />	leaseCashFlows.append(leaseAfterTaxCF)<br />}<br /><br />let leaseNPV = npv(discountRate: discountRate, cashFlows: leaseCashFlows)<br /><br />print("Lease NPV: \(leaseNPV.currency())")<br />print("Buy NPV: \(npvValue.currency())")<br />print()<br /><br />if npvValue &gt; leaseNPV {<br />	let advantage = npvValue - leaseNPV<br />	print("✓ RECOMMENDATION: Buy")<br />	print("  Buying creates \(advantage.currency()) more value than leasing")<br />} else {<br />	let advantage = leaseNPV - npvValue<br />	print("✓ RECOMMENDATION: Lease")<br />	print("  Leasing creates \(advantage.currency()) more value than buying")<br />}<br />print()<br /><br /></code></pre>
+          <pre><code class="language-swift">import BusinessMath
+
+print("=== CAPITAL EQUIPMENT DECISION ANALYSIS ===\n")
+
+// Equipment Details
+let purchasePrice = 500_000.0
+let usefulLife = 7  // years
+let salvageValue = 50_000.0
+
+// Operating Assumptions
+let annualProductionIncrease = 100_000.0  // units
+let contributionMarginPerUnit = 6.0  // $ per unit
+let annualMaintenanceCost = 15_000.0
+
+// Financial Assumptions
+let discountRate = 0.10  // 10% WACC
+let taxRate = 0.25  // 25% corporate tax rate
+
+print("Equipment Investment:")
+print("- Purchase Price: \(purchasePrice.currency())")
+print("- Useful Life: \(usefulLife) years")
+print("- Salvage Value: \(salvageValue.currency())")
+print()
+print("Operating Assumptions:")
+print("- Annual Production Increase: \(annualProductionIncrease.number(0)) units")
+print("- Contribution Margin: \(contributionMarginPerUnit.currency())/unit")
+print("- Annual Maintenance: \(annualMaintenanceCost.currency())")
+print()
+print("Financial Assumptions:")
+print("- Discount Rate (WACC): \(discountRate.formatted(.percent))")
+print("- Tax Rate: \(taxRate.formatted(.percent))")
+print()
+
+
+print("PART 1: Annual Cash Flow Analysis\n")
+
+// Annual contribution margin from increased production
+let annualRevenueBenefit = Double(annualProductionIncrease) * contributionMarginPerUnit
+print("Annual Revenue Benefit: \(annualRevenueBenefit.currency())")
+
+// Net annual operating cash flow (before tax)
+let annualOperatingCashFlow = annualRevenueBenefit - annualMaintenanceCost
+print("Annual Operating Cash Flow (pre-tax): \(annualOperatingCashFlow.currency())")
+
+// Calculate depreciation using straight-line method
+let annualDepreciation = (purchasePrice - salvageValue) / Double(usefulLife)
+print("Annual Depreciation (straight-line): \(annualDepreciation.currency())")
+
+// Taxable income = Operating cash flow - Depreciation
+let annualTaxableIncome = annualOperatingCashFlow - annualDepreciation
+print("Annual Taxable Income: \(annualTaxableIncome.currency())")
+
+// Taxes
+let annualTaxes = annualTaxableIncome * taxRate
+print("Annual Taxes: \(annualTaxes.currency())")
+
+// After-tax cash flow = Operating cash flow - Taxes
+// (Note: Depreciation is added back because it's non-cash)
+let annualAfterTaxCashFlow = annualOperatingCashFlow - annualTaxes
+print("Annual After-Tax Cash Flow: \(annualAfterTaxCashFlow.currency())")
+print()
+
+print("PART 2: NPV and IRR Analysis\n")
+
+// Build cash flow array
+var cashFlows = [-purchasePrice]  // Year 0: Initial investment
+
+// Years 1-7: Annual after-tax cash flows
+for _ in 1...usefulLife {
+	cashFlows.append(annualAfterTaxCashFlow)
+}
+
+// Year 7: Add salvage value (assume no tax on salvage for simplicity)
+cashFlows[cashFlows.count - 1] += salvageValue
+
+print("Cash Flow Profile:")
+for (year, cf) in cashFlows.enumerated() {
+	let sign = cf &gt;= 0 ? "+" : ""
+	print("  Year \(year): \(sign)\(cf.currency())")
+}
+print()
+
+// Calculate NPV
+let npvValue = npv(discountRate: discountRate, cashFlows: cashFlows)
+print("Net Present Value (NPV): \(npvValue.currency())")
+
+if npvValue &gt; 0 {
+	print("✓ ACCEPT: Positive NPV creates value")
+} else {
+	print("✗ REJECT: Negative NPV destroys value")
+}
+print()
+
+// Calculate IRR
+let irrValue = try! irr(cashFlows: cashFlows)
+print("Internal Rate of Return (IRR): \(irrValue.formatted(.percent.precision(.fractionLength(2))))")
+
+if irrValue &gt; discountRate {
+	print("✓ ACCEPT: IRR (\(irrValue.formatted(.percent))) &gt; WACC (\(discountRate.formatted(.percent)))")
+} else {
+	print("✗ REJECT: IRR &lt; WACC")
+}
+print()
+
+
+print("PART 3: Payback Period Analysis\n")
+
+var cumulativeCashFlow = -purchasePrice
+var paybackYear = 0
+
+print("Cumulative Cash Flow:")
+for (year, cf) in cashFlows.enumerated() {
+	if year == 0 {
+		cumulativeCashFlow = cf
+	} else {
+		cumulativeCashFlow += cf
+	}
+
+	print("  Year \(year): \(cumulativeCashFlow.currency())")
+
+	if cumulativeCashFlow &gt;= 0 &amp;&amp; paybackYear == 0 {
+		paybackYear = year
+	}
+}
+
+if paybackYear &gt; 0 {
+	print("\nPayback Period: ~\(paybackYear) years")
+	print("✓ Investment recovered in \(paybackYear) years (well within \(usefulLife) year life)")
+} else {
+	print("\n⚠️ Investment not recovered within useful life")
+}
+print()
+
+
+print("PART 4: Financial Statement Impact\n")
+
+// Assume current company metrics
+let currentAssets = 5_000_000.0
+let currentNetIncome = 750_000.0
+
+// Year 1 impact
+let newAssets = currentAssets + (purchasePrice - annualDepreciation)  // Equipment at book value
+let newNetIncome = currentNetIncome + annualTaxableIncome - annualTaxes  // Add equipment contribution
+
+// Calculate ROA before and after
+let roaBefore = currentNetIncome / currentAssets
+let roaAfter = newNetIncome / newAssets
+
+print("Return on Assets (ROA):")
+print("  Before investment: \(roaBefore.formatted(.percent.precision(.fractionLength(2))))")
+print("  After investment (Year 1): \(roaAfter.formatted(.percent.precision(.fractionLength(2))))")
+
+let roaChange = roaAfter - roaBefore
+if roaChange &gt; 0 {
+	print("  ✓ ROA improves by \(roaChange.formatted(.percent.precision(.fractionLength(2))))")
+} else {
+	print("  ⚠️ ROA declines by \(abs(roaChange).formatted(.percent.precision(.fractionLength(2))))")
+}
+print()
+
+// Profit increase
+let profitIncrease = annualTaxableIncome - annualTaxes
+print("Annual Profit Increase: \(profitIncrease.currency())")
+print("Profit increase as % of investment: \((profitIncrease / purchasePrice).percent())")
+print()
+
+
+print("PART 5: Sensitivity Analysis\n")
+
+print("NPV Sensitivity to Production Volume:")
+let volumeScenarios = [0.7, 0.8, 0.9, 1.0, 1.1, 1.2]  // 70% to 120% of base
+
+for multiplier in volumeScenarios {
+	let adjustedUnits = Int(Double(annualProductionIncrease) * multiplier)
+	let adjustedRevenue = Double(adjustedUnits) * contributionMarginPerUnit
+	let adjustedOperatingCF = adjustedRevenue - annualMaintenanceCost
+	let adjustedTaxableIncome = adjustedOperatingCF - annualDepreciation
+	let adjustedTaxes = adjustedTaxableIncome * taxRate
+	let adjustedAfterTaxCF = adjustedOperatingCF - adjustedTaxes
+
+	var adjustedCashFlows = [-purchasePrice]
+	for _ in 1...usefulLife {
+		adjustedCashFlows.append(adjustedAfterTaxCF)
+	}
+	adjustedCashFlows[adjustedCashFlows.count - 1] += salvageValue
+
+	let adjustedNPV = npv(discountRate: discountRate, cashFlows: adjustedCashFlows)
+	let decision = adjustedNPV &gt; 0 ? "Accept ✓" : "Reject ✗"
+
+	print("  \(multiplier.percent(0)) volume: \(adjustedNPV.currency(0)) - \(decision)")
+}
+print()
+
+print("NPV Sensitivity to Discount Rate:")
+let rateScenarios = [0.08, 0.10, 0.12, 0.15, 0.20]
+
+for rate in rateScenarios {
+	let npvAtRate = npv(discountRate: rate, cashFlows: cashFlows)
+	let decision = npvAtRate &gt; 0 ? "Accept ✓" : "Reject ✗"
+	print("  \(rate.percent(0)): \(npvAtRate.currency(0)) - \(decision)")
+}
+print()
+
+
+print("PART 6: Lease vs. Buy Comparison\n")
+
+// Lease terms
+let annualLeasePayment = 95_000.0
+let leaseMaintenanceIncluded = true  // Lessor covers maintenance
+
+print("Lease Option:")
+print("- Annual Lease Payment: \(annualLeasePayment.currency())")
+print("- Maintenance: Included")
+print()
+
+// Lease cash flows (after-tax)
+let leaseMaintenanceSaving = leaseMaintenanceIncluded ? annualMaintenanceCost : 0
+let leaseOperatingCF = annualRevenueBenefit - annualLeasePayment + leaseMaintenanceSaving
+
+// Lease payments are tax-deductible
+let leaseTaxableIncome = leaseOperatingCF
+let leaseTaxes = leaseTaxableIncome * taxRate
+let leaseAfterTaxCF = leaseOperatingCF - leaseTaxes
+
+var leaseCashFlows: [Double] = []
+for _ in 1...usefulLife {
+	leaseCashFlows.append(leaseAfterTaxCF)
+}
+
+let leaseNPV = npv(discountRate: discountRate, cashFlows: leaseCashFlows)
+
+print("Lease NPV: \(leaseNPV.currency())")
+print("Buy NPV: \(npvValue.currency())")
+print()
+
+if npvValue &gt; leaseNPV {
+	let advantage = npvValue - leaseNPV
+	print("✓ RECOMMENDATION: Buy")
+	print("  Buying creates \(advantage.currency()) more value than leasing")
+} else {
+	let advantage = leaseNPV - npvValue
+	print("✓ RECOMMENDATION: Lease")
+	print("  Leasing creates \(advantage.currency()) more value than buying")
+}
+print()
+
+</code></pre>
         </details> 
         <h3>Modifications to Try</h3>
         <ol>
@@ -459,15 +1038,15 @@
             </ul></li>
         </ol>
         <hr />
-        <h2>Technical Deep Dives</h2>Want to understand the components better? 
-        <p></p>
+        <h2>Technical Deep Dives</h2>
+        <p>Want to understand the components better?</p>
         <p><strong>DocC Tutorials Used</strong>:</p>
         <ul>
           <li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">1.3</a> - NPV, IRR calculations</li>
           <li><strong>Financial Ratios</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.2-FinancialRatiosGuide.md">2.2</a> - ROA, profitability metrics</li>
           <li><strong>Data Tables</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.1-DataTableAnalysis.md">2.1</a> - Sensitivity analysis</li>
         </ul>
-        <strong>API References</strong>:
+        <p><strong>API References</strong>:</p>
         <ul>
           <li><code>npv(discountRate:cashFlows:)</code></li>
           <li><code>irr(cashFlows:)</code></li>
@@ -475,8 +1054,7 @@
         </ul>
         <hr />
         <h2>Next Steps</h2>
-        <strong>Coming up next</strong>: Week 4 explores investment analysis and portfolio theory.
-        <p></p>
+        <p><strong>Coming up next</strong>: Week 4 explores investment analysis and portfolio theory.</p>
         <p><strong>Related Case Studies</strong>:</p>
         <ul>
           <li><a href="../../week-01/04-fri-case-retirement"><strong>Case Study #1: Retirement Planning</strong> (Week 1)</a> - TVM + Distributions</li>
@@ -484,7 +1062,7 @@
           <li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration</li>
         </ul>
         <hr />
-        <strong>Series Progress</strong>:
+        <p><strong>Series Progress</strong>:</p>
         <ul>
           <li>Week: 3/12</li>
           <li>Posts Published: 12/~48</li>
@@ -493,7 +1071,6 @@
           <li>Topics Combined: TVM + Depreciation + Financial Analysis</li>
           <li>Playgrounds: 11 available (9 technical + 2 case studies)</li>
         </ul>
-        <p></p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: case-study, investment-analysis</p>
@@ -506,7 +1083,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

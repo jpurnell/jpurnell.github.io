@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquerclient" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,29 +262,29 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target.
+          <p>In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target.</p>
         </blockquote>
-        <h2>Problem</h2>Networked applications across Apple’s platform family often repeat the same boilerplate: connection management, logging integration, async coordination. When the Iconquer ecosystem needed a dedicated client library, the goal was to build something reusable and portable — not another one-off networking layer buried inside a single app target. The challenge was delivering a clean abstraction over Swift NIO’s event-driven I/O that felt natural to Swift 6 consumers across every relevant Apple platform.
-        <h2>Approach</h2>The library was structured as a focused Swift Package Manager package, targeting Swift tools version 6.2 and declaring explicit platform support for macOS, iOS, tvOS, and visionOS from the outset. Rather than writing a bespoke I/O layer, the project reached for 
-        <code>swift-nio</code> as the async networking foundation — a deliberate choice that trades a lighter dependency footprint for production-grade event loop management and connection handling without reinventing low-level primitives. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>Networked applications across Apple’s platform family often repeat the same boilerplate: connection management, logging integration, async coordination. When the Iconquer ecosystem needed a dedicated client library, the goal was to build something reusable and portable — not another one-off networking layer buried inside a single app target. The challenge was delivering a clean abstraction over Swift NIO’s event-driven I/O that felt natural to Swift 6 consumers across every relevant Apple platform.</p>
+        <h2>Approach</h2>
+        <p>The library was structured as a focused Swift Package Manager package, targeting Swift tools version 6.2 and declaring explicit platform support for macOS, iOS, tvOS, and visionOS from the outset. Rather than writing a bespoke I/O layer, the project reached for <code>swift-nio</code> as the async networking foundation — a deliberate choice that trades a lighter dependency footprint for production-grade event loop management and connection handling without reinventing low-level primitives.</p>
         <p>Alongside <code>swift-nio</code>, <code>swift-log</code> was brought in as the observability backbone. Tying log output to the standard Swift logging ecosystem means consumers can route IconquerClient’s diagnostic output through their own logging handlers — a small but meaningful integration point for library users who care about operational visibility.</p>
         <p>Documentation was treated as a first-class concern from the start: the inclusion of <code>swift-docc-plugin</code> signals an intent to ship developer-facing docs as part of the build pipeline, not as an afterthought.</p>
         <p>The package is organized into two targets — <code>IconquerClient</code> and <code>IconquerClientTests</code> — keeping the production surface clean and the test boundary explicit.</p>
-        <h2>Results</h2>Over a 13-day development window spanning late April to early May 2026, the library landed across three commits on a single focused branch. The dual-target structure is in place, cross-platform declarations are established, and the dependency graph is locked to three well-maintained Swift open-source packages. The library is positioned for consumption by any Apple-platform application that needs to communicate with Iconquer services, with a public API ready to be documented via DocC.
-        <h2>Judgment Calls</h2>Several decisions here reflect library-authorship thinking rather than application-building instincts.
-        <p></p>
+        <h2>Results</h2>
+        <p>Over a 13-day development window spanning late April to early May 2026, the library landed across three commits on a single focused branch. The dual-target structure is in place, cross-platform declarations are established, and the dependency graph is locked to three well-maintained Swift open-source packages. The library is positioned for consumption by any Apple-platform application that needs to communicate with Iconquer services, with a public API ready to be documented via DocC.</p>
+        <h2>Judgment Calls</h2>
+        <p>Several decisions here reflect library-authorship thinking rather than application-building instincts.</p>
         <p><strong>Choosing swift-nio over URLSession.</strong> For a library targeting all four Apple platforms, URLSession would have been the path of least resistance. Reaching for swift-nio instead suggests the client is doing something closer to the metal — likely persistent connections, custom protocols, or multiplexed I/O — where URLSession’s abstractions would have gotten in the way.</p>
         <p><strong>Adopting Swift 6 tooling immediately.</strong> Swift 6’s strict concurrency model is stricter to satisfy but produces libraries that are genuinely safer for consumers running their own actor-isolated or structured-concurrency code. Opting into tools version 6.2 early means IconquerClient’s public API is designed for Swift concurrency from day one, rather than inheriting the technical debt of an async retrofit.</p>
         <p><strong>Four-platform declaration upfront.</strong> Listing macOS, iOS, tvOS, and visionOS in the manifest before the library was fully built is a constraint that keeps cross-platform compatibility honest throughout development. It’s easier to declare broad support early and let the compiler enforce it than to bolt on platform support after the fact.</p>
         <p><strong>Documentation infrastructure on day one.</strong> Adding <code>swift-docc-plugin</code> in the initial dependency set rather than the final one is a subtle tell about working style — documentation isn’t a polish pass, it’s part of the definition of done.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
@@ -296,7 +297,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

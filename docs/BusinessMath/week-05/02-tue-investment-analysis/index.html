@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/BusinessMath/week-05/02-tue-investment-analysis" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -292,10 +293,10 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Investment Analysis with NPV and IRR</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">17 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">15 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p><strong>Part 17 of 12-Week BusinessMath Series</strong>
-          <hr /></p>
+        <p><strong>Part 17 of 12-Week BusinessMath Series</strong></p>
+        <hr />
         <h2>What You’ll Learn</h2>
         <ul>
           <li>Calculating Net Present Value (NPV) for investment decisions</li>
@@ -307,80 +308,686 @@
           <li>Making risk-adjusted investment decisions using CAPM</li>
         </ul>
         <hr />
-        <h2>The Problem</h2>Every business faces investment decisions: 
-        <strong>Should we expand into a new market? Buy this equipment? Acquire that company?</strong> Bad investment decisions destroy value:
+        <h2>The Problem</h2>
+        <p>Every business faces investment decisions: <strong>Should we expand into a new market? Buy this equipment? Acquire that company?</strong> Bad investment decisions destroy value:</p>
         <ul>
           <li><strong>How do you compare investments with different sizes?</strong> $1M investment returning $1.2M vs. $100K returning $130K?</li>
           <li><strong>What if cash flows arrive at irregular times?</strong> Real estate projects don’t have annual cash flows.</li>
           <li><strong>How do you account for risk?</strong> A startup investment should require higher returns than treasury bonds.</li>
           <li><strong>Which metric is most important?</strong> NPV, IRR, payback period, or profitability index?</li>
         </ul>
-        <strong>Spreadsheet investment analysis is error-prone and doesn’t scale when evaluating dozens of opportunities.</strong>
+        <p><strong>Spreadsheet investment analysis is error-prone and doesn’t scale when evaluating dozens of opportunities.</strong></p>
         <hr />
-        <h2>The Solution</h2>BusinessMath provides comprehensive investment analysis functions: 
-        <code>npv()</code>, 
-        <code>irr()</code>, 
-        <code>xnpv()</code>, 
-        <code>xirr()</code>, plus supporting metrics like profitability index and payback periods.
-        <h3>Define the Investment</h3>Let’s analyze a rental property investment:
-        <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />// Rental property opportunity<br />let propertyPrice = 250_000.0<br />let downPayment = 50_000.0      // 20% down<br />let renovationCosts = 20_000.0<br />let initialInvestment = downPayment + renovationCosts  // $70,000<br /><br />// Expected annual cash flows (after expenses and mortgage)<br />let year1 = 8_000.0<br />let year2 = 8_500.0<br />let year3 = 9_000.0<br />let year4 = 9_500.0<br />let year5 = 10_000.0<br />let salePrice = 300_000.0       // Sell after 5 years<br />let mortgagePayoff = 190_000.0<br />let saleProceeds = salePrice - mortgagePayoff  // Net: $110,000<br /><br />print(“Real Estate Investment Analysis”)<br />print(”================================”)<br />print(“Initial Investment: (initialInvestment.currency(0))”)<br />print(”  Down Payment: (downPayment.currency(0))”)<br />print(”  Renovations: (renovationCosts.currency(0))”)<br />print(”\nExpected Cash Flows:”)<br />print(”  Years 1-5: Annual rental income”)<br />print(”  Year 5: + Sale proceeds ((saleProceeds.currency(0)))”)<br />print(”  Required Return: 12%”)<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Real Estate Investment Analysis<br />================================<br />Initial Investment: $70,000<br />  Down Payment: $50,000<br />  Renovations: $20,000<br /><br />Expected Cash Flows:<br />  Years 1-5: Annual rental income<br />  Year 5: + Sale proceeds ($110,000)<br />  Required Return: 12%<br /></code></pre>
+        <h2>The Solution</h2>
+        <p>BusinessMath provides comprehensive investment analysis functions: <code>npv()</code>, <code>irr()</code>, <code>xnpv()</code>, <code>xirr()</code>, plus supporting metrics like profitability index and payback periods.</p>
+        <h3>Define the Investment</h3>
+        <p>Let’s analyze a rental property investment:</p>
+        <pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Rental property opportunity
+let propertyPrice = 250_000.0
+let downPayment = 50_000.0      // 20% down
+let renovationCosts = 20_000.0
+let initialInvestment = downPayment + renovationCosts  // $70,000
+
+// Expected annual cash flows (after expenses and mortgage)
+let year1 = 8_000.0
+let year2 = 8_500.0
+let year3 = 9_000.0
+let year4 = 9_500.0
+let year5 = 10_000.0
+let salePrice = 300_000.0       // Sell after 5 years
+let mortgagePayoff = 190_000.0
+let saleProceeds = salePrice - mortgagePayoff  // Net: $110,000
+
+print("Real Estate Investment Analysis")
+print("================================")
+print("Initial Investment: \(initialInvestment.currency(0))")
+print("  Down Payment: \(downPayment.currency(0))")
+print("  Renovations: \(renovationCosts.currency(0))")
+print("\nExpected Cash Flows:")
+print("  Years 1-5: Annual rental income")
+print("  Year 5: + Sale proceeds (\(saleProceeds.currency(0)))")
+print("  Required Return: 12%")
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Real Estate Investment Analysis
+================================
+Initial Investment: $70,000
+  Down Payment: $50,000
+  Renovations: $20,000
+
+Expected Cash Flows:
+  Years 1-5: Annual rental income
+  Year 5: + Sale proceeds ($110,000)
+  Required Return: 12%
+</code></pre>
         <hr />
-        <h3>Calculate NPV</h3>Determine if the investment creates value at your required return:
-        <pre><code class="language-swift">// Define all cash flows<br />let cashFlows = [<br />    -initialInvestment,  // Year 0: Outflow<br />    year1,               // Year 1: Rental income<br />    year2,               // Year 2<br />    year3,               // Year 3<br />    year4,               // Year 4<br />    year5 + saleProceeds // Year 5: Rental + sale<br />]<br /><br />let requiredReturn = 0.12<br />let npvValue = npv(discountRate: requiredReturn, cashFlows: cashFlows)<br /><br />print(”\nNet Present Value Analysis”)<br />print(”===========================”)<br />print(“Discount Rate: (requiredReturn.percent())”)<br />print(“NPV: (npvValue.currency(0))”)<br /><br />if npvValue &gt; 0 {<br />    print(“✓ Positive NPV - Investment adds value”)<br />    print(”  For every $1 invested, you create ((1 + npvValue / initialInvestment).currency(2)) of value”)<br />} else if npvValue &lt; 0 {<br />    print(“✗ Negative NPV - Investment destroys value”)<br />    print(”  Should reject this opportunity”)<br />} else {<br />    print(“○ Zero NPV - Breakeven investment”)<br />}<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Net Present Value Analysis<br />===========================<br />Discount Rate: 12.00%<br />NPV: $24,454<br />✓ Positive NPV - Investment adds value<br />  For every $1 invested, you create $1.35 of value<br /></code></pre>
-        <strong>The decision rule</strong>: 
-        <strong>NPV &gt; 0 means accept</strong>. This investment creates $24,454 of value at your 12% required return.
+        <h3>Calculate NPV</h3>
+        <p>Determine if the investment creates value at your required return:</p>
+        <pre><code class="language-swift">// Define all cash flows
+let cashFlows = [
+    -initialInvestment,  // Year 0: Outflow
+    year1,               // Year 1: Rental income
+    year2,               // Year 2
+    year3,               // Year 3
+    year4,               // Year 4
+    year5 + saleProceeds // Year 5: Rental + sale
+]
+
+let requiredReturn = 0.12
+let npvValue = npv(discountRate: requiredReturn, cashFlows: cashFlows)
+
+print("\nNet Present Value Analysis")
+print("===========================")
+print("Discount Rate: \(requiredReturn.percent())")
+print("NPV: \(npvValue.currency(0))")
+
+if npvValue &gt; 0 {
+    print("✓ Positive NPV - Investment adds value")
+    print("  For every $1 invested, you create \((1 + npvValue / initialInvestment).currency(2)) of value")
+} else if npvValue &lt; 0 {
+    print("✗ Negative NPV - Investment destroys value")
+    print("  Should reject this opportunity")
+} else {
+    print("○ Zero NPV - Breakeven investment")
+}
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Net Present Value Analysis
+===========================
+Discount Rate: 12.00%
+NPV: $24,454
+✓ Positive NPV - Investment adds value
+  For every $1 invested, you create $1.35 of value
+</code></pre>
+        <p><strong>The decision rule</strong>: <strong>NPV &gt; 0 means accept</strong>. This investment creates $24,454 of value at your 12% required return.</p>
         <hr />
-        <h3>Calculate IRR</h3>Find the actual return rate of the investment:
-        <pre><code class="language-swift">let irrValue = try irr(cashFlows: cashFlows)<br /><br />print(”\nInternal Rate of Return”)<br />print(”=======================”)<br />print(“IRR: (irrValue.percent(2))”)<br />print(“Required Return: (requiredReturn.percent())”)<br /><br />if irrValue &gt; requiredReturn {<br />    let spread = (irrValue - requiredReturn) * 100<br />    print(“✓ IRR exceeds required return by (spread.number(2)) percentage points”)<br />    print(”  Investment is attractive”)<br />} else if irrValue &lt; requiredReturn {<br />    let shortfall = (requiredReturn - irrValue) * 100<br />    print(“✗ IRR falls short by (shortfall.number(2)) percentage points”)<br />} else {<br />    print(“○ IRR equals required return - Breakeven”)<br />}<br /><br />// Verify: NPV at IRR should be ~$0<br />let npvAtIRR = npv(discountRate: irrValue, cashFlows: cashFlows)<br />print(”\nVerification: NPV at IRR = (npvAtIRR.currency()) (should be ~$0)”)<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Internal Rate of Return<br />=======================<br />IRR: 20.24%<br />Required Return: 12.00%<br />✓ IRR exceeds required return by 8.24 percentage points<br />  Investment is attractive<br /><br />Verification: NPV at IRR = $0.00 (should be ~$0)<code><br /><br />**The insight**: The investment returns **22.83%**, well above the 12% hurdle rate. IRR is the discount rate that makes NPV = $0.<br /><br />---<br /><br />### Additional Investment Metrics<br /><br />Calculate supporting metrics for a complete picture:<br /><br /></code>swift<br />// Profitability Index<br />let pi = profitabilityIndex(rate: requiredReturn, cashFlows: cashFlows)<br /><br />print(”\nProfitability Index”)<br />print(”===================”)<br />print(“PI: (pi.number(2))”)<br />if pi &gt; 1.0 {<br />    print(“✓ PI &gt; 1.0 - Creates value”)<br />    print(”  Returns (pi.currency(2)) for every $1 invested”)<br />} else {<br />    print(“✗ PI &lt; 1.0 - Destroys value”)<br />}<br /><br />// Payback Period<br />let payback = paybackPeriod(cashFlows: cashFlows)<br /><br />print(”\nPayback Period”)<br />print(”==============”)<br />if let pb = payback {<br />    print(“Simple Payback: (pb) years”)<br />    print(”  Investment recovered in year (pb)”)<br />} else {<br />    print(“Investment never recovers initial outlay”)<br />}<br /><br />// Discounted Payback<br />let discountedPayback = discountedPaybackPeriod(<br />    rate: requiredReturn,<br />    cashFlows: cashFlows<br />)<br /><br />if let dpb = discountedPayback {<br />    print(“Discounted Payback: (dpb) years (at (requiredReturn.percent()))”)<br />    if let pb = payback {<br />        let difference = dpb - pb<br />        print(”  Takes (difference) more years accounting for time value”)<br />    }<br />}<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Profitability Index<br />===================<br />PI: 1.35<br />✓ PI &gt; 1.0 - Creates value<br />  Returns $1.35 for every $1 invested<br /><br />Payback Period<br />==============<br />Simple Payback: 5 years<br />  Investment recovered in year 5<br /><br />Discounted Payback: 5 years (at 12.00%)<br />  Takes 0 more years accounting for time value<br /></code></pre>
-        <strong>The metrics</strong>:
+        <h3>Calculate IRR</h3>
+        <p>Find the actual return rate of the investment:</p>
+        <pre><code class="language-swift">let irrValue = try irr(cashFlows: cashFlows)
+
+print("\nInternal Rate of Return")
+print("=======================")
+print("IRR: \(irrValue.percent(2))")
+print("Required Return: \(requiredReturn.percent())")
+
+if irrValue &gt; requiredReturn {
+    let spread = (irrValue - requiredReturn) * 100
+    print("✓ IRR exceeds required return by \(spread.number(2)) percentage points")
+    print("  Investment is attractive")
+} else if irrValue &lt; requiredReturn {
+    let shortfall = (requiredReturn - irrValue) * 100
+    print("✗ IRR falls short by \(shortfall.number(2)) percentage points")
+} else {
+    print("○ IRR equals required return - Breakeven")
+}
+
+// Verify: NPV at IRR should be ~$0
+let npvAtIRR = npv(discountRate: irrValue, cashFlows: cashFlows)
+print("\nVerification: NPV at IRR = \(npvAtIRR.currency()) (should be ~$0)")
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Internal Rate of Return
+=======================
+IRR: 20.24%
+Required Return: 12.00%
+✓ IRR exceeds required return by 8.24 percentage points
+  Investment is attractive
+
+Verification: NPV at IRR = $0.00 (should be ~$0)```
+
+**The insight**: The investment returns **22.83%**, well above the 12% hurdle rate. IRR is the discount rate that makes NPV = $0.
+
+---
+
+### Additional Investment Metrics
+
+Calculate supporting metrics for a complete picture:
+
+```swift
+// Profitability Index
+let pi = profitabilityIndex(rate: requiredReturn, cashFlows: cashFlows)
+
+print("\nProfitability Index")
+print("===================")
+print("PI: \(pi.number(2))")
+if pi &gt; 1.0 {
+    print("✓ PI &gt; 1.0 - Creates value")
+    print("  Returns \(pi.currency(2)) for every $1 invested")
+} else {
+    print("✗ PI &lt; 1.0 - Destroys value")
+}
+
+// Payback Period
+let payback = paybackPeriod(cashFlows: cashFlows)
+
+print("\nPayback Period")
+print("==============")
+if let pb = payback {
+    print("Simple Payback: \(pb) years")
+    print("  Investment recovered in year \(pb)")
+} else {
+    print("Investment never recovers initial outlay")
+}
+
+// Discounted Payback
+let discountedPayback = discountedPaybackPeriod(
+    rate: requiredReturn,
+    cashFlows: cashFlows
+)
+
+if let dpb = discountedPayback {
+    print("Discounted Payback: \(dpb) years (at \(requiredReturn.percent()))")
+    if let pb = payback {
+        let difference = dpb - pb
+        print("  Takes \(difference) more years accounting for time value")
+    }
+}
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Profitability Index
+===================
+PI: 1.35
+✓ PI &gt; 1.0 - Creates value
+  Returns $1.35 for every $1 invested
+
+Payback Period
+==============
+Simple Payback: 5 years
+  Investment recovered in year 5
+
+Discounted Payback: 5 years (at 12.00%)
+  Takes 0 more years accounting for time value
+</code></pre>
+        <p><strong>The metrics</strong>:</p>
         <ul>
           <li><strong>PI = 1.35</strong>: Every dollar invested returns $1.35 in present value</li>
           <li><strong>Payback = 5 years</strong>: Break even at the end (due to large sale proceeds)</li>
         </ul>
         <hr />
-        <h3>Sensitivity Analysis</h3>Test how changes in assumptions affect the decision:
-        <pre><code class="language-swift">print(”\nSensitivity Analysis”)<br />print(”====================”)<br /><br />// Test different discount rates<br />print(“NPV at Different Discount Rates:”)<br />print(“Rate  | NPV        | Decision”)<br />print(”——|————|–––––”)<br /><br />for rate in stride(from: 0.08, through: 0.16, by: 0.02) {<br />    let npv = npv(discountRate: rate, cashFlows: cashFlows)<br />    let decision = npv &gt; 0 ? “Accept” : “Reject”<br />    print(”(rate.percent(0)) | (npv.currency()) | (decision)”)<br />}<br /><br />// Test different sale prices<br />print(”\nNPV at Different Sale Prices:”)<br />print(“Sale Price | Net Proceeds | NPV        | Decision”)<br />print(”———–|–––––––|————|–––––”)<br /><br />for price in stride(from: 240_000.0, through: 340_000.0, by: 20_000.0) {<br />    let proceeds = price - mortgagePayoff<br />    let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]<br />    let npv = npv(discountRate: requiredReturn, cashFlows: flows)<br />    let decision = npv &gt; 0 ? “Accept” : “Reject”<br />    print(”(price.currency(0)) | (proceeds.currency(0)) | (npv.currency()) | (decision)”)<br />}<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Sensitivity Analysis<br />====================<br />NPV at Different Discount Rates:<br />Rate  | NPV        | Decision<br />——|————|–––––<br />   8% |    $40,492 | Accept<br />  10% |    $32,059 | Accept<br />  12% |    $24,454 | Accept<br />  14% |    $17,582 | Accept<br />  16% |    $11,360 | Accept<br /><br />NPV at Different Sale Prices:<br />Sale Price | Net Proceeds | NPV        | Decision<br />———–|–––––––|————|–––––<br />  $240,000 |      $50,000 |   ($9,592) | Reject<br />  $260,000 |      $70,000 |     $1,757 | Accept<br />  $280,000 |      $90,000 |    $13,105 | Accept<br />  $300,000 |     $110,000 |    $24,454 | Accept<br />  $320,000 |     $130,000 |    $35,802 | Accept<br />  $340,000 |     $150,000 |    $47,151 | Accept<br /></code></pre>
-        <strong>The risk assessment</strong>: The investment is 
-        <strong>sensitive to sale price</strong>. If the property sells for &lt; ~$260k, NPV turns negative. This is your 
-        <strong>margin of safety</strong>.
+        <h3>Sensitivity Analysis</h3>
+        <p>Test how changes in assumptions affect the decision:</p>
+        <pre><code class="language-swift">print("\nSensitivity Analysis")
+print("====================")
+
+// Test different discount rates
+print("NPV at Different Discount Rates:")
+print("Rate  | NPV        | Decision")
+print("------|------------|----------")
+
+for rate in stride(from: 0.08, through: 0.16, by: 0.02) {
+    let npv = npv(discountRate: rate, cashFlows: cashFlows)
+    let decision = npv &gt; 0 ? "Accept" : "Reject"
+    print("\(rate.percent(0)) | \(npv.currency()) | \(decision)")
+}
+
+// Test different sale prices
+print("\nNPV at Different Sale Prices:")
+print("Sale Price | Net Proceeds | NPV        | Decision")
+print("-----------|--------------|------------|----------")
+
+for price in stride(from: 240_000.0, through: 340_000.0, by: 20_000.0) {
+    let proceeds = price - mortgagePayoff
+    let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+    let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+    let decision = npv &gt; 0 ? "Accept" : "Reject"
+    print("\(price.currency(0)) | \(proceeds.currency(0)) | \(npv.currency()) | \(decision)")
+}
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Sensitivity Analysis
+====================
+NPV at Different Discount Rates:
+Rate  | NPV        | Decision
+------|------------|----------
+   8% |    $40,492 | Accept
+  10% |    $32,059 | Accept
+  12% |    $24,454 | Accept
+  14% |    $17,582 | Accept
+  16% |    $11,360 | Accept
+
+NPV at Different Sale Prices:
+Sale Price | Net Proceeds | NPV        | Decision
+-----------|--------------|------------|----------
+  $240,000 |      $50,000 |   ($9,592) | Reject
+  $260,000 |      $70,000 |     $1,757 | Accept
+  $280,000 |      $90,000 |    $13,105 | Accept
+  $300,000 |     $110,000 |    $24,454 | Accept
+  $320,000 |     $130,000 |    $35,802 | Accept
+  $340,000 |     $150,000 |    $47,151 | Accept
+</code></pre>
+        <p><strong>The risk assessment</strong>: The investment is <strong>sensitive to sale price</strong>. If the property sells for &lt; ~$260k, NPV turns negative. This is your <strong>margin of safety</strong>.</p>
         <hr />
-        <h3>Breakeven Analysis</h3>Find the exact breakeven sale price where NPV = $0:
-        <pre><code class="language-swift">print(”\nBreakeven Analysis:”)<br /><br />var low = 200_000.0<br />var high = 350_000.0<br />var breakeven = (low + high) / 2<br /><br />// Binary search for breakeven<br />for _ in 0..&lt;20 {<br />    let proceeds = breakeven - mortgagePayoff<br />    let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]<br />    let npv = npv(discountRate: requiredReturn, cashFlows: flows)<br /><br />    if abs(npv) &lt; 1.0 { break }  // Close enough<br />    else if npv &gt; 0 { high = breakeven }<br />    else { low = breakeven }<br /><br />    breakeven = (low + high) / 2<br />}<br /><br />print(“Breakeven Sale Price: (breakeven.currency(0))”)<br />print(”  At this price, NPV = $0 and IRR = (requiredReturn.percent())”)<br />print(”  Current assumption: (salePrice.currency(0))”)<br />print(”  Safety margin: ((salePrice - breakeven).currency(0)) ((((salePrice - breakeven) / salePrice).percent(1)))”)<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Breakeven Analysis:<br />Breakeven Sale Price: $256,905<br />  At this price, NPV = $0 and IRR = 12.00%<br />  Current assumption: $300,000<br />  Safety margin: $43,095 (14.4%)<br /></code></pre>
-        <strong>The cushion</strong>: The property can drop 
-        <strong>$43k (14.4%)</strong> from your expected sale price before the investment turns negative.
+        <h3>Breakeven Analysis</h3>
+        <p>Find the exact breakeven sale price where NPV = $0:</p>
+        <pre><code class="language-swift">print("\nBreakeven Analysis:")
+
+var low = 200_000.0
+var high = 350_000.0
+var breakeven = (low + high) / 2
+
+// Binary search for breakeven
+for _ in 0..&lt;20 {
+    let proceeds = breakeven - mortgagePayoff
+    let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+    let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+
+    if abs(npv) &lt; 1.0 { break }  // Close enough
+    else if npv &gt; 0 { high = breakeven }
+    else { low = breakeven }
+
+    breakeven = (low + high) / 2
+}
+
+print("Breakeven Sale Price: \(breakeven.currency(0))")
+print("  At this price, NPV = $0 and IRR = \(requiredReturn.percent())")
+print("  Current assumption: \(salePrice.currency(0))")
+print("  Safety margin: \((salePrice - breakeven).currency(0)) (\(((salePrice - breakeven) / salePrice).percent(1)))")
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Breakeven Analysis:
+Breakeven Sale Price: $256,905
+  At this price, NPV = $0 and IRR = 12.00%
+  Current assumption: $300,000
+  Safety margin: $43,095 (14.4%)
+</code></pre>
+        <p><strong>The cushion</strong>: The property can drop <strong>$43k (14.4%)</strong> from your expected sale price before the investment turns negative.</p>
         <hr />
-        <h3>Compare Multiple Investments</h3>Rank several opportunities systematically:
-        <pre><code class="language-swift">print(”\nComparing Investment Opportunities”)<br />print(”===================================”)<br /><br />struct Investment {<br />    let name: String<br />    let cashFlows: [Double]<br />    let description: String<br />}<br /><br />let investments = [<br />    Investment(<br />        name: “Real Estate”,<br />        cashFlows: [-70_000, 8_000, 8_500, 9_000, 9_500, 120_000],<br />        description: “Rental property with 5-year hold”<br />    ),<br />    Investment(<br />        name: “Stock Portfolio”,<br />        cashFlows: [-70_000, 5_000, 5_500, 6_000, 6_500, 75_000],<br />        description: “Diversified equity portfolio”<br />    ),<br />    Investment(<br />        name: “Business Expansion”,<br />        cashFlows: [-70_000, 0, 10_000, 15_000, 20_000, 40_000],<br />        description: “Expand product line (delayed returns)”<br />    )<br />]<br /><br />print(”\nInvestment        | NPV       | IRR     | PI   | Payback”)<br />print(”——————|———–|———|——|––––”)<br /><br />var results: [(name: String, npv: Double, irr: Double)] = []<br /><br />for investment in investments {<br />    let npv = npv(discountRate: requiredReturn, cashFlows: investment.cashFlows)<br />    let irr = try irr(cashFlows: investment.cashFlows)<br />    let pi = profitabilityIndex(rate: requiredReturn, cashFlows: investment.cashFlows)<br />    let pb = paybackPeriod(cashFlows: investment.cashFlows) ?? 99<br /><br />    results.append((investment.name, npv, irr))<br />    print(”(investment.name.padding(toLength: 17, withPad: “ “, startingAt: 0)) | (npv.currency(0)) | (irr.percent(1)) | (pi.number(2)) | (pb) yrs”)<br />}<br /><br />// Rank by NPV<br />let ranked = results.sorted { $0.npv &gt; $1.npv }<br /><br />print(”\nRanking by NPV:”)<br />for (i, result) in ranked.enumerated() {<br />    print(”  (i + 1). (result.name) - NPV: (result.npv.currency(0))”)<br />}<br /><br />print(”\nRecommendation: Choose ‘(ranked[0].name)’”)<br />print(”  Highest NPV = Maximum value creation”)<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Comparing Investment Opportunities<br />===================================<br /><br />Investment        | NPV       | IRR     | PI   | Payback<br />——————|———–|———|——|––––<br />Real Estate       |   $24,454 |   20.2% | 1.35 | 5 yrs<br />Stock Portfolio   | ($10,193) |    8.0% | 0.85 | 5 yrs<br />Business Expansio | ($15,944) |    4.9% | 0.77 | 5 yrs<br /><br />Ranking by NPV:<br />  1. Real Estate - NPV: $24,454<br />  2. Stock Portfolio - NPV: ($10,193)<br />  3. Business Expansion - NPV: ($15,944)<br /><br />Recommendation: Choose ‘Real Estate’<br />  Highest NPV = Maximum value creation<br /></code></pre>
-        <strong>The decision</strong>: 
-        <strong>Real Estate has the highest NPV</strong>, creating $24,454 of value. Even though Business Expansion has a higher IRR than Stock Portfolio, Real Estate wins on absolute value creation.
+        <h3>Compare Multiple Investments</h3>
+        <p>Rank several opportunities systematically:</p>
+        <pre><code class="language-swift">print("\nComparing Investment Opportunities")
+print("===================================")
+
+struct Investment {
+    let name: String
+    let cashFlows: [Double]
+    let description: String
+}
+
+let investments = [
+    Investment(
+        name: "Real Estate",
+        cashFlows: [-70_000, 8_000, 8_500, 9_000, 9_500, 120_000],
+        description: "Rental property with 5-year hold"
+    ),
+    Investment(
+        name: "Stock Portfolio",
+        cashFlows: [-70_000, 5_000, 5_500, 6_000, 6_500, 75_000],
+        description: "Diversified equity portfolio"
+    ),
+    Investment(
+        name: "Business Expansion",
+        cashFlows: [-70_000, 0, 10_000, 15_000, 20_000, 40_000],
+        description: "Expand product line (delayed returns)"
+    )
+]
+
+print("\nInvestment        | NPV       | IRR     | PI   | Payback")
+print("------------------|-----------|---------|------|--------")
+
+var results: [(name: String, npv: Double, irr: Double)] = []
+
+for investment in investments {
+    let npv = npv(discountRate: requiredReturn, cashFlows: investment.cashFlows)
+    let irr = try irr(cashFlows: investment.cashFlows)
+    let pi = profitabilityIndex(rate: requiredReturn, cashFlows: investment.cashFlows)
+    let pb = paybackPeriod(cashFlows: investment.cashFlows) ?? 99
+
+    results.append((investment.name, npv, irr))
+    print("\(investment.name.padding(toLength: 17, withPad: " ", startingAt: 0)) | \(npv.currency(0)) | \(irr.percent(1)) | \(pi.number(2)) | \(pb) yrs")
+}
+
+// Rank by NPV
+let ranked = results.sorted { $0.npv &gt; $1.npv }
+
+print("\nRanking by NPV:")
+for (i, result) in ranked.enumerated() {
+    print("  \(i + 1). \(result.name) - NPV: \(result.npv.currency(0))")
+}
+
+print("\nRecommendation: Choose '\(ranked[0].name)'")
+print("  Highest NPV = Maximum value creation")
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Comparing Investment Opportunities
+===================================
+
+Investment        | NPV       | IRR     | PI   | Payback
+------------------|-----------|---------|------|--------
+Real Estate       |   $24,454 |   20.2% | 1.35 | 5 yrs
+Stock Portfolio   | ($10,193) |    8.0% | 0.85 | 5 yrs
+Business Expansio | ($15,944) |    4.9% | 0.77 | 5 yrs
+
+Ranking by NPV:
+  1. Real Estate - NPV: $24,454
+  2. Stock Portfolio - NPV: ($10,193)
+  3. Business Expansion - NPV: ($15,944)
+
+Recommendation: Choose 'Real Estate'
+  Highest NPV = Maximum value creation
+</code></pre>
+        <p><strong>The decision</strong>: <strong>Real Estate has the highest NPV</strong>, creating $24,454 of value. Even though Business Expansion has a higher IRR than Stock Portfolio, Real Estate wins on absolute value creation.</p>
         <hr />
-        <h3>Irregular Cash Flow Analysis</h3>Use XNPV and XIRR for real-world irregular timing:
-        <pre><code class="language-swift">print(”\nIrregular Cash Flow Analysis”)<br />print(”============================”)<br /><br />let startDate = Date()<br />let dates = [<br />	startDate,                                     // Today: Initial investment<br />	startDate.addingTimeInterval(90 * 86400),     // 90 days<br />	startDate.addingTimeInterval(250 * 86400),    // 250 days<br />	startDate.addingTimeInterval(400 * 86400),    // 400 days<br />	startDate.addingTimeInterval(600 * 86400),    // 600 days<br />	startDate.addingTimeInterval(5 * 365 * 86400) // 5 years<br />]<br /><br />let irregularFlows = [-70_000.0, 8_000, 8_500, 9_000, 9_500, 120_000]<br /><br />// XNPV accounts for exact dates<br />let xnpvValue = try xnpv(rate: requiredReturn, dates: dates, cashFlows: irregularFlows)<br />print(“XNPV (irregular timing): (xnpvValue.currency())”)<br /><br />// XIRR finds return with irregular dates<br />let xirrValue = try xirr(dates: dates, cashFlows: irregularFlows)<br />print(“XIRR (irregular timing): (xirrValue.percent(2))”)<br /><br />// Compare to regular IRR (assumes annual periods)<br />let regularIRR = try irr(cashFlows: irregularFlows)<br />print(”\nComparison:”)<br />print(”  Regular IRR (annual periods): (regularIRR.percent(2))”)<br />print(”  XIRR (actual dates): (xirrValue.percent(2))”)<br />print(”  Difference: (((xirrValue - regularIRR) * 10000).number(0)) basis points”)<br /></code></pre>
-        <strong>Output:</strong>
-        <pre><code>Irregular Cash Flow Analysis<br />============================<br />XNPV (irregular timing): $29,570.08<br />XIRR (irregular timing): 23.80%<br /><br />Comparison:<br />  Regular IRR (annual periods): 20.24%<br />  XIRR (actual dates): 23.80%<br />  Difference: 356 basis points<br /></code></pre>
-        <strong>The precision</strong>: XIRR is 
-        <strong>more accurate</strong> for real-world investments where cash flows don’t arrive exactly annually.
+        <h3>Irregular Cash Flow Analysis</h3>
+        <p>Use XNPV and XIRR for real-world irregular timing:</p>
+        <pre><code class="language-swift">print("\nIrregular Cash Flow Analysis")
+print("============================")
+
+let startDate = Date()
+let dates = [
+	startDate,                                     // Today: Initial investment
+	startDate.addingTimeInterval(90 * 86400),     // 90 days
+	startDate.addingTimeInterval(250 * 86400),    // 250 days
+	startDate.addingTimeInterval(400 * 86400),    // 400 days
+	startDate.addingTimeInterval(600 * 86400),    // 600 days
+	startDate.addingTimeInterval(5 * 365 * 86400) // 5 years
+]
+
+let irregularFlows = [-70_000.0, 8_000, 8_500, 9_000, 9_500, 120_000]
+
+// XNPV accounts for exact dates
+let xnpvValue = try xnpv(rate: requiredReturn, dates: dates, cashFlows: irregularFlows)
+print("XNPV (irregular timing): \(xnpvValue.currency())")
+
+// XIRR finds return with irregular dates
+let xirrValue = try xirr(dates: dates, cashFlows: irregularFlows)
+print("XIRR (irregular timing): \(xirrValue.percent(2))")
+
+// Compare to regular IRR (assumes annual periods)
+let regularIRR = try irr(cashFlows: irregularFlows)
+print("\nComparison:")
+print("  Regular IRR (annual periods): \(regularIRR.percent(2))")
+print("  XIRR (actual dates): \(xirrValue.percent(2))")
+print("  Difference: \(((xirrValue - regularIRR) * 10000).number(0)) basis points")
+</code></pre>
+        <p><strong>Output:</strong></p>
+        <pre><code>Irregular Cash Flow Analysis
+============================
+XNPV (irregular timing): $29,570.08
+XIRR (irregular timing): 23.80%
+
+Comparison:
+  Regular IRR (annual periods): 20.24%
+  XIRR (actual dates): 23.80%
+  Difference: 356 basis points
+</code></pre>
+        <p><strong>The precision</strong>: XIRR is <strong>more accurate</strong> for real-world investments where cash flows don’t arrive exactly annually.</p>
         <hr />
         <h2>Try It Yourself</h2>
-        <details>
+        <details> 
           <summary>Click to expand full playground code</summary> 
-          <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />// Rental property opportunity<br />let propertyPrice = 250_000.0<br />let downPayment = 50_000.0      // 20% down<br />let renovationCosts = 20_000.0<br />let initialInvestment = downPayment + renovationCosts  // $70,000<br /><br />// Expected annual cash flows (after expenses and mortgage)<br />let year1 = 8_000.0<br />let year2 = 8_500.0<br />let year3 = 9_000.0<br />let year4 = 9_500.0<br />let year5 = 10_000.0<br />let salePrice = 300_000.0       // Sell after 5 years<br />let mortgagePayoff = 190_000.0<br />let saleProceeds = salePrice - mortgagePayoff  // Net: $110,000<br /><br />print("Real Estate Investment Analysis")<br />print("================================")<br />print("Initial Investment: \(initialInvestment.currency(0))")<br />print("  Down Payment: \(downPayment.currency(0))")<br />print("  Renovations: \(renovationCosts.currency(0))")<br />print("\nExpected Cash Flows:")<br />print("  Years 1-5: Annual rental income")<br />print("  Year 5: + Sale proceeds (\(saleProceeds.currency(0)))")<br />print("  Required Return: 12%")<br /><br />// MARK: - Calculate NPV<br /><br />	// Define all cash flows<br />	let cashFlows = [<br />		-initialInvestment,  // Year 0: Outflow<br />		year1,               // Year 1: Rental income<br />		year2,               // Year 2<br />		year3,               // Year 3<br />		year4,               // Year 4<br />		year5 + saleProceeds // Year 5: Rental + sale<br />	]<br /><br />	let requiredReturn = 0.12<br />	let npvValue = npv(discountRate: requiredReturn, cashFlows: cashFlows)<br /><br />	print("\nNet Present Value Analysis")<br />	print("===========================")<br />	print("Discount Rate: \(requiredReturn.percent())")<br />	print("NPV: \(npvValue.currency(0))")<br /><br />	if npvValue &gt; 0 {<br />		print("✓ Positive NPV - Investment adds value")<br />		print("  For every $1 invested, you create \((1 + npvValue / initialInvestment).currency(2)) of value")<br />	} else if npvValue &lt; 0 {<br />		print("✗ Negative NPV - Investment destroys value")<br />		print("  Should reject this opportunity")<br />	} else {<br />		print("○ Zero NPV - Breakeven investment")<br />	}<br /><br />// MARK: - Calculate IRR<br /><br />let irrValue = try irr(cashFlows: cashFlows)<br /><br />print("\nInternal Rate of Return")<br />print("=======================")<br />print("IRR: \(irrValue.percent(2))")<br />print("Required Return: \(requiredReturn.percent())")<br /><br />if irrValue &gt; requiredReturn {<br />	let spread = (irrValue - requiredReturn) * 100<br />	print("✓ IRR exceeds required return by \(spread.number(2)) percentage points")<br />	print("  Investment is attractive")<br />} else if irrValue &lt; requiredReturn {<br />	let shortfall = (requiredReturn - irrValue) * 100<br />	print("✗ IRR falls short by \(shortfall.number(2)) percentage points")<br />} else {<br />	print("○ IRR equals required return - Breakeven")<br />}<br /><br />// Verify: NPV at IRR should be ~$0<br />let npvAtIRR = npv(discountRate: irrValue, cashFlows: cashFlows)<br />print("\nVerification: NPV at IRR = \(npvAtIRR.currency()) (should be ~$0)")<br /><br /><br />// MARK: - Additional Investment Metrics<br /><br />	// Profitability Index<br />	let pi = profitabilityIndex(rate: requiredReturn, cashFlows: cashFlows)<br /><br />	print("\nProfitability Index")<br />	print("===================")<br />	print("PI: \(pi.number(2))")<br />	if pi &gt; 1.0 {<br />		print("✓ PI &gt; 1.0 - Creates value")<br />		print("  Returns \(pi.currency(2)) for every $1 invested")<br />	} else {<br />		print("✗ PI &lt; 1.0 - Destroys value")<br />	}<br /><br />	// Payback Period<br />	let payback = paybackPeriod(cashFlows: cashFlows)<br /><br />	print("\nPayback Period")<br />	print("==============")<br />	if let pb = payback {<br />		print("Simple Payback: \(pb) years")<br />		print("  Investment recovered in year \(pb)")<br />	} else {<br />		print("Investment never recovers initial outlay")<br />	}<br /><br />	// Discounted Payback<br />	let discountedPayback = discountedPaybackPeriod(<br />		rate: requiredReturn,<br />		cashFlows: cashFlows<br />	)<br /><br />	if let dpb = discountedPayback {<br />		print("Discounted Payback: \(dpb) years (at \(requiredReturn.percent()))")<br />		if let pb = payback {<br />			let difference = dpb - pb<br />			print("  Takes \(difference) more years accounting for time value")<br />		}<br />	}<br /><br />// MARK: - Sensitivity Analysis<br /><br />print("\nSensitivity Analysis")<br />print("====================")<br /><br />// Test different discount rates<br />print("NPV at Different Discount Rates:")<br />print("Rate  | NPV        | Decision")<br />print("------|------------|----------")<br /><br />for rate in stride(from: 0.08, through: 0.16, by: 0.02) {<br />	let npv = npv(discountRate: rate, cashFlows: cashFlows)<br />	let decision = npv &gt; 0 ? "Accept" : "Reject"<br />	print("\(rate.percent(0).paddingLeft(toLength: 5)) | \(npv.currency(0).paddingLeft(toLength: 10)) | \(decision)")<br />}<br /><br />// Test different sale prices<br />print("\nNPV at Different Sale Prices:")<br />print("Sale Price | Net Proceeds | NPV        | Decision")<br />print("-----------|--------------|------------|----------")<br /><br />for price in stride(from: 240_000.0, through: 340_000.0, by: 20_000.0) {<br />	let proceeds = price - mortgagePayoff<br />	let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]<br />	let npv = npv(discountRate: requiredReturn, cashFlows: flows)<br />	let decision = npv &gt; 0 ? "Accept" : "Reject"<br />	print("\(price.currency(0).paddingLeft(toLength: 10)) | \(proceeds.currency(0).paddingLeft(toLength: 12)) | \(npv.currency(0).paddingLeft(toLength: 10)) | \(decision)")<br />}<br /><br />// MARK: - Breakeven Analysis<br /><br />print("\nBreakeven Analysis:")<br /><br />var low = 200_000.0<br />var high = 350_000.0<br />var breakeven = (low + high) / 2<br /><br />// Binary search for breakeven<br />for _ in 0..&lt;20 {<br />	let proceeds = breakeven - mortgagePayoff<br />	let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]<br />	let npv = npv(discountRate: requiredReturn, cashFlows: flows)<br /><br />	if abs(npv) &lt; 1.0 { break }  // Close enough<br />	else if npv &gt; 0 { high = breakeven }<br />	else { low = breakeven }<br /><br />	breakeven = (low + high) / 2<br />}<br /><br />print("Breakeven Sale Price: \(breakeven.currency(0))")<br />print("  At this price, NPV = $0 and IRR = \(requiredReturn.percent())")<br />print("  Current assumption: \(salePrice.currency(0))")<br />print("  Safety margin: \((salePrice - breakeven).currency(0)) (\(((salePrice - breakeven) / salePrice).percent(1)))")<br /><br />// MARK: - Compare Multiple Investments<br /><br />print("\nComparing Investment Opportunities")<br />print("===================================")<br /><br />struct Investment {<br />	let name: String<br />	let cashFlows: [Double]<br />	let description: String<br />}<br /><br />let investments = [<br />	Investment(<br />		name: "Real Estate",<br />		cashFlows: [-70_000, 8_000, 8_500, 9_000, 9_500, 120_000],<br />		description: "Rental property with 5-year hold"<br />	),<br />	Investment(<br />		name: "Stock Portfolio",<br />		cashFlows: [-70_000, 5_000, 5_500, 6_000, 6_500, 75_000],<br />		description: "Diversified equity portfolio"<br />	),<br />	Investment(<br />		name: "Business Expansion",<br />		cashFlows: [-70_000, 0, 10_000, 15_000, 20_000, 40_000],<br />		description: "Expand product line (delayed returns)"<br />	)<br />]<br /><br />print("\nInvestment        | NPV       | IRR     | PI   | Payback")<br />print("------------------|-----------|---------|------|--------")<br /><br />var results: [(name: String, npv: Double, irr: Double)] = []<br /><br />for investment in investments {<br />	let npv = npv(discountRate: requiredReturn, cashFlows: investment.cashFlows)<br />	let irr = try irr(cashFlows: investment.cashFlows)<br />	let pi = profitabilityIndex(rate: requiredReturn, cashFlows: investment.cashFlows)<br />	let pb = paybackPeriod(cashFlows: investment.cashFlows) ?? 99<br /><br />	results.append((investment.name, npv, irr))<br />	print("\(investment.name.padding(toLength: 17, withPad: " ", startingAt: 0)) | \(npv.currency(0).paddingLeft(toLength: 9)) | \(irr.percent(1).paddingLeft(toLength: 7)) | \(pi.number(2)) | \(pb) yrs")<br />}<br /><br />// Rank by NPV<br />let ranked = results.sorted { $0.npv &gt; $1.npv }<br /><br />print("\nRanking by NPV:")<br />for (i, result) in ranked.enumerated() {<br />	print("  \(i + 1). \(result.name) - NPV: \(result.npv.currency(0))")<br />}<br /><br />print("\nRecommendation: Choose '\(ranked[0].name)'")<br />print("  Highest NPV = Maximum value creation")<br /><br />// MARK: - Irregular Cash Flow Analysis<br /><br />print("\nIrregular Cash Flow Analysis")<br />print("============================")<br /><br />let startDate = Date()<br />let dates = [<br />	startDate,                                     // Today: Initial investment<br />	startDate.addingTimeInterval(90 * 86400),     // 90 days<br />	startDate.addingTimeInterval(250 * 86400),    // 250 days<br />	startDate.addingTimeInterval(400 * 86400),    // 400 days<br />	startDate.addingTimeInterval(600 * 86400),    // 600 days<br />	startDate.addingTimeInterval(5 * 365 * 86400) // 5 years<br />]<br /><br />let irregularFlows = [-70_000.0, 8_000, 8_500, 9_000, 9_500, 120_000]<br /><br />// XNPV accounts for exact dates<br />let xnpvValue = try xnpv(rate: requiredReturn, dates: dates, cashFlows: irregularFlows)<br />print("XNPV (irregular timing): \(xnpvValue.currency())")<br /><br />// XIRR finds return with irregular dates<br />let xirrValue = try xirr(dates: dates, cashFlows: irregularFlows)<br />print("XIRR (irregular timing): \(xirrValue.percent(2))")<br /><br />// Compare to regular IRR (assumes annual periods)<br />let regularIRR = try irr(cashFlows: irregularFlows)<br />print("\nComparison:")<br />print("  Regular IRR (annual periods): \(regularIRR.percent(2))")<br />print("  XIRR (actual dates): \(xirrValue.percent(2))")<br />print("  Difference: \(((xirrValue - regularIRR) * 10000).number(0)) basis points")<br /><br /></code></pre>
+          <pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// Rental property opportunity
+let propertyPrice = 250_000.0
+let downPayment = 50_000.0      // 20% down
+let renovationCosts = 20_000.0
+let initialInvestment = downPayment + renovationCosts  // $70,000
+
+// Expected annual cash flows (after expenses and mortgage)
+let year1 = 8_000.0
+let year2 = 8_500.0
+let year3 = 9_000.0
+let year4 = 9_500.0
+let year5 = 10_000.0
+let salePrice = 300_000.0       // Sell after 5 years
+let mortgagePayoff = 190_000.0
+let saleProceeds = salePrice - mortgagePayoff  // Net: $110,000
+
+print("Real Estate Investment Analysis")
+print("================================")
+print("Initial Investment: \(initialInvestment.currency(0))")
+print("  Down Payment: \(downPayment.currency(0))")
+print("  Renovations: \(renovationCosts.currency(0))")
+print("\nExpected Cash Flows:")
+print("  Years 1-5: Annual rental income")
+print("  Year 5: + Sale proceeds (\(saleProceeds.currency(0)))")
+print("  Required Return: 12%")
+
+// MARK: - Calculate NPV
+
+	// Define all cash flows
+	let cashFlows = [
+		-initialInvestment,  // Year 0: Outflow
+		year1,               // Year 1: Rental income
+		year2,               // Year 2
+		year3,               // Year 3
+		year4,               // Year 4
+		year5 + saleProceeds // Year 5: Rental + sale
+	]
+
+	let requiredReturn = 0.12
+	let npvValue = npv(discountRate: requiredReturn, cashFlows: cashFlows)
+
+	print("\nNet Present Value Analysis")
+	print("===========================")
+	print("Discount Rate: \(requiredReturn.percent())")
+	print("NPV: \(npvValue.currency(0))")
+
+	if npvValue &gt; 0 {
+		print("✓ Positive NPV - Investment adds value")
+		print("  For every $1 invested, you create \((1 + npvValue / initialInvestment).currency(2)) of value")
+	} else if npvValue &lt; 0 {
+		print("✗ Negative NPV - Investment destroys value")
+		print("  Should reject this opportunity")
+	} else {
+		print("○ Zero NPV - Breakeven investment")
+	}
+
+// MARK: - Calculate IRR
+
+let irrValue = try irr(cashFlows: cashFlows)
+
+print("\nInternal Rate of Return")
+print("=======================")
+print("IRR: \(irrValue.percent(2))")
+print("Required Return: \(requiredReturn.percent())")
+
+if irrValue &gt; requiredReturn {
+	let spread = (irrValue - requiredReturn) * 100
+	print("✓ IRR exceeds required return by \(spread.number(2)) percentage points")
+	print("  Investment is attractive")
+} else if irrValue &lt; requiredReturn {
+	let shortfall = (requiredReturn - irrValue) * 100
+	print("✗ IRR falls short by \(shortfall.number(2)) percentage points")
+} else {
+	print("○ IRR equals required return - Breakeven")
+}
+
+// Verify: NPV at IRR should be ~$0
+let npvAtIRR = npv(discountRate: irrValue, cashFlows: cashFlows)
+print("\nVerification: NPV at IRR = \(npvAtIRR.currency()) (should be ~$0)")
+
+
+// MARK: - Additional Investment Metrics
+
+	// Profitability Index
+	let pi = profitabilityIndex(rate: requiredReturn, cashFlows: cashFlows)
+
+	print("\nProfitability Index")
+	print("===================")
+	print("PI: \(pi.number(2))")
+	if pi &gt; 1.0 {
+		print("✓ PI &gt; 1.0 - Creates value")
+		print("  Returns \(pi.currency(2)) for every $1 invested")
+	} else {
+		print("✗ PI &lt; 1.0 - Destroys value")
+	}
+
+	// Payback Period
+	let payback = paybackPeriod(cashFlows: cashFlows)
+
+	print("\nPayback Period")
+	print("==============")
+	if let pb = payback {
+		print("Simple Payback: \(pb) years")
+		print("  Investment recovered in year \(pb)")
+	} else {
+		print("Investment never recovers initial outlay")
+	}
+
+	// Discounted Payback
+	let discountedPayback = discountedPaybackPeriod(
+		rate: requiredReturn,
+		cashFlows: cashFlows
+	)
+
+	if let dpb = discountedPayback {
+		print("Discounted Payback: \(dpb) years (at \(requiredReturn.percent()))")
+		if let pb = payback {
+			let difference = dpb - pb
+			print("  Takes \(difference) more years accounting for time value")
+		}
+	}
+
+// MARK: - Sensitivity Analysis
+
+print("\nSensitivity Analysis")
+print("====================")
+
+// Test different discount rates
+print("NPV at Different Discount Rates:")
+print("Rate  | NPV        | Decision")
+print("------|------------|----------")
+
+for rate in stride(from: 0.08, through: 0.16, by: 0.02) {
+	let npv = npv(discountRate: rate, cashFlows: cashFlows)
+	let decision = npv &gt; 0 ? "Accept" : "Reject"
+	print("\(rate.percent(0).paddingLeft(toLength: 5)) | \(npv.currency(0).paddingLeft(toLength: 10)) | \(decision)")
+}
+
+// Test different sale prices
+print("\nNPV at Different Sale Prices:")
+print("Sale Price | Net Proceeds | NPV        | Decision")
+print("-----------|--------------|------------|----------")
+
+for price in stride(from: 240_000.0, through: 340_000.0, by: 20_000.0) {
+	let proceeds = price - mortgagePayoff
+	let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+	let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+	let decision = npv &gt; 0 ? "Accept" : "Reject"
+	print("\(price.currency(0).paddingLeft(toLength: 10)) | \(proceeds.currency(0).paddingLeft(toLength: 12)) | \(npv.currency(0).paddingLeft(toLength: 10)) | \(decision)")
+}
+
+// MARK: - Breakeven Analysis
+
+print("\nBreakeven Analysis:")
+
+var low = 200_000.0
+var high = 350_000.0
+var breakeven = (low + high) / 2
+
+// Binary search for breakeven
+for _ in 0..&lt;20 {
+	let proceeds = breakeven - mortgagePayoff
+	let flows = [-initialInvestment, year1, year2, year3, year4, year5 + proceeds]
+	let npv = npv(discountRate: requiredReturn, cashFlows: flows)
+
+	if abs(npv) &lt; 1.0 { break }  // Close enough
+	else if npv &gt; 0 { high = breakeven }
+	else { low = breakeven }
+
+	breakeven = (low + high) / 2
+}
+
+print("Breakeven Sale Price: \(breakeven.currency(0))")
+print("  At this price, NPV = $0 and IRR = \(requiredReturn.percent())")
+print("  Current assumption: \(salePrice.currency(0))")
+print("  Safety margin: \((salePrice - breakeven).currency(0)) (\(((salePrice - breakeven) / salePrice).percent(1)))")
+
+// MARK: - Compare Multiple Investments
+
+print("\nComparing Investment Opportunities")
+print("===================================")
+
+struct Investment {
+	let name: String
+	let cashFlows: [Double]
+	let description: String
+}
+
+let investments = [
+	Investment(
+		name: "Real Estate",
+		cashFlows: [-70_000, 8_000, 8_500, 9_000, 9_500, 120_000],
+		description: "Rental property with 5-year hold"
+	),
+	Investment(
+		name: "Stock Portfolio",
+		cashFlows: [-70_000, 5_000, 5_500, 6_000, 6_500, 75_000],
+		description: "Diversified equity portfolio"
+	),
+	Investment(
+		name: "Business Expansion",
+		cashFlows: [-70_000, 0, 10_000, 15_000, 20_000, 40_000],
+		description: "Expand product line (delayed returns)"
+	)
+]
+
+print("\nInvestment        | NPV       | IRR     | PI   | Payback")
+print("------------------|-----------|---------|------|--------")
+
+var results: [(name: String, npv: Double, irr: Double)] = []
+
+for investment in investments {
+	let npv = npv(discountRate: requiredReturn, cashFlows: investment.cashFlows)
+	let irr = try irr(cashFlows: investment.cashFlows)
+	let pi = profitabilityIndex(rate: requiredReturn, cashFlows: investment.cashFlows)
+	let pb = paybackPeriod(cashFlows: investment.cashFlows) ?? 99
+
+	results.append((investment.name, npv, irr))
+	print("\(investment.name.padding(toLength: 17, withPad: " ", startingAt: 0)) | \(npv.currency(0).paddingLeft(toLength: 9)) | \(irr.percent(1).paddingLeft(toLength: 7)) | \(pi.number(2)) | \(pb) yrs")
+}
+
+// Rank by NPV
+let ranked = results.sorted { $0.npv &gt; $1.npv }
+
+print("\nRanking by NPV:")
+for (i, result) in ranked.enumerated() {
+	print("  \(i + 1). \(result.name) - NPV: \(result.npv.currency(0))")
+}
+
+print("\nRecommendation: Choose '\(ranked[0].name)'")
+print("  Highest NPV = Maximum value creation")
+
+// MARK: - Irregular Cash Flow Analysis
+
+print("\nIrregular Cash Flow Analysis")
+print("============================")
+
+let startDate = Date()
+let dates = [
+	startDate,                                     // Today: Initial investment
+	startDate.addingTimeInterval(90 * 86400),     // 90 days
+	startDate.addingTimeInterval(250 * 86400),    // 250 days
+	startDate.addingTimeInterval(400 * 86400),    // 400 days
+	startDate.addingTimeInterval(600 * 86400),    // 600 days
+	startDate.addingTimeInterval(5 * 365 * 86400) // 5 years
+]
+
+let irregularFlows = [-70_000.0, 8_000, 8_500, 9_000, 9_500, 120_000]
+
+// XNPV accounts for exact dates
+let xnpvValue = try xnpv(rate: requiredReturn, dates: dates, cashFlows: irregularFlows)
+print("XNPV (irregular timing): \(xnpvValue.currency())")
+
+// XIRR finds return with irregular dates
+let xirrValue = try xirr(dates: dates, cashFlows: irregularFlows)
+print("XIRR (irregular timing): \(xirrValue.percent(2))")
+
+// Compare to regular IRR (assumes annual periods)
+let regularIRR = try irr(cashFlows: irregularFlows)
+print("\nComparison:")
+print("  Regular IRR (annual periods): \(regularIRR.percent(2))")
+print("  XIRR (actual dates): \(xirrValue.percent(2))")
+print("  Difference: \(((xirrValue - regularIRR) * 10000).number(0)) basis points")
+
+</code></pre>
         </details> → Full API Reference: [**BusinessMath Docs – 3.8 Investment Analysis**](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/3.8-InvestmentAnalysis.md) 
-        <strong>Modifications to try</strong>:
+        <p><strong>Modifications to try</strong>:</p>
         <ol>
           <li>Model your company’s capital project pipeline</li>
           <li>Compare equipment purchase vs. lease</li>
@@ -388,17 +995,18 @@
           <li>Build Monte Carlo simulation around key assumptions</li>
         </ol>
         <hr />
-        <h2>Real-World Application</h2>Every CFO, investor, and analyst uses NPV/IRR daily:
+        <h2>Real-World Application</h2>
+        <p>Every CFO, investor, and analyst uses NPV/IRR daily:</p>
         <ul>
           <li><strong>Private equity</strong>: Evaluating buyout opportunities ($100M+)</li>
           <li><strong>Startups</strong>: Deciding which product line to fund</li>
           <li><strong>Corporate finance</strong>: Capital budgeting for factories, equipment</li>
           <li><strong>Real estate</strong>: Property acquisition analysis</li>
         </ul>
-        <strong>PE firm use case</strong>: “We have 15 potential acquisitions. Rank them by NPV at our 15% hurdle rate. Show sensitivity to exit multiple (6x, 8x, 10x EBITDA).” 
-        <p></p>
-        <p>BusinessMath makes this analysis programmatic, reproducible, and portfolio-wide.
-          <hr /><code>★ Insight ─────────────────────────────────────</code></p>
+        <p><strong>PE firm use case</strong>: “We have 15 potential acquisitions. Rank them by NPV at our 15% hurdle rate. Show sensitivity to exit multiple (6x, 8x, 10x EBITDA).”</p>
+        <p>BusinessMath makes this analysis programmatic, reproducible, and portfolio-wide.</p>
+        <hr />
+        <p><code>★ Insight ─────────────────────────────────────</code></p>
         <p><strong>Why NPV is Superior to IRR for Decision-Making</strong></p>
         <p>IRR is intuitive (“this investment returns 23%!”) but has flaws:</p>
         <p><strong>Problem 1: Scale blindness</strong></p>
@@ -407,48 +1015,44 @@
           <li>Project B: Invest $1M, return $1.2M → IRR = 20%</li>
           <li>IRR prefers A, but B creates $200k vs. $30k of value!</li>
         </ul>
-        <strong>Problem 2: Multiple IRRs</strong>
+        <p><strong>Problem 2: Multiple IRRs</strong></p>
         <ul>
           <li>Cash flows: [-100, +300, -250] → Two IRRs exist (math breakdown)</li>
         </ul>
-        <strong>Problem 3: Reinvestment assumption</strong>
+        <p><strong>Problem 3: Reinvestment assumption</strong></p>
         <ul>
           <li>IRR assumes you can reinvest cash flows at the IRR rate (unrealistic)</li>
           <li>NPV assumes reinvestment at the discount rate (more reasonable)</li>
         </ul>
-        <strong>The rule</strong>: Use 
-        <strong>NPV for decisions</strong> (maximizes value), 
-        <strong>IRR for communication</strong> (easy to understand).
-        <p></p>
-        <p><code>─────────────────────────────────────────────────</code>
-          <hr /></p>
-        <h3>📝 Development Note</h3>The hardest implementation challenge was 
-        <strong>IRR convergence</strong>. IRR is calculated using Newton-Raphson iteration, which can fail if:
+        <p><strong>The rule</strong>: Use <strong>NPV for decisions</strong> (maximizes value), <strong>IRR for communication</strong> (easy to understand).</p>
+        <p><code>─────────────────────────────────────────────────</code></p>
+        <hr />
+        <h3>📝 Development Note</h3>
+        <p>The hardest implementation challenge was <strong>IRR convergence</strong>. IRR is calculated using Newton-Raphson iteration, which can fail if:</p>
         <ul>
           <li>Initial guess is far from the true IRR</li>
           <li>Cash flows have multiple sign changes (multiple IRRs exist)</li>
           <li>All cash flows have the same sign (no IRR exists)</li>
-        </ul>We implemented robust error handling with:
+        </ul>
+        <p>We implemented robust error handling with:</p>
         <ol>
           <li>Bisection fallback if Newton-Raphson diverges</li>
           <li>Detection of multiple IRRs (warn user)</li>
           <li>Clear error messages when no IRR exists</li>
         </ol>
-        <strong>Related Methodology</strong>: 
-        <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests for pathological cases (no IRR, multiple IRRs, near-zero cash flows) before implementing.
+        <p><strong>Related Methodology</strong>: <a href="../week-01/02-tue-test-first-development">Test-First Development</a> (Week 1) - We wrote tests for pathological cases (no IRR, multiple IRRs, near-zero cash flows) before implementing.</p>
         <hr />
         <h2>Next Steps</h2>
-        <strong>Coming up tomorrow</strong>: Equity Valuation - Pricing stocks using dividend discount models, FCFE, and residual income.
-        <p></p>
-        <p><strong>Thursday</strong>: Bond Valuation - Pricing bonds, credit spreads, and callable securities.
-          <hr /><strong>Series Progress</strong>:</p>
+        <p><strong>Coming up tomorrow</strong>: Equity Valuation - Pricing stocks using dividend discount models, FCFE, and residual income.</p>
+        <p><strong>Thursday</strong>: Bond Valuation - Pricing bonds, credit spreads, and callable securities.</p>
+        <hr />
+        <p><strong>Series Progress</strong>:</p>
         <ul>
           <li>Week: 5/12</li>
           <li>Posts Published: 17/~48</li>
           <li>Topics Covered: Foundation + Analysis + Operational + Financial Statements + Loans + Investments</li>
           <li>Playgrounds: 16 available</li>
         </ul>
-        <p></p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: investment-analysis</p>
@@ -461,7 +1065,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

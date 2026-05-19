@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/projects/project-showcase" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -292,43 +293,40 @@
     <div class="ig-main-content">
       <h1 class="mainTitle" style="font-weight: 600">ProjectShowcase — Turning Git Repos Into Narratives | Justin Purnell</h1>
       <div style="width: 70.0%; max-width: 800px">
-        <p><strong>A Swift CLI that reads your project artifacts and writes your portfolio for you.</strong>
-          <hr /></p>
-        <h2>The Problem</h2>I have thirty active repositories. Each one has a story to tell — about why it exists, what problems it solves, and what I learned building it. Commit histories encode velocity. Test suites encode rigor. Package manifests encode architectural decisions. Design proposals encode judgment. All of this signal is just sitting there, legible to anyone willing to read raw JSON and git logs, which is nobody.
-        <p></p>
+        <p><strong>A Swift CLI that reads your project artifacts and writes your portfolio for you.</strong></p>
+        <hr />
+        <h2>The Problem</h2>
+        <p>I have thirty active repositories. Each one has a story to tell — about why it exists, what problems it solves, and what I learned building it. Commit histories encode velocity. Test suites encode rigor. Package manifests encode architectural decisions. Design proposals encode judgment. All of this signal is just sitting there, legible to anyone willing to read raw JSON and git logs, which is nobody.</p>
         <p>The gap between “my projects exist” and “here is a coherent developer portfolio” is a writing problem. You sit down on a Saturday to update your portfolio, you open a blank document, you stare at it, you remember you need to fix a bug in one of those thirty projects, and the portfolio doesn’t get written. Six months later, repeat.</p>
         <p>What if the artifacts could write the portfolio themselves? Not a list of repos with star counts — an actual narrative that understands what the project does, how it was built, and what signals a technical reader should care about?</p>
-        <h2>The Pipeline</h2>ProjectShowcase is a three-stage pipeline: 
-        <strong>Gather</strong>, 
-        <strong>Narrate</strong>, 
-        <strong>Render</strong>.
-        <p></p>
+        <h2>The Pipeline</h2>
+        <p>ProjectShowcase is a three-stage pipeline: <strong>Gather</strong>, <strong>Narrate</strong>, <strong>Render</strong>.</p>
         <p>The <strong>Gather</strong> stage runs a <code>FactGatherer</code> that orchestrates extractors against a project directory. <code>GitExtractor</code> pulls commit counts, release tags with dates, contributor counts, branch counts, and the timeline from first to latest commit. A <code>PackageExtractor</code> protocol dispatches to language-specific implementations — <code>SwiftPackageExtractor</code>, <code>NodePackageExtractor</code>, <code>PythonPackageExtractor</code>, and <code>CargoExtractor</code> — each parsing its respective manifest for dependencies, targets, platforms, and tools versions. <code>DesignDocExtractor</code> scans for CLAUDE.md, development-guidelines, and design proposals. <code>TestOutputParser</code> can ingest a test run’s stdout. And <code>InsightsExtractor</code> reads Claude Code’s own usage data — session counts, commit counts, friction categories, outcome distributions — to add meta-information about how the project was built. The output is a <code>ProjectCard</code>: a single Codable struct that captures everything the pipeline knows about a project.</p>
         <p>The <strong>Narrate</strong> stage takes a <code>ProjectCard</code> and passes it to the Claude API via <code>PromptBuilder</code>, which constructs targeted prompts for different audiences. A <code>hiringManager</code> audience gets language emphasizing judgment and craft. A <code>selfReflection</code> audience gets language about growth and trajectory. The prompt carries every data point from the card — commit count, release history, test numbers, design proposal count, Claude Code session patterns — and instructs the model to ground claims in that data and never fabricate. Three narrative styles are available: <code>caseStudy</code>, <code>projectCard</code>, and <code>deepDive</code>.</p>
         <p>The <strong>Render</strong> stage takes the narrative output and produces SSG-compatible markdown with YAML frontmatter, plus SVG infographics. <code>MarkdownRenderer</code> writes the page. Three <code>InfographicGenerator</code> implementations — <code>StatsCardGenerator</code>, <code>CommitTimelineGenerator</code>, and <code>ReleaseTimelineGenerator</code> — produce dark-themed SVG cards showing stats badges, commit activity bars, and release timelines with alternating label placement. The <code>PortfolioPromptBuilder</code> handles the cross-project overview, aggregating all thirty cards into a single prompt that asks for themes, trajectory, and craft signals across the entire body of work.</p>
         <p>The CLI exposes this as six subcommands: <code>gather</code>, <code>narrate</code>, <code>render</code>, <code>refresh</code> (all three in one shot), <code>infographics</code>, and <code>portfolio</code>.</p>
-        <h2>The Git Shortlog Bug</h2>This was the best debugging story of the build.
-        <p></p>
+        <h2>The Git Shortlog Bug</h2>
+        <p>This was the best debugging story of the build.</p>
         <p>I ran <code>showcase gather</code> against a project directory in my terminal. It hung. No output, no error, just a cursor blinking at me. I switched to the Claude Code terminal, ran the exact same binary against the exact same path. It completed in two seconds.</p>
         <p>Same machine. Same binary. Same arguments. Same project. Different result.</p>
         <p>I tried five different approaches to fix it. Swapped pipe order. Collapsed the shell script into a single invocation. Moved execution to <code>DispatchQueue.global</code>. Switched to <code>terminationHandler</code> instead of <code>waitUntilExit</code>. Redirected output through a temp file. Each attempt either still hung or introduced a new problem. The file-based approach — writing shell output to a temp file instead of reading from a pipe — actually worked, but I didn’t understand <em>why</em>, which meant I didn’t trust it.</p>
-        <p>Then I looked at the actual git command that was hanging: <code>git shortlog -sn –all</code>. In a normal repository with commits, <code>–all</code> resolves refs and the command runs. But in a repo where <code>–all</code> resolves to zero refs (empty repo, or a repo state where the ref list is empty), git falls back to reading from <strong>stdin</strong>. It’s the same behavior as <code>cat</code> with no arguments — if stdin is a TTY, it blocks waiting for input. If stdin is a pipe, it gets EOF immediately and exits.</p>
+        <p>Then I looked at the actual git command that was hanging: <code>git shortlog -sn --all</code>. In a normal repository with commits, <code>--all</code> resolves refs and the command runs. But in a repo where <code>--all</code> resolves to zero refs (empty repo, or a repo state where the ref list is empty), git falls back to reading from <strong>stdin</strong>. It’s the same behavior as <code>cat</code> with no arguments — if stdin is a TTY, it blocks waiting for input. If stdin is a pipe, it gets EOF immediately and exits.</p>
         <p>In my terminal, stdin was a TTY. The process inherited it, <code>git shortlog</code> saw an interactive terminal on its stdin, and waited politely for input that would never come. In Claude Code’s terminal, stdin was already a pipe (Claude Code’s own process orchestration), so the child process got EOF and moved on.</p>
         <p>The fix was one line:</p>
-        <pre><code class="language-swift">process.standardInput = FileHandle.nullDevice<br /></code></pre>That’s it. Disconnect stdin from the parent process, give the child 
-        <code>/dev/null</code>, and 
-        <code>git shortlog</code> on an empty ref list gets immediate EOF instead of blocking on a TTY. Every other workaround was treating symptoms. This was the cause.
-        <h2>MASTER_PLAN.md Integration</h2>The first time I ran the full pipeline against all thirty projects, I read through the generated narratives and found a problem. iConquer — a Risk-style strategy game for iOS — was narrated as an “icon querying tool.” The model had no authoritative description of what the project actually does. It was inferring from the name and the package manifest, and inferring badly.
-        <p></p>
+        <pre><code class="language-swift">process.standardInput = FileHandle.nullDevice
+</code></pre>
+        <p>That’s it. Disconnect stdin from the parent process, give the child <code>/dev/null</code>, and <code>git shortlog</code> on an empty ref list gets immediate EOF instead of blocking on a TTY. Every other workaround was treating symptoms. This was the cause.</p>
+        <h2>MASTER_PLAN.md Integration</h2>
+        <p>The first time I ran the full pipeline against all thirty projects, I read through the generated narratives and found a problem. iConquer — a Risk-style strategy game for iOS — was narrated as an “icon querying tool.” The model had no authoritative description of what the project actually does. It was inferring from the name and the package manifest, and inferring badly.</p>
         <p>The fix was to teach the <code>DesignDocExtractor</code> to look for each project’s <code>MASTER_PLAN.md</code> and extract three specific sections: <strong>Mission</strong>, <strong>Target Users</strong>, and <strong>Key Differentiators</strong>. These get injected into the prompt as a <code>Project Description</code> block with an explicit instruction: “treat this as the authoritative source for what the project does — the narrative must be consistent with this description.” The model can still weave its own observations about commit patterns and test coverage, but it cannot contradict the project’s own stated purpose. Eleven of my thirty projects now carry this context, and the narratives for those eleven are significantly more accurate.</p>
-        <h2>The Meta Layer</h2>There is something satisfying about the recursion here. ProjectShowcase uses the Claude API to generate narratives about projects. Many of those projects were themselves built with Claude Code. And ProjectShowcase itself was built with Claude Code — the 
-        <code>InsightsExtractor</code> can read its own session data and include it in its own project card.
-        <p></p>
+        <h2>The Meta Layer</h2>
+        <p>There is something satisfying about the recursion here. ProjectShowcase uses the Claude API to generate narratives about projects. Many of those projects were themselves built with Claude Code. And ProjectShowcase itself was built with Claude Code — the <code>InsightsExtractor</code> can read its own session data and include it in its own project card.</p>
         <p>The <code>selfReflection</code> audience mode leans into this. Instead of selling your work to a hiring manager, it tells <em>you</em> what patterns it sees across your projects — what you keep reaching for, where you invest testing effort, how your design-first workflow shows up across repositories. The portfolio overview weaves thirty projects into a single narrative about trajectory and craft. It is, genuinely, a useful mirror.</p>
-        <h2>Results</h2>Thirty projects. 709 total commits across the portfolio. Ninety SVG infographics (three per project). Thirty-one markdown pages (one per project plus a portfolio overview). The whole pipeline runs in under five minutes. 119 tests cover the library.
-        <p></p>
-        <p>The showcase section is live on the site. Every project page has a narrative, a stats card, a commit timeline, and a release timeline — all generated from artifacts that already existed, with no manual writing required. When I ship a new version of any project, I run <code>showcase refresh</code> and the page updates itself.
-          <hr /><strong>Source</strong>: <a href="https://github.com/jpurnell/project-showcase">github.com/jpurnell/project-showcase</a></p>
+        <h2>Results</h2>
+        <p>Thirty projects. 709 total commits across the portfolio. Ninety SVG infographics (three per project). Thirty-one markdown pages (one per project plus a portfolio overview). The whole pipeline runs in under five minutes. 119 tests cover the library.</p>
+        <p>The showcase section is live on the site. Every project page has a narrative, a stats card, a commit timeline, and a release timeline — all generated from artifacts that already existed, with no manual writing required. When I ship a new version of any project, I run <code>showcase refresh</code> and the page updates itself.</p>
+        <hr />
+        <p><strong>Source</strong>: <a href="https://github.com/jpurnell/project-showcase">github.com/jpurnell/project-showcase</a></p>
       </div>
       <p>Tagged with: swift, cli, ai, portfolio</p>
     </div>
@@ -340,7 +338,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

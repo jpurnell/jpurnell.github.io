@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/applesoftbasiclib" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,29 +262,28 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">ApplesoftBASIC</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A Swift 6 library that brings Applesoft BASIC interpretation to macOS and iOS, designed and documented with architectural rigor from the very first commit.
+          <p>A Swift 6 library that brings Applesoft BASIC interpretation to macOS and iOS, designed and documented with architectural rigor from the very first commit.</p>
         </blockquote>
-        <h2>Problem</h2>Applesoft BASIC occupies a singular place in computing history — it shipped on every Apple II and served as the first programming language for millions of people. Yet for developers and enthusiasts who want to embed that experience in modern applications, no native Swift library existed. Running Applesoft programs on macOS or iOS meant reaching for emulators or bridging to C code, neither of which felt at home in a Swift-first ecosystem. The challenge was to build a genuine interpreter — not a wrapper — that could live naturally inside a Swift package, run on both macOS and iOS, and meet the quality bar that Swift 6’s strict concurrency model demands.
-        <h2>Approach</h2>The project was scoped and structured before a single line of interpreter logic was written. A design proposal was committed early, and a 
-        <code>CLAUDE.md</code> file established the architectural constitution for the codebase: session-start conventions, a development workflow, key rules, a quality gate, and references. This design-first discipline is visible in the package layout itself — the work is divided across four targets that each carry a distinct responsibility. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>Applesoft BASIC occupies a singular place in computing history — it shipped on every Apple II and served as the first programming language for millions of people. Yet for developers and enthusiasts who want to embed that experience in modern applications, no native Swift library existed. Running Applesoft programs on macOS or iOS meant reaching for emulators or bridging to C code, neither of which felt at home in a Swift-first ecosystem. The challenge was to build a genuine interpreter — not a wrapper — that could live naturally inside a Swift package, run on both macOS and iOS, and meet the quality bar that Swift 6’s strict concurrency model demands.</p>
+        <h2>Approach</h2>
+        <p>The project was scoped and structured before a single line of interpreter logic was written. A design proposal was committed early, and a <code>CLAUDE.md</code> file established the architectural constitution for the codebase: session-start conventions, a development workflow, key rules, a quality gate, and references. This design-first discipline is visible in the package layout itself — the work is divided across four targets that each carry a distinct responsibility.</p>
         <p><code>ApplesoftBASICLib</code> is the core: the tokenizer, parser, and execution engine that other targets depend on. <code>ApplesoftBASIC</code> provides a command-line host, making the interpreter immediately usable as a standalone tool and serving as an integration harness. <code>CLineEditor</code> isolates terminal line-editing concerns, keeping the REPL experience clean without entangling it with interpreter logic. <code>ApplesoftBASICTests</code> houses the test suite, treated as a first-class target rather than an afterthought.</p>
         <p>Targeting Swift Tools Version 6.0 was itself a judgment call — it opted into the strictest concurrency checking available, which front-loads correctness work but produces a library that will compose safely into async Swift contexts on both platforms without retrofitting.</p>
-        <h2>Results</h2>Sixteen commits landed across a focused 35-hour window, from April 1 to April 2, 2026. The project shipped with full dual-platform support for macOS and iOS, a structured test target, and a working command-line executable alongside the library. The pace — an average of roughly one commit every two hours during active development — reflects concentrated, deliberate work rather than exploratory churn. The presence of a dedicated test target from the outset means the quality gate described in 
-        <code>CLAUDE.md</code> was enforced structurally, not just by intention.
-        <h2>Judgment Calls</h2>Several decisions reveal the thinking beneath the output.
-        <p></p>
+        <h2>Results</h2>
+        <p>Sixteen commits landed across a focused 35-hour window, from April 1 to April 2, 2026. The project shipped with full dual-platform support for macOS and iOS, a structured test target, and a working command-line executable alongside the library. The pace — an average of roughly one commit every two hours during active development — reflects concentrated, deliberate work rather than exploratory churn. The presence of a dedicated test target from the outset means the quality gate described in <code>CLAUDE.md</code> was enforced structurally, not just by intention.</p>
+        <h2>Judgment Calls</h2>
+        <p>Several decisions reveal the thinking beneath the output.</p>
         <p><strong>Swift 6 over Swift 5.</strong> Adopting the newest tools version meant grappling with strict concurrency from the start. For a library meant to be embedded in UI applications on iOS, this was the right call — async-safe code now is cheaper than migration debt later.</p>
         <p><strong>Four targets instead of one.</strong> It would have been simpler to write a monolithic executable. Splitting <code>CLineEditor</code> out as its own target signals that the line-editing subsystem has a boundary worth preserving, and that <code>ApplesoftBASICLib</code> should remain embeddable without pulling in terminal dependencies.</p>
         <p><strong>Design proposal before implementation.</strong> Committing a design document in the first hours of the project — and maintaining a <code>CLAUDE.md</code> that describes workflow, rules, and a quality gate — demonstrates that the architecture was reasoned about, not just arrived at. The references section in <code>CLAUDE.md</code> suggests the implementation was grounded in source material about the original Applesoft specification, not reconstructed from memory or approximation.</p>
         <p><strong>Dual-platform from day one.</strong> Declaring both macOS and iOS as targets immediately, rather than adding iOS later, shapes every API decision. It prevents the quiet accumulation of macOS-only assumptions that make cross-platform porting painful.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/applesoftbasic-stats.svg" alt="ApplesoftBASIC statistics" class="img-fluid" />
-        <img src="/images/showcase/applesoftbasic-commits.svg" alt="ApplesoftBASIC commit history" class="img-fluid" />
-        <img src="/images/showcase/applesoftbasic-releases.svg" alt="ApplesoftBASIC release history" class="img-fluid" />
+        <img src="/images/showcase/applesoftbasic-stats.svg" alt="ApplesoftBASIC statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/applesoftbasic-commits.svg" alt="ApplesoftBASIC commit history chart" class="img-fluid" />
+        <img src="/images/showcase/applesoftbasic-releases.svg" alt="ApplesoftBASIC release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: applesoftbasic, selfReflection</p>
@@ -296,7 +296,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

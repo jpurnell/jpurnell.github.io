@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/BusinessMath/week-01/04-fri-case-retirement" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -292,21 +293,21 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">Case Study: Retirement Planning Calculator</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">14 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">13 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p><strong>Capstone #1 – Combining Time Series + TVM + Distributions</strong>
-          <hr /></p>
-        <h2>The Business Challenge</h2>Sarah, a 35-year-old professional, wants to retire at 65 with $2 million saved. She currently has $100,000 in her retirement account. Her financial advisor needs to answer two critical questions:
+        <p><strong>Capstone #1 – Combining Time Series + TVM + Distributions</strong></p>
+        <hr />
+        <h2>The Business Challenge</h2>
+        <p>Sarah, a 35-year-old professional, wants to retire at 65 with $2 million saved. She currently has $100,000 in her retirement account. Her financial advisor needs to answer two critical questions:</p>
         <ol>
           <li><strong>How much should Sarah contribute monthly</strong> to reach her goal?</li>
           <li><strong>What’s the probability she’ll actually reach $2M</strong> given market volatility?</li>
-        </ol>This is a real problem financial advisors solve daily. Get it wrong, and Sarah either oversaves (reducing quality of life now) or undersaves (risking retirement security).
-        <p></p>
-        <p>Let’s build a calculator that answers both questions using BusinessMath.
-          <hr /></p>
+        </ol>
+        <p>This is a real problem financial advisors solve daily. Get it wrong, and Sarah either oversaves (reducing quality of life now) or undersaves (risking retirement security).</p>
+        <p>Let’s build a calculator that answers both questions using BusinessMath.</p>
+        <hr />
         <h2>The Requirements</h2>
-        <strong>Stakeholders</strong>: Financial advisors, retirement planners, individuals planning for retirement
-        <p></p>
+        <p><strong>Stakeholders</strong>: Financial advisors, retirement planners, individuals planning for retirement</p>
         <p><strong>Key Questions</strong>:</p>
         <ul>
           <li>What monthly contribution is required?</li>
@@ -314,7 +315,7 @@
           <li>How do market assumptions (return rate, volatility) affect the plan?</li>
           <li>What’s the probability of success given realistic market conditions?</li>
         </ul>
-        <strong>Success Criteria</strong>:
+        <p><strong>Success Criteria</strong>:</p>
         <ul>
           <li>Accurate TVM calculations</li>
           <li>Probability analysis using statistical distributions</li>
@@ -323,54 +324,225 @@
         </ul>
         <hr />
         <h2>The Solution</h2>
-        <h3>Part 1: Setup and Assumptions</h3>First, we define Sarah’s situation and market assumptions:
-        <pre><code class="language-swift">import BusinessMath<br /><br />print(”=== RETIREMENT PLANNING CALCULATOR ===\n”)<br /><br />// Sarah’s Current Situation<br />let currentAge = 35.0<br />let retirementAge = 65.0<br />let yearsUntilRetirement = retirementAge - currentAge  // 30 years<br />let currentSavings = 100_000.0<br />let targetAmount = 2_000_000.0<br /><br />// Market Assumptions<br />let expectedReturn = 0.07      // 7% annual return (historical equity average)<br />let returnStdDev = 0.15        // 15% volatility (realistic for stock market)<br /><br />print(“Sarah’s Profile:”)<br />print(”- Age: (Int(currentAge))”)<br />print(”- Current Savings: (currentSavings.currency())”)<br />print(”- Retirement Goal: (targetAmount.currency())”)<br />print(”- Years to Retirement: (Int(yearsUntilRetirement))”)<br />print(”- Expected Return: (expectedReturn.percent())”)<br />print(”- Return Volatility: (returnStdDev.percent())”)<br />print()<br /></code></pre>
-        <strong>Output</strong>:
-        <pre><code>=== RETIREMENT PLANNING CALCULATOR ===<br /><br />Sarah’s Profile:<br />- Age: 35<br />- Current Savings: $100,000<br />- Retirement Goal: $2,000,000<br />- Years to Retirement: 30<br />- Expected Return: 7%<br />- Return Volatility: 15%<br /></code></pre>
+        <h3>Part 1: Setup and Assumptions</h3>
+        <p>First, we define Sarah’s situation and market assumptions:</p>
+        <pre><code class="language-swift">import BusinessMath
+
+print("=== RETIREMENT PLANNING CALCULATOR ===\n")
+
+// Sarah's Current Situation
+let currentAge = 35.0
+let retirementAge = 65.0
+let yearsUntilRetirement = retirementAge - currentAge  // 30 years
+let currentSavings = 100_000.0
+let targetAmount = 2_000_000.0
+
+// Market Assumptions
+let expectedReturn = 0.07      // 7% annual return (historical equity average)
+let returnStdDev = 0.15        // 15% volatility (realistic for stock market)
+
+print("Sarah's Profile:")
+print("- Age: \(Int(currentAge))")
+print("- Current Savings: \(currentSavings.currency())")
+print("- Retirement Goal: \(targetAmount.currency())")
+print("- Years to Retirement: \(Int(yearsUntilRetirement))")
+print("- Expected Return: \(expectedReturn.percent())")
+print("- Return Volatility: \(returnStdDev.percent())")
+print()
+</code></pre>
+        <p><strong>Output</strong>:</p>
+        <pre><code>=== RETIREMENT PLANNING CALCULATOR ===
+
+Sarah's Profile:
+- Age: 35
+- Current Savings: $100,000
+- Retirement Goal: $2,000,000
+- Years to Retirement: 30
+- Expected Return: 7%
+- Return Volatility: 15%
+</code></pre>
         <hr />
-        <h3>Part 2: Calculate Required Monthly Contribution</h3>Using TVM functions to determine the monthly contribution needed:
-        <pre><code class="language-swift">print(“PART 1: Required Contribution”)<br /><br />let monthlyRate = expectedReturn / 12.0<br />let numberOfPayments: Int = Int(yearsUntilRetirement) * 12<br /><br />// Future value of current savings (no additional contributions)<br />let futureValueOfCurrentSavings = futureValue(<br />    presentValue: currentSavings,<br />    rate: expectedReturn,<br />	periods: Int(yearsUntilRetirement)<br />)<br /><br />print(“Future value of current $100K: (futureValueOfCurrentSavings.currency())”)<br /><br />// Gap to fill with monthly contributions<br />let gapToFill = targetAmount - futureValueOfCurrentSavings<br />print(“Gap to fill: (gapToFill.currency())”)<br /><br />// Calculate required monthly payment<br />// Note: payment() returns negative value (cash outflow), so negate it<br />let requiredMonthlyContribution = -payment(<br />    presentValue: 0.0,<br />    futureValue: gapToFill,<br />    rate: monthlyRate,<br />    periods: numberOfPayments,<br />    type: .ordinary<br />)<br /><br />print(“Required monthly contribution: (requiredMonthlyContribution.currency())”)<br />print()<br /></code></pre>
-        <strong>Output</strong>:
-        <pre><code>PART 1: Required Contribution<br />Future value of current $100K: $761,225.50<br />Gap to fill: $1,238,774.50<br />Required monthly contribution: $1,015.41<br /></code></pre>
-        <strong>The answer</strong>: Sarah needs to contribute 
-        <strong>$1,015.41 per month</strong> to reach her $2M goal.
+        <h3>Part 2: Calculate Required Monthly Contribution</h3>
+        <p>Using TVM functions to determine the monthly contribution needed:</p>
+        <pre><code class="language-swift">print("PART 1: Required Contribution")
+
+let monthlyRate = expectedReturn / 12.0
+let numberOfPayments: Int = Int(yearsUntilRetirement) * 12
+
+// Future value of current savings (no additional contributions)
+let futureValueOfCurrentSavings = futureValue(
+    presentValue: currentSavings,
+    rate: expectedReturn,
+	periods: Int(yearsUntilRetirement)
+)
+
+print("Future value of current $100K: \(futureValueOfCurrentSavings.currency())")
+
+// Gap to fill with monthly contributions
+let gapToFill = targetAmount - futureValueOfCurrentSavings
+print("Gap to fill: \(gapToFill.currency())")
+
+// Calculate required monthly payment
+// Note: payment() returns negative value (cash outflow), so negate it
+let requiredMonthlyContribution = -payment(
+    presentValue: 0.0,
+    futureValue: gapToFill,
+    rate: monthlyRate,
+    periods: numberOfPayments,
+    type: .ordinary
+)
+
+print("Required monthly contribution: \(requiredMonthlyContribution.currency())")
+print()
+</code></pre>
+        <p><strong>Output</strong>:</p>
+        <pre><code>PART 1: Required Contribution
+Future value of current $100K: $761,225.50
+Gap to fill: $1,238,774.50
+Required monthly contribution: $1,015.41
+</code></pre>
+        <p><strong>The answer</strong>: Sarah needs to contribute <strong>$1,015.41 per month</strong> to reach her $2M goal.</p>
         <hr />
-        <h3>Part 3: Probability Analysis (Simplified Model)</h3>Now the harder question: Given market volatility, what’s the probability Sarah actually reaches $2M?
+        <h3>Part 3: Probability Analysis (Simplified Model)</h3>
+        <p>Now the harder question: Given market volatility, what’s the probability Sarah actually reaches $2M?</p>
         <blockquote>
-          <strong>Note</strong>: This simplified analytical approach has limitations (see “What Didn’t Work” section). Monte Carlo simulation provides more accurate probability estimates.
+          <p><strong>Note</strong>: This simplified analytical approach has limitations (see “What Didn’t Work” section). Monte Carlo simulation provides more accurate probability estimates.</p>
         </blockquote>
-        <pre><code class="language-swift">print(“PART 2: Success Probability Analysis”)<br /><br />// Total contributions over 30 years<br />let totalContributions = requiredMonthlyContribution * Double(numberOfPayments)<br />let totalInvested = currentSavings + totalContributions<br /><br />print(“Total contributions: (totalContributions.currency())”)<br />print(“Total invested: (totalInvested.currency())”)<br /><br />// For $2M target, what total return is required?<br />let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested<br /><br />print(“Minimum required total return: (minimumRequiredReturn.percent())”)<br /><br />// Model market returns using log-normal distribution<br />let expectedTotalReturn = expectedReturn * yearsUntilRetirement<br />let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)<br /><br />// Probability of achieving required return<br />// CDF gives P(X &lt;= x), we want P(X &gt;= minimumRequiredReturn)<br />let prob = 1.0 - logNormalCDF(<br />    minimumRequiredReturn,<br />    mean: expectedTotalReturn,<br />    standardDeviation: totalReturnStdDev<br />)<br /><br />print(“Probability of reaching $2M goal: ((1.0 - probability).percent())”)<br />print()<br /></code></pre>
-        <strong>Output</strong>:
-        <pre><code>PART 2: Success Probability Analysis<br />Total contributions: $365,548.71<br />Total invested: $465,548.71<br />Minimum required total return: 329.60%<br />Probability of reaching $2M goal: [Value depends on calculation - see note below]<br /></code></pre>
-        <strong>Important Note</strong>: The probability calculation in this simplified example has a methodological issue. It calculates 
-        <code>minimumRequiredReturn = (target - totalInvested) / totalInvested</code> treating contributions as a lump sum, but the 
-        <code>payment()</code> function already accounts for monthly compounding. This causes the probability estimates to be unrealistic.
-        <p></p>
-        <p><strong>A better approach</strong> (demonstrated in Week 6’s Monte Carlo case study): Simulate 10,000 scenarios where Sarah contributes monthly and returns vary each period according to the volatility. This gives much more realistic probability estimates for retirement planning.
-          <hr /></p>
-        <h3>Part 4: Scenario Analysis</h3>Let’s see how different expected returns affect required monthly contributions:
-        <pre><code class="language-swift">print(“PART 3: What-If Scenarios”)<br /><br />let scenarios = [<br />    (“Conservative”, 0.05, 0.10),  // Bonds, low risk<br />    (“Moderate”, 0.07, 0.15),      // Balanced, medium risk<br />    (“Aggressive”, 0.09, 0.20)     // Stocks, high risk<br />]<br /><br />print(“Required monthly contribution by strategy:”)<br />for (name, returnRate, volatility) in scenarios {<br />    let monthlyRate = returnRate / 12.0<br />    let fvSavings = futureValue(<br />        presentValue: currentSavings,<br />        rate: returnRate,<br />        periods: Int(yearsUntilRetirement)<br />    )<br />    let gap = targetAmount - fvSavings<br />    let monthlyPayment = -payment(<br />        presentValue: 0.0,<br />        futureValue: gap,<br />        rate: monthlyRate,<br />        periods: numberOfPayments,<br />        type: .ordinary<br />    )<br /><br />// Calculate success probability using the volatility<br />  let totalContrib = monthlyPayment * Double(numberOfPayments)<br />  let totalInv = currentSavings + totalContrib<br />  let minReturn = (targetAmount - totalInv) / totalInv<br />  let expectedTotal = returnRate * yearsUntilRetirement<br />  let totalStdDev = volatility * sqrt(yearsUntilRetirement)<br /><br />// CDF gives P(X &lt;= minReturn), we want P(X &gt;= minReturn)<br />	let successProb = 1.0 - logNormalCDF(<br />	  minReturn,<br />	  mean: expectedTotal,<br />	  stdDev: totalStdDev<br />  )<br /><br />	print(”(name.padding(toLength: 15, withPad: “ “, startingAt: 0))(monthlyPayment.currency().paddingLeft(toLength: 15))(successProb.percent().paddingLeft(toLength: 15))”)<br />}<br /></code></pre>
-        <strong>Output</strong>:
-        <pre><code>PART 3: What-If Scenarios<br />Strategy Comparison (Return vs. Risk):<br />Strategy       Monthly Contrib    Success Rate<br />———————————————<br />Required monthly contribution by strategy:<br />Conservative         $1,883.80         97.22%<br />Moderate             $1,015.41         86.53%<br />Aggressive             $367.74         72.99%<br /></code></pre>
-        <strong>The insight</strong>: Lower expected returns require higher monthly contributions. The conservative strategy requires nearly 5x the monthly investment of the aggressive strategy.
+        <pre><code class="language-swift">print("PART 2: Success Probability Analysis")
+
+// Total contributions over 30 years
+let totalContributions = requiredMonthlyContribution * Double(numberOfPayments)
+let totalInvested = currentSavings + totalContributions
+
+print("Total contributions: \(totalContributions.currency())")
+print("Total invested: \(totalInvested.currency())")
+
+// For $2M target, what total return is required?
+let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
+
+print("Minimum required total return: \(minimumRequiredReturn.percent())")
+
+// Model market returns using log-normal distribution
+let expectedTotalReturn = expectedReturn * yearsUntilRetirement
+let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)
+
+// Probability of achieving required return
+// CDF gives P(X &lt;= x), we want P(X &gt;= minimumRequiredReturn)
+let prob = 1.0 - logNormalCDF(
+    minimumRequiredReturn,
+    mean: expectedTotalReturn,
+    standardDeviation: totalReturnStdDev
+)
+
+print("Probability of reaching $2M goal: \((1.0 - probability).percent())")
+print()
+</code></pre>
+        <p><strong>Output</strong>:</p>
+        <pre><code>PART 2: Success Probability Analysis
+Total contributions: $365,548.71
+Total invested: $465,548.71
+Minimum required total return: 329.60%
+Probability of reaching $2M goal: [Value depends on calculation - see note below]
+</code></pre>
+        <p><strong>Important Note</strong>: The probability calculation in this simplified example has a methodological issue. It calculates <code>minimumRequiredReturn = (target - totalInvested) / totalInvested</code> treating contributions as a lump sum, but the <code>payment()</code> function already accounts for monthly compounding. This causes the probability estimates to be unrealistic.</p>
+        <p><strong>A better approach</strong> (demonstrated in Week 6’s Monte Carlo case study): Simulate 10,000 scenarios where Sarah contributes monthly and returns vary each period according to the volatility. This gives much more realistic probability estimates for retirement planning.</p>
+        <hr />
+        <h3>Part 4: Scenario Analysis</h3>
+        <p>Let’s see how different expected returns affect required monthly contributions:</p>
+        <pre><code class="language-swift">print("PART 3: What-If Scenarios")
+
+let scenarios = [
+    ("Conservative", 0.05, 0.10),  // Bonds, low risk
+    ("Moderate", 0.07, 0.15),      // Balanced, medium risk
+    ("Aggressive", 0.09, 0.20)     // Stocks, high risk
+]
+
+print("Required monthly contribution by strategy:")
+for (name, returnRate, volatility) in scenarios {
+    let monthlyRate = returnRate / 12.0
+    let fvSavings = futureValue(
+        presentValue: currentSavings,
+        rate: returnRate,
+        periods: Int(yearsUntilRetirement)
+    )
+    let gap = targetAmount - fvSavings
+    let monthlyPayment = -payment(
+        presentValue: 0.0,
+        futureValue: gap,
+        rate: monthlyRate,
+        periods: numberOfPayments,
+        type: .ordinary
+    )
+
+// Calculate success probability using the volatility
+  let totalContrib = monthlyPayment * Double(numberOfPayments)
+  let totalInv = currentSavings + totalContrib
+  let minReturn = (targetAmount - totalInv) / totalInv
+  let expectedTotal = returnRate * yearsUntilRetirement
+  let totalStdDev = volatility * sqrt(yearsUntilRetirement)
+
+// CDF gives P(X &lt;= minReturn), we want P(X &gt;= minReturn)
+	let successProb = 1.0 - logNormalCDF(
+	  minReturn,
+	  mean: expectedTotal,
+	  stdDev: totalStdDev
+  )
+
+	print("\(name.padding(toLength: 15, withPad: " ", startingAt: 0))\(monthlyPayment.currency().paddingLeft(toLength: 15))\(successProb.percent().paddingLeft(toLength: 15))")
+}
+</code></pre>
+        <p><strong>Output</strong>:</p>
+        <pre><code>PART 3: What-If Scenarios
+Strategy Comparison (Return vs. Risk):
+Strategy       Monthly Contrib    Success Rate
+---------------------------------------------
+Required monthly contribution by strategy:
+Conservative         $1,883.80         97.22%
+Moderate             $1,015.41         86.53%
+Aggressive             $367.74         72.99%
+</code></pre>
+        <p><strong>The insight</strong>: Lower expected returns require higher monthly contributions. The conservative strategy requires nearly 5x the monthly investment of the aggressive strategy.</p>
         <blockquote>
-          <strong>Note</strong>: The probability calculation code is included in the full playground, but as discussed in “What Didn’t Work” below, this simplified analytical approach has methodological issues. Monte Carlo simulation (Week 6) provides more accurate probability estimates for retirement planning.
+          <p><strong>Note</strong>: The probability calculation code is included in the full playground, but as discussed in “What Didn’t Work” below, this simplified analytical approach has methodological issues. Monte Carlo simulation (Week 6) provides more accurate probability estimates for retirement planning.</p>
         </blockquote>
         <hr />
         <h3>Part 5: Key Insights</h3>
-        <pre><code class="language-swift">print(”=== KEY INSIGHTS ===”)<br />print(“1. Current savings will grow to (futureValueOfCurrentSavings.currency()) by retirement”)<br />print(“2. Need (requiredMonthlyContribution.currency())/month with 7% expected returns”)<br />print(“3. Risk-return trade-off:”)<br />print(”   - Conservative (5%): $1,883/month required”)<br />print(”   - Moderate (7%): $1,015/month required”)<br />print(”   - Aggressive (9%): $367/month required”)<br />print(“4. Higher expected returns = lower required contributions”)<br />print(“5. For accurate probability analysis, use Monte Carlo simulation (Week 6)”)<br />print()<br /><br />print(“Try It: Adjust the parameters and re-run!”)<br /></code></pre>
-        <strong>Output</strong>:
-        <pre><code>=== KEY INSIGHTS ===<br />1. Current savings will grow to $761,225.50 by retirement<br />2. Need $1,015.41/month with 7% expected returns<br />3. Risk-return trade-off:<br />   - Conservative (5%): $1,883/month required<br />   - Moderate (7%): $1,015/month required<br />   - Aggressive (9%): $367/month required<br />4. Higher expected returns = lower required contributions<br />5. For accurate probability analysis, use Monte Carlo simulation (Week 6)<br /><br />Try It: Adjust the parameters and re-run!<br /></code></pre>
+        <pre><code class="language-swift">print("=== KEY INSIGHTS ===")
+print("1. Current savings will grow to \(futureValueOfCurrentSavings.currency()) by retirement")
+print("2. Need \(requiredMonthlyContribution.currency())/month with 7% expected returns")
+print("3. Risk-return trade-off:")
+print("   - Conservative (5%): \$1,883/month required")
+print("   - Moderate (7%): \$1,015/month required")
+print("   - Aggressive (9%): \$367/month required")
+print("4. Higher expected returns = lower required contributions")
+print("5. For accurate probability analysis, use Monte Carlo simulation (Week 6)")
+print()
+
+print("Try It: Adjust the parameters and re-run!")
+</code></pre>
+        <p><strong>Output</strong>:</p>
+        <pre><code>=== KEY INSIGHTS ===
+1. Current savings will grow to $761,225.50 by retirement
+2. Need $1,015.41/month with 7% expected returns
+3. Risk-return trade-off:
+   - Conservative (5%): $1,883/month required
+   - Moderate (7%): $1,015/month required
+   - Aggressive (9%): $367/month required
+4. Higher expected returns = lower required contributions
+5. For accurate probability analysis, use Monte Carlo simulation (Week 6)
+
+Try It: Adjust the parameters and re-run!
+</code></pre>
         <hr />
         <h2>The Results</h2>
         <h3>Business Value</h3>
-        <strong>Financial Impact</strong>:
+        <p><strong>Financial Impact</strong>:</p>
         <ul>
           <li>Clear monthly contribution target: <strong>$1,015/month</strong></li>
           <li>Quantified probability of success: <strong>92.73%</strong></li>
           <li>Scenario analysis shows trade-offs between risk and required contribution</li>
         </ul>
-        <strong>Technical Achievement</strong>:
+        <p><strong>Technical Achievement</strong>:</p>
         <ul>
           <li>Combined 3 topics: TVM, Time Series, Distributions</li>
           <li>~150 lines of playground code</li>
@@ -378,40 +550,39 @@
         </ul>
         <hr />
         <h2>What Worked</h2>
-        <strong>Integration Success</strong>:
+        <p><strong>Integration Success</strong>:</p>
         <ul>
           <li>TVM functions (<code>futureValue</code>, <code>payment</code>) calculated contributions cleanly</li>
           <li>Statistical distributions (<code>normalCDF</code>) provided probability analysis</li>
           <li>APIs composed naturally—no impedance mismatch</li>
           <li>Type safety prevented errors (can’t mix periods and amounts)</li>
         </ul>
-        <strong>Code Quality</strong>:
+        <p><strong>Code Quality</strong>:</p>
         <ul>
           <li>Generic functions work with Double throughout</li>
           <li>Formatting APIs (<code>.formatted(.percent)</code>) make output readable</li>
           <li>No manual date arithmetic—periods handle it automatically</li>
         </ul>
-        <strong>From the Development Journey</strong>:
+        <p><strong>From the Development Journey</strong>:</p>
         <blockquote>
-          When we built this case study, it was the first time we combined multiple topics. Up to this point, we’d tested TVM functions in isolation and distribution functions separately.
-          <p></p>
+          <p>When we built this case study, it was the first time we combined multiple topics. Up to this point, we’d tested TVM functions in isolation and distribution functions separately.</p>
           <p>The case study revealed integration issues unit tests missed. For example, we discovered our <code>payment</code> function didn’t handle the <code>type</code> parameter correctly (beginning vs. end of period). The unit tests for <code>payment</code> worked because they tested it in isolation. But when used in a realistic scenario, the difference between <code>.ordinary</code> and <code>.due</code> became apparent.</p>
           <p><strong>The fix took 10 minutes</strong>. But without the case study, that bug might have shipped.</p>
         </blockquote>
         <hr />
         <h2>What Didn’t Work</h2>
-        <strong>Initial Challenges</strong>:
+        <p><strong>Initial Challenges</strong>:</p>
         <ul>
           <li>First version didn’t include scenario analysis—added after user feedback</li>
           <li>Forgot to validate that <code>currentSavings &lt; targetAmount</code> (edge case)</li>
           <li><strong>Probability calculation methodology is flawed</strong> - treats contributions as lump sum instead of monthly compounding</li>
         </ul>
-        <strong>The Probability Issue</strong>:
-        <p></p>
+        <p><strong>The Probability Issue</strong>:</p>
         <p>The simplified probability calculation has a fundamental flaw:</p>
-        <pre><code class="language-swift">// This treats totalInvested as a lump sum<br />let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested<br /></code></pre>But the 
-        <code>payment()</code> function already accounts for monthly contributions compounding over time! This mismatch makes the probability estimates unrealistic.
-        <p></p>
+        <pre><code class="language-swift">// This treats totalInvested as a lump sum
+let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
+</code></pre>
+        <p>But the <code>payment()</code> function already accounts for monthly contributions compounding over time! This mismatch makes the probability estimates unrealistic.</p>
         <p><strong>Why this matters</strong>: When teaching with case studies, it’s important to acknowledge limitations. The monthly contribution calculations are accurate, but the probability estimates need Monte Carlo simulation (Week 6) to be reliable.</p>
         <p><strong>Lessons Learned</strong>:</p>
         <ul>
@@ -420,33 +591,163 @@
           <li>Analytical probability calculations for annuities with volatility are complex—Monte Carlo is often more appropriate</li>
           <li>It’s better to acknowledge methodological limitations than to present questionable numbers as authoritative</li>
         </ul>
-        <strong>From the Development Journey</strong>:
+        <p><strong>From the Development Journey</strong>:</p>
         <blockquote>
-          The first implementation calculated probability wrong. We used a point estimate of expected return instead of modeling the distribution.
-          <p></p>
+          <p>The first implementation calculated probability wrong. We used a point estimate of expected return instead of modeling the distribution.</p>
           <p>The playground made the error obvious. When we printed intermediate values, we saw: “Probability: 50.0%” for every scenario. That’s suspicious—the actual probability should change based on assumptions!</p>
           <p>Digging in, we realized we were essentially asking “What’s the probability of achieving the average return?” which is always ~50% for a symmetric distribution.</p>
           <p>The correct question: “What’s the probability of achieving <em>at least</em> the minimum required return?” That requires integrating the probability distribution, which <code>normalCDF</code> does.</p>
           <p><strong>Playground saved us from shipping a calculator that always said 50%.</strong></p>
         </blockquote>
         <hr />
-        <h2>The Insight</h2>Case studies reveal integration issues that unit tests miss.
-        <p></p>
+        <h2>The Insight</h2>
+        <p>Case studies reveal integration issues that unit tests miss.</p>
         <p><strong>Unit tests verify</strong>: “Does <code>futureValue</code> calculate correctly?” <strong>Case studies verify</strong>: “Do <code>futureValue</code>, <code>payment</code>, and <code>normalCDF</code> work together to solve real problems?”</p>
         <p>When we wrote Sarah’s retirement calculator, we discovered:</p>
         <ul>
           <li>The <code>payment</code> function’s <code>type</code> parameter matters in practice</li>
           <li>Probability calculation requires distribution modeling, not point estimates</li>
           <li>Scenario analysis is essential—users want to explore trade-offs</li>
-        </ul>None of these issues appeared in unit tests. All appeared immediately in the case study.
+        </ul>
+        <p>None of these issues appeared in unit tests. All appeared immediately in the case study.</p>
         <blockquote>
-          <strong>Key Takeaway</strong>: Write case studies at topic milestones. They validate integration, reveal API friction, and demonstrate business value.
+          <p><strong>Key Takeaway</strong>: Write case studies at topic milestones. They validate integration, reveal API friction, and demonstrate business value.</p>
         </blockquote>
         <hr />
         <h2>Try It Yourself</h2>
-        <details>
+        <details> 
           <summary>Click to expand full playground code</summary> 
-          <pre><code class="language-swift">import BusinessMath<br />import Foundation<br /><br />// MARK: - Retirement Planning Case Study<br />// Business Scenario: Sarah's Retirement Plan<br /><br />print("=== RETIREMENT PLANNING CALCULATOR ===\n")<br /><br />// Sarah's Current Situation<br />let currentAge = 35.0<br />let retirementAge = 65.0<br />let yearsUntilRetirement = retirementAge - currentAge<br />let currentSavings = 100_000.0<br />let targetAmount = 2_000_000.0<br /><br />// Market Assumptions<br />let expectedReturn = 0.07	// 7% annual return (historical equity average)<br />let returnStdDev = 0.15		// 15% volatility (realistic for stock market)<br /><br />print("Sarah's Profile:")<br />print("- Age: \(Int(currentAge))")<br />print("- Current Savings: \(currentSavings.currency())")<br />print("- Retirement Goal: \(targetAmount.currency())")<br />print("- Years to Retirement: \(Int(yearsUntilRetirement))")<br />print("- Expected Return: \(expectedReturn.percent())")<br />print("- Return Volatility: \(returnStdDev.percent())")<br />print()<br /><br />// PART 1: Calculate Required Monthly Contribution<br />print("PART 1: Required Contribution")<br /><br />let monthlyRate = expectedReturn / 12.0<br />let numberOfPayments: Int = Int(yearsUntilRetirement) * 12<br /><br />let futureValueOfCurrentSavings = futureValue(<br />	presentValue: currentSavings,<br />	rate: expectedReturn,<br />	periods: Int(yearsUntilRetirement)<br />)<br /><br />print("Future value of current \((currentSavings / 1000).currency(0))K: \(futureValueOfCurrentSavings.currency())")<br /><br />let gapToFill = targetAmount - futureValueOfCurrentSavings<br />print("Gap to fill: \(gapToFill.currency())")<br /><br />// Calculate required monthly payment<br />// Note: payment() returns negative value (cash outflow), so negate it<br />let requiredMonthlyContribution = -payment(<br />	presentValue: 0.0,<br />	rate: monthlyRate,<br />	periods: numberOfPayments,<br />	futureValue: gapToFill,<br />	type: .ordinary<br />)<br /><br />print("Required monthly contribution: \(requiredMonthlyContribution.currency())")<br />print()<br /><br />// PART 2: Probability Analysis<br />print("PART 2: Success Probability Analysis")<br /><br />let totalContributions = requiredMonthlyContribution * Double(numberOfPayments)<br />let totalInvested = currentSavings + totalContributions<br /><br />print("Total contributions: \(totalContributions.currency())")<br />print("Total invested: \(totalInvested.currency())")<br /><br />// For $2M target, what total return is required?<br />let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested<br /><br />print("Minimum required total return: \(minimumRequiredReturn.percent())")<br /><br />// Model market returns using normal distribution<br />// (Simplification: actual returns are log-normal, but normal is close enough for planning)<br />let expectedTotalReturn = expectedReturn * yearsUntilRetirement<br />let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)<br /><br />// normalCDF gives P(X &lt;= x), we want P(X &gt;= minimumRequiredReturn)<br />let probability = 1.0 - normalCDF(<br />	x: minimumRequiredReturn,<br />	mean: expectedTotalReturn,<br />	stdDev: totalReturnStdDev<br />)<br /><br />print("Probability of reaching \((targetAmount / 1000000).currency(0))M goal: \(probability.percent())")<br />print()<br /><br />// PART 3: Scenario Analysis<br />print("PART 3: What-If Scenarios")<br /><br />let scenarios = [<br />	("Conservative", 0.05, 0.10),  // Bonds, low risk<br />	("Moderate", 0.07, 0.15),      // Balanced, medium risk<br />	("Aggressive", 0.09, 0.20)     // Stocks, high risk<br />]<br /><br />print("Required monthly contribution by strategy:")<br />for (name, returnRate, volatility) in scenarios {<br />	let monthlyRate = returnRate / 12.0<br />	let fvSavings = futureValue(<br />		presentValue: currentSavings,<br />		rate: returnRate,<br />		periods: Int(yearsUntilRetirement)<br />	)<br />	let gap = targetAmount - fvSavings<br />	let monthlyPayment = -payment(<br />		presentValue: 0.0,<br />		rate: monthlyRate,<br />		periods: numberOfPayments,<br />		futureValue: gap,<br />		type: .ordinary<br />	)<br /><br />	print("  \(name): \(monthlyPayment.currency())/month (\(returnRate.percent()) return, \(volatility.percent()) volatility)")<br />}<br />print()<br /><br />// PART 4: Key Insights<br />print("=== KEY INSIGHTS ===")<br />print("1. Current savings will grow to \(futureValueOfCurrentSavings.currency()) by retirement")<br />print("2. Need \(requiredMonthlyContribution.currency())/month with 7% expected returns")<br />print("3. Risk-return trade-off:")<br />print("   - Conservative (5%): \$1,883/month required")<br />print("   - Moderate (7%): \$1,015/month required")<br />print("   - Aggressive (9%): \$367/month required")<br />print("4. Higher expected returns = lower required contributions")<br />print("5. For accurate probability analysis, use Monte Carlo simulation (Week 6)")<br />print()<br /><br />print("Try It: Adjust the parameters and re-run!")<br /></code></pre>
+          <pre><code class="language-swift">import BusinessMath
+import Foundation
+
+// MARK: - Retirement Planning Case Study
+// Business Scenario: Sarah's Retirement Plan
+
+print("=== RETIREMENT PLANNING CALCULATOR ===\n")
+
+// Sarah's Current Situation
+let currentAge = 35.0
+let retirementAge = 65.0
+let yearsUntilRetirement = retirementAge - currentAge
+let currentSavings = 100_000.0
+let targetAmount = 2_000_000.0
+
+// Market Assumptions
+let expectedReturn = 0.07	// 7% annual return (historical equity average)
+let returnStdDev = 0.15		// 15% volatility (realistic for stock market)
+
+print("Sarah's Profile:")
+print("- Age: \(Int(currentAge))")
+print("- Current Savings: \(currentSavings.currency())")
+print("- Retirement Goal: \(targetAmount.currency())")
+print("- Years to Retirement: \(Int(yearsUntilRetirement))")
+print("- Expected Return: \(expectedReturn.percent())")
+print("- Return Volatility: \(returnStdDev.percent())")
+print()
+
+// PART 1: Calculate Required Monthly Contribution
+print("PART 1: Required Contribution")
+
+let monthlyRate = expectedReturn / 12.0
+let numberOfPayments: Int = Int(yearsUntilRetirement) * 12
+
+let futureValueOfCurrentSavings = futureValue(
+	presentValue: currentSavings,
+	rate: expectedReturn,
+	periods: Int(yearsUntilRetirement)
+)
+
+print("Future value of current \((currentSavings / 1000).currency(0))K: \(futureValueOfCurrentSavings.currency())")
+
+let gapToFill = targetAmount - futureValueOfCurrentSavings
+print("Gap to fill: \(gapToFill.currency())")
+
+// Calculate required monthly payment
+// Note: payment() returns negative value (cash outflow), so negate it
+let requiredMonthlyContribution = -payment(
+	presentValue: 0.0,
+	rate: monthlyRate,
+	periods: numberOfPayments,
+	futureValue: gapToFill,
+	type: .ordinary
+)
+
+print("Required monthly contribution: \(requiredMonthlyContribution.currency())")
+print()
+
+// PART 2: Probability Analysis
+print("PART 2: Success Probability Analysis")
+
+let totalContributions = requiredMonthlyContribution * Double(numberOfPayments)
+let totalInvested = currentSavings + totalContributions
+
+print("Total contributions: \(totalContributions.currency())")
+print("Total invested: \(totalInvested.currency())")
+
+// For $2M target, what total return is required?
+let minimumRequiredReturn = (targetAmount - totalInvested) / totalInvested
+
+print("Minimum required total return: \(minimumRequiredReturn.percent())")
+
+// Model market returns using normal distribution
+// (Simplification: actual returns are log-normal, but normal is close enough for planning)
+let expectedTotalReturn = expectedReturn * yearsUntilRetirement
+let totalReturnStdDev = returnStdDev * sqrt(yearsUntilRetirement)
+
+// normalCDF gives P(X &lt;= x), we want P(X &gt;= minimumRequiredReturn)
+let probability = 1.0 - normalCDF(
+	x: minimumRequiredReturn,
+	mean: expectedTotalReturn,
+	stdDev: totalReturnStdDev
+)
+
+print("Probability of reaching \((targetAmount / 1000000).currency(0))M goal: \(probability.percent())")
+print()
+
+// PART 3: Scenario Analysis
+print("PART 3: What-If Scenarios")
+
+let scenarios = [
+	("Conservative", 0.05, 0.10),  // Bonds, low risk
+	("Moderate", 0.07, 0.15),      // Balanced, medium risk
+	("Aggressive", 0.09, 0.20)     // Stocks, high risk
+]
+
+print("Required monthly contribution by strategy:")
+for (name, returnRate, volatility) in scenarios {
+	let monthlyRate = returnRate / 12.0
+	let fvSavings = futureValue(
+		presentValue: currentSavings,
+		rate: returnRate,
+		periods: Int(yearsUntilRetirement)
+	)
+	let gap = targetAmount - fvSavings
+	let monthlyPayment = -payment(
+		presentValue: 0.0,
+		rate: monthlyRate,
+		periods: numberOfPayments,
+		futureValue: gap,
+		type: .ordinary
+	)
+
+	print("  \(name): \(monthlyPayment.currency())/month (\(returnRate.percent()) return, \(volatility.percent()) volatility)")
+}
+print()
+
+// PART 4: Key Insights
+print("=== KEY INSIGHTS ===")
+print("1. Current savings will grow to \(futureValueOfCurrentSavings.currency()) by retirement")
+print("2. Need \(requiredMonthlyContribution.currency())/month with 7% expected returns")
+print("3. Risk-return trade-off:")
+print("   - Conservative (5%): \$1,883/month required")
+print("   - Moderate (7%): \$1,015/month required")
+print("   - Aggressive (9%): \$367/month required")
+print("4. Higher expected returns = lower required contributions")
+print("5. For accurate probability analysis, use Monte Carlo simulation (Week 6)")
+print()
+
+print("Try It: Adjust the parameters and re-run!")
+</code></pre>
         </details> 
         <h3>Modifications to Try</h3>
         <ol>
@@ -472,15 +773,15 @@
             </ul></li>
         </ol>
         <hr />
-        <h2>Technical Deep Dives</h2>Want to understand the individual components better? 
-        <p></p>
+        <h2>Technical Deep Dives</h2>
+        <p>Want to understand the individual components better?</p>
         <p><strong>DocC Tutorials Used</strong>:</p>
         <ul>
           <li><strong>Time Series</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.2-TimeSeries.md">BusinessMath Docs – 1.2</a> - Period arithmetic and temporal data</li>
           <li><strong>Time Value of Money</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/1.3-TimeValueOfMoney.md">BusinessMath Docs – 1.3</a> - TVM functions (<code>futureValue</code>, <code>payment</code>)</li>
           <li><strong>Statistical Distributions</strong>: <a href="https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/2.3-RiskAnalyticsGuide.md">BusinessMath Docs – 2.3</a> - <code>normalCDF</code> for probability</li>
         </ul>
-        <strong>API References</strong>:
+        <p><strong>API References</strong>:</p>
         <ul>
           <li><code>futureValue(presentValue:rate:periods:)</code></li>
           <li><code>payment(presentValue:futureValue:rate:periods:type:)</code></li>
@@ -488,15 +789,14 @@
         </ul>
         <hr />
         <h2>Next Steps</h2>
-        <strong>Coming up next</strong>: Week 2 explores analysis tools—data tables, financial ratios, and risk analytics.
-        <p></p>
+        <p><strong>Coming up next</strong>: Week 2 explores analysis tools—data tables, financial ratios, and risk analytics.</p>
         <p><strong>Related Case Studies</strong>:</p>
         <ul>
           <li><strong>Case Study #2: Capital Equipment Decision</strong> (Week 3) - Combines depreciation with TVM for capital budgeting</li>
           <li><strong>Case Study #4: Portfolio Optimization</strong> (Week 8) - MIDPOINT integration showing all core topics working together</li>
         </ul>
         <hr />
-        <strong>Series Progress</strong>:
+        <p><strong>Series Progress</strong>:</p>
         <ul>
           <li>Week: 1/12</li>
           <li>Posts Published: 4/~48</li>
@@ -505,7 +805,6 @@
           <li>Playgrounds: 4 available (3 technical + 1 case study)</li>
         </ul>
         <hr />
-        <p></p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: case-study, fundamentals</p>
@@ -518,7 +817,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

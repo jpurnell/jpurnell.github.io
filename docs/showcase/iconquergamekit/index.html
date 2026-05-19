@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquergamekit" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,13 +262,13 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A freshly minted Swift 6.2 package that establishes the scaffolding for shared game logic across Apple’s entire platform ecosystem.
+          <p>A freshly minted Swift 6.2 package that establishes the scaffolding for shared game logic across Apple’s entire platform ecosystem.</p>
         </blockquote>
-        <h2>Problem</h2>Building a game that runs well on iPhone, Apple TV, Mac, Apple Watch, and Vision Pro is not a matter of writing one codebase and hoping for the best. Platform-specific quirks, input models, and performance characteristics demand that shared logic be isolated deliberately — cleanly separated from any one host environment. The challenge IconquerGameKit sets out to address is providing a reliable, testable game logic layer that any surface in the Iconquer family can depend on without coupling itself to a specific platform’s frameworks or assumptions.
-        <h2>Approach</h2>Justin initialized IconquerGameKit as a modern Swift package targeting Swift 6.2, the toolchain’s latest structured-concurrency-era release. Rather than scoping the library narrowly, he declared support for all five of Apple’s current platforms — macOS, iOS, tvOS, watchOS, and visionOS — from the outset. That upfront declaration is itself an architectural commitment: every API surface added to the library will need to justify its presence across the full matrix, discouraging the kind of platform-creep that tends to make shared libraries quietly un-shareable. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>Building a game that runs well on iPhone, Apple TV, Mac, Apple Watch, and Vision Pro is not a matter of writing one codebase and hoping for the best. Platform-specific quirks, input models, and performance characteristics demand that shared logic be isolated deliberately — cleanly separated from any one host environment. The challenge IconquerGameKit sets out to address is providing a reliable, testable game logic layer that any surface in the Iconquer family can depend on without coupling itself to a specific platform’s frameworks or assumptions.</p>
+        <h2>Approach</h2>
+        <p>Justin initialized IconquerGameKit as a modern Swift package targeting Swift 6.2, the toolchain’s latest structured-concurrency-era release. Rather than scoping the library narrowly, he declared support for all five of Apple’s current platforms — macOS, iOS, tvOS, watchOS, and visionOS — from the outset. That upfront declaration is itself an architectural commitment: every API surface added to the library will need to justify its presence across the full matrix, discouraging the kind of platform-creep that tends to make shared libraries quietly un-shareable.</p>
         <p>The package ships with two targets baked in from the first commit: <code>IconquerGameKit</code> (the production library) and <code>IconquerGameKitTests</code> (its test suite). Standing up the test target at project creation, before any feature code exists, signals an intention to treat testability as a property of the architecture rather than something retrofitted later.</p>
         <p>The two-commit history — both landing within 18 seconds of each other on April 10, 2026 — reads as a deliberate initialization sequence: repository scaffolding followed immediately by package configuration, with no loose exploration commits muddying the record.</p>
         <h2>Results</h2>
@@ -278,17 +279,15 @@
           <li><strong>Test target present from the initial commit</strong>, establishing a test-first contract before any domain logic is authored.</li>
         </ul>
         <h2>Judgment Calls</h2>
-        <strong>Versioning immediately.</strong> Tagging 
-        <code>v0.1.0</code> on a two-commit repository might look premature, but it reflects sound dependency management thinking. Downstream packages in a multi-repo game project need a stable ref to pin against. A named release — even a nascent one — is more trustworthy than a floating branch tip. James made the call that a stable identity matters more than waiting for the library to feel “complete.”
-        <p></p>
+        <p><strong>Versioning immediately.</strong> Tagging <code>v0.1.0</code> on a two-commit repository might look premature, but it reflects sound dependency management thinking. Downstream packages in a multi-repo game project need a stable ref to pin against. A named release — even a nascent one — is more trustworthy than a floating branch tip. James made the call that a stable identity matters more than waiting for the library to feel “complete.”</p>
         <p><strong>All five platforms, day one.</strong> It would have been simpler to start with iOS and macOS and add watchOS and tvOS later. The risk of that approach is that late-added platforms surface architectural assumptions baked in during the iOS-first phase — assumptions about screen size, input, or lifecycle that quietly break smaller targets. By declaring the full platform surface at initialization, every subsequent design decision is made with the constraint already present.</p>
         <p><strong>Swift 6.2 without hesitation.</strong> Adopting the latest tools version means opting into Swift 6’s strict concurrency checking. For a game logic library that will eventually model state, timers, and potentially networked play, building on structured concurrency from the ground up is the right foundation — even if it asks more of contributors early.</p>
         <p>The project is young, but its shape is intentional. IconquerGameKit starts narrow on code and wide on commitment, which is exactly the right posture for a shared library that other work will depend on.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
@@ -301,7 +300,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

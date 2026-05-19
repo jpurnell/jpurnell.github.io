@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/BusinessMath/week-12/01-mon-what-worked" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -292,236 +293,286 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">What Worked: Practices That Delivered Results</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMath Quarterly Series</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">7 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p><strong>Part 39 of 12-Week BusinessMath Series</strong>
-          <hr />After building BusinessMath from scratch—3,552 tests, 50+ DocC tutorials, 6 case studies—certain practices emerged as force multipliers. Here’s what worked, why it worked, and how you can apply it.
-          <hr /></p>
+        <p><strong>Part 39 of 12-Week BusinessMath Series</strong></p>
+        <hr />
+        <p>After building BusinessMath from scratch—3,552 tests, 50+ DocC tutorials, 6 case studies—certain practices emerged as force multipliers. Here’s what worked, why it worked, and how you can apply it.</p>
+        <hr />
         <h2>1. Test-First Development (Every. Single. Time.)</h2>
-        <strong>Practice</strong>: Write the test before the implementation. Always.
-        <p></p>
+        <p><strong>Practice</strong>: Write the test before the implementation. Always.</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">// FIRST: Write this test<br />func testIRRConvergence() throws {<br />    let cashFlows = [-100_000.0, 30_000, 40_000, 45_000, 50_000]<br /><br />    let irr = try irr(cashFlows: cashFlows)<br /><br />    // Verify: NPV at IRR should be ~0<br />    let npvAtIRR = npv(discountRate: irr, cashFlows: cashFlows)<br /><br />    XCTAssertEqual(npvAtIRR, 0.0, accuracy: 1e-6, “NPV at IRR must be zero”)<br />    XCTAssertEqual(irr, 0.209, accuracy: 1e-3, “IRR should be ~20.9%”)<br />}<br /><br />// THEN: Implement until test passes<br />func irr(cashFlows: [Double]) throws -&gt; Double {<br />    // Newton-Raphson iteration…<br />    // (Implementation driven by test requirements)<br />}<br /></code></pre>
-        <strong>Why It Worked</strong>:
+        <pre><code class="language-swift">// FIRST: Write this test
+func testIRRConvergence() throws {
+    let cashFlows = [-100_000.0, 30_000, 40_000, 45_000, 50_000]
+
+    let irr = try irr(cashFlows: cashFlows)
+
+    // Verify: NPV at IRR should be ~0
+    let npvAtIRR = npv(discountRate: irr, cashFlows: cashFlows)
+
+    XCTAssertEqual(npvAtIRR, 0.0, accuracy: 1e-6, "NPV at IRR must be zero")
+    XCTAssertEqual(irr, 0.209, accuracy: 1e-3, "IRR should be ~20.9%")
+}
+
+// THEN: Implement until test passes
+func irr(cashFlows: [Double]) throws -&gt; Double {
+    // Newton-Raphson iteration...
+    // (Implementation driven by test requirements)
+}
+</code></pre>
+        <p><strong>Why It Worked</strong>:</p>
         <ul>
           <li>Caught edge cases before they became bugs (negative cash flows, single period, all zeros)</li>
           <li>Forced clear API design (if it’s hard to test, it’s hard to use)</li>
           <li>Enabled fearless refactoring (change internals, tests still pass)</li>
           <li><strong>3,552 tests = 99.9% confidence in production</strong></li>
         </ul>
-        <strong>Lesson</strong>: If you can’t test it easily, redesign it. Tests are your specification.
+        <p><strong>Lesson</strong>: If you can’t test it easily, redesign it. Tests are your specification.</p>
         <hr />
         <h2>2. Real-World Validation (Compare to Textbooks)</h2>
-        <strong>Practice</strong>: Every calculation validated against published examples.
-        <p></p>
+        <p><strong>Practice</strong>: Every calculation validated against published examples.</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">// Hull (2018) “Options, Futures, and Other Derivatives”, Example 15.6<br />func testBlackScholesVsHull() {<br />    let option = EuropeanOption(<br />        type: .call,<br />        strike: 100.0,<br />        expiry: .years(0.25),<br />        spotPrice: 100.0,<br />        riskFreeRate: 0.05,<br />        volatility: 0.20<br />    )<br /><br />    let price = option.price()<br /><br />    // Hull’s textbook result: $3.399<br />    XCTAssertEqual(price, 3.399, accuracy: 0.001, “Must match Hull Example 15.6”)<br />}<br /></code></pre>
-        <strong>Why It Worked</strong>:
+        <pre><code class="language-swift">// Hull (2018) "Options, Futures, and Other Derivatives", Example 15.6
+func testBlackScholesVsHull() {
+    let option = EuropeanOption(
+        type: .call,
+        strike: 100.0,
+        expiry: .years(0.25),
+        spotPrice: 100.0,
+        riskFreeRate: 0.05,
+        volatility: 0.20
+    )
+
+    let price = option.price()
+
+    // Hull's textbook result: $3.399
+    XCTAssertEqual(price, 3.399, accuracy: 0.001, "Must match Hull Example 15.6")
+}
+</code></pre>
+        <p><strong>Why It Worked</strong>:</p>
         <ul>
           <li>Built trust: “This matches the textbook, so it’s probably right”</li>
           <li>Caught implementation errors early (wrong formula, incorrect units)</li>
           <li>Documentation bonus: Tests serve as worked examples</li>
           <li><strong>Academic validation → production confidence</strong></li>
         </ul>
-        <strong>Lesson</strong>: Find authoritative sources, implement their examples, make them pass.
+        <p><strong>Lesson</strong>: Find authoritative sources, implement their examples, make them pass.</p>
         <hr />
         <h2>3. Generics Over Duplication</h2>
-        <strong>Practice</strong>: Write once for 
-        <code>Real</code>, works for 
-        <code>Double</code>, 
-        <code>Decimal</code>, 
-        <code>Float</code>.
-        <p></p>
+        <p><strong>Practice</strong>: Write once for <code>Real</code>, works for <code>Double</code>, <code>Decimal</code>, <code>Float</code>.</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">// BEFORE (duplicated):<br />func npv(discountRate: Double, cashFlows: [Double]) -&gt; Double { … }<br />func npvDecimal(discountRate: Decimal, cashFlows: [Decimal]) -&gt; Decimal { … }<br /><br />// AFTER (generic):<br />func npv
+        <pre><code class="language-swift">// BEFORE (duplicated):
+func npv(discountRate: Double, cashFlows: [Double]) -&gt; Double { ... }
+func npvDecimal(discountRate: Decimal, cashFlows: [Decimal]) -&gt; Decimal { ... }
+
+// AFTER (generic):
+func npv
             <t: real>
-              (discountRate: T, cashFlows: [T]) -&gt; T {
-              <br /> cashFlows.enumerated().reduce(T.zero) { sum, pair in
-              <br /> let (period, cashFlow) = pair
-              <br /> let denominator = T(1) + discountRate
-              <br /> return sum + cashFlow / denominator.pow(T(period + 1))
-              <br /> }
-              <br />}
-              <br />
-              <br />// Now works with ANY numeric type
-              <br />let doubleNPV = npv(discountRate: 0.10, cashFlows: [100.0, 200.0])
-              <br />let decimalNPV = npv(discountRate: Decimal(0.10), cashFlows: [Decimal(100), Decimal(200)])
-              <br />
+              (discountRate: T, cashFlows: [T]) -&gt; T { cashFlows.enumerated().reduce(T.zero) { sum, pair in let (period, cashFlow) = pair let denominator = T(1) + discountRate return sum + cashFlow / denominator.pow(T(period + 1)) } } // Now works with ANY numeric type let doubleNPV = npv(discountRate: 0.10, cashFlows: [100.0, 200.0]) let decimalNPV = npv(discountRate: Decimal(0.10), cashFlows: [Decimal(100), Decimal(200)]) 
             </t:></code></pre>
-        <strong>Why It Worked</strong>:
+        <p><strong>Why It Worked</strong>:</p>
         <ul>
           <li>Eliminated code duplication (one implementation, multiple types)</li>
           <li>Type safety: Compiler enforces consistency (can’t mix <code>Double</code> and <code>Decimal</code>)</li>
           <li>High-precision finance: Users can choose <code>Decimal</code> when cents matter</li>
           <li><strong>Cut codebase size 40% vs. separate implementations</strong></li>
         </ul>
-        <strong>Lesson</strong>: If you’re copy-pasting for different types, you need generics.
+        <p><strong>Lesson</strong>: If you’re copy-pasting for different types, you need generics.</p>
         <hr />
         <h2>4. Result Builders for Domain-Specific Language</h2>
-        <strong>Practice</strong>: Make financial models read like business logic, not code.
-        <p></p>
+        <p><strong>Practice</strong>: Make financial models read like business logic, not code.</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">// Financial statement using result builder<br />@ThreeStatementModelBuilder<br />var acmeFinancials: ThreeStatementModel {<br />    // Income Statement<br />    Revenue(entity: acme, timeSeries: revenueSeries)<br />    CostOfGoodsSold(entity: acme, timeSeries: cogsSeries)<br />    OperatingExpenses(entity: acme, timeSeries: opexSeries)<br /><br />    // Balance Sheet<br />    Cash(entity: acme, timeSeries: cashSeries)<br />    AccountsReceivable(entity: acme, timeSeries: arSeries)<br />    Inventory(entity: acme, timeSeries: inventorySeries)<br /><br />    // Cash Flow Statement<br />    OperatingCashFlow(entity: acme, timeSeries: ocfSeries)<br />    CapEx(entity: acme, timeSeries: capexSeries)<br />}<br /><br />// vs. imperative alternative:<br />let revenue = Revenue(…)<br />let cogs = CostOfGoodsSold(…)<br />// … 20 more lines …<br />let model = ThreeStatementModel(<br />    incomeStatement: IncomeStatement(…),<br />    balanceSheet: BalanceSheet(…),<br />    cashFlowStatement: CashFlowStatement(…)<br />)<br /></code></pre>
-        <strong>Why It Worked</strong>:
+        <pre><code class="language-swift">// Financial statement using result builder
+@ThreeStatementModelBuilder
+var acmeFinancials: ThreeStatementModel {
+    // Income Statement
+    Revenue(entity: acme, timeSeries: revenueSeries)
+    CostOfGoodsSold(entity: acme, timeSeries: cogsSeries)
+    OperatingExpenses(entity: acme, timeSeries: opexSeries)
+
+    // Balance Sheet
+    Cash(entity: acme, timeSeries: cashSeries)
+    AccountsReceivable(entity: acme, timeSeries: arSeries)
+    Inventory(entity: acme, timeSeries: inventorySeries)
+
+    // Cash Flow Statement
+    OperatingCashFlow(entity: acme, timeSeries: ocfSeries)
+    CapEx(entity: acme, timeSeries: capexSeries)
+}
+
+// vs. imperative alternative:
+let revenue = Revenue(...)
+let cogs = CostOfGoodsSold(...)
+// ... 20 more lines ...
+let model = ThreeStatementModel(
+    incomeStatement: IncomeStatement(...),
+    balanceSheet: BalanceSheet(...),
+    cashFlowStatement: CashFlowStatement(...)
+)
+</code></pre>
+        <p><strong>Why It Worked</strong>:</p>
         <ul>
           <li>Readable by non-programmers (CFOs can review model structure)</li>
           <li>Type-safe (compiler catches structural errors)</li>
           <li>Declarative (say what you want, not how to build it)</li>
           <li><strong>Reduced errors 67% vs. imperative construction</strong></li>
         </ul>
-        <strong>Lesson</strong>: Use result builders when domain experts need to read/write code.
+        <p><strong>Lesson</strong>: Use result builders when domain experts need to read/write code.</p>
         <hr />
         <h2>5. DocC Integration from Day One</h2>
-        <strong>Practice</strong>: Documentation isn’t separate—it’s part of the codebase.
-        <p></p>
+        <p><strong>Practice</strong>: Documentation isn’t separate—it’s part of the codebase.</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">/// Calculates the internal rate of return for a series of cash flows.<br />///<br />/// The IRR is the discount rate that makes NPV equal to zero:<br />///<br />/// <code>math<br />/// NPV = \sum_{t=0}^{n} \frac{CF_t}{(1 + IRR)^t} = 0<br />/// </code><br />///<br />/// ## Example<br />///<br />/// Calculate IRR for a 5-year investment:<br />///<br />/// <code>swift<br />/// let cashFlows = [-100_000.0, 30_000, 40_000, 45_000, 50_000]<br />/// let irr = try irr(cashFlows: cashFlows)<br />/// // → 0.209 (20.9% annual return)<br />/// </code><br />///<br />/// - Parameters:<br />///   - cashFlows: Array of periodic cash flows (first is typically negative investment)<br />/// - Returns: The internal rate of return as a decimal (0.10 = 10%)<br />/// - Throws: <code>FinancialError.noConvergence</code> if IRR cannot be found<br />///<br />/// - Note: Uses Newton-Raphson method with maximum 100 iterations<br />/// - SeeAlso: <code>npv(discountRate:cashFlows:)</code><br />public func irr
+        <pre><code class="language-swift">/// Calculates the internal rate of return for a series of cash flows.
+///
+/// The IRR is the discount rate that makes NPV equal to zero:
+///
+/// ```math
+/// NPV = \sum_{t=0}^{n} \frac{CF_t}{(1 + IRR)^t} = 0
+/// ```
+///
+/// ## Example
+///
+/// Calculate IRR for a 5-year investment:
+///
+/// ```swift
+/// let cashFlows = [-100_000.0, 30_000, 40_000, 45_000, 50_000]
+/// let irr = try irr(cashFlows: cashFlows)
+/// // → 0.209 (20.9% annual return)
+/// ```
+///
+/// - Parameters:
+///   - cashFlows: Array of periodic cash flows (first is typically negative investment)
+/// - Returns: The internal rate of return as a decimal (0.10 = 10%)
+/// - Throws: `FinancialError.noConvergence` if IRR cannot be found
+///
+/// - Note: Uses Newton-Raphson method with maximum 100 iterations
+/// - SeeAlso: ``npv(discountRate:cashFlows:)``
+public func irr
             <t: real>
-              (cashFlows: [T]) throws -&gt; T {
-              <br /> // Implementation…
-              <br />}
-              <br />
+              (cashFlows: [T]) throws -&gt; T { // Implementation... } 
             </t:></code></pre>
-        <strong>Why It Worked</strong>:
+        <p><strong>Why It Worked</strong>:</p>
         <ul>
           <li>Single source of truth (code and docs in same file)</li>
           <li>Examples compile (Xcode builds them, catches errors)</li>
           <li>Auto-generated reference (DocC builds beautiful site)</li>
           <li><strong>User feedback: “Best financial library docs we’ve seen”</strong></li>
         </ul>
-        <strong>Lesson</strong>: Documentation as code &gt; documentation about code.
+        <p><strong>Lesson</strong>: Documentation as code &gt; documentation about code.</p>
         <hr />
         <h2>6. Progressive Complexity (Simple First, Advanced Later)</h2>
-        <strong>Practice</strong>: Start with basic version, add complexity only when needed.
-        <p></p>
+        <p><strong>Practice</strong>: Start with basic version, add complexity only when needed.</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">// v1: Simple NPV (90% of use cases)<br />func npv
+        <pre><code class="language-swift">// v1: Simple NPV (90% of use cases)
+func npv
             <t: real>
-              (discountRate: T, cashFlows: [T]) -&gt; T
-              <br />
-              <br />// v2: Irregular periods (10% of use cases)
-              <br />func xnpv
+              (discountRate: T, cashFlows: [T]) -&gt; T // v2: Irregular periods (10% of use cases) func xnpv
               <t: real>
-                (discountRate: T, cashFlows: [(date: Date, amount: T)]) -&gt; T
-                <br />
-                <br />// v3: Custom discounting (1% of use cases)
-                <br />func npv
+                (discountRate: T, cashFlows: [(date: Date, amount: T)]) -&gt; T // v3: Custom discounting (1% of use cases) func npv
                 <t: real>
-                  (
-                  <br /> cashFlows: [T],
-                  <br /> discountFactors: (period: Int, cashFlow: T) -&gt; T
-                  <br />) -&gt; T
-                  <br />
+                  ( cashFlows: [T], discountFactors: (period: Int, cashFlow: T) -&gt; T ) -&gt; T 
                 </t:>
               </t:>
             </t:></code></pre>
-        <strong>Why It Worked</strong>:
+        <p><strong>Why It Worked</strong>:</p>
         <ul>
           <li>Onboarding: Beginners use simple version, advanced users discover features</li>
           <li>Maintainability: Core functions stay clean, complexity isolated</li>
           <li>Performance: Simple path optimized, complex path flexible</li>
           <li><strong>80% of users need 20% of features—prioritize that 20%</strong></li>
         </ul>
-        <strong>Lesson</strong>: Every feature adds cognitive load. Add features sparingly.
+        <p><strong>Lesson</strong>: Every feature adds cognitive load. Add features sparingly.</p>
         <hr />
         <h2>7. Parameter Recovery Tests</h2>
-        <strong>Practice</strong>: If optimizer finds X, can it find X again starting from Y?
-        <p></p>
+        <p><strong>Practice</strong>: If optimizer finds X, can it find X again starting from Y?</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">func testBlackScholesImpliedVolatility() {<br />    let trueVolatility = 0.25<br /><br />    let option = EuropeanOption(<br />        type: .call,<br />        strike: 100.0,<br />        expiry: .years(1.0),<br />        spotPrice: 100.0,<br />        riskFreeRate: 0.05,<br />        volatility: trueVolatility<br />    )<br /><br />    // Calculate market price with true volatility<br />    let marketPrice = option.price()<br /><br />    // Recover volatility from market price<br />    let impliedVol = option.impliedVolatility(marketPrice: marketPrice)<br /><br />    // Should recover input exactly<br />    XCTAssertEqual(impliedVol, trueVolatility, accuracy: 1e-6,<br />                   “Implied volatility must recover input volatility”)<br />}<br /></code></pre>
-        <strong>Why It Worked</strong>:
+        <pre><code class="language-swift">func testBlackScholesImpliedVolatility() {
+    let trueVolatility = 0.25
+
+    let option = EuropeanOption(
+        type: .call,
+        strike: 100.0,
+        expiry: .years(1.0),
+        spotPrice: 100.0,
+        riskFreeRate: 0.05,
+        volatility: trueVolatility
+    )
+
+    // Calculate market price with true volatility
+    let marketPrice = option.price()
+
+    // Recover volatility from market price
+    let impliedVol = option.impliedVolatility(marketPrice: marketPrice)
+
+    // Should recover input exactly
+    XCTAssertEqual(impliedVol, trueVolatility, accuracy: 1e-6,
+                   "Implied volatility must recover input volatility")
+}
+</code></pre>
+        <p><strong>Why It Worked</strong>:</p>
         <ul>
           <li>Validates numerical methods (proves optimization actually works)</li>
           <li>Catches subtle bugs (rounding errors, iteration limits)</li>
           <li>Builds confidence (if it can’t find known answer, it’s broken)</li>
           <li><strong>Found 23 bugs that unit tests missed</strong></li>
         </ul>
-        <strong>Lesson</strong>: Test your solver by giving it problems with known answers.
+        <p><strong>Lesson</strong>: Test your solver by giving it problems with known answers.</p>
         <hr />
         <h2>8. Async/Await for Optimization Progress</h2>
-        <strong>Practice</strong>: Use structured concurrency for long-running calculations.
-        <p></p>
+        <p><strong>Practice</strong>: Use structured concurrency for long-running calculations.</p>
         <p><strong>Example</strong>:</p>
-        <pre><code class="language-swift">// Optimization with progress updates<br />actor PortfolioOptimizer {<br />    func optimize() async throws -&gt; Result {<br />        for iteration in 0..
-            <maxiterations {<br>
-               let value = evaluateObjective()
-              <br />
-              <br /> // Publish progress
-              <br /> await progressPublisher.publish(
-              <br /> iteration: iteration,
-              <br /> bestValue: value
-              <br /> )
-              <br />
-              <br /> // Check cancellation
-              <br /> try Task.checkCancellation()
-              <br /> }
-              <br /> }
-              <br />}
-              <br />
-              <br />// UI shows live progress
-              <br />for await progress in optimizer.optimizationProgress {
-              <br /> print(“Iteration (progress.iteration): (progress.bestValue)”)
-              <br />}
-              <br />
-            </maxiterations></code></pre>
-        <strong>Why It Worked</strong>:
+        <pre><code class="language-swift">// Optimization with progress updates
+actor PortfolioOptimizer {
+    func optimize() async throws -&gt; Result {
+        for iteration in 0..
+            <maxiterations { let value="evaluateObjective()" publish progress await progresspublisher.publish( iteration: iteration, bestvalue: value ) check cancellation try task.checkcancellation() } } } ui shows live progress for await progress in optimizer.optimizationprogress { print("iteration \(progress.iteration): \(progress.bestvalue)") }< code></maxiterations></code></pre>
+        <p><code class="language-swift"><strong>Why It Worked</strong>:</code></p>
         <ul>
-          <li>User experience: “I can see it’s working” vs. “Is it frozen?”</li>
-          <li>Cancellation: Stop optimization if market changes</li>
-          <li>Resource management: Actors prevent race conditions</li>
-          <li><strong>User satisfaction: 9.2/10 vs. 6.1/10 for synchronous version</strong></li>
+          <li><code class="language-swift">User experience: “I can see it’s working” vs. “Is it frozen?”</code></li>
+          <li><code class="language-swift">Cancellation: Stop optimization if market changes</code></li>
+          <li><code class="language-swift">Resource management: Actors prevent race conditions</code></li>
+          <li><code class="language-swift"><strong>User satisfaction: 9.2/10 vs. 6.1/10 for synchronous version</strong></code></li>
         </ul>
-        <strong>Lesson</strong>: For expensive operations, make progress visible.
-        <hr />
-        <h2>The Meta-Lesson</h2>
-        <strong>What really worked wasn’t any single practice—it was the combination.</strong>
-        <ul>
-          <li>Test-first → Real-world validation → Confidence to ship</li>
-          <li>Generics → Result builders → DSL that delights users</li>
-          <li>DocC → Progressive complexity → Gentle learning curve</li>
-          <li>Async/await → Progress updates → Production-ready UX</li>
-        </ul>
-        <strong>Each practice amplified the others.</strong>
-        <p></p>
-        <p>That’s the real insight: Great software isn’t built with one best practice. It’s built with many practices that reinforce each other.
-          <hr /></p>
-        <h2>Try It Yourself</h2>Apply these practices to your next project:
-        <ol>
-          <li><strong>This week</strong>: Write one test before one implementation</li>
-          <li><strong>This month</strong>: Add one generic where you have duplication</li>
-          <li><strong>This quarter</strong>: Validate one calculation against a textbook</li>
-          <li><strong>This year</strong>: Build one result builder DSL for your domain</li>
-        </ol>Start small. Compound the benefits.
-        <hr />
-        <strong>Tomorrow</strong>: “What Didn’t Work” — honest lessons from failures, dead ends, and abandoned approaches.
-        <hr />
-        <strong>Series</strong>: [Week 12 of 12] | 
-        <strong>Topic</strong>: [Reflections] | 
-        <strong>Case Studies</strong>: [5/6 Complete]
-        <p></p>
-        <p><strong>Topics Covered</strong>: Test-driven development • Real-world validation • Generics • Result builders • DocC • Progressive complexity • Parameter recovery • Async/await</p>
-        <p><strong>Final Week</strong>: [3 posts remaining] • [Final case study Thursday]</p>
+        <p><code class="language-swift"><strong>Lesson</strong>: For expensive operations, make progress visible.</code></p>
+        <code class="language-swift">
+          <hr /><h2>The Meta-Lesson</h2><p><strong>What really worked wasn’t any single practice—it was the combination.</strong></p>
+          <ul>
+            <li>Test-first → Real-world validation → Confidence to ship</li>
+            <li>Generics → Result builders → DSL that delights users</li>
+            <li>DocC → Progressive complexity → Gentle learning curve</li>
+            <li>Async/await → Progress updates → Production-ready UX</li>
+          </ul><p><strong>Each practice amplified the others.</strong></p><p>That’s the real insight: Great software isn’t built with one best practice. It’s built with many practices that reinforce each other.</p>
+          <hr /><h2>Try It Yourself</h2><p>Apply these practices to your next project:</p>
+          <ol>
+            <li><strong>This week</strong>: Write one test before one implementation</li>
+            <li><strong>This month</strong>: Add one generic where you have duplication</li>
+            <li><strong>This quarter</strong>: Validate one calculation against a textbook</li>
+            <li><strong>This year</strong>: Build one result builder DSL for your domain</li>
+          </ol><p>Start small. Compound the benefits.</p>
+          <hr /><p><strong>Tomorrow</strong>: “What Didn’t Work” — honest lessons from failures, dead ends, and abandoned approaches.</p>
+          <hr /><p><strong>Series</strong>: [Week 12 of 12] | <strong>Topic</strong>: [Reflections] | <strong>Case Studies</strong>: [5/6 Complete]</p><p><strong>Topics Covered</strong>: Test-driven development • Real-world validation • Generics • Result builders • DocC • Progressive complexity • Parameter recovery • Async/await</p><p><strong>Final Week</strong>: [3 posts remaining] • [Final case study Thursday]</p></code>
       </div>
-      <hr />
-      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: development-process</p>
+      <code class="language-swift">
+        <hr /><p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: development-process</p></code>
     </div>
     <header>
       <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
         <div class="container flex-wrap flex-lg-nowrap">
-          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-          <div id="navbarCollapse" class="collapse navbar-collapse">
-            <ul class="navbar-nav mb-2 mb-md-0 col ">
-              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
-              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
-              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
-              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
-              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
-              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
-              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
-              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
-            </ul>
-          </div>
+          <code class="language-swift"><button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+            <div id="navbarCollapse" class="collapse navbar-collapse">
+              <ul class="navbar-nav mb-2 mb-md-0 col ">
+                <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+                <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+                <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+                <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+                <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+                <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+                <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+                <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+                <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+              </ul>
+            </div></code>
         </div>
       </nav>
     </header>

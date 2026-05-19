@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquerui" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,29 +262,27 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem.
+          <p>A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem.</p>
         </blockquote>
-        <h2>Problem</h2>Modern Swift applications increasingly need to run across Apple’s full platform spectrum — Mac, iPhone, Apple TV, and Apple Vision Pro — without maintaining separate UI codebases. For the Iconquer app, this fragmentation posed a real challenge: how do you build UI components that feel native and appropriate on each platform while keeping the underlying logic unified and testable? The answer was to extract UI concerns into a dedicated package, IconquerUI, purpose-built for cross-platform consistency from day one.
-        <h2>Approach</h2>The project was structured as a Swift Package Manager library targeting Swift Tools version 6.2, the current frontier of Swift’s concurrency and strict-mode capabilities. Rather than bolting on platform support later, the package manifest was written from the start to declare explicit support for macOS, iOS, tvOS, and visionOS — a decision that forces architectural discipline early, since any platform-specific assumption surfaces immediately as a build error on the unsupported targets. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>Modern Swift applications increasingly need to run across Apple’s full platform spectrum — Mac, iPhone, Apple TV, and Apple Vision Pro — without maintaining separate UI codebases. For the Iconquer app, this fragmentation posed a real challenge: how do you build UI components that feel native and appropriate on each platform while keeping the underlying logic unified and testable? The answer was to extract UI concerns into a dedicated package, IconquerUI, purpose-built for cross-platform consistency from day one.</p>
+        <h2>Approach</h2>
+        <p>The project was structured as a Swift Package Manager library targeting Swift Tools version 6.2, the current frontier of Swift’s concurrency and strict-mode capabilities. Rather than bolting on platform support later, the package manifest was written from the start to declare explicit support for macOS, iOS, tvOS, and visionOS — a decision that forces architectural discipline early, since any platform-specific assumption surfaces immediately as a build error on the unsupported targets.</p>
         <p>The package exposes two targets: <code>IconquerUI</code>, the library itself, and <code>IconquerUITests</code>, a dedicated test target. This separation signals an intent to treat the UI layer as a verifiable unit rather than a collection of visual intuitions. The single-repository, single-contributor structure kept decision-making tight and iteration fast across the four-week development window.</p>
-        <h2>Results</h2>Over 27 days — from the first commit on April 10, 2026 to the most recent on May 7, 2026 — the developer moved from an empty repository to a tagged release: 
-        <strong>IconquerUI v0.1.0</strong>. Eight commits mark a disciplined, incremental build rather than a single large dump of code. The package is live, versioned, and consumable by the parent Iconquer application or any downstream Swift project that declares it as a dependency.
-        <p></p>
+        <h2>Results</h2>
+        <p>Over 27 days — from the first commit on April 10, 2026 to the most recent on May 7, 2026 — the developer moved from an empty repository to a tagged release: <strong>IconquerUI v0.1.0</strong>. Eight commits mark a disciplined, incremental build rather than a single large dump of code. The package is live, versioned, and consumable by the parent Iconquer application or any downstream Swift project that declares it as a dependency.</p>
         <p>The test target shipped alongside the library itself, meaning the v0.1.0 release is not just functional code but testable code — a meaningful distinction for a UI package where regressions can be subtle and platform-specific.</p>
         <h2>Judgment Calls</h2>
-        <strong>Targeting visionOS from the start.</strong> It would have been easy to treat visionOS as a future concern. Instead it was included in the initial platform matrix alongside iOS, macOS, and tvOS. This is a bet that spatial computing is a first-class deployment target for Iconquer, not an afterthought — and structuring for it early avoids the painful refactoring that comes from retrofitting a platform into an already-settled component architecture.
-        <p></p>
+        <p><strong>Targeting visionOS from the start.</strong> It would have been easy to treat visionOS as a future concern. Instead it was included in the initial platform matrix alongside iOS, macOS, and tvOS. This is a bet that spatial computing is a first-class deployment target for Iconquer, not an afterthought — and structuring for it early avoids the painful refactoring that comes from retrofitting a platform into an already-settled component architecture.</p>
         <p><strong>Swift 6.2 toolchain.</strong> Adopting the leading-edge tools version means opting into Swift’s strictest concurrency checking. For a UI library that will be consumed across asynchronous rendering contexts on multiple platforms, this is the right kind of early pain — catching data-race hazards at compile time rather than in production.</p>
         <p><strong>Library over framework.</strong> Packaging this as a Swift library rather than a standalone framework keeps it lightweight and composable. Consumers get what they need without carrying unnecessary overhead, and the package remains easy to audit and extend as the Iconquer product evolves.</p>
         <p><strong>Separating UI from app logic in the repository structure.</strong> The name <code>IconquerUI</code> against the broader <code>IconquerApp</code> path suggests a deliberate layering: the application shell lives in one place, the reusable interface primitives in another. Even at v0.1.0, this boundary is worth establishing — it’s the difference between a project that scales and one that becomes a monolith.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
@@ -296,7 +295,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

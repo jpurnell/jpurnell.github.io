@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/iconquermatch" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,34 +262,30 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A focused Swift 6 library that separates match lifecycle management from game rules, giving the iConquer ecosystem a single, agent-agnostic conductor for running games end-to-end.
+          <p>A focused Swift 6 library that separates match lifecycle management from game rules, giving the iConquer ecosystem a single, agent-agnostic conductor for running games end-to-end.</p>
         </blockquote>
-        <h2>Problem</h2>Turn-based strategy games carry a deceptive complexity beneath their familiar surface. The rules of play — territory ownership, troop counts, attack resolution — are one problem. But 
-        <em>running</em> a game is another problem entirely: who moves next, how long they have to decide, what happens when an AI agent goes silent, and how the full sequence of decisions gets preserved for replay or analysis. Without a clear boundary between these concerns, that orchestration logic tends to leak into every consumer of the rules engine, creating duplication and fragility. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>Turn-based strategy games carry a deceptive complexity beneath their familiar surface. The rules of play — territory ownership, troop counts, attack resolution — are one problem. But <em>running</em> a game is another problem entirely: who moves next, how long they have to decide, what happens when an AI agent goes silent, and how the full sequence of decisions gets preserved for replay or analysis. Without a clear boundary between these concerns, that orchestration logic tends to leak into every consumer of the rules engine, creating duplication and fragility.</p>
         <p>IconquerMatch was built to draw that boundary cleanly for iConquer, a Risk-style turn-based strategy game. It sits as the middle layer in a three-tier architecture — between <code>IconquerCore</code> (the rules engine that knows nothing about runtime) and any consumer application: the <code>IconquerCLI</code> terminal client, the SwiftUI app running headless matches in the background, or test harnesses simulating thousands of games with mock agents. The library’s job is narrow and explicit: bind players to seats, request moves from agents within deadlines, validate and apply those moves through Core, record everything, and produce a final result.</p>
-        <h2>Approach</h2>Justin Purnell established a design-first workflow before writing production code. A single formal design proposal preceded implementation, and a 
-        <code>CLAUDE.md</code> file was committed alongside the source — encoding session start procedures, development workflow conventions, quality gates, and references. This is a deliberate working style: the architectural thinking is written down and version-controlled, not just held in the developer’s head.
-        <p></p>
+        <h2>Approach</h2>
+        <p>Justin Purnell established a design-first workflow before writing production code. A single formal design proposal preceded implementation, and a <code>CLAUDE.md</code> file was committed alongside the source — encoding session start procedures, development workflow conventions, quality gates, and references. This is a deliberate working style: the architectural thinking is written down and version-controlled, not just held in the developer’s head.</p>
         <p>The central abstraction is <code>PlayerAgent</code>, a protocol that decouples move production from match orchestration entirely. Whether a move comes from a human waiting at a terminal, a local deterministic AI, an LLM-backed agent, or an MCP agent over a network connection, <code>MatchRunner</code> neither knows nor cares. The protocol surface is the only contract.</p>
         <p>Layered onto this is <code>SeatBinding</code>, which maps players to agents and carries fallback policy — defining what happens when an agent fails to respond: forfeit, retry, or substitute. Combined with deadline-based move requests, this design prevents a class of failure modes (hung games from slow or unresponsive AI) that only surface at runtime and are painful to debug after the fact. The deadline mechanism was a first-class design decision, not a patch.</p>
         <p>Full move recording via <code>MoveRecord</code> was built in from the start rather than added as an afterthought. Every move in a match is captured, enabling replay, analysis, and parity testing across agent implementations. The library targets macOS, iOS, tvOS, and visionOS, and is authored in Swift 6 with <code>swift-docc-plugin</code> as its only dependency — a deliberately minimal footprint.</p>
-        <h2>Results</h2>IconquerMatch shipped its initial release — v0.1.0 — sixteen days after the first commit, across five focused commits by a single contributor. The library is live on one branch with a clean release tag. The 
-        <code>IconquerMatch</code> and 
-        <code>IconquerMatchTests</code> targets are both present, establishing the testing surface for future agent simulation work. The Swift 6 toolchain adoption means the library is positioned for strict concurrency correctness, which matters for a component that will eventually coordinate async move requests across multiple agents simultaneously.
-        <h2>Judgment Calls</h2>Several decisions in this project reflect craft rather than just output.
-        <p></p>
+        <h2>Results</h2>
+        <p>IconquerMatch shipped its initial release — v0.1.0 — sixteen days after the first commit, across five focused commits by a single contributor. The library is live on one branch with a clean release tag. The <code>IconquerMatch</code> and <code>IconquerMatchTests</code> targets are both present, establishing the testing surface for future agent simulation work. The Swift 6 toolchain adoption means the library is positioned for strict concurrency correctness, which matters for a component that will eventually coordinate async move requests across multiple agents simultaneously.</p>
+        <h2>Judgment Calls</h2>
+        <p>Several decisions in this project reflect craft rather than just output.</p>
         <p><strong>The three-tier split itself.</strong> Separating <code>IconquerCore</code>, <code>IconquerMatch</code>, and consumer applications into distinct packages is a choice with real cost — more moving parts, more explicit interfaces — and real payoff: consumers like <code>IconquerCLI</code> and the SwiftUI app can delegate entirely to <code>MatchRunner</code> without reimplementing any orchestration logic. The design proposal artifact suggests this boundary was deliberated, not stumbled into.</p>
         <p><strong><code>PlayerAgent</code> as a protocol, not a class hierarchy.</strong> Making the agent abstraction a protocol means any type can produce moves — including test doubles, mock agents, and future LLM or MCP integrations — without inheriting from a base class. This is the kind of decision that looks obvious in retrospect and is easy to get wrong under time pressure.</p>
         <p><strong>Deadline and fallback policy as first-class domain concepts.</strong> It would have been simpler to not build deadlines in at v0.1.0 and handle the “slow AI” problem later. Purnell treated it as a correctness requirement from the start. <code>SeatBinding</code> carrying explicit fallback policy (forfeit, retry, substitute) means the library’s behavior under failure is defined and testable, not undefined and surprising.</p>
         <p><strong><code>CLAUDE.md</code> as a workflow artifact.</strong> Committing a file that encodes session start procedures, development conventions, and quality gates into the repository itself signals a developer who thinks about the conditions under which good work gets done — not just the work itself. It makes the project’s working agreements explicit and reviewable.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history" class="img-fluid" />
+        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>
@@ -301,7 +298,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>

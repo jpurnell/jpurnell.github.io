@@ -11,6 +11,7 @@
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
     <link href="https://www.justinpurnell.com/showcase/swiftclikit" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
     <script>(function() {
     function getThemePreference() {
         return localStorage.getItem('custom-theme') || 'auto';
@@ -261,37 +262,29 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
-        <p></p>
         <blockquote>
-          A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow.
+          <p>A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow.</p>
         </blockquote>
-        <h2>Problem</h2>Building command-line tools in Swift on macOS has long meant either reaching for third-party frameworks with heavy dependency trees or writing the same boilerplate — argument parsing, terminal formatting, process management — from scratch on every project. Neither path is satisfying for a developer who cares about craft. SwiftCLIKit sets out to close that gap: a purpose-built, opinionated toolkit for macOS CLI development that keeps dependencies lean, leans into Swift 6’s concurrency model, and grows predictably through a disciplined release cadence. 
-        <p></p>
+        <h2>Problem</h2>
+        <p>Building command-line tools in Swift on macOS has long meant either reaching for third-party frameworks with heavy dependency trees or writing the same boilerplate — argument parsing, terminal formatting, process management — from scratch on every project. Neither path is satisfying for a developer who cares about craft. SwiftCLIKit sets out to close that gap: a purpose-built, opinionated toolkit for macOS CLI development that keeps dependencies lean, leans into Swift 6’s concurrency model, and grows predictably through a disciplined release cadence.</p>
         <p>The addition of a dedicated <code>SwiftCLIKitSSH</code> target signals an early architectural decision to treat remote shell interaction as a first-class concern, not an afterthought — something that distinguishes SwiftCLIKit from simpler argument-parsing libraries.</p>
-        <h2>Approach</h2>The project’s most telling characteristic is the design-first workflow embedded directly into the repository. Three design proposals exist before production code stabilizes, and a 
-        <code>CLAUDE.md</code> file codifies the architectural contract: Session Start rituals, Development Workflow steps, Key Rules, an Architecture section, a Quality Gate, and a References block. This is not incidental documentation — it is the skeleton the project grows around. Writing that document first forces clarity about what the framework is and is not before a single public API is committed.
-        <p></p>
+        <h2>Approach</h2>
+        <p>The project’s most telling characteristic is the design-first workflow embedded directly into the repository. Three design proposals exist before production code stabilizes, and a <code>CLAUDE.md</code> file codifies the architectural contract: Session Start rituals, Development Workflow steps, Key Rules, an Architecture section, a Quality Gate, and a References block. This is not incidental documentation — it is the skeleton the project grows around. Writing that document first forces clarity about what the framework is and is not before a single public API is committed.</p>
         <p>The dependency surface is deliberately minimal. Beyond the Swift standard library and Apple’s own frameworks, the sole external dependency is <code>swift-nio-ssh</code>, Apple’s battle-tested NIO-backed SSH implementation. Choosing an Apple-maintained package rather than a community wrapper reflects a considered trust hierarchy: the SSH subsystem is complex and security-sensitive enough to warrant a known-quantity foundation, while everything else in the framework stays under direct authorial control.</p>
         <p>Structurally, the package separates concerns cleanly into named targets: the core <code>SwiftCLIKit</code> library, the additive <code>SwiftCLIKitSSH</code> module, an <code>swiftclikit-examples</code> target that doubles as living documentation, and parallel test targets for both library modules. Adopting Swift tools version 6.0 and constraining to macOS means the codebase can embrace strict concurrency checking and platform-native APIs without hedging for Linux or Windows compatibility.</p>
-        <h2>Results</h2>Eighteen tagged releases shipped between April 10 and April 13, 2026 — a version history that spans 
-        <code>v0.1.0</code> through 
-        <code>v1.14.0</code> in under 96 hours across 14 commits. That ratio of releases to commits reflects a deliberate, increment-by-increment release discipline: changes are small, tagged immediately, and the version history becomes an auditable changelog of the framework’s surface area expanding over time.
-        <p></p>
+        <h2>Results</h2>
+        <p>Eighteen tagged releases shipped between April 10 and April 13, 2026 — a version history that spans <code>v0.1.0</code> through <code>v1.14.0</code> in under 96 hours across 14 commits. That ratio of releases to commits reflects a deliberate, increment-by-increment release discipline: changes are small, tagged immediately, and the version history becomes an auditable changelog of the framework’s surface area expanding over time.</p>
         <p>The dual test targets — <code>SwiftCLIKitTests</code> and <code>SwiftCLIKitSSHTests</code> — establish that both the core library and the SSH extension are held to independent quality gates, meaning SSH additions cannot silently regress core CLI behavior and vice versa. The examples target ensures the public API is validated in realistic usage, not just in unit isolation.</p>
         <h2>Judgment Calls</h2>
-        <strong>Separating SSH into its own target rather than the core.</strong> Bundling SSH capabilities into the main 
-        <code>SwiftCLIKit</code> target would have been the path of least resistance, but it would have forced every consumer to carry the 
-        <code>swift-nio-ssh</code> dependency regardless of need. Making 
-        <code>SwiftCLIKitSSH</code> an opt-in module keeps the core framework lightweight and the dependency graph honest.
-        <p></p>
+        <p><strong>Separating SSH into its own target rather than the core.</strong> Bundling SSH capabilities into the main <code>SwiftCLIKit</code> target would have been the path of least resistance, but it would have forced every consumer to carry the <code>swift-nio-ssh</code> dependency regardless of need. Making <code>SwiftCLIKitSSH</code> an opt-in module keeps the core framework lightweight and the dependency graph honest.</p>
         <p><strong>Codifying the workflow in <code>CLAUDE.md</code> before the codebase matured.</strong> With a solo project moving fast, the temptation is to keep everything in one’s head. Instead, a structured document with Architecture and Quality Gate sections was committed early — a form of writing-to-think that makes the project legible to a future self (or collaborator) who wasn’t present for the initial decisions.</p>
         <p><strong>Eighteen releases across four days.</strong> This is not version-number inflation; it is a working philosophy about the cost of integration lag. Small, tagged increments mean that at any moment the <code>v1.x</code> tags represent shippable, tested states of the framework rather than a single monolithic release that accumulates risk invisibly.</p>
         <p><strong>Pinning to macOS only.</strong> Cross-platform Swift is achievable, but it comes with real costs — conditional compilation noise, the loss of certain Foundation and AppKit primitives, and the inability to assume things like the system keychain or macOS process model. Explicitly constraining the platform is a scope decision that keeps the framework’s promises coherent and its implementation honest.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history" class="img-fluid" />
-        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
+        <img src="/images/showcase/internal-infrastructure-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftclikit, infrastructure, selfReflection</p>
@@ -304,7 +297,7 @@
             <ul class="navbar-nav mb-2 mb-md-0 col ">
               <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
               <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
-              <li class="nav-item"><a href="http://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
               <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
               <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
               <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
