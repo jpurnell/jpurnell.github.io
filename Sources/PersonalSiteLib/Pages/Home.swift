@@ -6,8 +6,10 @@ public struct Home: StaticPage {
     /// Page title used in the `<title>` tag.
     public var title = "Justin Purnell — Strategist, Builder, Product Leader"
 
+    /// Creates a new Home page.
     public init() {}
 
+    /// The home page content with site title and hidden biographical text.
     public var body: some HTML {
         Text("Justin Purnell")
             .font(.title1)

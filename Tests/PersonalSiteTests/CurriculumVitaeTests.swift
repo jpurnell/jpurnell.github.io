@@ -114,9 +114,9 @@ struct CurriculumVitaeTests {
     @Test("Position start date parses correctly")
     func positionStartDate() throws {
         let cv = try loadCV()
-        let firstPosition = cv.work.first?.positions.first
-        if let position = firstPosition, position.startDate != nil {
-            #expect(position.start != nil)
+        let position = try #require(cv.work.first?.positions.first)
+        if position.startDate != nil {
+            _ = try #require(position.start)
         }
     }
 

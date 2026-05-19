@@ -1,7 +1,7 @@
 import Foundation
 
 /// A social media platform link with logo asset reference.
-public struct SocialLink {
+public struct SocialLink: Sendable {
     /// Display name of the platform (e.g. "LinkedIn").
     public let site: String
     /// Filename stem for the SVG logo in `/images/social/`.

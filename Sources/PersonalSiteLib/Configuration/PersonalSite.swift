@@ -9,9 +9,13 @@ public struct PersonalSite: Site {
     public var name = "Justin Purnell"
     /// Suffix appended to every page `<title>`.
     public var titleSuffix = " | Justin Purnell"
-    // swiftlint:disable:next force_unwrapping
-    /// The site's base URL. Force unwrap is safe — this is a compile-time constant required by the `Site` protocol.
-    public var url = URL(string: "https://www.justinpurnell.com")!
+    /// The site's base URL required by the `Site` protocol.
+    public var url: URL = {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "www.justinpurnell.com"
+        return components.url ?? URL(fileURLWithPath: "/")
+    }()
     /// SEO meta description used in OG and Twitter tags.
     public var description: String? = "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA."
     /// Content language for the `<html lang>` attribute.
@@ -58,5 +62,6 @@ public struct PersonalSite: Site {
         ShowcaseLayout()
     }
 
+    /// Creates a new site configuration with default values.
     public init() {}
 }

@@ -7,8 +7,10 @@ public struct CV: StaticPage {
     public var title = "CV"
     @Environment(\.decode) var decode
 
+    /// Creates a new CV page.
     public init() {}
 
+    /// The full curriculum vitae rendered from structured JSON data.
     public var body: some HTML {
         if let cv = decode("cv.json", as: CurriculumVitae.self) {
             NavigationBar(logo: nil, items: {

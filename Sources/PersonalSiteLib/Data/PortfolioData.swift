@@ -1,7 +1,7 @@
 import Foundation
 
 /// A portfolio project or website to showcase.
-public struct PortfolioSite: Codable {
+public struct PortfolioSite: Codable, Sendable {
     /// Display name of the site.
     public let name: String
     /// URL to the live site or archive.

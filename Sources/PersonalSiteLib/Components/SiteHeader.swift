@@ -3,8 +3,10 @@ import Ignite
 
 /// Top navigation bar linking to the site's main pages.
 public struct SiteHeader: HTML {
+    /// Creates a new site header.
     public init() {}
 
+    /// The header navigation bar linking to main pages.
     public var body: some HTML {
         NavigationBar(logo: nil, items: {
             Link("Home", target: "/")

@@ -22,7 +22,7 @@ public let radio = OffsiteLink(title: "radio", url: "https://music.apple.com/us/
 public let rss = OffsiteLink(title: "rss", url: "https://www.justinpurnell.com/feed.rss")
 
 /// Blog link.
-public let tumblr = OffsiteLink(title: "blog", url: "http://blog.justinpurnell.com")
+public let tumblr = OffsiteLink(title: "blog", url: "https://blog.justinpurnell.com")
 
 /// Theme toggle placeholder link.
 public let theme = OffsiteLink(title: "theme", url: "#")

@@ -1,12 +1,16 @@
 import Foundation
 import Ignite
 
+/// The Developer Showcase page with filterable project narratives and infographics.
 public struct Showcase: StaticPage {
+    /// Page title used in the `<title>` tag.
     public var title = "Developer Showcase"
     @Environment(\.articles) var articles
 
+    /// Creates a new Showcase page.
     public init() {}
 
+    /// The showcase content with style/project filters and card grid.
     public var body: some HTML {
         Text("Developer Showcase").font(.title1).class("mainTitle")
 

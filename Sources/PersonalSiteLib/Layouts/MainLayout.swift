@@ -9,8 +9,10 @@ public struct MainLayout: Layout {
     @Environment(\.page) var page
     @Environment(\.decode) var decode
 
+    /// Creates a new main layout.
     public init() {}
 
+    /// The full document including head metadata, structured data, and body chrome.
     public var body: some Document {
         Head {
             MetaLink(href: "/css/main.css", rel: .stylesheet)

@@ -6,8 +6,10 @@ public struct Portfolio: StaticPage {
     /// Page title used in the `<title>` tag.
     public var title = "Portfolio"
 
+    /// Creates a new Portfolio page.
     public init() {}
 
+    /// The portfolio grid displaying featured project cards.
     public var body: some HTML {
         Text("Portfolio").font(.title1).class("mainTitle")
         Section {
@@ -22,7 +24,7 @@ public struct Portfolio: StaticPage {
                     .fontWeight(.semibold)
                     .foregroundStyle(.black)
                     Divider()
-                    Image(site.thumbnail, description: site.name).resizable().frame(width: 200)
+                    Image(site.thumbnail, description: site.name).resizable().accessibilityLabel("\(site.name) logo").frame(width: 200)
                 } header: {
 
                 } footer: {

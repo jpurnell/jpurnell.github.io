@@ -43,6 +43,12 @@ jobs:
       - name: Run static site generator
         run: swift run -c release IgniteStarter
 
+      - name: Add RSS autodiscovery links
+        run: |
+          if [ -x ./add-rss-link.sh ]; then
+            ./add-rss-link.sh
+          fi
+
       - name: Commit generated site
         run: |
           git config --local user.email "action@github.com"

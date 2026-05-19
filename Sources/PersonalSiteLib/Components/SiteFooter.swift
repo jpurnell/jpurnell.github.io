@@ -3,8 +3,10 @@ import Ignite
 
 /// Bottom navigation bar with external links (email, social, RSS, theme toggle).
 public struct SiteFooter: HTML {
+    /// Creates a new site footer.
     public init() {}
 
+    /// The footer navigation bar with external links.
     public var body: some HTML {
         NavigationBar(logo: nil, items: {
             for link in footerLinks {

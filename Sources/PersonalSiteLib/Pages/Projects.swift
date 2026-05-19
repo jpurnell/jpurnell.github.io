@@ -1,12 +1,16 @@
 import Foundation
 import Ignite
 
+/// The Projects page with a filterable grid of project articles.
 public struct Projects: StaticPage {
+    /// Page title used in the `<title>` tag.
     public var title = "Projects"
     @Environment(\.articles) var articles
 
+    /// Creates a new Projects page.
     public init() {}
 
+    /// The projects content with tag filters and card grid.
     public var body: some HTML {
         Text("Projects").font(.title1).class("mainTitle")
 

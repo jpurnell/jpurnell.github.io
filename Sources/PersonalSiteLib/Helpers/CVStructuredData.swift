@@ -1,12 +1,12 @@
 import Foundation
 import Ignite
+import os
 
 /// Builds JSON-LD structured data for the CV page from decoded `cv.json` data.
 ///
 /// Generates a single `@graph` containing Organization, Article, SoftwareApplication,
 /// and CreativeWork schemas for all employers, volunteer organizations, and publications.
 /// Schema types are read from each model's `schemaType` property.
-@MainActor
 enum CVStructuredData {
 
     /// Creates a `StructuredData` element containing a JSON-LD `@graph` with all
@@ -25,13 +25,21 @@ enum CVStructuredData {
             "@graph": graph
         ]
 
-        guard JSONSerialization.isValidJSONObject(wrapper),
-              let data = try? JSONSerialization.data(
-                  withJSONObject: wrapper,
-                  options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-              ),
-              let json = String(data: data, encoding: .utf8)
-        else { return nil }
+        guard JSONSerialization.isValidJSONObject(wrapper) else { return nil }
+
+        let data: Data
+        do {
+            data = try JSONSerialization.data(
+                withJSONObject: wrapper,
+                options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+            )
+        } catch {
+            Logger(subsystem: "com.justinpurnell", category: "CVStructuredData")
+                .error("JSON-LD serialization failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+
+        guard let json = String(data: data, encoding: .utf8) else { return nil }
 
         return StructuredData(json: json)
     }

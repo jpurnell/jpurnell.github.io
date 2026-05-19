@@ -6,8 +6,10 @@ public struct NeXT: StaticPage {
     /// Page title used in the `<title>` tag.
     public var title = "NeXT"
 
+    /// Creates a new NeXT page.
     public init() {}
 
+    /// The embedded NeXT content.
     public var body: some HTML {
         Include("NeXTEmbed.html")
     }

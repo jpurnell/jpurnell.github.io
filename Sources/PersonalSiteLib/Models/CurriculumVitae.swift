@@ -5,9 +5,9 @@ public enum SummaryType: String, Codable {
     /// Full curriculum vitae summary.
     case cv
     /// Abbreviated resume summary.
-    case resume
+    case resume // LIVE: decoded from cv.json
     /// Website-specific summary.
-    case website
+    case website // LIVE: decoded from cv.json
 }
 
 /// The top-level curriculum vitae model decoded from `cv.json`.

@@ -1,7 +1,7 @@
 import Foundation
 
 /// An external link used in the site footer navigation.
-public struct OffsiteLink: Codable {
+public struct OffsiteLink: Codable, Sendable {
     /// Display text for the link.
     public let title: String
     /// Destination URL (may be `mailto:`, `http://`, or `#`).

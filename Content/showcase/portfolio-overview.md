@@ -11,13 +11,13 @@ published: true
 
 # A Swift Portfolio at the Frontier of Native and AI-Native Development
 
-> Across 20 projects, 741 commits, and four years of continuous work, this developer has built a coherent body of Swift tooling that bridges game engines, developer productivity, AI agent integration, and native Apple platform experiences — always design-first, always test-grounded.
+> Across 20 projects, 741 commits, and ten years of continuous work, I've built a coherent body of Swift tooling that bridges game engines, consumer apps, developer productivity, AI agent integration, and native Apple platform experiences — always design-first, always test-grounded.
 
 ## Overview
 
-From a first commit in June 2022 through active work as recently as May 2026, this portfolio spans nearly four years of focused Swift development across Apple's full platform matrix. What makes the trajectory distinctive is not breadth for its own sake, but a clear pattern of vertical integration: the developer repeatedly builds the primitives they need, then builds atop them. A rules engine begets an orchestration layer, which begets a CLI client, which begets an MCP integration. A code quality concept becomes a CLI tool with a plugin architecture and SARIF output. An MCP client library enables a server framework, which enables geo-SEO and game AI tooling built on top of it.
+From my first deployed work with Swift 3 in 2016, through active work as recently as May 2026, my portfolio spans over ten years of focused Swift development across Apple's full platform matrix. What I think makes the trajectory of this particular set of projects distinctive is not breadth for its own sake, but a clear pattern of vertical integration: I try to build the primitives first, and then build atop them. A rules engine begets an orchestration layer, which begets a CLI client, which begets an MCP integration. A code quality concept becomes a CLI tool with a plugin architecture and SARIF output. An MCP client library enables a server framework, which enables geo-SEO and game AI tooling built on top of it.
 
-The earliest projects — ApplesoftBASICLib, WineTaster 4 — show foundational Swift work on iOS and macOS. By the middle of the timeline, the developer is assembling multi-package ecosystems with headless engines, agent protocols, and deadline-aware orchestration. The most recent work incorporates Model Context Protocol (MCP) tooling, AI-assisted development workflows, and iOS 26-targeting SwiftUI. The arc is one of compounding complexity managed through deliberate decomposition.
+My earliest projects — AmazonCSVCreator, ApplesoftBASICLib, WineTaster 4 — show foundational Swift work on iOS and macOS. By the middle of the timeline, the developer is assembling multi-package ecosystems with headless engines, agent protocols, and deadline-aware orchestration. The most recent work incorporates Model Context Protocol (MCP) tooling, AI-assisted development workflows, and iOS 26-targeting SwiftUI. The arc is one of compounding complexity managed through deliberate decomposition.
 
 Thirteen of twenty projects use a documented design-first workflow, and 124 design proposals exist across the portfolio. This is not incidental — it is the developer's primary method for managing scope across a large solo practice.
 

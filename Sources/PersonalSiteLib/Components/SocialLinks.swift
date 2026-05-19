@@ -6,14 +6,17 @@ public struct SocialLinks: HTML {
     /// The social platforms to display. Defaults to ``socialLinkList``.
     public var links: [SocialLink] = socialLinkList
 
+    /// Creates a new social links row with the default platform list.
     public init() {}
 
+    /// The rendered row of social media icon links.
     public var body: some HTML {
         for link in links {
             Text {
                 Link(
                     Image(link.fullLink, description: link.site)
                         .resizable()
+                        .accessibilityLabel("\(link.site) profile")
                         .opacity(0.74)
                         .foregroundStyle(.secondary)
                     , target: link.link)

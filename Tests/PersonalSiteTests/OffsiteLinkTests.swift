@@ -25,17 +25,15 @@ struct OffsiteLinkTests {
     }
 
     @Test("Email link uses mailto protocol")
-    func emailIsMailto() {
-        let emailLink = footerLinks.first { $0.title == "email" }
-        #expect(emailLink != nil)
-        #expect(emailLink?.url.hasPrefix("mailto:") == true)
+    func emailIsMailto() throws {
+        let emailLink = try #require(footerLinks.first { $0.title == "email" })
+        #expect(emailLink.url.hasPrefix("mailto:"))
     }
 
     @Test("RSS link points to feed.rss")
-    func rssPointsToFeed() {
-        let rssLink = footerLinks.first { $0.title == "rss" }
-        #expect(rssLink != nil)
-        #expect(rssLink?.url.contains("feed.rss") == true)
+    func rssPointsToFeed() throws {
+        let rssLink = try #require(footerLinks.first { $0.title == "rss" })
+        #expect(rssLink.url.contains("feed.rss"))
     }
 
     @Test("OffsiteLink round-trips through Codable")

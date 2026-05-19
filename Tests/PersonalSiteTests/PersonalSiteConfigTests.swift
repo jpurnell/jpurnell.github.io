@@ -24,13 +24,11 @@ struct PersonalSiteConfigTests {
     }
 
     @Test("Description is present and within SEO length")
-    @MainActor func descriptionPresent() {
+    @MainActor func descriptionPresent() throws {
         let site = PersonalSite()
-        #expect(site.description != nil)
-        if let desc = site.description {
-            #expect(!desc.isEmpty)
-            #expect(desc.count <= 160, "Description exceeds 160 characters: \(desc.count)")
-        }
+        let desc = try #require(site.description)
+        #expect(!desc.isEmpty)
+        #expect(desc.count <= 160, "Description exceeds 160 characters: \(desc.count)")
     }
 
     @Test("Author is set")
@@ -40,9 +38,9 @@ struct PersonalSiteConfigTests {
     }
 
     @Test("Feed configuration is present")
-    @MainActor func feedConfigPresent() {
+    @MainActor func feedConfigPresent() throws {
         let site = PersonalSite()
-        #expect(site.feedConfiguration != nil)
+        _ = try #require(site.feedConfiguration)
     }
 
     @Test("Language is English")
