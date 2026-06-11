@@ -20,7 +20,7 @@ Distributed tooling systems live and die by the consistency of their shared cont
 
 ## Approach
 
-The package targets Swift 6.0, signaling a deliberate commitment to strict concurrency and the type safety guarantees that come with the modern Swift toolchain. The structure is minimal by design: a single library target, `QualityGateTypes`, paired with a `QualityGateTypesTests` target to validate the contracts from the start.
+The package targets Swift 6.2, signaling a deliberate commitment to strict concurrency and the type safety guarantees that come with the modern Swift toolchain. The structure is minimal by design: a single library target, `QualityGateTypes`, paired with a `QualityGateTypesTests` target to validate the contracts from the start.
 
 By isolating types into their own package, the architecture enforces a clean dependency graph. Consumers depend on definitions, not implementations — a foundational separation of concerns that keeps downstream packages loosely coupled and independently evolvable. This is a classic shared-kernel pattern, applied to a macOS developer toolchain.
 

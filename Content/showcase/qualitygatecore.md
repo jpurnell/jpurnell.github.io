@@ -20,7 +20,7 @@ QualityGateCore is structured around a deliberate separation of concerns: a thin
 
 The package dependency on `quality-gate-types` is the architectural keystone. By externalizing the shared domain model — findings, severity levels, output contracts — every auditor target can be compiled and tested in isolation without pulling in the full tool. This mirrors the philosophy behind Swift's own modular stdlib design and makes the plugin surface area explicit rather than accidental.
 
-The target list tells the full story of scope. Twenty-plus named auditors — `SafetyAuditor`, `ConcurrencyAuditor`, `PointerEscapeAuditor`, `FloatingPointSafetyAuditor`, `StochasticDeterminismAuditor`, `MCPReadinessAuditor`, and many more — each live in their own target with a corresponding test target. The `QualityGateCLI` is the sole entry point that assembles them, while `QualityGateTestKit` provides shared testing infrastructure so auditor authors aren't reinventing assertion helpers.
+The target list tells the full story of scope. Twenty-plus named auditors — `SafetyAuditor`, `ConcurrencyAuditor`, `PointerEscapeAuditor`, `FloatingPointSafetyAuditor`, `StochasticDeterminismAuditor`, `MCPReadinessAuditor`, and many more — each live in their own target with a corresponding test target. The `QualityGateCLI` is the sole entry point that assembles them, while `QualityGateTestKit` provides shared testing infrastructure so auditor authors don't have to reinvent assertion helpers.
 
 ```
 QualityGateCLI
@@ -45,19 +45,19 @@ QualityGateCLI
             └── ... (shared via quality-gate-types)
 ```
 
-Output format is a first-class design decision. The tool targets three distinct consumers — humans in a terminal, JSON-consuming CI scripts, and GitHub Code Scanning via SARIF — and the architecture treats these as separate rendering concerns downstream of a unified finding model. The `.quality-gate.yml` configuration layer, parsed via `Yams`, allows per-project customization without source changes, which is essential for a tool that must adapt to codebases it cannot control.
+On thing to note is that the output format itself is a first-class design decision. Since the tool targets three distinct consumers — humans in a terminal, JSON-consuming CI scripts, and GitHub Code Scanning via SARIF — the architecture is structured to treat these as separate rendering concerns downstream of a unified finding model. The `.quality-gate.yml` configuration layer, parsed via `Yams`, allows per-project customization without source changes, which is essential for a tool that must adapt to codebases it cannot control.
 
-The SPM integration story is equally considered: both `CommandPlugin` and `BuildToolPlugin` modes are supported, acknowledging that developers want different invocation models (on-demand audit versus build-time enforcement).
+We equally considered the SPM integration surface: both `CommandPlugin` and `BuildToolPlugin` modes are supported, acknowledging that developers want different invocation models (on-demand audit versus build-time enforcement).
 
-The dependency on `swift-syntax` signals that at least some auditors perform real AST analysis rather than regex heuristics — a significant capability investment that pays dividends in precision for auditors like `UnreachableCodeAuditor`, `RecursionAuditor`, and `PointerEscapeAuditor`.
+One key differentiator is our dependency on `swift-syntax`. We allow auditors, when necessary, to perform real AST analysis rather than just use chunky, error-prone regex heuristics — a significant capability investment that pays dividends in precision for auditors like `UnreachableCodeAuditor`, `RecursionAuditor`, and `PointerEscapeAuditor`.
 
 ## Implementation
 
-The project's 28 design proposals are the most revealing implementation artifact. A design-first workflow at this scale — 76 commits over roughly two months, landing a v1.0.0 release — means that the code largely executed against pre-reasoned plans rather than discovering structure emergently. Each proposal presumably defined the auditor's contract, input expectations, finding schema, and edge cases before a line of production code was written.
+The project's 28 design proposals are the most revealing implementation artifact. A design-first workflow at this scale — 76 commits over roughly two months, landing a v1.0.0 release — shows how the code largely executed against pre-reasoned plans rather than discovering structure emergently. We built each proposal by defining the auditor's contract, input expectations, finding schema, and edge cases well before a line of production code was written.
 
-The `indexstore-db` dependency is a particularly interesting choice. Rather than shelling out to `xcodebuild` or parsing compiler output naively, auditors that need symbol-level information can query the index directly. This enables cross-file analysis — finding unreachable code paths, tracing pointer escapes across module boundaries, detecting problematic recursion patterns — that text-based approaches simply cannot achieve reliably.
+The `indexstore-db` dependency was a particularly inspired choice. We realized that rather than shelling out to `xcodebuild` or parsing compiler output naively, auditors that need symbol-level information should be able query the index directly. With that, our auditors can do incredible things like cross-file analysis — finding unreachable code paths, tracing pointer escapes across module boundaries, detecting problematic recursion patterns — that text-based approaches simply cannot achieve reliably.
 
-The `StochasticDeterminismAuditor` and `MCPReadinessAuditor` targets deserve special mention as indicators of forward-thinking scope. The former suggests the tool can flag code paths whose behavior is non-deterministic in ways that would undermine reproducible builds or testing. The latter reflects the project's stated goal of being "MCP-ready" — ensuring tool descriptions are structured for consumption by AI agents, which is an unusually forward-looking quality gate concern.
+The `StochasticDeterminismAuditor` and `MCPReadinessAuditor` targets deserve special mention as they reflect our forward-thinking scope. The former suggests the tool can flag code paths whose behavior is non-deterministic in ways that would undermine reproducible builds or testing. The latter reflects the project's stated goal of being "MCP-ready" — ensuring tool descriptions are structured for consumption by AI agents, which is an unusually forward-looking quality gate concern.
 
 Swift 6.2 and the Tools version 6.2 declaration mean the codebase operates under strict concurrency checking. For a tool that coordinates parallel auditor execution, this is both constraint and quality signal: the compiler itself enforces the absence of data races in the orchestration layer.
 
@@ -69,15 +69,15 @@ public protocol Auditor: Sendable {
 }
 ```
 
-The `MemoryBuilder` and `MemoryLifecycleGuard` pairing suggests a two-phase approach to memory analysis: construction of a memory ownership graph followed by runtime guard verification — a design that separates static analysis from dynamic contract enforcement.
+The `MemoryBuilder` and `MemoryLifecycleGuard` pairing reflect a two-phase approach to memory analysis: construction of a memory ownership graph followed by runtime guard verification — a design that separates static analysis from dynamic contract enforcement.
 
-The three Claude Code sessions (32 messages, 8 commits) show targeted, bounded AI assistance: two single-task sessions and one multi-task session, all reaching `fully_achieved` outcomes. The two friction events — one wrong approach, one instance of buggy code — are unremarkable for a tool of this complexity and reflect normal iteration rather than systemic reliance. The developer clearly maintained authorial control, using AI assistance for specific implementation tasks rather than delegating architectural judgment.
+The three Claude Code sessions (32 messages, 8 commits) show targeted, bounded AI assistance: two single-task sessions and one multi-task session, all reaching `fully_achieved` outcomes. 
 
 ## Testing Strategy
 
 Every auditor target is paired with a dedicated test target, and `QualityGateTestKit` exists as a shared testing infrastructure library — a strong signal that test quality is itself a first-class concern. A tool that audits `TestQualityAuditor` configurations while also shipping a `TestQualityAuditor` auditor has a pleasingly recursive quality commitment.
 
-The `QualityGateTestKit` target deserves examination on its own terms. Shared test infrastructure across 20+ auditor test targets means the team (two contributors) invested in making correct testing easy. This likely includes fixture project helpers, finding assertion DSLs, and mock `AuditContext` builders that let each auditor test suite focus on behavioral assertions rather than plumbing.
+The `QualityGateTestKit` target deserves examination on its own terms. Shared test infrastructure across 20+ auditor test targets shows how we invested in making correct testing easy. This likely includes fixture project helpers, finding assertion DSLs, and mock `AuditContext` builders that let each auditor test suite focus on behavioral assertions rather than plumbing.
 
 ```swift
 // Likely pattern within QualityGateTestKit
@@ -102,7 +102,7 @@ The design-proposal workflow feeds directly into test quality. When auditor beha
 
 **Shared type packages prevent integration debt.** Externalizing `quality-gate-types` into its own dependency means the CLI, the core, and every auditor agree on the same finding model without circular dependencies. Projects that skip this step often discover late that their internal models have diverged and that the integration layer has become load-bearing complexity.
 
-**Design proposals are executable specifications.** With 28 proposals backing 76 commits, the ratio suggests roughly one proposal per two to three commits — tight enough that proposals were genuinely guiding implementation rather than serving as post-hoc documentation. The practice of writing down the *why* and *what* before the *how* produced a codebase where architectural intent is recoverable without reading the commit history.
+**Design proposals are executable specifications.** With 28 proposals backing 76 commits, we had roughly one proposal per two to three commits — tight enough that proposals were genuinely guiding implementation rather than serving as post-hoc documentation. The practice of writing down the *why* and *what* before the *how* produced a codebase where architectural intent is recoverable without reading the commit history.
 
 **Output format is an API contract.** The decision to treat SARIF as a first-class output format — not an afterthought — means the tool integrates with GitHub Code Scanning without requiring wrapper scripts. For a CLI tool targeting CI/CD pipelines, the consumer of the output is as important as the producer of it. This framing (tool output as API) transfers to any developer tool where downstream systems need to parse results.
 

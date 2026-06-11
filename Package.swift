@@ -7,7 +7,7 @@ let package = Package(
     name: "IgniteStarter",
     platforms: [.macOS(.v13), .iOS(.v16)],
     dependencies: [
-        .package(url: "https://github.com/jpurnell/Ignite.git", branch: "feature/structured-data"),
+        .package(url: "https://github.com/jpurnell/Ignite.git", revision: "161588651d1e0153a245672ec978ee23a48a4e4b"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
     ],
     targets: [
