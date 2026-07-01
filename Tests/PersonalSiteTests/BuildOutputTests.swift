@@ -48,10 +48,11 @@ struct BuildOutputTests {
         #expect(exists, "docs/feed.rss should exist")
     }
 
-    @Test("index.html contains JSON-LD structured data")
+    @Test("index.html contains JSON-LD structured data with @graph")
     func indexHasJSONLD() throws {
         let html = try readFile("index.html")
         #expect(html.contains("application/ld+json"))
+        #expect(html.contains("\"@graph\""))
         #expect(html.contains("\"@type\" : \"Person\"") || html.contains("\"@type\":\"Person\""))
     }
 

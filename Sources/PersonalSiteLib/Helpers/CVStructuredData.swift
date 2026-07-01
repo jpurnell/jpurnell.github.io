@@ -1,47 +1,19 @@
 import Foundation
-import Ignite
-import os
 
-/// Builds JSON-LD structured data for the CV page from decoded `cv.json` data.
+/// Builds JSON-LD graph nodes for the CV page from decoded `cv.json` data.
 ///
-/// Generates a single `@graph` containing Organization, Article, SoftwareApplication,
-/// and CreativeWork schemas for all employers, volunteer organizations, and publications.
-/// Schema types are read from each model's `schemaType` property.
+/// Returns an array of Schema.org node dictionaries (Organization, Article,
+/// SoftwareApplication, CreativeWork) for employers, volunteer organizations,
+/// and publications. These are merged into the site-wide `@graph` by `SiteGraphBuilder`.
 enum CVStructuredData {
 
-    /// Creates a `StructuredData` element containing a JSON-LD `@graph` with all
-    /// CV-related entities: employers, volunteer organizations, and publications.
-    static func graph(from cv: CurriculumVitae) -> StructuredData? {
-        var graph: [[String: Any]] = []
-
-        graph.append(contentsOf: employerSchemas(from: cv.work))
-        graph.append(contentsOf: volunteerSchemas(from: cv.volunteer))
-        graph.append(contentsOf: publicationSchemas(from: cv.publications))
-
-        guard !graph.isEmpty else { return nil }
-
-        let wrapper: [String: Any] = [
-            "@context": "https://schema.org",
-            "@graph": graph
-        ]
-
-        guard JSONSerialization.isValidJSONObject(wrapper) else { return nil }
-
-        let data: Data
-        do {
-            data = try JSONSerialization.data(
-                withJSONObject: wrapper,
-                options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-            )
-        } catch {
-            Logger(subsystem: "com.justinpurnell", category: "CVStructuredData")
-                .error("JSON-LD serialization failed: \(error.localizedDescription, privacy: .public)")
-            return nil
-        }
-
-        guard let json = String(data: data, encoding: .utf8) else { return nil }
-
-        return StructuredData(json: json)
+    /// Returns graph node dictionaries for all CV entities.
+    static func graphNodes(from cv: CurriculumVitae) -> [[String: Any]] {
+        var nodes: [[String: Any]] = []
+        nodes.append(contentsOf: employerSchemas(from: cv.work))
+        nodes.append(contentsOf: volunteerSchemas(from: cv.volunteer))
+        nodes.append(contentsOf: publicationSchemas(from: cv.publications))
+        return nodes
     }
 
     // MARK: - Employers
