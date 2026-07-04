@@ -1,5 +1,7 @@
 import Ignite
+#if canImport(os)
 import os
+#endif
 import PersonalSiteLib
 
 /// Entry point that builds the static site.
