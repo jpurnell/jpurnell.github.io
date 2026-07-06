@@ -3,6 +3,13 @@ name: Quality Gate
 on:
   push:
     branches: [main]
+    # Only run when the site's Swift code changes — not on content/docs pushes
+    # (blog posts, regenerated docs/). The daily schedule still collects telemetry.
+    paths:
+      - 'Sources/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - '.github/workflows/quality-gate.yml'
   schedule:
     - cron: '0 6 * * *'
 
