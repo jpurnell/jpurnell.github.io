@@ -1097,7 +1097,7 @@ var simulation = MonteCarloSimulation(
 
 Download the complete GPU acceleration playgrounds:
 
-→ Full API Reference: BusinessMath Docs – [Monte Carlo GPU Acceleration]()
+→ Full API Reference: BusinessMath Docs – [Monte Carlo GPU Acceleration](https://github.com/jpurnell/BusinessMath/blob/main/Sources/BusinessMath/BusinessMath.docc/5.16-GPUAccelerationTutorial.md)
 
 
 ### Experiments to Try

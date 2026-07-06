@@ -48,12 +48,12 @@ public struct CV: StaticPage {
             Text("Experience").class("sectionHeader").id("Experience")
             ForEach(cv.work) { employer in
                 Text {
-                    Link(employer.name, target: employer.url ?? "#").target(.blank)
+                    Link(employer.name, target: safeHref(employer.url)).target(.blank)
                 }.class("institution").id(employer.name)
                 ForEach(employer.positions) { position in
                     Group {
                         Text {
-                            Link(position.project, target: position.url ?? "#").target(.blank)
+                            Link(position.project, target: safeHref(position.url)).target(.blank)
                         }.class("project")
                         Text(position.position ?? "PROJECT ROLE").class("role").id(position.position ?? "#")
                         Text("\(formatDates(position.startDate ?? "", end: position.endDate))").class("role")
@@ -70,12 +70,12 @@ public struct CV: StaticPage {
             Text("Volunteer").class("sectionHeader").id("Volunteer")
             ForEach(cv.volunteer) { volunteer in
                 Text {
-                    Link(volunteer.organization, target: volunteer.url).target(.blank)
+                    Link(volunteer.organization, target: safeHref(volunteer.url)).target(.blank)
                 }.class("institution").id(volunteer.organization)
                 ForEach(volunteer.positions?.sorted(by: { $0.start ?? .distantFuture > $1.start ?? .distantPast }) ?? []) { position in
                     Group {
                         Text {
-                            Link(position.project, target: position.url ?? "#").target(.blank)
+                            Link(position.project, target: safeHref(position.url)).target(.blank)
                         }.class("project")
                         Text(position.position ?? "PROJECT ROLE").class("role").id(position.position ?? "#")
                         Text("\(formatDates(position.startDate ?? "", end: position.endDate))").class("role")
@@ -92,8 +92,8 @@ public struct CV: StaticPage {
             Text("Projects & Publications").class("sectionHeader").id("Projects & Publications")
             ForEach(cv.publications.sorted(by: { $0.releaseDate > $1.releaseDate })) { publication in
                 Text {
-                    Link(publication.name, target: publication.url).target(.blank).class("institution")
-                    Link("\(publication.publisher ?? "") \((publication.publisher == nil || publication.releaseDate.isEmpty) ? "" : " - ") \(formatDate(publication.releaseDate))", target: publication.url).target(.blank).class("role")
+                    Link(publication.name, target: safeHref(publication.url)).target(.blank).class("institution")
+                    Link("\(publication.publisher ?? "") \((publication.publisher == nil || publication.releaseDate.isEmpty) ? "" : " - ") \(formatDate(publication.releaseDate))", target: safeHref(publication.url)).target(.blank).class("role")
                 }.style(.marginBottom, "0rem")
                 List {
                     ForEach(publication.highlights) { highlight in
@@ -106,7 +106,7 @@ public struct CV: StaticPage {
             Text("Education").class("sectionHeader").id("Education")
             ForEach(cv.education.sorted(by: { getDate($0.startDate ?? "") > getDate($1.startDate ?? "") })) { education in
                 Text {
-                    Link(education.institution, target: education.institution.isEmpty ? "" : education.url).target(.blank)
+                    Link(education.institution, target: safeHref(education.url)).target(.blank)
                 }.class("institution").margin(.none)
                 Text("\(education.studyType), \(education.area)").class("project")
                 Text(getYear(education.endDate ?? "")).class("role")
@@ -128,5 +128,13 @@ public struct CV: StaticPage {
                 .padding(.horizontal)
                 .class("clearfix")
         }.class("noPrint")
+    }
+
+    /// Returns a usable href, mapping a nil or empty URL to "#" so a link never
+    /// renders an empty `href` (which Ignite rejects: "One of your links uses an
+    /// invalid URL."). Used for CV entries whose data has no link.
+    private func safeHref(_ url: String?) -> String {
+        guard let url, !url.isEmpty else { return "#" }
+        return url
     }
 }

@@ -7,6 +7,7 @@ tags: showcase, project, selfReflection, iConquer
 layout: ShowcaseLayout
 style: caseStudy
 project: iConquer
+infographics: false
 published: true
 ---
 

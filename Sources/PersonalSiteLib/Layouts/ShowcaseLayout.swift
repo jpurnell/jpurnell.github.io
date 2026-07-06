@@ -36,20 +36,20 @@ public struct ShowcaseLayout: ArticlePage {
         .frame(width: .percent(70%), maxWidth: .px(800))
         .class("blurb")
 
-        if let project = article.metadata["project"] as? String {
+        if let infoSlug = infographicSlug {
             Section {
-                Image("/images/showcase/\(slug(from: project))-stats.svg",
-                      description: "\(project) statistics")
+                Image("/images/showcase/\(infoSlug)-stats.svg",
+                      description: "\(infographicLabel) statistics")
                     .resizable()
-                    .accessibilityLabel("\(project) statistics infographic")
-                Image("/images/showcase/\(slug(from: project))-commits.svg",
-                      description: "\(project) commit history")
+                    .accessibilityLabel("\(infographicLabel) statistics infographic")
+                Image("/images/showcase/\(infoSlug)-commits.svg",
+                      description: "\(infographicLabel) commit history")
                     .resizable()
-                    .accessibilityLabel("\(project) commit history chart")
-                Image("/images/showcase/\(slug(from: project))-releases.svg",
-                      description: "\(project) release history")
+                    .accessibilityLabel("\(infographicLabel) commit history chart")
+                Image("/images/showcase/\(infoSlug)-releases.svg",
+                      description: "\(infographicLabel) release history")
                     .resizable()
-                    .accessibilityLabel("\(project) release history chart")
+                    .accessibilityLabel("\(infographicLabel) release history chart")
             }
             .class("showcase-infographics")
         }
@@ -68,6 +68,29 @@ public struct ShowcaseLayout: ArticlePage {
     /// Converts a project name into a URL-friendly slug.
     private func slug(from project: String) -> String {
         project.lowercased().replacingOccurrences(of: " ", with: "-")
+    }
+
+    /// The slug used to locate this entry's SVG infographics, or `nil` to omit the block.
+    ///
+    /// Infographics are generated per-repository as `{slug}-{stats,commits,releases}.svg`,
+    /// where `{slug}` matches the entry's own filename — so we key off the article's own path,
+    /// NOT the `project` metadata (which is a display/grouping label like "Internal Infrastructure"
+    /// and does not correspond to a card). An `infographics:` front-matter value overrides the
+    /// slug, or suppresses the block when set to `false`/`none` (e.g. overview pages with no card).
+    private var infographicSlug: String? {
+        if let override = article.metadata["infographics"] as? String {
+            let lowered = override.lowercased()
+            if lowered == "false" || lowered == "none" { return nil }
+            return slug(from: override)
+        }
+        guard let last = article.path.split(separator: "/").last else { return nil }
+        let filenameSlug = String(last).lowercased()
+        return filenameSlug.isEmpty ? nil : filenameSlug
+    }
+
+    /// A human-readable label for the infographic alt text (the display project name, else title).
+    private var infographicLabel: String {
+        (article.metadata["project"] as? String) ?? article.title
     }
 
     /// Returns article tags with "showcase" and "project" filtered out.

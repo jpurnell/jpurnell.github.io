@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="How parallelizing the run loop, a provably-safe result cache, and — the big one — discovering the gate was compiling every project twice took a SwiftSyntax + IndexStoreDB quality gate from ~262s to ~16s cold, with zero suppressions." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>The Double Compile: Making a Swift Quality Gate ~16× Faster Without Weakening a Check | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/quality-gate-performance" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="The Double Compile: Making a Swift Quality Gate ~16× Faster Without Weakening a Check" />
+    <meta name="twitter:title" content="The Double Compile: Making a Swift Quality Gate ~16× Faster Without Weakening a Check" />
+    <meta property="og:description" content="How parallelizing the run loop, a provably-safe result cache, and — the big one — discovering the gate was compiling every project twice took a SwiftSyntax + IndexStoreDB quality gate from ~262s to ~16s cold, with zero suppressions." />
+    <meta name="twitter:description" content="How parallelizing the run loop, a provably-safe result cache, and — the big one — discovering the gate was compiling every project twice took a SwiftSyntax + IndexStoreDB quality gate from ~262s to ~16s cold, with zero suppressions." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/quality-gate-performance" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/quality-gate-performance#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/showcase/quality-gate-performance",
+          "name" : "The Double Compile: Making a Swift Quality Gate ~16× Faster Without Weakening a Check",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/quality-gate-performance#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/showcase/quality-gate-performance#breadcrumb"
+      },
+      "description" : "How parallelizing the run loop, a provably-safe result cache, and — the big one — discovering the gate was compiling every project twice took a SwiftSyntax + IndexStoreDB quality gate from ~262s to ~16s cold, with zero suppressions.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "The Double Compile: Making a Swift Quality Gate ~16× Faster Without Weakening a Check",
+      "url" : "https://www.justinpurnell.com/showcase/quality-gate-performance"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">The Double Compile: Making a Swift Quality Gate ~16× Faster Without Weakening a Check</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">9 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <blockquote>
+          <p>How parallelizing the run loop, a provably-safe result cache, and — the big one — discovering the gate was compiling every project twice took a SwiftSyntax + IndexStoreDB quality gate from ~262s to ~16s cold, with zero suppressions.</p>
+        </blockquote>
+        <h2>The premium we were paying</h2>
+        <p><code>quality-gate</code> is a static-analysis tool for Swift: about thirty auditors built on <strong>SwiftSyntax</strong> for the syntactic rules (force-unwraps, unguarded division, empty catch blocks, concurrency-annotation hygiene) and on <strong>IndexStoreDB</strong> for the cross-module ones (recursion cycles across files, dead code, cognitive-complexity amplification through the call graph). It dogfoods itself — it runs its own checkers on every commit through a pre-commit hook — so its own speed is something I feel dozens of times a day.</p>
+        <p>And it had gotten slow. Not “annoying” slow — “walk away from the terminal” slow.</p>
+        <p>The tempting fixes were all the wrong ones: skip the expensive checkers, sample a subset of files, cache aggressively and hope. I had a hard rule against every one of those. <strong>Quality costs time, and I was willing to pay the premium — but I wanted to pay it once, not three times over.</strong> The goal was to make the gate <em>itself</em> faster without weakening a single check, and to be deeply suspicious of any change that could let a real problem slip through silently.</p>
+        <p>Here’s how that went, in four levers.</p>
+        <h2>Lever 1: stop running checkers one at a time</h2>
+        <p>The gate ran its ~28 checkers strictly sequentially, so wall-time was the <em>sum</em> of every checker. Profiling showed 106 seconds summed against a 28-second slowest single checker — i.e., I was leaving a 3–4× speedup on the floor.</p>
+        <p>The checkers are a good fit for concurrency: each only <em>reads</em> shared state, and the run loop performs no writes. But naive <code>withTaskGroup</code>-everything actually measured <strong>slower</strong> (492s), because a handful of checkers spawn <code>swift build</code> / <code>swift test</code> and contend on the SwiftPM <code>.build</code> lock.</p>
+        <p>So the fix partitions checkers by a new <code>isParallelSafe</code> property. The build/test-spawning ones (<code>build</code>, <code>test</code>, <code>xcode-build</code>) plus <code>disk-clean</code> (which <em>deletes</em> <code>.build</code>) run sequentially, outside the group; the pure AST/file checkers run concurrently in a bounded task group sized to the core count. Same checks, same diagnostics, same pass/fail — just overlapped.</p>
+        <p>Result on the pure-AST set: <strong>19.0s → 8.8s (2.2×)</strong>, right up against the ceiling set by the slowest single checker.</p>
+        <h2>Lever 1.5: the index checkers were all opening the same door</h2>
+        <p>Lever 1 got the AST checkers flying, but the five <strong>index-dependent</strong> checkers barely moved — the full parallel-safe set only hit 1.8×. The reason was subtle and satisfying: each index checker independently loaded <code>libIndexStore.dylib</code>, built its own temporary <code>IndexStoreDB</code>, and polled every unit. Run them concurrently and those redundant <em>opens</em> serialized against each other.</p>
+        <p>The fix (<code>SharedIndexStore</code>, backed by a small actor that deduplicates concurrent construction) opens each store <strong>once</strong> and shares the read-only <code>IndexStoreDB</code> across all five checkers. That confirmed something worth knowing: concurrent <em>queries</em> against one <code>IndexStoreDB</code> don’t meaningfully serialize — the redundant opens were the entire bottleneck.</p>
+        <p>Result: the parallel-safe set went <strong>40.9s → 20.5s</strong>, roughly 86% parallel efficiency.</p>
+        <h2>Lever 2: don’t re-run a checker whose inputs didn’t change</h2>
+        <p>The safest cache is one that can’t be wrong. A checker’s result is a deterministic function of its inputs, so reusing a result is safe <em>if and only if</em> the checker’s <strong>complete</strong> input set is byte-identical. Under-specifying the inputs is the only footgun — so I bias hard toward over-inclusion (over-including only costs an unnecessary re-run; under-including risks a false pass).</p>
+        <p><code>CheckerFingerprint</code> computes a SHA-256 over the checker id, a gate-identity hash (the executable’s size+mtime plus the toolchain version, so a rebuild or a compiler change invalidates everything), a salt, and each input file’s path + content hash. <code>ResultCache</code> stores results on disk, corruption-safe: a bad entry is a miss, and a write failure never fails the gate.</p>
+        <p>One safety fix worth calling out, because it’s exactly the kind of silent-pass hole the discipline exists to catch: the cache salt now folds in a digest of the <em>entire</em> <code>Configuration</code>. Without it, tightening a complexity threshold wouldn’t invalidate a cached “pass” — the gate would happily serve a stale green. Now any config change busts the cache.</p>
+        <p>On an unchanged re-run, the five index checkers’ ~50s of analysis is skipped entirely. Warm runs collapse toward the AST-bound floor.</p>
+        <h2>The thing hiding in plain sight: I was compiling everything twice</h2>
+        <p>Here’s where it gets interesting. Even with all three levers, cold runs were still dominated by something that <em>wasn’t a checker at all</em>: producing the index store.</p>
+        <p>To query cross-module symbols, IndexStoreDB needs an <strong>index store</strong> — the <code>v5/units</code> + <code>v5/records</code> datastore the compiler emits while building. And <code>quality-gate</code> was producing that store by running a <em>second, separate</em> compile:</p>
+        <pre><code>swift build --build-system native --build-path .build/index-build -Xswiftc -index-store-path …
+</code></pre>
+        <p>A whole extra build of the entire module graph, into a <em>different</em> directory from the one the normal <code>swift build</code> had just populated. On a cold run of this package, that second compile was <strong>~231 seconds</strong> — dwarfing every checker.</p>
+        <p>Why was it there? Swift 6.4’s SwiftPM changed the default build system from the classic <code>native</code> engine to <strong><code>swiftbuild</code></strong> (the integrated XCBuild engine). And <code>swiftbuild</code> <em>doesn’t honor</em> <code>-index-store-path</code> — pass the flag and you get no queryable store. That silently broke every cross-module checker (a freshly built fixture had <strong>0 units, 0 records</strong>), which I’d worked around by forcing <code>--build-system native</code>. <code>native</code> honors the flag… but into its own build path, so it can’t reuse the main build’s objects. Hence: two full compiles.</p>
+        <p>The workaround was correct. It was also treating the symptom.</p>
+        <h2>The fix: swiftbuild was already emitting an index — I just wasn’t looking</h2>
+        <p>Here’s the part that felt like finding money in a coat pocket. <code>swiftbuild</code> <strong>doesn’t honor <code>-index-store-path</code></strong> — but it <em>does</em> index-while-building to its <strong>own</strong> default location during the normal build. I went looking, and there it was:</p>
+        <pre><code>$ find .build -type d -name v5
+.build/out/v5        ← 2,783 units, 6,342 records — from the ordinary `swift build`
+</code></pre>
+        <p>That’s <em>more</em> complete than the 2,114-unit store the separate native compile was producing. All five of my first-party modules were in it, freshly stamped from the last ordinary build. And the decisive test — can <code>IndexStoreDB</code> actually open and query it?</p>
+        <pre><code class="language-swift">let session = try IndexStoreSession(storePath: .build/out, libPath: lib)
+let symbols = session.db.symbols(inFilePath: "Sources/RecursionAuditor/RecursionAuditor.swift")
+#expect(!symbols.isEmpty)   // passes
+</code></pre>
+        <p>It opens, and it returns real symbols for my own source. So on Swift 6.4+, the second compile is <strong>pure waste</strong> — the normal build already produced a queryable index; I just had to point at it.</p>
+        <p><code>StoreLocator.ensureFresh</code> now checks <code>.build/out</code> first. When it exists and is current relative to <code>Sources</code>, the index checkers query it directly — <strong>zero extra compile</strong>. Because the on-save build hook keeps <code>.build/out</code> fresh, it’s already current by the time I commit, so the pre-commit gate stops double-compiling.</p>
+        <p>I kept the old path as a fallback, because it’s still needed. A probe settled the last question: does a <em>plain</em> native build (older toolchains, my 6.3.3 server) emit an index without the flag? <strong>No</strong> — <code>find</code> turned up no <code>v5</code> store. So on native, <code>.build/out</code> is absent and the locked, dedicated index-build remains the fallback, unchanged. One codebase, correct on both build systems.</p>
+        <p>Proof it’s gone, on the deployed binary:</p>
+        <pre><code>$ rm -rf .build/index-build
+$ quality-gate --check recursion      # 9.7s
+&gt;&gt;&gt; reused .build/out — no double-compile, .build/index-build never recreated
+</code></pre>
+        <h2>A bonus lever: <code>--no-index-build</code>, from a self-inflicted wound</h2>
+        <p>There’s a coda that’s a good cautionary tale on its own. A portfolio dashboard ran <code>quality-gate --check all</code> across ~100 projects every two hours. Because <code>--check all</code> includes the index checkers, and index checkers need a compiled index, the sweep <em>cold-built every project</em> whose <code>.build</code> had been deleted to reclaim disk. Which refilled the disk. Which triggered a cleanup that deleted the builds. Which the next sweep rebuilt. A perfect thrashing loop — plus a launchd job misconfigured with <code>KeepAlive=true</code>, so it relaunched the instant it finished and never actually stopped.</p>
+        <p>The gate-side fix is a new <code>--no-index-build</code> flag. It forbids compiling to produce an index: index checkers reuse an existing store if present, and otherwise <strong>degrade to AST-only</strong> instead of triggering a build. The plumbing is pleasingly small — <code>ensureFresh</code> throws <code>indexBuildSkipped</code> at the point a compile would be required, and the checkers <em>already</em> catch an index-pass failure and fall back to their name-based/AST analysis, so no per-checker changes were needed.</p>
+        <pre><code>$ cd unbuilt-package
+$ quality-gate --check recursion --no-index-build   # 0.23s
+&gt;&gt;&gt; passed — no .build/out, no index-build, no compile artifacts
+</code></pre>
+        <p>A portfolio sweep can now run fast and never compile the world.</p>
+        <h2>The numbers</h2>
+        <p>Measured on a 10-core Mac, release binary, median of three runs with a discarded warm-up, machine quiesced before timing. “Checker phase” is all AST + index checkers (<code>--check all --exclude build --exclude test</code>), with <code>.build/out</code> pre-refreshed so no timed run pays a compile.</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Stage</th>
+              <th scope="col">Checker-phase median</th>
+              <th scope="col">Speedup</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sequential (pre-Lever 1)</td>
+              <td>30.6s</td>
+              <td>1.0×</td>
+            </tr>
+            <tr>
+              <td>+ Levers 1 &amp; 1.5 (parallel, shared index)</td>
+              <td>16.1s</td>
+              <td><strong>1.9×</strong></td>
+            </tr>
+            <tr>
+              <td>+ Lever 2 (warm result cache)</td>
+              <td>8.2s</td>
+              <td><strong>3.7×</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>And the term that dwarfs all of them — eliminating the second compile:</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Cold index-inclusive gate run</th>
+              <th scope="col">Wall time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Before</td>
+              <td>~231s compile + 30.6s checkers ≈ <strong>262s</strong></td>
+            </tr>
+            <tr>
+              <td>After Levers 1+1.5 + single-build</td>
+              <td><strong>~16s</strong> (~16×)</td>
+            </tr>
+            <tr>
+              <td>After + Lever 2 (warm)</td>
+              <td><strong>~8s</strong> (~32×)</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><em>(Honest caveat: the ~262s “before” composes a separately-measured 231s native compile with the sequential checker phase; the three checker-phase rows are one internally-consistent benchmark. The single-build fix is the dominant win by a wide margin.)</em></p>
+        <h2>What I’d take away</h2>
+        <ul>
+          <li><strong>The expensive thing often isn’t the thing you’re optimizing.</strong> I tuned the checker loop three ways — real, worthwhile wins — while a 231-second redundant compile sat in front of all of it. Profile the whole wall-clock, not the part you assume is slow.</li>
+          <li><strong>Read what your tools already produce before making them produce it again.</strong> <code>swiftbuild</code> was emitting a perfectly good index store the entire time. The fix was to <em>look</em>, not to build.</li>
+          <li><strong>A workaround that works can still be the bug.</strong> Forcing <code>--build-system native</code> genuinely fixed the broken index. It also doubled every compile. Fixing the symptom bought a year of paying twice.</li>
+          <li><strong>Make the safe cache provably safe.</strong> Reuse a result only when the <em>complete</em> input set is byte-identical, bias to over-inclusion, and fold config into the key — or you’ll ship a green that’s lying.</li>
+          <li><strong>Watch your own automation.</strong> The nastiest slowdown of the bunch wasn’t in the gate at all — it was a two-hourly sweep with <code>KeepAlive=true</code> rebuilding a hundred projects in a loop.</li>
+        </ul>
+        <p>Same checks. Same diagnostics. Same pass/fail. Roughly sixteen times faster cold, thirty-two times warm — and not one suppression, exclusion, or skipped check to get there.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/quality-gate-performance-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/quality-gate-performance-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
+        <img src="/images/showcase/quality-gate-performance-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: QualityGate, performance, infrastructure, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
