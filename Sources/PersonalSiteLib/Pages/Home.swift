@@ -34,7 +34,7 @@ public struct Home: StaticPage {
                 "A 2000 graduate of Princeton University and holder of an MBA from the Tuck School of Business at Dartmouth, Justin combines analytical rigor with creative problem-solving. He is an active Swift and Python developer, building open-source tools including BusinessMath (a financial computation framework) and contributing to projects in AI/ML and data science."
             }
             Text {
-                "Justin currently serves on the Princeton Class of 2000 Executive Committee and has held leadership roles in alumni organizations for over two decades. He is based in the New York metropolitan area."
+                "Justin currently serves as President of the Princeton Class of 2000 and has held leadership roles in the alumni organizations of St. Albans School and the Tuck School of Business for over two decades. He is based in the New York metropolitan area."
             }
         }
         .class("visually-hidden")
