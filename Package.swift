@@ -1,4 +1,5 @@
 // swift-tools-version: 6.2
+// legibility:description: This is the codebase for my personal website, built using the Ignite static site generator.
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
