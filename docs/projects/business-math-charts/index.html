@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A Washington Post El Niño interactive sent me down a rabbit hole. I came out the other side with an honest Monte Carlo fan chart, a from-scratch geographic mapping library, and a working demo app — all value-agnostic, all pure SwiftUI Canvas, no dependencies." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>"The Cone of Possibility: From a Newspaper Chart to a Mapping Library" | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/projects/business-math-charts" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:image" content="/projects/business-math-charts/globe.png" />
+    <meta name="twitter:image" content="/projects/business-math-charts/globe.png" />
+    <meta property="og:title" content="" the cone of possibility: from a newspaper chart to a mapping library"" />
+    <meta name="twitter:title" content="" the cone of possibility: from a newspaper chart to a mapping library"" />
+    <meta property="og:description" content="A Washington Post El Niño interactive sent me down a rabbit hole. I came out the other side with an honest Monte Carlo fan chart, a from-scratch geographic mapping library, and a working demo app — all value-agnostic, all pure SwiftUI Canvas, no dependencies." />
+    <meta name="twitter:description" content="A Washington Post El Niño interactive sent me down a rabbit hole. I came out the other side with an honest Monte Carlo fan chart, a from-scratch geographic mapping library, and a working demo app — all value-agnostic, all pure SwiftUI Canvas, no dependencies." />
+    <meta property="og:url" content="https://www.justinpurnell.com/projects/business-math-charts" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/projects/business-math-charts#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/projects/business-math-charts",
+          "name" : "\"The Cone of Possibility: From a Newspaper Chart to a Mapping Library\"",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/projects/business-math-charts#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/projects/business-math-charts#breadcrumb"
+      },
+      "description" : "A Washington Post El Niño interactive sent me down a rabbit hole. I came out the other side with an honest Monte Carlo fan chart, a from-scratch geographic mapping library, and a working demo app — all value-agnostic, all pure SwiftUI Canvas, no dependencies.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "\"The Cone of Possibility: From a Newspaper Chart to a Mapping Library\"",
+      "url" : "https://www.justinpurnell.com/projects/business-math-charts"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/projects/business-math-charts#article",
+      "@type" : "Article",
+      "author" : {
+        "@id" : "https://www.justinpurnell.com/#person"
+      },
+      "dateModified" : "2026-07-13T00:00:00Z",
+      "datePublished" : "2026-07-13T12:00:00Z",
+      "description" : "A Washington Post El Niño interactive sent me down a rabbit hole. I came out the other side with an honest Monte Carlo fan chart, a from-scratch geographic mapping library, and a working demo app — all value-agnostic, all pure SwiftUI Canvas, no dependencies.",
+      "headline" : "\"The Cone of Possibility: From a Newspaper Chart to a Mapping Library\"",
+      "image" : "https://www.justinpurnell.com/projects/business-math-charts/globe.png",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "mainEntityOfPage" : {
+        "@id" : "https://www.justinpurnell.com/projects/business-math-charts#webpage"
+      },
+      "publisher" : {
+        "@id" : "https://www.justinpurnell.com/#person"
+      },
+      "url" : "https://www.justinpurnell.com/projects/business-math-charts"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">"The Cone of Possibility: From a Newspaper Chart to a Mapping Library"</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">9 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong>A Washington Post El Niño interactive sent me down a rabbit hole. I came out the other side with an honest Monte Carlo fan chart, a from-scratch geographic mapping library, and a working demo app — all value-agnostic, all pure SwiftUI Canvas, no dependencies.</strong></p>
+        <hr />
+        <p>I was reading a <a href="https://www.washingtonpost.com/climate-environment/interactive/2026/07/10/track-how-extreme-this-years-el-nio-could-get/">Washington Post interactive</a> about how extreme this year’s El Niño could get, and one chart stopped me. It showed the sea-surface-temperature anomaly climbing through the year, and around the forecast it drew a widening band of uncertainty — a <em>cone of possibility</em>. What I liked about it wasn’t that it was pretty. It was that it was <strong>honest</strong>. The band widened with time because the future genuinely gets less certain the further out you look, and the shape wasn’t a tidy symmetric envelope — it leaned, because the underlying distribution is skewed.</p>
+        <p>I had a library sitting in my toolbox — <code>BusinessMath</code>, my Swift Monte Carlo engine — that could produce exactly that kind of honest, sampled uncertainty. So I asked a simple question: <em>what do I have, relative to this article?</em> The answer turned into a weekend of building that reached a lot further than I expected.</p>
+        <h2>Honest uncertainty is a rendering problem and a math problem</h2>
+        <p>The article’s cone works because it’s built from a <strong>Monte Carlo ensemble</strong>: you simulate many trajectories forward in time, then read the percentiles at each step. The band between the 5th and 95th percentile is the 90% interval; it widens because the spread of the trajectories widens.</p>
+        <p>The tempting shortcut is to draw the band as <code>mean ± 1.96·σ</code> — a symmetric Gaussian interval. It’s one line of code and it’s usually wrong. Real forecasts — temperature anomalies, revenue, project timelines — are <strong>skewed</strong>. They spike more easily in one direction than the other. If you draw a symmetric band around the mean, you lie about the shape of the risk.</p>
+        <p>So the first thing I built was a reusable component that does it right: a nested percentile fan (5/25/50/75/95), read from the <strong>empirical</strong> quantiles of the ensemble, not a Gaussian assumption. It draws the median as a line, the bands as graduated fills, an optional overlay of individual sampled trajectories (the honest complement to the fan — it shows that real paths are wiggly and autocorrelated), and a hover readout that gives you the exact percentiles at any point.</p>
+        <p><img src="/projects/business-math-charts/fan-chart.png" alt="The El Niño demo: a Monte Carlo fan chart with nested pink percentile bands, a red median line, and a per-point hover card reading P5 through P95. Below the chart, summary tiles report the median peak, when the cone crosses the record line, the asymmetric band at the peak, and a “Mean vs median” tile showing the mean sitting just above the median." class="img-fluid" /></p>
+        <p>Here’s the honest part I’m proudest of, and it lives in the summary tiles under the chart. One tile reports the mean against the median — and because the sampling is genuinely skewed, the mean sits <em>above</em> the median, the signature of a right-skewed distribution. The band at the peak leans for the same reason: it’s <code>+0.50</code> up and <code>−0.45</code> down, not symmetric. The chart isn’t smoothing any of that away. It’s showing you the asymmetry the sampling actually produced. Arguably it’s <em>more</em> faithful than the newspaper’s version, which renders the band as discrete monthly step-boxes; a continuous, skew-preserving fan carries the same honesty at higher resolution.</p>
+        <h2>The article had four visuals, not one</h2>
+        <p>Once the cone worked, I looked at the rest of the article. There were four distinct visuals: the forecast cone, a world <strong>choropleth</strong> of the probability of extreme heat, an <strong>orthographic globe</strong> showing the sea-surface-temperature field, and the spaghetti overlay of past strong El Niños. I had reproduced one. The other three were geographic — and I had nothing geographic in the toolbox at all.</p>
+        <p>That’s usually where a project quietly ends. Rendering scientific fields on a map is exactly the kind of thing you reach for a heavy dependency to do — MapKit, or a 3D engine, or a charting framework that pulls in the world. I didn’t want any of that. <code>BusinessMath</code>’s companion UI packages are deliberately dependency-light, and I wanted whatever I built to match.</p>
+        <p>So I made a bet: a gridded scalar field over a map projection is <em>just math and 2D drawing</em>. You don’t need MapKit — that’s built for tiles and pins, not continuous fields. And, the insight that made the whole thing feel tractable, <strong>you don’t need a 3D engine for the globe.</strong> An orthographic projection is a two-dimensional projection: you map latitude and longitude to a disc and cull the far hemisphere. It’s pure <code>Canvas</code>.</p>
+        <p>I built a new package, <code>BusinessMathMaps</code>, from an empty repository. A few small, composable pieces:</p>
+        <ul>
+          <li><strong>Projections</strong> — pure functions from <code>(lat, lon)</code> to plane coordinates and back. Equirectangular for flat maps, orthographic for the globe.</li>
+          <li><strong>A field type</strong> that holds arbitrary <code>Double</code> values on a lat/lon grid.</li>
+          <li><strong>Colormaps</strong> that map any value range to color — sequential, diverging, single-hue.</li>
+          <li><strong>Coastlines</strong> — Natural Earth’s public-domain land polygons, bundled and parsed.</li>
+          <li><strong>A single <code>Canvas</code> view</strong> that colors the field through a projection and overlays the coastlines. One view serves both the flat map and the globe.</li>
+        </ul>
+        <p>The first render came out looking like a real world map, with the warm anomaly glowing over the equatorial Pacific.</p>
+        <p><img src="/projects/business-math-charts/choropleth.png" alt="A flat Plate Carrée world map with recognizable coastlines drawn in white over a dark viridis-colored scalar field, the field peaking bright yellow-green in the equatorial Pacific." class="img-fluid" /></p>
+        <p>And the globe — the visual I’d assumed would need a 3D scene — rendered as a clean sphere with limb shading, coastlines curving over the surface, no engine underneath it.</p>
+        <p><img src="/projects/business-math-charts/globe.png" alt="An orthographic globe centered on the Pacific, colored with a blue-white-red diverging colormap, with subtle darkening toward the edge that reads as a genuine sphere." class="img-fluid" /></p>
+        <h2>Value-agnostic, on purpose</h2>
+        <p>Partway through, I made a design correction that turned out to matter more than any single feature. My first field type was quietly assuming its numbers were probabilities. That’s a trap. The strongest version of this library doesn’t know or care what the numbers <em>mean</em>. “Probability of extreme heat” is just one caller that happens to produce a grid of doubles; so is temperature, so is revenue-by-region, so is population density.</p>
+        <p>Keeping the field and the colormap decoupled from meaning is what makes the thing reusable across problems. The same renderer that draws a climate field draws a business choropleth — countries colored by an arbitrary metric, with no-data regions left gray.</p>
+        <p><img src="/projects/business-math-charts/region-choropleth.png" alt="A world map with countries filled by color from a viridis scale representing an illustrative revenue index — the United States bright yellow, China green, others graded down to dark blue, with a color legend beneath." class="img-fluid" /></p>
+        <p>That “value-agnostic” principle is the quiet backbone of the whole library. It’s the difference between a one-off climate visualization and a component you’ll actually reach for again.</p>
+        <h2>The parts where craft shows up</h2>
+        <p>The fun of a project like this is never the happy path. It’s the details you only see once it’s on screen.</p>
+        <p>The globe developed a <strong>pointy pole</strong>. Near a pole, all the longitude lines converge, so the grid cells collapse into slivers — and a small anti-aliasing trick I’d used to hide seams between cells was overlapping those slivers into a little spiral pinch that made the sphere look like a teardrop. The fix was two-fold: scale the seam-hiding outset to the cell size so tiny polar cells get almost none, and cap the pole with a single smooth filled region instead of hundreds of converging quads.</p>
+        <p>Then I added a <strong>tilt</strong> — the ability to pitch the globe to an oblique, look-toward-the-horizon view, the way Apple Maps does. My first version looked <em>parabolic</em>, like a hill instead of a planet. That one was a real lesson in perspective: the camera was too close, so at a steep tilt you were looking well past the horizon and the near edge flattened into a wide arc. Pulling the camera back — less aggressive perspective — let the tilt read as a rounded sphere again. It’s correct geometry either way; it just needed the camera in a sane place.</p>
+        <p><img src="/projects/business-math-charts/tilted-globe.png" alt="The demo app showing the globe tilted to about forty degrees — a rounded dome receding toward the horizon, coastlines foreshortening naturally into the distance, with tilt and colormap controls above it." class="img-fluid" /></p>
+        <p>There were more of these than I can list: making the equirectangular projection a <em>true</em> 2:1 Plate Carrée instead of an accidental square that stretched every continent vertically; giving the globe Apple-Maps-style modifier-gated controls (hold a key and drag to rotate, another to zoom, another to tilt) so it lives happily inside a scrolling page; swapping coarse coastlines for finer ones automatically as you zoom in. None of them are hard. All of them are the difference between a demo that looks <em>almost</em> right and one that looks right.</p>
+        <h2>The shape of the stack</h2>
+        <p>What I ended up with is layered cleanly enough that I want to draw it:</p>
+        <ul>
+          <li><strong><code>BusinessMath</code></strong> does the simulation — Monte Carlo ensembles, distributions, empirical percentiles.</li>
+          <li><strong><code>BusinessMathAdapters</code></strong> bridges. It takes the simulation output — a grid of per-cell results, or a per-period distribution — and reduces it into exactly the shape a chart or a map wants.</li>
+          <li><strong><code>BusinessMathUI</code></strong> and <strong><code>BusinessMathMaps</code></strong> render — the fan chart, the choropleth, the globe.</li>
+        </ul>
+        <p>The El Niño demo runs the whole chain: simulate a forward-looking anomaly, bridge each period’s distribution into percentiles, hand it to the fan chart. Feed a grid of per-cell outcomes through the same bridge and you get a map instead. The pieces compose because none of them reach across the boundary.</p>
+        <h2>Why this is the interesting part</h2>
+        <p>I could have stopped after the fan chart. Reproducing one newspaper chart is a fine afternoon. What I keep coming back to is how far <em>one honest question</em> — “what do I have relative to this?” — carried, when the toolbox underneath was solid and the working style let me keep the whole thing green the entire way.</p>
+        <p>Every step was tested and committed before the next one started. The maps library went from an empty repository to a tested, documented package with a rotatable, tiltable, hoverable globe — reproducing all four of the article’s visuals — without ever leaving a broken build behind. That’s not a story about a clever algorithm. It’s a story about compounding: a good foundation, a disciplined loop, and a willingness to follow a small spark of curiosity further than seems reasonable.</p>
+        <p>It started with a cone of possibility in a newspaper. It ended with a globe I can spin with my thumb.</p>
+        <p><em><code>BusinessMath</code> — the simulation engine underneath all of this — is <a href="https://github.com/jpurnell/BusinessMath">open source on GitHub</a>. The charting, adapter, and mapping packages are companions in the same suite.</em></p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: project, swift, apple, development, dataviz, monte-carlo, maps</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
