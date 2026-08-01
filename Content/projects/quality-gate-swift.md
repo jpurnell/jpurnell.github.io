@@ -16,6 +16,10 @@ published: true
 
 ---
 
+> **This post has grown into a whole series.** quality-gate-swift now has 33 checkers and a companion institutional-judgment system — the full story, checker by checker, lives in [**The Gate and the Mirror**](/quality-gate). The three auditors below are where it started.
+
+---
+
 A while back I wrote about the [development-guidelines repo](/projects/development-guidelines) — the system I use to keep AI assistants productive across sessions. One of its load-bearing pieces is `quality-gate`: a single command that runs every quality check before a commit can land. Build, test, safety audit, doc lint, doc coverage, dead-code detection. If any of them fails, the commit doesn't happen.
 
 This week I added three new checkers, and I want to talk about why the modularity of the quality gate made it almost trivial to do — and what each new auditor catches.
