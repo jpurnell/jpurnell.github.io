@@ -14,6 +14,7 @@ public struct SiteHeader: HTML {
             Link("Showcase", target: Showcase())
             Link("CV", target: CV())
             Link("BusinessMath", target: BusinessMath())
+            Link("Quality Gate", target: QualityGate())
             Link("NeXT", target: NeXT())
         })
         .navigationItemAlignment(.leading)

@@ -47,6 +47,7 @@ public struct PersonalSite: Site {
     public var staticPages: [any StaticPage] {
         About()
         BusinessMath()
+        QualityGate()
         CV()
         Portfolio()
         Projects()
