@@ -1,145 +1,79 @@
-# [PROJECT_NAME] Master Plan
+# justinpurnell.com Master Plan
 
 **Purpose:** Source of truth for project vision, architecture, and goals.
+
+> **Provenance:** Written 2026-08-05 from README, `Package.swift`, and the source tree.
 
 ---
 
 ## Project Overview
 
 ### Mission
-[Describe the core mission of this project - what problem does it solve?]
+
+The codebase for a personal website, built with the [Ignite](../../Ignite/project/master_plan.md)
+static site generator.
 
 ### Target Users
-- [User type 1]
-- [User type 2]
-- [User type 3]
+- Readers of the site — its writing, project showcase, and quality-gate series
+- The author, who needs publishing to be a `swift run` rather than an operation
 
 ### Key Differentiators
-- [What makes this project unique?]
-- [Why would someone choose this over alternatives?]
+- **The site is a Swift package.** Pages are types; layouts are composed in code, so a
+  broken page is usually a compile error rather than a deploy-time surprise
+- **Its own generator.** This is the primary consumer of the Ignite fork, which makes it the
+  place divergence gets exercised before anyone else sees it
+- **Published from `docs/`** — GitHub Pages, no external build service
 
 ---
 
 ## Architecture
 
-### Technology Stack
-- **Language:** [Swift 6.0 / Python / etc.]
-- **Frameworks:** [List key frameworks]
-- **Build System:** [SPM / CocoaPods / etc.]
-- **Testing:** [Swift Testing / XCTest / etc.]
-
-### Module Structure
+- **Language:** Swift 6 · **Build:** SwiftPM · **Generator:** the `Ignite` fork
+- **Output:** `site.publish(buildDirectoryPath: "docs")`, committed and served by Pages
 
 ```
-[PROJECT_NAME]/
-├── Sources/
-│   └── [PROJECT_NAME]/
-│       ├── [Module1]/
-│       ├── [Module2]/
-│       └── [PROJECT_NAME].docc/
-├── Tests/
-│   └── [PROJECT_NAME]Tests/
-└── Package.swift
+Sources/IgniteStarter/
+├── Pages/  Layouts/  Components/   # the site
+├── Models/  Data/                  # content types
+├── Configuration/  Helpers/
+Content/                            # markdown posts, front-matter driven
 ```
 
-### Key Types
+29 source files, 10 test files, 142 content documents.
 
-| Type | Purpose |
-|------|---------|
-| `[Type1]` | [Description] |
-| `[Type2]` | [Description] |
-| `[Type3]` | [Description] |
+### The relationship worth stating
 
-> **Full capability inventory:** See [Capability Map](../development-guidelines/strategies/CAPABILITY_MAP.md) for the complete feature area inventory with interfaces and application domains.
+This site depends on the fork, and the fork's changes land here first. Structured-data work
+in `Ignite` is only observable once a real site emits it — so this repository is the fork's
+integration test, whether or not it is labelled that way.
 
 ---
 
 ## Current Status
 
-### What's Working
-- [x] [Feature 1]
-- [x] [Feature 2]
-- [ ] [Feature 3 - in progress]
+- [x] Site building and publishing to `docs/`
+- [x] Content series including quality-gate, projects, showcase
 
 ### Known Issues
-- [Issue 1]
-- [Issue 2]
 
-### Current Priorities
-1. [Priority 1]
-2. [Priority 2]
-3. [Priority 3]
+**`docs/` is generated but committed**, so a rebuild produces diffs unrelated to any edit.
+Regenerating also removes artifacts Ignite does not itself produce — an EPUB in the
+quality-gate series had to be restored after one rebuild. Worth knowing before running
+`swift run` casually.
 
----
-
-## Collaboration Principles
-
-### AI as Sparring Partner, Not Oracle
-
-AI proposes; the human interrogates. High AI confidence triggers harder questions, not faster acceptance.
-
-- **Interrogate confident outputs.** When the AI states something with certainty, ask for the counterargument before accepting.
-- **Demand counterarguments.** Before locking in an approach, require an explicit case for the strongest alternative.
-- **Sit with discomfort.** Resist the pull to take the first plausible answer. Working through a hard call manually preserves the judgment that lets you catch the AI when it's wrong.
-
-This principle is operationalized in the **Adversarial Review** step of `design_proposal.md` and is the canonical reference for any other doc that invokes it.
-
----
+### Priorities
+**[NEEDS INPUT]**
 
 ## Quality Standards
 
-### Code Quality
-- All code follows `coding_rules.md`
-- Test coverage target: [80%+]
-- Documentation for all public APIs
-- No warnings in build output
-
-### Documentation Quality
-- DocC comments for all public functions
-- Usage examples in documentation
-- Articles for complex topics
-
----
-
-## Error Registry
-
-> **Purpose:** Single source of truth for all error types in the project. Consult this
-> registry during the Design Proposal Phase to ensure new error cases don't duplicate
-> existing ones. Update it whenever new error types are introduced.
-
-### Error Types
-
-| Error Enum | Case | When Thrown | Module |
-|------------|------|------------|--------|
-| `ProjectError` | `.emptyInput` | Collection is empty when non-empty is required | [Module] |
-| `ProjectError` | `.invalidInput(message:)` | Parameter fails validation | [Module] |
-| `ProjectError` | `.divisionByZero(context:)` | Denominator is zero or near-zero | [Module] |
-
-*Add new error cases here as they are introduced. Remove this example content and replace with your project's actual errors.*
-
-### Error Design Principles
-
-- **One error enum per domain boundary** — avoid proliferating error types
-- **Descriptive associated values** — include context (parameter name, expected range, etc.)
-- **No overlapping cases** — `invalidParameter` and `outOfRange` should not coexist if they mean the same thing
-- **Consult this registry** before creating new error cases in a Design Proposal
-
----
+`coding_rules.md`, Swift 6 strict concurrency, zero warnings.
+**Every published post's front matter must parse and every internal link resolve** — a dead
+link on a personal site is cheap to create and invisible until someone else finds it.
 
 ## Roadmap
 
-### Phase 1: [Name]
-- [ ] [Goal 1]
-- [ ] [Goal 2]
-
-### Phase 2: [Name]
-- [ ] [Goal 1]
-- [ ] [Goal 2]
-
-### Future Considerations
-- [Potential future direction 1]
-- [Potential future direction 2]
+**[NEEDS INPUT]**
 
 ---
 
-**Last Updated:** [Date]
+**Last Updated:** 2026-08-05
