@@ -37,4 +37,4 @@ The **Mirror** posts are, frankly, the more interesting half — because they're
 
 Filter by family below — or start with the two anchor posts: **A Gate, Not a Linter** for the philosophy of mechanical enforcement, and **The Mirror** for how the judgment system learns. Everything here dogfoods itself: this very site is a node in the corpus.
 
-Prefer to read it all at once? **[Download the book — *The Gate and the Mirror* (.epub)](/QualityGate/The-Gate-and-the-Mirror.epub)**.
+Prefer to read it all at once? **[Download the book — *The Gate and the Mirror* (.epub)](/epub/The-Gate-and-the-Mirror.epub)**.

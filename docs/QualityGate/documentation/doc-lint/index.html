@@ -180,7 +180,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">"DocLinter: Catching DocC Errors Before They Break the Build"</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">quality-gate</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">2 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Documentation that doesn’t build is worse than none — it fails at the least convenient moment. This checker builds the DocC and fails at commit time instead.</strong></p>
         <hr />
@@ -192,10 +192,31 @@
           <li>Dangling references after a rename or a move</li>
           <li>The structural problems that only appear when DocC actually compiles the catalog</li>
         </ul>
-        <p>Because it <em>builds</em> the documentation rather than pattern-matching it, the findings are the same ones DocC itself would produce — no false positives from a heuristic that doesn’t understand the format.</p>
+        <p>Because it <em>builds</em> the documentation rather than pattern-matching it, the findings are DocC’s own. There is no heuristic guessing at the format.</p>
+        <p>That sentence used to end differently, and the correction is the most useful thing in this post.</p>
+        <h2>Two ways a checker can lie to you</h2>
+        <p>For most of its life this checker was wrong in two ways at once, and both were invisible because the output looked exactly like success.</p>
+        <p><strong>It examined one module out of a hundred and sixteen.</strong> The command it ran was <code>swift package generate-documentation --target X</code>, where <code>X</code> was the first target of the first library product — or whatever <code>docTarget</code> named in the config. Every other module was never handed to DocC at all. So the green checkmark was not a claim about the package. It was a claim about 0.9% of it, and nothing in the output said so.</p>
+        <p>That is not degraded coverage. It is <em>absent</em> coverage, printed in the same shape as a clean run.</p>
+        <p>The fix was small — <code>--target</code> is repeatable, so full coverage costs one invocation rather than thirty-one. Pointed at every module owning a catalog, it went from 1 target to 31 and immediately surfaced <strong>19 real defects</strong> that had been sitting there: fifteen cross-module symbol references that DocC cannot resolve, three nested code spans it was reading as symbol links, and one parameter documented by its external label instead of its internal name.</p>
+        <p><strong>And it invented the addresses of what it did find.</strong> Modern DocC puts the message on one line and the location on the next:</p>
+        <pre><code>warning: Parameter 'seed' is missing documentation
+   --&gt; ../Portfolio/PortfolioUtilities.swift:103:54-103:54
+</code></pre>
+        <p>The parser recognised two older shapes and neither of them was this one, so it dropped the location entirely — and then <em>recovered</em> it by collecting every function in the package with a parameter of that name and pairing them to the warnings <strong>by position</strong>. The first warning got the first match, the second the second, and so on, from two orderings that have nothing to do with each other.</p>
+        <p>With one such parameter in a package, that guess lands by luck. With eight, every guess missed. Three separate investigations went to files whose documentation was perfectly correct, and the natural reading of “the checker is flagging correct documentation” is <em>the checker is broken</em> — which was precisely backwards. The findings were right. Only the addresses were wrong.</p>
+        <p>A wrong location is not a milder version of a missing one. It spends your attention in the wrong place, and it does so most confidently when there are many candidates — which is exactly when your codebase is largest. The rule now is that ambiguity produces <em>no</em> location at all.</p>
+        <h2>The property worth stealing</h2>
+        <p>Both bugs are the same bug wearing different clothes:</p>
+        <blockquote>
+          <p><strong>A checker that examined nothing must not print what a checker that found nothing prints.</strong></p>
+        </blockquote>
+        <p>A sibling checker in the same suite, <code>doc-generated</code>, has reported its own coverage on every run since the day it was written — <code>regions: 10 found · 10 regenerated · 0 unknown</code> — pass or fail, including when the answer is zero. It has never had this class of failure, because the failure is unsayable in its output.</p>
+        <p><code>doc-lint</code> now does the same: every run states how many targets it examined, and examining zero is an <em>error</em> rather than a pass. If your linter can’t tell you what it looked at, you don’t know what its silence means.</p>
         <h2>A note on cross-module references</h2>
-        <p>One hard-won detail worth passing on: in DocC, cross-module symbol references use <em>single</em> backticks, not double. It’s the kind of rule you learn once by breaking the build, and then a linter that catches it saves everyone else from learning it the same way. That’s the entire case for this checker — documentation is only an asset if it compiles, and “it compiles” should be a gate, not a hope.</p>
-        <p><code>doc-lint</code> is one of the checkers commonly excluded from fast local runs (it’s slower, because it builds), then run in full before a push. Right tool, right cadence.</p>
+        <p>One hard-won detail worth passing on: in DocC, cross-module symbol references use <em>single</em> backticks, not double. Double backticks resolve against the symbol graph of the module being documented, and a type from another module simply isn’t in it.</p>
+        <p>It’s the kind of rule you learn once by breaking the build. Fifteen of the nineteen defects above were exactly this — including several in code written by someone who already knew the rule. That’s the case for the checker in one line: knowing a rule and obeying it under deadline are different skills, and only one of them can be automated.</p>
+        <p><code>doc-lint</code> is slower than most checkers, because it builds. Run it before a push rather than on every save. Right tool, right cadence.</p>
         <h2>Try it</h2>
         <pre><code class="language-bash">quality-gate --check doc-lint
 </code></pre>
