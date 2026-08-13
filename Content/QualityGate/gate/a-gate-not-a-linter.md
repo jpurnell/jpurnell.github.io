@@ -43,7 +43,7 @@ So the entire design is organized around one demand: **nearly every finding must
 
 Most quality problems in Swift aren't typos — they're structural. A force-unwrap that crashes on the one `nil` you didn't expect. An `async` stream whose cancellation path was never specified. A pointer that escapes the block that owned it. These are invisible to a regex, which can't tell `value!` from `value != nil` from a `!` inside a string literal.
 
-Every rule in quality-gate-swift walks the Swift **abstract syntax tree** via SwiftSyntax. It knows scope, type context, and control flow. That's what makes it precise enough to block. Zero regex — 33 checkers, all AST-based.
+Every rule in quality-gate-swift walks the Swift **abstract syntax tree** via SwiftSyntax. It knows scope, type context, and control flow. That's what makes it precise enough to block. Zero regex — 42 checkers, all AST-based.
 
 ### Precision is the product
 
@@ -79,7 +79,7 @@ The gate blocks on correctness and safety. It informs on everything else. Keepin
 
 ## It's held to its own standard
 
-quality-gate-swift runs its own 33 checkers on every push. Its ~1,700 tests are the tool held to the standard it enforces. When it finds a false positive, it finds it against itself first — like the recursion checker flagging its own SwiftSyntax visitor, caught and fixed before it ever shipped to another project. Dogfooding isn't a virtue signal here; it's the primary test harness.
+quality-gate-swift runs its own 42 checkers on every push. Its ~2,800 tests are the tool held to the standard it enforces. When it finds a false positive, it finds it against itself first — like the recursion checker flagging its own SwiftSyntax visitor, caught and fixed before it ever shipped to another project. Dogfooding isn't a virtue signal here; it's the primary test harness.
 
 ## The gate is half the story
 
