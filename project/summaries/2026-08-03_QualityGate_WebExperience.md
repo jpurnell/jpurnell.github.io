@@ -40,9 +40,15 @@ quality-gate-swift's guidelines (`BOOK_QUALITY_GATE_AND_INSTITUTIONAL_JUDGMENT.m
 
 - **URLs:** landing at `/quality-gate` (from the StaticPage type name); posts at
   `/QualityGate/<family>/<slug>` (from the content dir). Both work.
-- **Epub serving:** Ignite does NOT copy `.epub` from `Content/` to `docs/`. The
+- **Epub serving:** ~~Ignite does NOT copy `.epub` from `Content/` to `docs/`. The
   epub is served by a manual `cp Content/QualityGate/*.epub docs/QualityGate/`
-  **after** `swift run`. If you regenerate the epub or the site, re-copy it.
+  **after** `swift run`. If you regenerate the epub or the site, re-copy it.~~
+  **Superseded 2026-08-13.** The epub now lives in `Assets/epub/`, which Ignite
+  copies to `docs/epub/` on every `swift run`. No manual `cp`. The old
+  arrangement put a generated file directly into the publish directory, where
+  the next build was free to overwrite the folder around it and where nothing
+  recorded that a step had been skipped — which is how it ended up seven
+  chapters behind the site.
 - **Site gate:** the site runs its own `.quality-gate.yml` (doc-coverage on
   `PersonalSiteLib`, consistency/ijs into `org-judgement-corpus`). The new
   `QualityGate.swift` is fully documented; the section is 0/0.
@@ -50,6 +56,20 @@ quality-gate-swift's guidelines (`BOOK_QUALITY_GATE_AND_INSTITUTIONAL_JUDGMENT.m
   (rebuild takes a minute or two).
 
 ## Rebuild the epub
+
+**Superseded 2026-08-13** — this procedure is now `scripts/build-quality-gate-epub.sh`.
+The recipe below was correct and still went wrong, in the way prose recipes do:
+it lived here, nobody re-read it, and the epub silently fell seven chapters
+behind the site with nothing to say so. The script holds the chapter order in
+one list and fails if the count it emits differs from the count of `.md` files
+on disk.
+
+```
+./scripts/build-quality-gate-epub.sh   # -> Assets/epub/
+swift run                              # Ignite copies Assets/ -> docs/
+```
+
+<details><summary>Original procedure, for the record</summary>
 
 ```
 # from Content/QualityGate/: concat posts (frontmatter-stripped) into a
@@ -59,3 +79,5 @@ pandoc QualityGate-Complete.md --css epub.css --toc --toc-depth=1 \
 # then remove Complete.md (Ignite misparses its --- block) and
 # cp the .epub into docs/QualityGate/ after `swift run`.
 ```
+
+</details>

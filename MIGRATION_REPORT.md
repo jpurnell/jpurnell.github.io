@@ -48,8 +48,39 @@ completeness only — nothing to upstream.
 
 ## Next steps
 
-1. Review `project/` and commit it to this repository.
-2. Upstream anything listed above that belongs in the framework.
-3. Only then remove `development-guidelines.pre-v2/`.
-4. The `project-state/*` branch on the development-guidelines remote may be
-   deleted only after this repository's commit is pushed.
+1. ~~Review `project/` and commit it to this repository.~~ Done — `project/`
+   is tracked and pushed.
+2. ~~Upstream anything listed above that belongs in the framework.~~ Nothing to
+   upstream: the divergence audit above found no local-only and no locally
+   modified rules. Every listed file is a superseded upstream release.
+3. ~~Only then remove `development-guidelines.pre-v2/`.~~ Removed 2026-08-13.
+4. The `project-state/justinpurnell-com` branch on the development-guidelines
+   remote (at `563d729`) **still exists** and is a decision left open. It holds
+   the two commits that predate repatriation. The three commits that came after
+   it were only ever local, and their content is byte-identical to files now
+   tracked here — verified before removal:
+
+   | pre-v2 path | now lives at | state |
+   |---|---|---|
+   | `02_IMPLEMENTATION_PLANS/PROPOSALS/QualityGateWebExperience.md` | `project/plans/proposals/QualityGateWebExperience.md` | identical |
+   | `05_SUMMARIES/2026-08-03_QualityGate_WebExperience.md` | `project/summaries/` | identical |
+   | `05_SUMMARIES/HANDOFF_2026-08-03.md` | `project/summaries/` | this repo's copy is **newer** — its internal path reference was corrected to the v2 layout |
+
+## What the nested clone actually was
+
+Worth writing down, because the shape recurs: `development-guidelines.pre-v2/`
+was not a submodule and not a gitlink. It was a full clone of the shared
+framework repo, sitting inside this working tree, gitignored, checked out on a
+local-only branch that carried this site's own session summaries and proposals.
+
+Nothing leaked upstream — the three site-specific commits were never pushed
+anywhere. But the arrangement is worth avoiding on its own terms: a gitignored
+directory containing a live repository is invisible to `git status` here and
+looks like an ordinary folder, so a stray `git commit` run from inside it lands
+in the *framework's* history rather than this one. That is precisely the
+"never pollute shared template repos" boundary, and an ignored nested clone is
+the configuration most likely to cross it by accident.
+
+The same pattern exists at scale: the framework remote carries **50**
+`project-state/*` branches, one per project. Consider this repo's entry
+resolved either way — the content is here now.
