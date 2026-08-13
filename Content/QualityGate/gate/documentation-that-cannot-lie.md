@@ -4,8 +4,8 @@ series: quality-gate
 title: "Documentation That Cannot Lie"
 tags: quality-gate, gate, documentation, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-09-16 09:00
-lastModified: 2026-08-12
+date: 2026-08-13 09:00
+lastModified: 2026-08-13
 published: true
 ---
 

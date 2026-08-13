@@ -4,7 +4,7 @@ series: quality-gate
 title: "PointerEscapeAuditor: The Auditor I Wish I'd Had a Year Ago"
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-04 09:00
+date: 2026-07-31 09:03
 lastModified: 2026-08-04
 published: true
 ---

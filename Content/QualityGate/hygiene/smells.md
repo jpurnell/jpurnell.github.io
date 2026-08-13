@@ -4,7 +4,7 @@ series: quality-gate
 title: "SmellPack: God Objects, Deep Nesting, and Other Code Smells"
 tags: quality-gate, hygiene, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-23 09:00
+date: 2026-07-31 09:34
 lastModified: 2026-08-23
 published: true
 ---

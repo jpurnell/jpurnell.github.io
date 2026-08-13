@@ -4,7 +4,7 @@ series: quality-gate
 title: "AccessibilityAuditor: The Users You Forgot to Test With"
 tags: quality-gate, hygiene, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-21 09:00
+date: 2026-07-31 09:32
 lastModified: 2026-08-21
 published: true
 ---

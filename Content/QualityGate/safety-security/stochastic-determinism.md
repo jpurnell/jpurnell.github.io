@@ -4,7 +4,7 @@ series: quality-gate
 title: "StochasticDeterminismAuditor: The .random() That Fails One Build in Fifty"
 tags: quality-gate, safety, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-15 09:00
+date: 2026-07-31 09:24
 lastModified: 2026-08-15
 published: true
 ---

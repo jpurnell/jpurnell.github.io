@@ -4,8 +4,8 @@ series: quality-gate
 title: "A Gate, Not a Linter"
 tags: quality-gate, gate
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-05 09:00
-lastModified: 2026-08-05
+date: 2026-07-31 09:04
+lastModified: 2026-08-13
 published: true
 ---
 

@@ -4,7 +4,7 @@ series: quality-gate
 title: "TestQualityAuditor: Tests That Don't Actually Test Anything"
 tags: quality-gate, hygiene, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-19 09:00
+date: 2026-07-31 09:30
 lastModified: 2026-08-19
 published: true
 ---

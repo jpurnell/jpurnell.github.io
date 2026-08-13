@@ -4,8 +4,8 @@ series: quality-gate
 title: "DocLinter: Catching DocC Errors Before They Break the Build"
 tags: quality-gate, documentation, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-13 09:00
-lastModified: 2026-08-12
+date: 2026-07-31 09:19
+lastModified: 2026-08-13
 published: true
 ---
 

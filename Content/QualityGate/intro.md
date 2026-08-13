@@ -4,8 +4,8 @@ series: quality-gate
 title: The Gate and the Mirror
 tags: quality-gate, gate
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-01 09:00
-lastModified: 2026-08-01
+date: 2026-07-31 09:00
+lastModified: 2026-08-13
 published: true
 ---
 

@@ -4,7 +4,7 @@ series: quality-gate
 title: The Rules Are Not Your Project
 tags: quality-gate, gate, architecture, ai
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-05 09:00
+date: 2026-07-31 09:05
 lastModified: 2026-08-05
 published: true
 ---

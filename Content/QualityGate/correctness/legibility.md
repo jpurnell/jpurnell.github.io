@@ -4,7 +4,7 @@ series: quality-gate
 title: "LegibilityAnalyzer: A Reading Order for a Codebase You've Never Seen"
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-12 09:00
+date: 2026-07-31 09:17
 lastModified: 2026-08-12
 published: true
 ---

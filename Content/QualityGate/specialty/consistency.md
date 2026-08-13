@@ -4,7 +4,7 @@ series: quality-gate
 title: "ConsistencyChecker: Where the Gate Becomes the Mirror"
 tags: quality-gate, specialty, mirror, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-09-08 09:00
+date: 2026-07-31 09:49
 lastModified: 2026-09-08
 published: true
 ---

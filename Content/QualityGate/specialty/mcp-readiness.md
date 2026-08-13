@@ -4,7 +4,7 @@ series: quality-gate
 title: "MCPReadinessAuditor: When the Tool Schema and the Code Disagree"
 tags: quality-gate, specialty, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-09-04 09:00
+date: 2026-07-31 09:45
 lastModified: 2026-09-04
 published: true
 ---

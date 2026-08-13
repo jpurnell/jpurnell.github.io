@@ -4,7 +4,7 @@ series: quality-gate
 title: "FloatingPointSafetyAuditor: The == You Should Never Write"
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-07 09:00
+date: 2026-07-31 09:07
 lastModified: 2026-08-07
 published: true
 ---

@@ -4,7 +4,7 @@ series: quality-gate
 title: "Principles as Software: The Bridgewater Lineage"
 tags: quality-gate, mirror, swift
 link: https://github.com/jpurnell/org-judgement-system
-date: 2026-08-12 10:00
+date: 2026-07-31 09:18
 lastModified: 2026-08-12
 published: true
 ---

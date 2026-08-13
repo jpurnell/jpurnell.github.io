@@ -4,7 +4,7 @@ series: quality-gate
 title: "TestRunner: The Flip Detector That Catches Races a Passing Suite Hides"
 tags: quality-gate, project-health, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-28 09:00
+date: 2026-07-31 09:38
 lastModified: 2026-08-28
 published: true
 ---

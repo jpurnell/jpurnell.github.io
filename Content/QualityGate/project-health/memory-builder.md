@@ -4,7 +4,7 @@ series: quality-gate
 title: "MemoryBuilder: Memory Files Beat Documentation (for AI, Anyway)"
 tags: quality-gate, project-health, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-09-02 09:00
+date: 2026-07-31 09:43
 lastModified: 2026-09-02
 published: true
 ---

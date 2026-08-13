@@ -4,7 +4,7 @@ series: quality-gate
 title: "KeychainSecretsChecker: The Token You Left in UserDefaults"
 tags: quality-gate, safety, compliance, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-14 09:00
+date: 2026-07-31 09:22
 lastModified: 2026-08-14
 published: true
 ---

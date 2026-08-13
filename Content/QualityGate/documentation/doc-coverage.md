@@ -4,7 +4,7 @@ series: quality-gate
 title: "DocCoverageChecker: Undocumented Public APIs, Ranked by How Much They Matter"
 tags: quality-gate, documentation, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-25 09:00
+date: 2026-07-31 09:36
 lastModified: 2026-08-25
 published: true
 ---

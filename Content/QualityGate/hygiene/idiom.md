@@ -4,7 +4,7 @@ series: quality-gate
 title: "IdiomAuditor: SwiftLint's Best Rules, Native and AST-Based"
 tags: quality-gate, hygiene, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-22 09:00
+date: 2026-07-31 09:33
 lastModified: 2026-08-22
 published: true
 ---

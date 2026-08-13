@@ -4,7 +4,7 @@ series: quality-gate
 title: "LoggingAuditor: No print(), No Silent Catches"
 tags: quality-gate, hygiene, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-18 09:00
+date: 2026-07-31 09:29
 lastModified: 2026-08-18
 published: true
 ---

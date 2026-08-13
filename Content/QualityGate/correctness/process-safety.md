@@ -4,7 +4,7 @@ series: quality-gate
 title: "ProcessSafetyAuditor: The 64 KB Pipe Deadlock It Caught in Its Own Author's Code"
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-10 09:00
+date: 2026-07-31 09:13
 lastModified: 2026-08-10
 published: true
 ---

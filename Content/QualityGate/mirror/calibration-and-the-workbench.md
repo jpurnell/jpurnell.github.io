@@ -4,7 +4,7 @@ series: quality-gate
 title: "Calibration & the Judgment Workbench: Making the Override Say Why"
 tags: quality-gate, mirror, swift
 link: https://github.com/jpurnell/org-judgement-system
-date: 2026-08-10 10:00
+date: 2026-07-31 09:14
 lastModified: 2026-08-10
 published: true
 ---

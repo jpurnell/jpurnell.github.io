@@ -4,7 +4,7 @@ series: quality-gate
 title: "The Pulse: Statistics, and the Discipline of Not Over-Reacting"
 tags: quality-gate, mirror, swift
 link: https://github.com/jpurnell/org-judgement-system
-date: 2026-08-08 10:00
+date: 2026-07-31 09:10
 lastModified: 2026-08-08
 published: true
 ---

@@ -4,7 +4,7 @@ series: quality-gate
 title: "SafetyAuditor: No Force Unwraps, and the OWASP Mobile Top 10"
 tags: quality-gate, safety, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-13 09:00
+date: 2026-07-31 09:20
 lastModified: 2026-08-13
 published: true
 ---

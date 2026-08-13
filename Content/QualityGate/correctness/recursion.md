@@ -4,7 +4,7 @@ series: quality-gate
 title: "RecursionAuditor: Infinite Loops That Compile Cleanly"
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
-date: 2026-08-02 09:00
+date: 2026-07-31 09:01
 lastModified: 2026-08-02
 published: true
 ---
