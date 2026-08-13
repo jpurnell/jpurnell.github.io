@@ -23,7 +23,7 @@ This series is about two systems that, together, replace unearned trust with mec
 
 ## The Gate
 
-**quality-gate-swift** is a modular, AST-powered static-analysis tool for Swift. It reads the tree, not the text: every rule walks the SwiftSyntax abstract syntax tree, so it understands scope, type context, and control flow. That precision is what lets it *block* rather than merely warn — 42 checkers, 2,800+ tests, zero regex, held to its own standard on every commit.
+**quality-gate-swift** is a modular, AST-powered static-analysis tool for Swift. It reads the tree, not the text: every rule walks the SwiftSyntax abstract syntax tree, so it understands scope, type context, and control flow. That precision is what lets it *block* rather than merely warn — 42 checkers, 2,990+ tests, zero regex, held to its own standard on every commit.
 
 The **Gate** posts walk through every checker: what it catches, the real bug that motivated it, how it's detected, and how it dogfoods itself.
 

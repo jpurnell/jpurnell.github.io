@@ -5,7 +5,7 @@ title: "The Trust Service: Who Gets to Write the Memory"
 tags: quality-gate, mirror, swift
 link: https://github.com/jpurnell/org-judgement-system
 date: 2026-07-31 09:16
-lastModified: 2026-08-11
+lastModified: 2026-08-13
 published: true
 ---
 

@@ -5,7 +5,7 @@ title: "Policy Discovery: Closing the Loop"
 tags: quality-gate, mirror, swift
 link: https://github.com/jpurnell/org-judgement-system
 date: 2026-07-31 09:12
-lastModified: 2026-08-09
+lastModified: 2026-08-13
 published: true
 ---
 

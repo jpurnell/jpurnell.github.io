@@ -5,7 +5,7 @@ title: "SubmoduleAuditor: Git Submodules That Point at the Wrong Commit"
 tags: quality-gate, project-health, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:44
-lastModified: 2026-09-03
+lastModified: 2026-08-13
 published: true
 ---
 

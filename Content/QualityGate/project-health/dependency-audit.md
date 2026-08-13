@@ -5,7 +5,7 @@ title: "DependencyAuditor: Catching the Import That Doesn't Exist"
 tags: quality-gate, project-health, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:40
-lastModified: 2026-08-30
+lastModified: 2026-08-13
 published: true
 ---
 

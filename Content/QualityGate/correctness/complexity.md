@@ -5,7 +5,7 @@ title: "ComplexityAnalyzer: Cognitive Load, and the Cost That Hides in the Call 
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:15
-lastModified: 2026-08-11
+lastModified: 2026-08-13
 published: true
 ---
 

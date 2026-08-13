@@ -5,7 +5,7 @@ title: "ContextAuditor: Consent, Surveillance, and the Ethics of Code"
 tags: quality-gate, hygiene, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:31
-lastModified: 2026-08-20
+lastModified: 2026-08-13
 published: true
 ---
 

@@ -5,7 +5,7 @@ title: "The Mirror: Teaching an Organization to Learn From Its Own Decisions"
 tags: quality-gate, mirror
 link: https://github.com/jpurnell/org-judgement-system
 date: 2026-07-31 09:06
-lastModified: 2026-08-06
+lastModified: 2026-08-13
 published: true
 ---
 

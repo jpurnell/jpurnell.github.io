@@ -5,7 +5,7 @@ title: "StatusAuditor: When the Docs and the Code Disagree"
 tags: quality-gate, project-health, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:39
-lastModified: 2026-08-29
+lastModified: 2026-08-13
 published: true
 ---
 

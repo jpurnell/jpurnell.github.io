@@ -5,7 +5,7 @@ title: "HIGAuditor: Apple's Human Interface Guidelines, as Enforced Rules"
 tags: quality-gate, safety, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:28
-lastModified: 2026-08-17
+lastModified: 2026-08-13
 published: true
 ---
 

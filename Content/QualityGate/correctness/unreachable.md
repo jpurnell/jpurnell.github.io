@@ -5,7 +5,7 @@ title: "UnreachableCodeAuditor: Dead Code, and the 1,064 False Positives It Taug
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:11
-lastModified: 2026-08-09
+lastModified: 2026-08-13
 published: true
 ---
 

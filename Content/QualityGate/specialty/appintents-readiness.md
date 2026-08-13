@@ -5,7 +5,7 @@ title: "AppIntentsAuditor: The Siri Integration That Fails at Registration"
 tags: quality-gate, specialty, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:46
-lastModified: 2026-09-05
+lastModified: 2026-08-13
 published: true
 ---
 

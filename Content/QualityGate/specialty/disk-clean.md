@@ -5,7 +5,7 @@ title: "DiskCleaner: The Opt-In Checker That Once Faked a 61-Error Run"
 tags: quality-gate, specialty, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:48
-lastModified: 2026-09-07
+lastModified: 2026-08-13
 published: true
 ---
 

@@ -180,7 +180,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">"StochasticDeterminismAuditor: The .random() That Fails One Build in Fifty"</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">quality-gate</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">2 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Unseeded randomness in production and tests — the source of the flake you can never reproduce.</strong></p>
         <hr />
@@ -198,6 +198,19 @@ let n = Int.random(in: 0..&lt;100, using: &amp;rng)
 </code></pre>
         <p>The rule flags the implicit-RNG forms and points you at the seeded overloads. The project’s own rule is blunt: <strong>stochastic tests always use a seeded RNG, never implicit <code>.random()</code>.</strong> A tool that flags unseeded randomness had better not contain any — and its tests don’t.</p>
         <p>This pairs with its sibling, <a href="/QualityGate/safety-security/temporal-determinism">TemporalDeterminismAuditor</a>: between them they close the two biggest sources of non-reproducible test behavior — randomness and the wall clock. Determinism isn’t pedantry; it’s the precondition for a test suite you can actually trust to tell you the truth.</p>
+        <h2>The exemption that meant nothing</h2>
+        <p>Some randomness is genuinely intentional. A fuzzer wants fresh inputs; a backoff calculation wants real entropy. So there’s an escape hatch — and for most of this checker’s life it was recognised by substring. Any occurrence of <code>// stochastic:exempt</code> suppressed the diagnostic, which meant nothing distinguished a considered decision from <em>“the auditor complained here.”</em></p>
+        <p><strong>Two defects in one release hid behind that</strong>, both with bare markers, and each cost a misdiagnosis before the real cause was found.</p>
+        <p>One was a GPU path where a configured <code>seed</code> was silently inert — the parameter was accepted and never reached the generator. The other was a robust optimiser redrawing 92 of 100 scenarios on every call, so two runs of the same optimisation were solving two different problems. That one was investigated as load-dependent flakiness, then as a stale build. After seeding, two intermittent failures became reproducible and revealed a real constraint-accuracy defect that the randomness had been hiding the whole time.</p>
+        <p>A marker now has to say why:</p>
+        <pre><code class="language-swift">// stochastic:exempt — environmental jitter; no seeded sibling exists on this API
+let delay = Double.random(in: 0...0.1)
+</code></pre>
+        <p>A bare marker is itself a finding. So is one followed only by punctuation — a dash explains nothing — and so is one followed only by another suppression marker. That last case is specifically defended: the parser strips sibling <code>family:action</code> markers before asking whether any letters or digits remain, because a line reading <code>stochastic:exempt fp-safety:disable</code> silences two auditors while explaining neither, and letting each marker satisfy the other’s requirement would make the pair cheaper to write than either alone.</p>
+        <h2>What it doesn’t prove, stated in the code</h2>
+        <p>The obvious objection is that this checks a reason was <em>written</em>, not that it’s <em>true</em> — and the failure that prompted the whole change was a line whose comment would have passed had anyone bothered to write one.</p>
+        <p>That objection is correct, and it’s recorded in the source rather than argued with. It’s the reason this is a <strong>warning rather than an error</strong>, and the reason “verify the justification names a seeded alternative” is written down as the follow-on rather than claimed as done.</p>
+        <p>What it buys is narrower: the two populations become distinguishable at all. Before, a considered exemption and a reflexive one were the same eleven characters, and telling them apart cost a human reading every marker by hand. That’s the same idea as the <a href="/QualityGate/gate/a-gate-not-a-linter">advisory-checker principle</a> from the other side — surface unusual-but-legitimate code so it gets acknowledged, never so it gets forbidden.</p>
         <h2>Try it</h2>
         <pre><code class="language-bash">quality-gate --check stochastic-determinism
 </code></pre>

@@ -79,7 +79,7 @@ The gate blocks on correctness and safety. It informs on everything else. Keepin
 
 ## It's held to its own standard
 
-quality-gate-swift runs its own 42 checkers on every push. Its ~2,800 tests are the tool held to the standard it enforces. When it finds a false positive, it finds it against itself first — like the recursion checker flagging its own SwiftSyntax visitor, caught and fixed before it ever shipped to another project. Dogfooding isn't a virtue signal here; it's the primary test harness.
+quality-gate-swift runs its own 42 checkers on every push. Its ~3,000 tests are the tool held to the standard it enforces. When it finds a false positive, it finds it against itself first — like the recursion checker flagging its own SwiftSyntax visitor, caught and fixed before it ever shipped to another project. Dogfooding isn't a virtue signal here; it's the primary test harness.
 
 ## The gate is half the story
 

@@ -5,7 +5,7 @@ title: "ConcurrencyAuditor: Swift 6 Traps That Compile but Race"
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:02
-lastModified: 2026-08-03
+lastModified: 2026-08-13
 published: true
 ---
 

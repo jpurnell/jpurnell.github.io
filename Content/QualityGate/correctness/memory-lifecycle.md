@@ -5,7 +5,7 @@ title: "MemoryLifecycleGuard: Tasks That Never Cancel, Delegates That Never Die"
 tags: quality-gate, correctness, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:09
-lastModified: 2026-08-08
+lastModified: 2026-08-13
 published: true
 ---
 

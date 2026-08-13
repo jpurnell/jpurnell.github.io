@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="doc-code compiles the catalog. This compiles the doc comments the catalog was copied from — and the distinction is not theoretical." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>"DocCommentCode: The Examples in /// Must Compile Too" | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/QualityGate/documentation/doc-comment-code" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="" doccommentcode: the examples in must compile too"" />
+    <meta name="twitter:title" content="" doccommentcode: the examples in must compile too"" />
+    <meta property="og:description" content="doc-code compiles the catalog. This compiles the doc comments the catalog was copied from — and the distinction is not theoretical." />
+    <meta name="twitter:description" content="doc-code compiles the catalog. This compiles the doc comments the catalog was copied from — and the distinction is not theoretical." />
+    <meta property="og:url" content="https://www.justinpurnell.com/QualityGate/documentation/doc-comment-code" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/QualityGate/documentation/doc-comment-code#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/QualityGate/documentation/doc-comment-code",
+          "name" : "\"DocCommentCode: The Examples in /// Must Compile Too\"",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/QualityGate/documentation/doc-comment-code#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/QualityGate/documentation/doc-comment-code#breadcrumb"
+      },
+      "description" : "doc-code compiles the catalog. This compiles the doc comments the catalog was copied from — and the distinction is not theoretical.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "\"DocCommentCode: The Examples in /// Must Compile Too\"",
+      "url" : "https://www.justinpurnell.com/QualityGate/documentation/doc-comment-code"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/quality-gate/" class="nav-link text-nowrap">Quality Gate</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">"DocCommentCode: The Examples in /// Must Compile Too"</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">quality-gate</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <p><strong><code>doc-code</code> compiles the catalog. This compiles the doc comments the catalog was copied from — and the distinction is not theoretical.</strong></p>
+        <hr />
+        <p>A repair pass across one package fixed 26 DocC articles and found real API drift doing it: a <code>Configuration.default</code> that no longer existed, a parameter that had been retyped, <code>{ … }</code> placeholders that never parsed.</p>
+        <p>It touched <strong>no doc comment</strong>.</p>
+        <p>The article got fixed. The <code>///</code> it was copied from still carried the broken version, and Quick Help still served it. <code>doc-code</code> repaired the copy and could not see the original.</p>
+        <h2>The unit is one fence</h2>
+        <p><code>doc-code</code> treats an article as one program, because that’s what a reader pastes. Nobody pastes a whole source file out of Quick Help — they copy <strong>one panel</strong>. So here the compilation unit is a single fence, and that difference drives everything else.</p>
+        <p>It’s not a detail. One auditor in this suite carries a single <code>///</code> run holding two unrelated fences: a usage example, and a fragment of the <em>reader’s</em> SwiftUI code. Concatenating them would import <code>doc-code</code>’s collision rule into a place where its premise is false.</p>
+        <h2>The preamble is <code>Foundation</code> plus the owning module, and nothing widens it</h2>
+        <p>Not the dependency closure. Not a configured extras list. The function that builds it takes the configuration and deliberately ignores it, with a comment saying so, so that the next person looking for the knob finds the reasoning instead of adding one.</p>
+        <p>Here’s why. Measured on this package: <strong>43 doc fences across 26 files, of which 16 failed.</strong> Ten of the sixteen were one <code>## Usage</code> template copied into ten auditors — and the obvious repair fails too, because the block never says <code>import QualityGateCore</code>. A reader who copies it out of Quick Help cannot build it.</p>
+        <p>Injecting that import would have turned ten failures into ten passes while the examples stayed exactly as uncopyable. Whatever a fence needs in order to compile is precisely what a reader has to type.</p>
+        <h2>What it looks like at scale</h2>
+        <p>Run against a 100k-line package, it reported 1,515 errors. Triaged, that was <strong>560 distinct doc comments</strong> — roughly 2.7 errors per decision — and it split cleanly:</p>
+        <ul>
+          <li><strong>62% referenced something the fence doesn’t define.</strong> Not 387 separate mistakes: ten identifiers accounted for most of them. <code>balanceSheet</code> 62 times, <code>incomeStatement</code> 43, <code>q1</code> 37. That’s a house style — examples written assuming a fixture exists, the way you’d write a snippet in prose.</li>
+          <li><strong>37% genuinely don’t compile.</strong> Generic inference, missing <code>try</code>, wrong argument labels. These are the ones users copy and can’t build.</li>
+          <li><strong>A further finding:</strong> 40% of the compile errors were <em>downstream</em> of the undefined references. <code>Account
+              <t></t></code> can’t infer <code>T</code> when the values passed to it are undefined. Define the fixture and the generic error evaporates.</li>
+        </ul>
+        <p>The headline overstated the work by about 3×. That’s worth knowing before you look at a four-figure number and conclude the documentation is beyond saving.</p>
+        <h2>The decision it puts in front of you</h2>
+        <p>For each fence: <strong>recipe or shape?</strong></p>
+        <p>A recipe should stand alone. Making it stand alone is genuine improvement, and it’s the only repair that survives the copy-out-of-Quick-Help test.</p>
+        <p>A shape — illustrating an API’s form rather than a runnable sequence — is what <code>
+            <!-- docs:illustrative --></code> is for, and marking it is honest rather than a dodge. The hint says the marker is a human edit and is never applied by a tool, which is the line that stops a 387-site sweep from becoming 387 silent exemptions.</p>
+        <h2>Try it</h2>
+        <pre><code class="language-bash">quality-gate --check doc-comment-code
+</code></pre>
+        <hr />
+        <p><strong>Source:</strong> <a href="https://github.com/jpurnell/quality-gate-swift">github.com/jpurnell/quality-gate-swift</a></p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: quality-gate, documentation, swift</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

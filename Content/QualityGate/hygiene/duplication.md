@@ -5,7 +5,7 @@ title: "DuplicationAuditor: From 14,000 False Positives to 11 Real Clones"
 tags: quality-gate, hygiene, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:35
-lastModified: 2026-08-24
+lastModified: 2026-08-13
 published: true
 ---
 

@@ -5,7 +5,7 @@ title: "The Corpus: Radical Transparency as a File Format"
 tags: quality-gate, mirror, swift
 link: https://github.com/jpurnell/org-judgement-corpus
 date: 2026-07-31 09:08
-lastModified: 2026-08-07
+lastModified: 2026-08-13
 published: true
 ---
 

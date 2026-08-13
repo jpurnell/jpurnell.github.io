@@ -180,7 +180,7 @@
     <div class="ig-main-content">
       <h1 class="mainTitle">"ReleaseReadinessAuditor: The Placeholder You Forgot to Fill In"</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">quality-gate</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">2 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <p><strong>Missing changelog entries, README placeholders, <code>TODO</code>/<code>FIXME</code> pending-work markers — the small omissions that turn into embarrassing releases.</strong></p>
         <hr />
@@ -194,8 +194,32 @@
         </ul>
         <p>None of these are correctness bugs. They’re the difference between a release that looks finished and one that looks abandoned — and they’re exactly the things a human reviewer skims past because they’re focused on the code. A gate doesn’t skim.</p>
         <p>The philosophy running through the whole project applies here too: the checklist that lives in a document gets skipped under deadline pressure; the checklist that’s a gate runs every time, including the time you’re in a hurry — which is precisely when you’d otherwise ship the placeholder.</p>
+        <h2>The tag invariant, and where it belongs</h2>
+        <p>Added later, after the same failure recurred often enough to stop being bad luck: the version in <code>Package.swift</code>, the newest heading in <code>CHANGELOG.md</code>, and the git tag are three statements of one fact, and they disagree constantly.</p>
+        <p>The obvious place to enforce that is at commit time. It’s the wrong place. Mid-release, those three legitimately disagree — you bump the manifest, you write the changelog, you tag, and between any two of those steps a correct working tree fails a strict equality check. A gate that fails during normal work gets bypassed during normal work, and a bypass habit is not something you can scope to the cases where it was justified.</p>
+        <p>So the invariant is graded by <em>when it’s checked</em>:</p>
+        <ul>
+          <li><strong>Parity</strong> — manifest against changelog — is a <strong>note</strong> during ordinary work and an <strong>error at the release boundary</strong>. The disagreement is expected in the middle and unacceptable at the end.</li>
+          <li><strong>Identity</strong> — a tag pointing at a commit whose manifest says something else — is an error only for the tag actually being published. Old tags disagreeing with the current manifest is what history looks like.</li>
+          <li><strong>Boundary</strong> — the check that decides which of the above applies — reads the pushed-ref list.</li>
+        </ul>
+        <p>That last piece is the part worth stealing. The natural design is a new <code>pre-push</code> hook argument, which means asking every repository using the tool to edit its hooks — and a rollout that depends on dozens of repositories changing a file is a rollout that half-happens, leaving the protection weakest where it’s least maintained.</p>
+        <p>Git already hands <code>pre-push</code> the ref list <strong>on stdin</strong>: <code>
+            <local ref> 
+              <local sha> 
+                <remote ref> 
+                  <remote sha></remote>
+                </remote>
+              </local>
+            </local></code>, one line per ref. Nothing needed teaching. The existing hook already had the information; it was discarding it. Reading stdin — guarded by a zero-timeout <code>poll</code> so an interactive run doesn’t block waiting for input that will never come — makes every existing hook release-boundary-aware without a single repository editing anything.</p>
+        <h2>The release preflight</h2>
+        <p>The boundary checks answer “is this tag consistent?” A separate subcommand answers the wider question — is this <em>release</em> ready:</p>
+        <pre><code class="language-bash">quality-gate release 3.0.0
+</code></pre>
+        <p>Version parity across manifest and changelog, an <code>## [Unreleased]</code> section that is actually empty, the planning document reconciled against shipped code, the newest release’s date, and <code>Last Updated</code> current. Release-scoped, so it never runs during ordinary work and never has to be weakened to avoid doing so.</p>
         <h2>Try it</h2>
         <pre><code class="language-bash">quality-gate --check release-readiness
+quality-gate release 3.0.0
 </code></pre>
         <hr />
         <p><strong>Source:</strong> <a href="https://github.com/jpurnell/quality-gate-swift">github.com/jpurnell/quality-gate-swift</a></p>

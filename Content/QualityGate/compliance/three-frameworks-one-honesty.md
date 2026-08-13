@@ -5,7 +5,7 @@ title: "Three Frameworks, One Honesty: SOC 2, ISO 27001, HIPAA"
 tags: quality-gate, compliance, swift
 link: https://github.com/jpurnell/quality-gate-swift
 date: 2026-07-31 09:27
-lastModified: 2026-08-16
+lastModified: 2026-08-13
 published: true
 ---
 
