@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **Build-output tests check a standardized URL.** The four existence tests built a
+  path by string concatenation and passed it to `FileManager.fileExists(atPath:)`,
+  which takes the string exactly as given — a `..` segment would read outside
+  `docs/` with nothing to stop it (CWE-22). They now resolve through
+  `URL.standardized`, which collapses those segments before the filesystem is
+  touched. `readFile` goes through the same helper.
+- **Force unwrap removed from the getting-started playground.** `ts[period]!` sat
+  inside a loop that already binds the value it was reaching back for; it now uses
+  the bound `value`. Fixed in both `Assets/` and the `docs/` copy.
+
 ### Changed
 - Upgraded swift-tools-version from 5.9 to 6.2 with strict concurrency
 - Replaced force-unwrapped site URL with `URLComponents`-based construction

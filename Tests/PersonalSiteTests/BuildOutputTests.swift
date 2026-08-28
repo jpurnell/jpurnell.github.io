@@ -20,31 +20,48 @@ struct BuildOutputTests {
     }
 
     private func readFile(_ relativePath: String) throws -> String {
-        let fullPath = docsPath + "/" + relativePath
-        return try String(contentsOfFile: fullPath, encoding: .utf8)
+        return try String(contentsOf: buildOutputURL(relativePath), encoding: .utf8)
+    }
+
+    /// A build-output URL with `.` and `..` segments already collapsed.
+    ///
+    /// String concatenation followed by `FileManager.fileExists(atPath:)` takes the
+    /// path exactly as handed over, so a `..` segment silently reads outside `docs/`.
+    /// Standardizing the URL resolves those segments before anything touches the
+    /// filesystem — the actual CWE-22 defence, not a way to quiet the warning about it.
+    private func buildOutputURL(_ relativePath: String) -> URL {
+        Self.projectRoot
+            .appendingPathComponent("docs")
+            .appendingPathComponent(relativePath)
+            .standardized
+    }
+
+    /// Whether a build-output file exists, checked through the standardized URL.
+    private func buildOutputExists(_ relativePath: String) -> Bool {
+        (try? buildOutputURL(relativePath).checkResourceIsReachable()) ?? false
     }
 
     @Test("index.html exists in build output")
     func indexHTMLExists() {
-        let exists = FileManager.default.fileExists(atPath: docsPath + "/index.html")
+        let exists = buildOutputExists("index.html")
         #expect(exists, "docs/index.html should exist")
     }
 
     @Test("llms.txt exists in build output")
     func llmsTxtExists() {
-        let exists = FileManager.default.fileExists(atPath: docsPath + "/llms.txt")
+        let exists = buildOutputExists("llms.txt")
         #expect(exists, "docs/llms.txt should exist")
     }
 
     @Test("ai.txt exists in build output")
     func aiTxtExists() {
-        let exists = FileManager.default.fileExists(atPath: docsPath + "/ai.txt")
+        let exists = buildOutputExists("ai.txt")
         #expect(exists, "docs/ai.txt should exist")
     }
 
     @Test("feed.rss exists in build output")
     func feedRSSExists() {
-        let exists = FileManager.default.fileExists(atPath: docsPath + "/feed.rss")
+        let exists = buildOutputExists("feed.rss")
         #expect(exists, "docs/feed.rss should exist")
     }
 

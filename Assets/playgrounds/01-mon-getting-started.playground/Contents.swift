@@ -47,7 +47,7 @@ if let janRevenue = ts[periods[0]] {
 }
 
 for (period, value) in zip(periods, ts) {
-	print("\(period.label): \(ts[period]!.currency())")
+	print("\(period.label): \(value.currency())")
 }
 	// Cash flows: initial investment, then returns over 5 years
 	let cashFlows = [-250_000.0, 100_000, 150_000, 200_000, 250_000, 300_000]
