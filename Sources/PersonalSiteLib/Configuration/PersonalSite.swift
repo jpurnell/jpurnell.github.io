@@ -17,7 +17,7 @@ public struct PersonalSite: Site {
         return components.url ?? URL(fileURLWithPath: "/")
     }()
     /// SEO meta description used in OG and Twitter tags.
-    public var description: String? = "Justin Purnell — Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA."
+    public var description: String? = "Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift."
     /// Content language for the `<html lang>` attribute.
     public var language: Language = .english
     /// Bootstrap asset loading strategy.

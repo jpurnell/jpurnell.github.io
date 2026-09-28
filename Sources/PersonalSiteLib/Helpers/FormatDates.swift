@@ -1,9 +1,22 @@
 import Foundation
 import Ignite
 
-// Shared DateFormatter instance to avoid repeated initialization
+/// The one calendar the site is built against: proleptic Gregorian, GMT, POSIX locale.
+/// Pinning it means a build on any machine, in any time zone, renders the same dates.
+private let siteCalendar: Calendar = {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .gmt
+    calendar.locale = Locale(identifier: "en_US_POSIX")
+    return calendar
+}()
+
+// Shared DateFormatter instance to avoid repeated initialization; parses on `siteCalendar`
+// so the components read back below refer to the same midnight that was parsed.
 private let dateFormatter: DateFormatter = {
     let df = DateFormatter()
+    df.calendar = siteCalendar
+    df.timeZone = .gmt
+    df.locale = Locale(identifier: "en_US_POSIX")
     df.dateFormat = "yyyy-MM-dd"
     return df
 }()
@@ -13,7 +26,7 @@ private let dateFormatter: DateFormatter = {
 /// - Returns: The year as a string, or empty string if invalid
 public func getYear(_ start: String) -> String {
     guard let date = dateFormatter.date(from: start) else { return "" }
-    let year = Calendar.current.component(.year, from: date)
+    let year = siteCalendar.component(.year, from: date)
     return year > 0 ? year.description : ""
 }
 
@@ -22,7 +35,7 @@ public func getYear(_ start: String) -> String {
 /// - Returns: The month as a string (1-12), or empty string if invalid
 public func getMonth(_ dateString: String) -> String {
     guard let date = dateFormatter.date(from: dateString) else { return "" }
-    let month = Calendar.current.component(.month, from: date)
+    let month = siteCalendar.component(.month, from: date)
     return (1...12).contains(month) ? month.description : ""
 }
 
@@ -31,7 +44,7 @@ public func getMonth(_ dateString: String) -> String {
 /// - Returns: The day of month as a string (1-31), or empty string if invalid
 public func getDay(_ dateString: String) -> String {
     guard let date = dateFormatter.date(from: dateString) else { return "" }
-    let day = Calendar.current.component(.day, from: date)
+    let day = siteCalendar.component(.day, from: date)
     return (1...31).contains(day) ? day.description : ""
 }
 
@@ -59,6 +72,9 @@ public func getDate(_ dateString: String) -> Date {
 /// - Returns: Formatted date string in medium style
 public func formatDate(_ dateString: String) -> String {
     let df = DateFormatter()
+    df.calendar = siteCalendar
+    df.timeZone = .gmt
+    df.locale = Locale(identifier: "en_US")
     df.dateStyle = .medium
     return df.string(from: getDate(dateString))
 }

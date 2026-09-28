@@ -74,7 +74,7 @@ public struct MainLayout: Layout {
             return .cv(graphNodes: cvNodes)
         }
 
-        if page.title == "Projects" && path == "projects" {
+        if (page.title == "Projects" && path == "projects") || (page.title == "Portfolio" && path == "portfolio") {
             return .collection
         }
 

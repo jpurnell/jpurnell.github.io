@@ -1,69 +1,127 @@
 import Foundation
 
-/// A portfolio project or website to showcase.
+/// The section a portfolio entry belongs to. Declaration order is display order.
+public enum PortfolioCategory: String, Codable, Sendable, CaseIterable {
+    /// Published open-source packages.
+    case openSource = "open-source" // LIVE: decoded from portfolio.json
+    /// Products and services shipped to customers.
+    case product
+    /// Media, publishing, and community sites.
+    case media // LIVE: decoded from portfolio.json
+
+    /// Section heading and filter label shown on the Portfolio page.
+    public var displayName: String {
+        switch self {
+        case .product: "Products"
+        case .openSource: "Open Source"
+        case .media: "Media & Publishing"
+        }
+    }
+}
+
+/// A link a reader can follow to check a portfolio entry's outcome claim.
+public struct PortfolioEvidence: Codable, Sendable {
+    /// Short link text, e.g. "Conformance" or "Changelog".
+    public let label: String
+    /// Destination URL.
+    public let url: String
+
+    /// Creates a new evidence link.
+    /// - Parameters:
+    ///   - label: Short link text.
+    ///   - url: Destination URL.
+    public init(label: String, url: String) {
+        self.label = label
+        self.url = url
+    }
+}
+
+/// A portfolio project or website to showcase, decoded from `Resources/portfolio.json`.
 public struct PortfolioSite: Codable, Sendable {
     /// Display name of the site.
     public let name: String
     /// URL to the live site or archive.
     public let url: String
-    /// Path to the thumbnail/logo image.
+    /// Path to the thumbnail/logo image; empty when there is no logo.
     public let thumbnail: String
     /// Brief description of the project.
     public let summary: String?
+    /// Section the entry belongs to; `nil` in the data means ``PortfolioCategory/product``.
+    public let category: PortfolioCategory?
+    /// The role held, e.g. "Author" or "Head of Product, Hotels at Home".
+    public let role: String?
+    /// Years active, e.g. "2020–2023".
+    public let period: String?
+    /// One measurable result a reader could check.
+    public let outcome: String?
+    /// Links that let a reader check the outcome.
+    public let evidence: [PortfolioEvidence]?
+
+    /// The category to display, defaulting to product when the data omits one.
+    public var resolvedCategory: PortfolioCategory { category ?? .product }
 
     /// Creates a new portfolio site entry.
     /// - Parameters:
     ///   - name: Display name of the site.
     ///   - url: URL to the live site or archive.
-    ///   - thumbnail: Path to the thumbnail/logo image.
+    ///   - thumbnail: Path to the thumbnail/logo image, or empty.
     ///   - summary: Brief description of the project.
-    public init(name: String, url: String, thumbnail: String, summary: String?) {
+    ///   - category: Section the entry belongs to.
+    ///   - role: The role held.
+    ///   - period: Years active.
+    ///   - outcome: One measurable result.
+    ///   - evidence: Links that let a reader check the outcome.
+    public init(
+        name: String,
+        url: String,
+        thumbnail: String,
+        summary: String?,
+        category: PortfolioCategory? = nil,
+        role: String? = nil,
+        period: String? = nil,
+        outcome: String? = nil,
+        evidence: [PortfolioEvidence]? = nil
+    ) {
         self.name = name
         self.url = url
         self.thumbnail = thumbnail
         self.summary = summary
+        self.category = category
+        self.role = role
+        self.period = period
+        self.outcome = outcome
+        self.evidence = evidence
     }
 }
 
-/// Shop Marriott e-commerce storefront.
-public let shopMarriott = PortfolioSite(
-    name: "Shop Marriott",
-    url: "https://europe.shopmarriott.com/en?referrer=internal",
-    thumbnail: "/images/logos/shop-marriott-logo.svg",
-    summary: "ShopMarriott.com is a global online retailer of luxury home goods, curated by Marriott for its guests."
-)
+/// One section of the Portfolio page: a category and its entries in file order.
+public struct PortfolioGroup: Sendable {
+    /// The section's category.
+    public let category: PortfolioCategory
+    /// Entries in this section, in the order they appear in the data file.
+    public let sites: [PortfolioSite]
+}
 
-/// Nassau Weekly — Princeton's student newsmagazine.
-public let nassauWeekly = PortfolioSite(
-    name: "Nassau Weekly",
-    url: "https://web.archive.org/web/19991014032312/http://www.princeton.edu/%7Enweekly/",
-    thumbnail: "/images/logos/nassauWeekly.svg",
-    summary: "Princeton's One and Only Weekly Newsmagazine, published since 1979"
-)
+/// Loads and arranges the portfolio data.
+public enum PortfolioData {
+    /// Decodes a portfolio JSON array from disk. The site itself decodes through
+    /// Ignite's `decode` environment value; this entry point serves tests and tools.
+    /// - Parameter url: Location of `portfolio.json`.
+    /// - Returns: The entries in file order.
+    /// - Throws: Any file-reading or decoding error.
+    public static func load(from url: URL) throws -> [PortfolioSite] {
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode([PortfolioSite].self, from: data)
+    }
 
-/// UCBComedy.com — Upright Citizens Brigade digital platform.
-public let ucbComedy = PortfolioSite(
-    name: "UCBComedy.com",
-    url: "https://ucbcomedy.com",
-    thumbnail: "/images/logos/UCB_COM_BUG_fin_.svg",
-    summary: "UCB's Third Stage, created in 2008."
-)
-
-/// Shop With Golf — NBC Golf Channel e-commerce site.
-public let shopWithGolf = PortfolioSite(
-    name: "Shop With Golf",
-    url: "https://web.archive.org/web/20190402200305/https://www.shopwithgolf.com/",
-    thumbnail: "/images/logos/ShopWithGolf_Stacked_blk.svg",
-    summary: "Shop With Golf was a revolutionary content + commerce experience for golfers, marrying innovative young brands with NBC's unmatched golf content."
-)
-
-/// Princeton Class of 2000 25th Reunion site.
-public let reunions = PortfolioSite(
-    name: "Princeton 2000 Reunions",
-    url: "https://reunions.princeton2000.org/",
-    thumbnail: "/images/logos/P2000_25th_Lounging_Tiger.png",
-    summary: "The Princeton Class of 2000 celebrates its 25th Reunion"
-)
-
-/// All portfolio sites in display order.
-public let portfolioSites: [PortfolioSite] = [shopMarriott, shopWithGolf, ucbComedy, reunions, nassauWeekly]
+    /// Groups entries by category in declaration order, dropping empty categories
+    /// and preserving file order within each group.
+    /// - Parameter sites: The decoded entries.
+    /// - Returns: Non-empty groups, one per represented category.
+    public static func grouped(_ sites: [PortfolioSite]) -> [PortfolioGroup] {
+        PortfolioCategory.allCases.compactMap { category in
+            let members = sites.filter { $0.resolvedCategory == category }
+            return members.isEmpty ? nil : PortfolioGroup(category: category, sites: members)
+        }
+    }
+}

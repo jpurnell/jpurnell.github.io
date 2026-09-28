@@ -53,6 +53,11 @@ integration test, whether or not it is labelled that way.
 
 - [x] Site building and publishing to `docs/`
 - [x] Content series including quality-gate, projects, showcase
+- [x] Structured career data in `Resources/*.json`, decoded at build time: `cv.json`
+      (CV page, JSON-LD) and, since 2026-09-28, `portfolio.json` (Portfolio page).
+      The Portfolio page is the evidence page for the CV's positioning: every entry
+      states a role, an outcome, and where to check it. Proposal:
+      `project/plans/proposals/PortfolioPage.md`.
 
 ### Known Issues
 
@@ -76,4 +81,4 @@ link on a personal site is cheap to create and invisible until someone else find
 
 ---
 
-**Last Updated:** 2026-08-05
+**Last Updated:** 2026-09-28 — reconciled Current Status with the portfolio page and the JSON-data convention.
