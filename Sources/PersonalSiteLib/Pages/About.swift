@@ -21,7 +21,8 @@ public struct About: StaticPage {
                 .style(.float, "left")
                 .style(.marginRight, "1%")
                 .style(.marginBottom, "1%")
-            Section { article.text }.frame(width: .percent(70%), maxWidth: .px(800))
+            Section { article.text }
+//				.frame(width: .percent(70%), maxWidth: .px(800))
         }
     }
 }
