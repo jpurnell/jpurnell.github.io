@@ -8,5 +8,6 @@ public let socialLinkList: [SocialLink] = [
     SocialLink(site: "Bluesky", logoImage: "bluesky", link: "https://bsky.app/profile/justinpurnell.com"),
     SocialLink(site: "Threads", logoImage: "threads", link: "https://www.threads.net/@jpurnell"),
     SocialLink(site: "Facebook", logoImage: "facebook", link: "https://www.facebook.com/jpurnell"),
+	SocialLink(site: "ORCID", logoImage: "orcid", link: "https://orcid.org/0009-0006-7796-4088"),
     SocialLink(site: "Twitter", logoImage: "twitter", link: "https://twitter.com/jpurnell"),
 ]
