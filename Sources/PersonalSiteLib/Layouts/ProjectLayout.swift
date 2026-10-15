@@ -8,7 +8,7 @@ public struct ProjectLayout: ArticlePage {
 
     /// The rendered project page with title, content, and tags.
     public var body: some HTML {
-        Text((article.metadata["title"] as? String ?? article.title).appending(PersonalSite().titleSuffix))
+        Text(article.metadata["title"] as? String ?? article.title)
             .font(.title1)
             .fontWeight(.semibold)
             .class("mainTitle")

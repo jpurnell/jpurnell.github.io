@@ -1,9 +1,9 @@
 ---
-layout: ProjectLayout
-tags: project, python, pico
+layout: BlogPostLayout
+tags: project, John McPhee
 image: 
 imageDescription: 
-title: Draft No. 4
+title: Draft No. 4 - John McPhee
 link:
 date: 2007-07-23 00:00
 lastModified: 2025-03-11

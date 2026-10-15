@@ -35,7 +35,7 @@ The two-commit history — both landing within 18 seconds of each other on April
 
 ## Judgment Calls
 
-**Versioning immediately.** Tagging `v0.1.0` on a two-commit repository might look premature, but it reflects sound dependency management thinking. Downstream packages in a multi-repo game project need a stable ref to pin against. A named release — even a nascent one — is more trustworthy than a floating branch tip. James made the call that a stable identity matters more than waiting for the library to feel "complete."
+**Versioning immediately.** Tagging `v0.1.0` on a two-commit repository might look premature, but it reflects sound dependency management thinking. Downstream packages in a multi-repo game project need a stable ref to pin against. A named release — even a nascent one — is more trustworthy than a floating branch tip. Justin made the call that a stable identity matters more than waiting for the library to feel "complete."
 
 **All five platforms, day one.** It would have been simpler to start with iOS and macOS and add watchOS and tvOS later. The risk of that approach is that late-added platforms surface architectural assumptions baked in during the iOS-first phase — assumptions about screen size, input, or lifecycle that quietly break smaller targets. By declaring the full platform surface at initialization, every subsequent design decision is made with the constraint already present.
 
