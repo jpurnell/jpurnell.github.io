@@ -7,7 +7,7 @@ tags: showcase, narbis, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: narbis
-published: true
+published: false
 ---
 
 # Narbis: A Sovereign Biofeedback Engine for the Coherence-Aware Era

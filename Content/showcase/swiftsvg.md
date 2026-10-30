@@ -7,7 +7,7 @@ tags: showcase, swiftsvg, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
 project: SwiftSVG
-published: true
+published: false
 ---
 
 # SwiftSVG: A Foundation-Only SVG Renderer for the Server and CLI
