@@ -1,6 +1,6 @@
 ---
-title: ProjectShowcase: Engineering a Portfolio Compiler That Reads Its Own Mind
-description: A Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios — including about itself.
+title: ProjectShowcase: Building the Tool That Writes Your Portfolio
+description: A Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios with SVG infographics — eating its own cooking by describing itself.
 date: 2026-05-13 15:57
 lastModified: 2026-10-30
 tags: showcase, project, projectshowcase, selfReflection
@@ -10,66 +10,71 @@ project: ProjectShowcase
 published: true
 ---
 
-# ProjectShowcase: Engineering a Portfolio Compiler That Reads Its Own Mind
+# ProjectShowcase: Building the Tool That Writes Your Portfolio
 
-> A Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios — including about itself.
+> A Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios with SVG infographics — eating its own cooking by describing itself.
 
 ## Overview
 
-Most developers live in a gap: their work exists, their repositories are full of decisions and patterns and hard-won lessons, but none of it coheres into something a technical hiring manager or curious peer can actually read. README files describe what a project does; they rarely explain *why* it was designed the way it was, what tradeoffs were considered, or how it evolved. GitHub profile pages show commit graphs, not judgment.
+Most developers maintain a graveyard of projects: git repositories full of commits, design documents, test suites, and release history that collectively tell a sophisticated story about their craft — but that story never gets written. A README describes what a project does; it rarely explains why architectural decisions were made, what tradeoffs were accepted, or how the work evolved. ProjectShowcase exists to close that gap.
 
-ProjectShowcase was built to close that gap. Its mission, stated directly in its own `MASTER_PLAN.md`, is to "extract structured facts from developer projects — git history, package manifests, test results, design artifacts, and Claude Code usage data — and generate narrative case-study portfolios with SVG infographics." The tool scans whatever artifacts already exist in a repository — not just `Package.swift` or `git log`, but design proposals, `CLAUDE.md` files, architecture notes, and the project's own mission statement — and turns them into prose that a technical reader would care about.
+The tool's mission, captured in its own `MASTER_PLAN.md`, is direct: *"Extract structured facts from developer projects — git history, package manifests, test results, design artifacts, and Claude Code usage data — and generate narrative case-study portfolios with SVG infographics."* The emphasis on *facts* is deliberate. Generated portfolios are grounded in extracted data so that the model cannot fabricate capabilities — every claim traces back to something the extractor actually found.
 
-The target audience spans three overlapping groups: solo developers who maintain multiple projects and need a portfolio without manual writing, job seekers who need to present work as narrative case studies, and open-source maintainers who want richer project pages than a README can provide. What unifies them is the same problem: the artifacts of real work are present, but the coherent story is missing.
+The target audience divides into three overlapping groups. Solo developers who maintain multiple projects can run the tool across a workspace and produce a portfolio site without manual writing. Job seekers presenting work to hiring managers get structured case studies rather than a wall of repository links. Open-source maintainers get richer project pages than a README alone can provide. What unites all three is a shared problem: the artifacts that would make a compelling portfolio already exist; they just haven't been assembled into prose a technical reader would care about.
 
-The first release, `0.1.0`, landed roughly five months after the initial commit in May 2026, with 20 commits across the project's lifetime representing concentrated, intentional development rather than sprawl.
+ProjectShowcase shipped its first public release — `0.1.0` — across 26 commits spanning from May to October 2026, built entirely in Swift and targeting macOS.
 
 ## Architecture
 
-ProjectShowcase's most consequential architectural decision is the three-stage pipeline with independently operable stages: **Gather**, **Narrate**, and **Render**. This isn't organizational tidiness — it's a deliberate stance on where trust belongs in a system that involves a language model.
+The defining architectural decision in ProjectShowcase is its **three-stage pipeline with genuinely independent stages**: Gather, Narrate, and Render. The independence is not cosmetic — each stage produces inspectable, editable intermediate artifacts, and a user can halt the pipeline at any point, modify the output, and resume.
 
-**Gather** is entirely local. It shells out to `git`, parses `Package.swift` and equivalent manifests for other ecosystems, reads test result files, and runs the `DesignDocExtractor` against any documentation artifacts it finds. No network calls, no API keys, no side effects beyond writing a structured JSON artifact to disk. A developer can run Gather, inspect the output, and decide whether the extracted facts accurately represent the project before a single token is sent anywhere.
+**Gather** is entirely local and makes no API calls. It runs extractors against a target repository and writes structured JSON. The extractor design is language-agnostic: while the tool itself is written in Swift and uses the Swift Package Manager manifest as one data source, the extraction layer includes pluggable extractors for Swift, Node, Python, Rust, and Go repositories. This means a Swift-built CLI can produce accurate portfolios for a Rust crate or a Node library without any language-specific assumptions baked into the core pipeline.
 
-**Narrate** is the only LLM-dependent stage, and it is designed to be tightly constrained. The extracted JSON from Gather becomes a grounding document: the prompt architecture is built so that every claim the model produces must be traceable to a fact in the extraction. When a project carries a `MASTER_PLAN.md` with `Mission`, `Target Users`, and `Key Differentiators` sections, Narrate treats those as authoritative rather than inferring purpose from directory structure or function names. This directly addresses hallucination risk — the model cannot fabricate capabilities it was never told about.
+**Narrate** is the only LLM-dependent step. It receives the gathered JSON and any design artifacts the extractor surfaced, then produces prose. Critically, when a project carries a `MASTER_PLAN.md` with a `Mission`, `Target Users`, or `Key Differentiators` section, the Narrate stage treats that content as authoritative and does not attempt to infer the project's purpose from code alone. This is the `MASTER_PLAN.md` grounding differentiator: the model is given the developer's own words about intent and is constrained to be consistent with them.
 
-**Render** is fully deterministic. Given the narrative output from Narrate, it produces HTML and self-contained SVG infographics with no randomness, no network dependency, and no LLM involvement. Stats cards, commit timelines, and release timelines are generated as dependency-free SVGs ready to embed in any web page. Because Render is deterministic, its outputs can be diffed, version-controlled, and regenerated identically.
+**Render** is fully deterministic — no model calls, no randomness. It takes the narrated prose and the gathered metrics and produces the final output, including self-contained SVG infographics. The SVGs are generated without external dependencies, making them embeddable in any web page without a build step.
 
-This separation means users can intervene at any seam. The narrative JSON can be hand-edited before rendering. The SVG templates can be swapped. The Gather output can be audited and corrected. The pipeline is transparent by design.
+The `DesignDocExtractor` is a notable internal component. It scans for `CLAUDE.md`, development guidelines, design proposals, and architecture notes within a repository, extracting not just what a project does but the reasoning behind it. This is what allows the tool to capture design intent rather than simply measuring activity.
 
-The package itself reflects the separation of concerns structurally. Three targets — `ProjectShowcase` (the core library), `ShowcaseCLI` (the argument-parser-driven entry point), and `ProjectShowcaseTests` — mirror the conceptual split between extraction logic, user-facing interface, and verification. The Swift Argument Parser dependency handles the CLI surface, and `swift-docc-plugin` signals that documentation is treated as a first-class artifact. The project targets macOS only, appropriate for a developer tool that integrates with the local filesystem and shell environment.
+The package is structured into three targets defined in its `Package.swift` using Swift tools version 6.2:
 
-The `DesignDocExtractor` deserves specific mention as an architectural choice. Rather than treating a project as only its code and version history, the extractor reads `CLAUDE.md`, development guidelines, design proposals, and architecture notes. This captures the reasoning layer — what shaped the project's decisions — not just the output layer. It is, in a sense, the component that allows ProjectShowcase to tell a richer story than any pure metrics tool could.
+```
+Targets:
+  ProjectShowcase   — core library (extractors, pipeline, SVG rendering)
+  ShowcaseCLI       — swift-argument-parser entry point
+  ProjectShowcaseTests — test suite
+```
 
-Language-agnostic extraction is achieved through pluggable extractors for Swift, Node, Python, Rust, and Go. The tool is written in Swift but analyzes any git repository, which is the correct scope: the tool's identity is as a pipeline for developer artifacts, not as a Swift ecosystem utility.
+Dependencies are minimal by intent: `swift-argument-parser` for the CLI surface and `swift-docc-plugin` for documentation generation. Keeping the dependency surface narrow means the tool can analyze repositories on machines where large runtimes or package ecosystems are not available.
 
 ## Implementation
 
-The most interesting implementation challenge in a tool like this is making the grounding constraint actually hold. It is easy to say "fact-grounded narratives"; it is harder to enforce it architecturally. The approach taken is to structure the Narrate stage's input such that the model receives extracted facts as a structured document, not as a free-form description. When the `MASTER_PLAN.md` extractor finds a `Key Differentiators` section, those differentiators appear verbatim in the grounding document. The narrative prompt is designed to compose from that document, not to reason freely about what the project might do.
+Several implementation patterns reflect deliberate judgment about the problem space.
 
-The self-referential case is worth examining directly. ProjectShowcase carries its own `MASTER_PLAN.md` — and its own `CLAUDE.md`. When the tool processes itself, it reads its own mission statement, its own development guidelines, and its own design artifacts. The narrative it produces about itself is grounded in the same mechanism it uses for every other project. This is not a contrived test; it is the sharpest possible integration test of the pipeline's design, and the fact that it works coherently validates the extraction and grounding approach.
+**Pluggable extractors behind a common protocol** allow language-agnostic analysis without a combinatorial explosion of special cases. Each extractor conforms to a shared interface that returns a typed fact structure; the Gather stage orchestrates them without knowing which language it is dealing with. Adding support for a new ecosystem means writing one conforming type rather than modifying the pipeline.
 
-SVG generation without external dependencies is a deliberate implementation choice. A dependency on a charting library would compromise Render's determinism and add supply-chain surface area to a tool whose output is meant to be trusted. Instead, the SVG for stats cards, commit timelines, and release timelines is generated directly — arithmetic on coordinates, string interpolation into SVG markup. The output is verbose compared to what a library would produce, but it is auditable, self-contained, and embeds cleanly in any web page without JavaScript.
+**The grounding constraint** in the Narrate stage is the most consequential correctness mechanism in the tool. Rather than giving the model a free hand to describe a project based on file structure and commit messages alone — which produces plausible but sometimes invented claims — the Narrate stage explicitly injects authoritative sections from `MASTER_PLAN.md` into the prompt context and instructs the model to treat them as ground truth. The `DesignDocExtractor` feeds this mechanism by locating and parsing these documents across diverse repository layouts.
 
-The CLI target uses Swift Argument Parser in a straightforward way, with subcommands corresponding to the three pipeline stages. This allows users to run `showcase gather`, `showcase narrate`, and `showcase render` independently, which is the correct UX expression of the pipeline's architectural independence.
+The CLAUDE.md present in the repository itself demonstrates the developer's practice of documenting working conventions: the file captures session start procedures, development workflow, key rules, and a quality gate — evidence that the project's own development was treated with the same intentionality that the tool encourages in its users.
+
+SVG generation without a rendering dependency required building a small templating layer in Swift. Rather than serializing to a DOM library or shelling out to a renderer, the implementation produces SVG markup directly from typed value objects — stats cards, commit timelines, and release timelines each have dedicated renderers that compose standard SVG primitives. This keeps Render genuinely deterministic and removes an entire class of environmental failures.
 
 ## Testing Strategy
 
-The `ProjectShowcaseTests` target exists as a formal, separated concern. For a tool whose primary output is prose generated by an LLM, the testing strategy necessarily focuses on the deterministic stages: extraction correctness, SVG output validity, manifest parsing accuracy, and pipeline data contracts between stages.
+The package includes a dedicated `ProjectShowcaseTests` target. For a tool whose core value proposition is *fact-grounded output*, test coverage of the extraction layer is where quality risk concentrates. The extractors — which parse git logs, package manifests, and design documents — are the components most likely to produce incorrect structured data that then propagates silently into generated prose.
 
-The Gather and Render stages are the most testable, and the clearest value of the pipeline separation is that they can be tested in full isolation. Gather tests can verify that a known repository structure produces the expected JSON artifact — commit count, branch count, detected language, extracted design documents. Render tests can verify that a known narrative JSON produces structurally valid SVG and HTML with the expected content present.
+The three-stage pipeline architecture aids testability: because Gather, Narrate, and Render have clean interfaces and intermediate artifacts, each stage can be tested in isolation. The Render stage in particular, being fully deterministic, is straightforwardly verifiable: given identical structured input, it must produce identical SVG output.
 
-The Narrate stage is tested at the boundary: given a specific grounding document, does the produced narrative contain only claims that appear in the grounding document? This is harder to automate fully, but the structured input format makes it possible to write assertions against the presence of specific facts.
-
-The CLAUDE.md file's Quality Gate section indicates that quality standards are defined and referenced explicitly, consistent with a project where the developer is building a tool to evaluate other projects and therefore needs its own standards to be legible.
+The quality gate described in the project's own CLAUDE.md reflects this prioritization — the developer established explicit criteria that must be satisfied before changes are accepted, applying to the project the same rigor the tool promotes for the projects it analyzes.
 
 ## Lessons
 
-Several patterns from ProjectShowcase transfer directly to any project that involves LLM output in a larger pipeline.
+Several patterns from ProjectShowcase transferred directly to the broader craft of building developer tooling.
 
-**Grounding before generation.** The decision to extract all facts before any LLM call, and to structure those facts as a constraining document rather than a loose prompt, is the core reliability mechanism. Any project that uses a model to generate text about structured data benefits from this inversion: gather first, constrain the generation space, generate second.
+**Separation of concerns at stage boundaries pays dividends immediately.** The decision to make Gather local-only was partly about cost (no unnecessary API calls) and partly about trust (users can inspect what was extracted before the model ever sees it). That inspectability turned out to matter for debugging too — when generated prose was inaccurate, the cause was almost always in the gathered JSON, and having a discrete artifact to examine made diagnosis fast.
 
-**Pipeline stage independence as a design principle.** Making Gather local-only and Render deterministic meant that two of the three stages could be developed, tested, and debugged without an API key. This dramatically shortened the feedback loop during development and made the overall system more trustworthy. The pattern generalizes: in any LLM-dependent pipeline, isolate the model call to the smallest possible surface and make everything around it as deterministic as possible.
+**Grounding constraints are a design pattern, not a prompt trick.** The `MASTER_PLAN.md` grounding mechanism started as a way to prevent hallucinated capabilities in portfolio prose. It evolved into a general principle: when authoritative structured facts exist, inject them explicitly and constrain the generative step to be consistent with them. This pattern applies anywhere a model is given latitude to describe something that has a ground truth.
 
-**Treating documentation artifacts as first-class inputs.** The `DesignDocExtractor`'s approach — reading `CLAUDE.md`, design proposals, architecture notes — reflects a broader lesson: the reasoning behind decisions is often captured in text that tools conventionally ignore. Mining that text produces qualitatively different output than mining only the code. For any tool that tries to understand a codebase from the outside, the documentation layer is underexploited.
+**Language-agnostic tools require disciplined abstraction.** Building in Swift while targeting repositories written in Rust, Python, Go, and Node forced early extraction of a clean extractor interface. The temptation to special-case Swift Package Manager parsing in the core pipeline — because it was the first language supported and the one most familiar — was real. Resisting it meant the subsequent extractors were straightforward to add and that the pipeline stayed honest about what it actually knew versus what it was assuming.
 
-**Self-application as the most honest integration test.** Building a tool that processes its own repository, reads its own mission statement, and generates a narrative about itself is not a trick — it is a commitment. If the pipeline fails on its own artifacts, the failure is immediately visible and immediately meaningful. Projects that can describe themselves coherently using their own mechanisms tend to have cleaner internal contracts than those that cannot.
+**A tool that documents its own design is its own best test case.** ProjectShowcase analyzes itself. The presence of `MASTER_PLAN.md` in its own repository, the CLAUDE.md working conventions file, and the structured commit history mean the tool can be run against itself and the output evaluated for accuracy. This self-application is both a functional test and a demonstration — if the portfolio it generates for itself is coherent and accurate, that is evidence the pipeline works.

@@ -1,6 +1,6 @@
 ---
-title: A Personal Site That Fails at Compile Time, Not Deploy Time
-description: Justin Purnell rebuilt his personal website as a Swift package, turning broken pages into compiler errors and collapsing the publishing pipeline to a single command.
+title: A Personal Site That Compiles Its Own Promises
+description: Justin Purnell rebuilt his personal website as a Swift package, turning broken pages into compile errors and publishing into a single command.
 date: 2026-05-12 15:57
 lastModified: 2026-10-30
 tags: showcase, website, selfReflection
@@ -10,40 +10,40 @@ project: Website
 published: true
 ---
 
-# A Personal Site That Fails at Compile Time, Not Deploy Time
+# A Personal Site That Compiles Its Own Promises
 
-> Justin Purnell rebuilt his personal website as a Swift package, turning broken pages into compiler errors and collapsing the publishing pipeline to a single command.
+> Justin Purnell rebuilt his personal website as a Swift package, turning broken pages into compile errors and publishing into a single command.
 
 ## Problem
 
-Most personal sites are built on platforms that separate authoring from verification — you write in one place, render somewhere else, and discover problems only when visitors encounter them. For a developer who lives in Swift and cares about correctness, that gap is friction worth eliminating.
+Most personal sites are built on platforms that separate the author from the machinery — a CMS here, a build service there, a deployment hook somewhere else. When something breaks, it breaks silently at runtime, often only after it reaches a reader. Purnell set out to close that gap.
 
-PersonalSiteLib is the codebase behind justinpurnell.com: a writing-forward site hosting essays, a project showcase, and an ongoing quality-gate series. The site needed to be easy to publish, hard to accidentally break, and built on tools the author could trust because he also helps maintain them.
+The site hosts his writing, a project showcase, and a quality-gate series — content that reflects careful thinking and deserves infrastructure to match. The goal was a publishing workflow ruthlessly reduced to `swift run`, with the compiler doing what staging environments usually fail to do: catching structural problems before they ship.
 
-The deeper motivation was philosophical. If pages are types and layouts are composed in code, then a missing argument or an invalid structure becomes a compile error — not a blank page at midnight.
+He also had a secondary motivation with real architectural consequence: the site is the primary consumer of his own Ignite fork, a Swift static site generator. That means it isn't just a portfolio — it's a proving ground. Any divergence between Ignite's design and real-world authoring gets discovered here, by the author, before it reaches anyone else.
 
 ## Approach
 
-The site is built atop [Ignite](https://github.com/twostraws/Ignite), a Swift static site generator, using a fork that Purnell maintains and exercises here first. That relationship matters architecturally: PersonalSiteLib is the primary consumer of the Ignite fork, which means new divergences in the generator get stress-tested on a real site before they're visible anywhere else. The site and the tool evolve together.
+The central architectural bet is that **pages are types**. Rather than templating languages or markdown-with-frontmatter, each page in PersonalSiteLib is a Swift type. Layouts are composed in code. This isn't aesthetics — it's a guarantee: a page that references a non-existent component or passes the wrong data shape fails at compile time, not at reader-time.
 
-The package targets both macOS and iOS under Swift tools version 6.2, and carries two declared dependencies — Ignite itself and `swift-docc-plugin` — keeping the dependency surface minimal. The three targets (`PersonalSiteLib`, `IgniteStarter`, and `PersonalSiteTests`) reflect a clean separation between library code, the site entry point, and test coverage.
+The project is a Swift package targeting macOS and iOS, built against Swift 6.2 and organized into three targets: `PersonalSiteLib` (the site itself), `IgniteStarter` (the entry point), and `PersonalSiteTests` (the test suite). Dependencies are intentionally minimal — Ignite for generation, `swift-docc-plugin` for documentation — keeping the dependency surface small and the build predictable.
 
-Publishing is intentionally boring: the build outputs to a `docs/` directory that GitHub Pages serves directly. There is no external CI, no build service to authenticate, and no deploy step distinct from `swift run`. The architecture decisions consistently traded novelty for reliability: if the tool is familiar, the publishing day is calm.
+Deployment is deliberately low-ceremony: output publishes to a `docs/` directory and is served directly by GitHub Pages, with no external build service in the loop. The constraint is the feature. Removing CI/CD from the deploy path means the author's local toolchain is the only moving part, which suits a solo publishing workflow and avoids the category of failure where a build service diverges from local behavior.
 
-The repository's `CLAUDE.md` captures two standing rules that reveal how Purnell thinks about operational discipline — never stash changes mid-session, and always verify a change is actually live before calling it done. These aren't automations; they're explicit commitments baked into how the project is worked.
+The repository's `CLAUDE.md` encodes two architectural disciplines worth noting: never stash, and verify a change is live before calling it done. These aren't arbitrary rules — they're the kind of working norms that prevent the subtle state-drift bugs that plague long-running personal projects maintained in irregular bursts.
 
 ## Results
 
-Over nearly two years of active development — from November 2024 through October 2026 — the repository accumulated 253 commits across a single long-lived branch, reflecting a preference for continuity over branching ceremony. Two contributors touched the code, though the project is fundamentally a solo endeavor.
+Over nearly two years — first commit November 2024, latest October 2026 — the project accumulated 254 commits across a single branch, a pattern consistent with a disciplined trunk-based workflow where the main branch stays deployable. The site shipped and has remained the active home for Purnell's writing and project work throughout that period.
 
-The site ships. Pages compile or they don't. Publishing happens via a single terminal command. The quality-gate series, the project showcase, and the writing archive are all live and served without a build pipeline that requires maintenance of its own.
+As the primary consumer of the Ignite fork, PersonalSiteLib has served its secondary purpose: every authoring friction point, every API mismatch, every layout edge case encountered here has been encountered by the author rather than by a downstream user. The site's existence continuously validates — and stresses — the generator it depends on.
 
 ## Judgment Calls
 
-The most telling decision is the one that shapes everything else: *the site is a Swift package.* Purnell could have reached for any number of static site generators with larger ecosystems. He chose one where correctness is enforced by the same compiler he uses for everything else, accepting a narrower ecosystem in exchange for a guarantee — a broken page won't deploy silently.
+The most revealing decision is the one that looks like a constraint: building on a framework he also maintains. Most developers choose between "use something stable" and "build your own." Purnell chose a third path — use something he's actively evolving, but in a context where he bears all the cost of instability himself. That's a considered risk allocation, not an oversight.
 
-The choice to maintain a fork of Ignite and use this site as its primary test bed is a force multiplier. Fixes and extensions get real-world validation before they're proposed upstream, and the site benefits immediately when the generator improves. It's a tight feedback loop by design.
+Choosing `docs/`-based GitHub Pages deployment over a proper CI pipeline is similarly deliberate. It would be easy to read as a shortcut. It's better understood as a recognition that for a solo site with a single author, the build service is complexity without a beneficiary. Removing it makes the system more reliable, not less.
 
-Routing deployment through `docs/` and GitHub Pages is similarly deliberate. It eliminates an entire category of operational complexity — no tokens to rotate, no build service to debug, no external dependency on a third-party deploy pipeline. The tradeoff is a slightly unconventional repository layout; the gain is that the site goes down only when GitHub does.
+The decision to encode working norms in `CLAUDE.md` — particularly the discipline around never stashing and confirming deploys — reflects an author who has thought about the failure modes of intermittent, long-running projects. Personal sites famously bitrot; half-finished changes get stashed and forgotten; deploys get assumed rather than confirmed. Purnell wrote down the rules that prevent those specific failure modes, which suggests he's encountered them before and decided they weren't acceptable.
 
-The standing operational rules in `CLAUDE.md` — particularly the insistence on verifying a change is live before declaring it complete — suggest a developer who has learned that "shipped" is a state the world confirms, not one you declare.
+Finally, there's something worth naming about the thesis itself: that a broken page should be a compile error. This is not the path of least resistance. It requires more upfront structure, a steeper authoring model, and a willingness to fight the type system when you just want to publish something. Purnell made that trade explicitly, and 254 commits later, he's still making it.
