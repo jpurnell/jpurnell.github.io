@@ -1,8 +1,8 @@
 ---
-title: Auditing the Invisible: Building a GEO Compliance Tool for the AI Search Era
-description: A solo developer designed and shipped a full-stack Swift web application that audits how businesses appear in AI-generated search results — before most of the industry had a name for the problem.
+title: GEO Audit: Scoring AI Search Visibility with a Vapor-Backed Audit Pipeline
+description: A full-stack Swift service that scrapes websites, delegates scoring to a remote MCP server across 18 named tools, and sells the resulting audit reports as one-time purchases or recurring monitoring subscriptions.
 date: 2026-05-12 15:58
-lastModified: 2026-05-12
+lastModified: 2026-10-30
 tags: showcase, GEO-SEO, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,45 +10,42 @@ project: GEO Auditor
 published: true
 ---
 
-# Auditing the Invisible: Building a GEO Compliance Tool for the AI Search Era
+# GEO Audit: Scoring AI Search Visibility with a Vapor-Backed Audit Pipeline
 
-> A solo developer designed and shipped a full-stack Swift web application that audits how businesses appear in AI-generated search results — before most of the industry had a name for the problem.
+> A full-stack Swift service that scrapes websites, delegates scoring to a remote MCP server across 18 named tools, and sells the resulting audit reports as one-time purchases or recurring monitoring subscriptions.
 
 ## Problem
 
-Generative Engine Optimization (GEO) is a nascent discipline: as AI-powered search tools like Perplexity, ChatGPT, and Google's AI Overviews displace traditional search rankings, businesses have almost no visibility into how — or whether — they're being represented. The SEO tooling ecosystem hadn't caught up. There was no straightforward way for a business owner to ask: *When someone queries an AI assistant about my category, does my brand appear? Is what's said accurate? Is it favorable?*
+As AI-powered search engines began reshaping how users discover content, website owners faced a new blind spot: traditional SEO audits had no vocabulary for AI crawler access, `llms.txt` compliance, or the signals that large language models use to assess authority. Existing tools measured meta tags and Core Web Vitals, but none answered the question of whether a site was actually *visible to AI search*.
 
-That gap was the target. The project needed to go from zero to a working audit product: scraping AI-generated results, analyzing the content, storing findings relationally, and surfacing them through a web interface — all within a few weeks and a solo development context.
+GEO Audit was built to close that gap. Given a URL, it fetches the site's HTML, HTTP headers, `robots.txt`, `sitemap.xml`, and the emerging `llms.txt` convention, then routes that extracted data through a remote GeoSEO MCP server for authoritative scoring. The result is an actionable audit report covering both traditional SEO and generative-engine optimization — delivered as a paid product where users can run a single audit or subscribe to weekly or monthly re-audits as their site evolves.
 
 ## Approach
 
-The developer made a deliberate architectural commitment at the outset: **design first, then code**. Ten design proposals were written before significant implementation began, covering module structure, data flow, and the relationship between the scraping core and the application layer. A `CLAUDE.md` file codified project conventions, tech stack rationale, and development guidelines — a document that served both as a working reference and as a forcing function for architectural clarity.
+The project is organized into three SwiftPM library targets that enforce a clean separation of concerns. `WebScraper` owns all network I/O — fetching pages, parsing HTML with SwiftSoup, and validating every outbound URL against SSRF rules before a single byte leaves the process. `GEOAuditCore` sits above it as an orchestration layer, mapping scraped data onto 18 named MCP tools (covering meta tags, heading structure, JSON-LD, AI crawler access, E-E-A-T signals, and a composite GEO score) through `SwiftMCPClient`. The Vapor `App` target handles everything user-facing: routing, authentication, Leaf templates, Stripe payments, and Redis-backed job queues.
 
-The stack reflects considered tradeoffs rather than defaults. Swift was chosen as the primary language, running on Swift 6.0's strict concurrency model — a meaningful constraint that pushes developers toward correct-by-construction async code. The project is organized into distinct targets that reflect a genuine separation of concerns:
+Making `WebScraper` and `GEOAuditCore` exportable library products was a deliberate decision — it keeps the scoring logic decoupled from the web framework and makes both targets independently testable. The SSRF validation layer inside `WebScraper` reflects the same instinct: fetch behavior is constrained at the module boundary, not scattered through higher-level code.
 
-- **WebScraper / GEOAuditCore** — the parsing and analysis layer, built around SwiftSoup for HTML extraction and structured to be testable in isolation
-- **App** — a Vapor-based web server with Leaf templating, backed by Fluent ORM with support for both PostgreSQL (production) and SQLite (development/testing)
-- **Background processing** — Redis-backed job queues via `queues-redis-driver` for asynchronous audit runs
-- **Monetization** — Stripe integration present from early in the build, signaling intent to ship a real product, not a prototype
+Scoring itself is intentionally not owned by the application. The 18-tool evaluation lives on a remote GeoSEO MCP server, and `GEOAuditCore` is purely an orchestrator — it knows *what* to send and *how* to interpret responses, but the scoring definitions live elsewhere. This lets the rubric evolve without redeploying the application.
 
-The inclusion of both `fluent-postgres-driver` and `fluent-sqlite-driver` as explicit targets — along with separate test targets for both `WebScraper` and `GEOAuditCore` — shows a developer who anticipated the full lifecycle: local iteration, CI, and production deployment.
+Recurring monitoring is handled by `MonitoringJob`, an hourly scheduled job that queries for subscriptions due for re-audit and dispatches them through the same pipeline. The billing model — single audits, weekly plans, and monthly plans — is wired through Stripe Kit.
+
+The test suite uses in-memory SQLite and mock HTTP and MCP clients, so the full pipeline can be exercised without live credentials or network access. Targets `WebScraperTests`, `GEOAuditCoreTests`, and `AppTests` cover each layer independently.
 
 ## Results
 
-Over 24 days and 7 commits, the developer brought a multi-module Swift web application from concept to a working state. Six of those commits were made across three Claude Code sessions, with the seventh establishing the initial repository structure. All three sessions were classified as multi-task — meaning each session carried multiple distinct workstreams rather than isolated fixes — and two of three sessions reached a "mostly achieved" outcome, with one fully achieved.
+Development ran from March 2026 through October 2026 — roughly seven months — across 32 commits on a solo repository with three active branches. The project shipped a complete, monetized audit service: a scraping library, an MCP orchestration layer, a Vapor web application with Leaf templates, Stripe-integrated billing for three plan tiers, and an automated monitoring scheduler. The dependency list reflects genuine production scope: Fluent with both PostgreSQL and SQLite drivers, Redis-backed queues, swift-log for structured observability, and swift-docc-plugin for documentation generation.
 
-The application targets macOS and integrates a non-trivial dependency graph: nine external packages spanning scraping, web serving, ORM, templating, queueing, and payments. The presence of test targets for both core modules indicates the scraping and audit logic was being validated independently of the web layer.
+The codebase targets Swift 6.2 with Swift Package Manager tools version 6.2, and the macOS platform constraint is explicit in the manifest.
 
 ## Judgment Calls
 
-Several decisions in this project reveal a developer thinking past the immediate build.
+Several decisions in this project reveal deliberate architectural thinking rather than expedient choices.
 
-**Writing ten design proposals before writing significant code** is an unusual discipline for a solo project on a short timeline. It signals that the developer treats architecture as a first-class artifact — not just a byproduct of implementation, but something worth reasoning through explicitly before accumulating technical debt.
+**Delegating scoring to an MCP server.** Rather than embed a scoring rubric in application code, the project routes evaluation through a named external service. This is a meaningful tradeoff: it introduces a runtime dependency, but it means the definition of "good GEO score" can be updated centrally without touching the application. For a product whose entire value proposition is scoring accuracy, keeping that logic separate — and authoritative — is the right call.
 
-**Choosing Swift 6.0's strict concurrency** for a web scraping application is a meaningful bet. The compiler enforcement of actor isolation and sendability requirements adds friction during development but produces safer concurrent code — important in a system that's fetching external AI-generated pages, parsing them, and enqueuing background jobs simultaneously.
+**SSRF validation at the module boundary.** `WebScraper` validates URLs before fetching, not in a middleware layer above it. This means any caller of the library gets the protection automatically, and the constraint cannot be bypassed by a new route or job handler added later. Treating security as a module-level property rather than an application-level convention is a sign of systems thinking.
 
-**Integrating Stripe before the product was feature-complete** reflects product thinking, not just engineering. The payment infrastructure being present in the dependency graph from early on suggests the developer was building toward something shippable and sustainable, not a demo.
+**Three-target SPM layout with exported library products.** Exposing `WebScraper` and `GEOAuditCore` as library products imposes a discipline that single-target apps avoid: the module interfaces have to be intentional. It also means the scraping and orchestration logic are independently testable and, in principle, reusable. For a solo project, this is over-engineering that pays off — the test targets for each layer confirm the boundaries hold.
 
-**The SQLite/PostgreSQL dual-driver pattern** — with both included as package dependencies — reflects experience with the full deployment cycle. SQLite for local development keeps iteration fast; PostgreSQL in production scales. Wiring both up from the start avoids a painful migration later.
-
-The three Claude Code sessions show a working style comfortable with complexity and ambiguity: multi-task sessions, friction encountered and navigated (a buggy code instance, a wrong approach corrected, a permission issue resolved), and outcomes that landed in "mostly achieved" territory — the honest result of doing hard, novel work on a short timeline.
+**Test isolation via in-memory SQLite and mock clients.** The decision to make the entire pipeline runnable without external services means the test suite is fast, deterministic, and CI-friendly. Given that the real MCP server lives on a specific host, this wasn't optional — but structuring the code so mocks slot in cleanly required designing the interfaces with substitutability in mind from the start.
