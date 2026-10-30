@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A solo-built Swift library that handles token issuance and token consumption in a single, storage-agnostic package — purpose-built to close a real authentication gap in a live ecosystem of apps." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/swift-oauth" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package" />
+    <meta name="twitter:title" content="SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package" />
+    <meta property="og:description" content="A solo-built Swift library that handles token issuance and token consumption in a single, storage-agnostic package — purpose-built to close a real authentication gap in a live ecosystem of apps." />
+    <meta name="twitter:description" content="A solo-built Swift library that handles token issuance and token consumption in a single, storage-agnostic package — purpose-built to close a real authentication gap in a live ecosystem of apps." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/swift-oauth" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://orcid.org/0009-0006-7796-4088",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swift-oauth#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/showcase/swift-oauth",
+          "name" : "SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swift-oauth#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/showcase/swift-oauth#breadcrumb"
+      },
+      "description" : "A solo-built Swift library that handles token issuance and token consumption in a single, storage-agnostic package — purpose-built to close a real authentication gap in a live ecosystem of apps.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package",
+      "url" : "https://www.justinpurnell.com/showcase/swift-oauth"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/portfolio/" class="nav-link text-nowrap">Portfolio</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/quality-gate/" class="nav-link text-nowrap">Quality Gate</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftOAuthCore</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <blockquote>
+          <p>A solo-built Swift library that handles token issuance and token consumption in a single, storage-agnostic package — purpose-built to close a real authentication gap in a live ecosystem of apps.</p>
+        </blockquote>
+        <h2>Problem</h2>
+        <p>OAuth 2.0 has two distinct roles that happen to share a name: a server that issues tokens and validates its own, and a client that obtains tokens from someone else and keeps them fresh. Most libraries pick one side. That choice forces teams to either stitch two libraries together — duplicating shared vocabulary like grant types, <code>TokenResponse</code>, and PKCE — or write the plumbing themselves.</p>
+        <p>For J. Purnell, the problem was concrete, not hypothetical. <code>SwiftMCPClient</code> was authenticating via pasted bearer tokens. The MCP specification itself requires OAuth, which meant that gap wasn’t cosmetic — it was a conformance failure. On the other side of the ecosystem, <code>SwiftMCPServer</code> needed to act as an authorization server, and <code>LedgeOS</code>, <code>geo-audit</code>, and <code>Pare</code> were lined up as client consumers. The question was never whether to build authentication infrastructure. It was whether to build it once or repeatedly.</p>
+        <p>The third pressure was refresh-token rotation. When a refresh token is presented, it is consumed. Three specific failure modes follow from that — races, network drops at the wrong moment, retry logic that re-presents an already-expired token — and each one silently locks a user out of their own data. That problem is complicated enough that it justifies a library over a snippet.</p>
+        <h2>Approach</h2>
+        <p>SwiftOAuthCore is structured as a Swift package targeting macOS and iOS, organized into purpose-specific targets that reflect the library’s dual mandate: <code>SwiftOAuthCore</code> holds shared vocabulary, <code>SwiftOAuthMTLS</code> handles mutual TLS, <code>SwiftOAuthIdentity</code> manages identity concerns, <code>SwiftOAuthProvider</code> implements the server side, and <code>SwiftOAuthClient</code> implements the consumer side. A <code>RedirectWireStub</code> target exists for testing redirect-based flows without running live infrastructure.</p>
+        <p>The dependency selection reflects the Swift server ecosystem directly — <code>swift-nio</code> and <code>async-http-client</code> for async networking, <code>swift-crypto</code> and <code>swift-certificates</code> with <code>swift-asn1</code> for cryptographic operations including mTLS, and <code>swift-docc-plugin</code> signaling that documentation is treated as a deliverable rather than an afterthought. The addition of <code>swift-identity</code> ties into the broader ecosystem where these pieces will be consumed.</p>
+        <p>The most consequential architectural decision is the storage protocol boundary. The library defines what must be persisted — tokens, rotation state, client registrations — but imposes nothing about where. A service running Postgres doesn’t pull in SQLite. A test suite doesn’t touch disk. This is the kind of decision that looks obvious in retrospect but requires making it explicitly early, before concrete storage assumptions leak into the core abstractions.</p>
+        <p>The package was built using Swift 6.2 tooling, meaning strict concurrency checking shaped the design from the start rather than being retrofitted later.</p>
+        <h2>Results</h2>
+        <p>Over roughly eleven weeks between early August and late October 2026, Purnell shipped 143 commits across 28 tagged releases — from <code>v0.0.1</code> through fourteen minor and patch versions before pivoting to a beta series now at <code>v1.0.0-beta.9</code>. That release cadence, averaging more than two releases per week, reflects a library being iterated against real consumer needs rather than developed in isolation.</p>
+        <p>The test coverage spans six dedicated test targets — <code>SwiftOAuthCoreTests</code>, <code>SwiftOAuthMTLSTests</code>, <code>SwiftOAuthProviderTests</code>, <code>SwiftOAuthConformanceTests</code>, <code>SwiftOAuthIdentityTests</code>, and <code>SwiftOAuthClientTests</code> — with a conformance suite that sits separately from unit tests, suggesting the library is being held to specification correctness as a first-class concern. The beta series implies that the API surface is being stabilized with known consumers watching.</p>
+        <h2>Judgment Calls</h2>
+        <p><strong>Carrying both halves.</strong> The decision to implement provider and client in one package is the one that most libraries don’t make. Purnell’s reasoning, documented in the project’s own MASTER_PLAN.md, is precise: the two roles share grant types, <code>TokenResponse</code>, error codes, and PKCE — specifically, the client generates the PKCE verifier that the server validates. Splitting the package would duplicate that vocabulary and create the conditions for it to drift. The single-package design isn’t a shortcut; it’s a claim about where the real coupling lives.</p>
+        <p><strong>Making rotation a first-class concern.</strong> Refresh-token rotation is the kind of problem that looks solved until it isn’t. Purnell identified three specific failure modes that each produce the same bad outcome — a user locked out of their own data with no readable error — and named them as the reason a library exists at all rather than a code snippet. Building the client half around those failure modes rather than around the happy path is a different kind of discipline, and it’s visible in the structural choice to give the client its own test target.</p>
+        <p><strong>Storage as a protocol, not a default.</strong> Choosing to express storage as a protocol boundary rather than bundling a default implementation is a form of respect for the consumer’s existing infrastructure. It also makes the test story cleaner — <code>RedirectWireStub</code> exists because the redirect flow needs testable infrastructure, and that infrastructure can be ephemeral. The decision suggests Purnell was thinking about how the library would be adopted by real services rather than how it would pass its own tests.</p>
+        <p><strong>Beta discipline.</strong> The shift from a minor-version series to a <code>v1.0.0-beta</code> series at <code>beta.9</code> reads as intentional semantic signaling — the core is stable enough to stabilize against, but the API contract isn’t locked until known consumers have validated it in real use. That’s what betas are for, and using them correctly is rarer than it should be.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/swift-oauth-stats.svg" alt="SwiftOAuthCore statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/swift-oauth-commits.svg" alt="SwiftOAuthCore commit history chart" class="img-fluid" />
+        <img src="/images/showcase/swift-oauth-releases.svg" alt="SwiftOAuthCore release history chart" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swift-oauth, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

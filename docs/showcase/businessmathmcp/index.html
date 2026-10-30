@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A Swift MCP server that exposes a comprehensive financial and statistical library as deterministic, callable tools for AI agents — because an LLM should never estimate a discount rate." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>BusinessMathMCP: Putting Auditable Financial Computation on the AI Tool Belt | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/businessmathmcp" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="BusinessMathMCP: Putting Auditable Financial Computation on the AI Tool Belt" />
+    <meta name="twitter:title" content="BusinessMathMCP: Putting Auditable Financial Computation on the AI Tool Belt" />
+    <meta property="og:description" content="A Swift MCP server that exposes a comprehensive financial and statistical library as deterministic, callable tools for AI agents — because an LLM should never estimate a discount rate." />
+    <meta name="twitter:description" content="A Swift MCP server that exposes a comprehensive financial and statistical library as deterministic, callable tools for AI agents — because an LLM should never estimate a discount rate." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/businessmathmcp" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://orcid.org/0009-0006-7796-4088",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/businessmathmcp#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/showcase/businessmathmcp",
+          "name" : "BusinessMathMCP: Putting Auditable Financial Computation on the AI Tool Belt",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/businessmathmcp#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/showcase/businessmathmcp#breadcrumb"
+      },
+      "description" : "A Swift MCP server that exposes a comprehensive financial and statistical library as deterministic, callable tools for AI agents — because an LLM should never estimate a discount rate.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "BusinessMathMCP: Putting Auditable Financial Computation on the AI Tool Belt",
+      "url" : "https://www.justinpurnell.com/showcase/businessmathmcp"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/portfolio/" class="nav-link text-nowrap">Portfolio</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/quality-gate/" class="nav-link text-nowrap">Quality Gate</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">BusinessMathMCP: Putting Auditable Financial Computation on the AI Tool Belt</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMathMCP</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <blockquote>
+          <p>A Swift MCP server that exposes a comprehensive financial and statistical library as deterministic, callable tools for AI agents — because an LLM should never estimate a discount rate.</p>
+        </blockquote>
+        <h2>Problem</h2>
+        <p>AI agents are increasingly asked to perform financial analysis — modeling valuations, running sensitivity analyses, forecasting cash flows. The problem is that language models approach these tasks by estimation: pattern-matching against training data to produce plausible-looking numbers that may not be mathematically correct. For anyone who needs to rely on those numbers, “plausible-looking” is not good enough.</p>
+        <p>BusinessMathMCP exists to close that gap. The project exposes the BusinessMath Swift library — an already-built, already-tested financial and statistical computation engine — as a suite of tools that any MCP-capable host can call. Claude Desktop, Claude Code, or any other MCP client gets access to deterministic, library-grade arithmetic without writing a line of Swift. The agent asks; the server computes; the answer is auditable.</p>
+        <p>The project launched in February 2026 and shipped its first stable release, v1.0.0, over the course of 87 commits across roughly eight months of active development.</p>
+        <h2>Approach</h2>
+        <p>The architectural decision that defines BusinessMathMCP is what it <em>doesn’t</em> try to do. Rather than reimplementing financial logic inside the server, it treats BusinessMath’s correctness as an already-solved problem and focuses entirely on the transport and exposure layer. Financial correctness is the library’s problem. The server’s problem is surface area and reliability.</p>
+        <p>The Swift package is organized into three targets that reflect this separation of concerns: <code>BusinessMath</code> and its dependencies handle computation; <code>BusinessMathMCPServer</code> owns the server infrastructure built on <code>SwiftMCPServer</code>; and <code>BusinessMathMCPTests</code> guards the exposure layer independently. The dependency on <code>swift-numerics</code> signals a commitment to numerical precision at the platform level, and <code>swift-docc-plugin</code> suggests the tooling surface is documented as a first-class concern.</p>
+        <p>The CLAUDE.md file — a structured working agreement for AI-assisted development sessions — includes explicit sections on session recovery, mandatory process discipline, upstream contribution patterns, and environment gotchas. Its presence and its architecture mirror the discipline applied to the BusinessMath library itself: the developer brought the same rigor to how the project is <em>worked on</em> as to what it produces. The repo targets macOS and is built against Swift Tools version 6.2, keeping it current with the Swift concurrency model that makes a well-behaved server straightforward to reason about.</p>
+        <h2>Results</h2>
+        <p>BusinessMathMCP shipped v1.0.0 across 87 commits on a single-contributor project, with active work spanning from February to October 2026. The package exposes BusinessMath’s full breadth — valuation, statistics, optimization, forecasting — as a coherent tool surface rather than a handful of one-off calculator endpoints. MCP-capable hosts can reach the entire library without any Swift knowledge on the caller’s side.</p>
+        <p>The test target, <code>BusinessMathMCPTests</code>, ships as a dedicated package target, meaning the exposure layer carries its own test suite independent of the upstream library’s tests. The project maintains two branches alongside the released version, indicating ongoing development past the 1.0 milestone.</p>
+        <h2>Judgment Calls</h2>
+        <p><strong>Breadth as the product.</strong> The MASTER_PLAN.md is explicit that a large, coherent tool surface — not a curated handful of endpoints — is the differentiator. This is a meaningful design stance. A narrow MCP server is easier to ship and test but forces the AI agent to work around gaps; a complete surface means the agent can follow a financial problem wherever it leads without hitting dead ends. Purnell chose completeness and structured the project to sustain it.</p>
+        <p><strong>Determinism as a feature worth naming.</strong> The project’s own description draws an explicit contrast: “the opposite of an LLM estimating a discount rate.” Framing determinism and auditability as key differentiators — not just implementation properties — shows an understanding of where AI-assisted financial work actually breaks down, and a deliberate decision to build against that failure mode.</p>
+        <p><strong>Delegating correctness upstream.</strong> Rather than rebuilding financial logic inside the server, Purnell treated the BusinessMath library as the authoritative source of truth and kept the MCP layer focused on exposure. This is a composition decision that trades a certain kind of control for a much stronger correctness guarantee — the math is tested where the math lives, and the server doesn’t have to be right about finance, only about transport.</p>
+        <p><strong>CLAUDE.md as process infrastructure.</strong> Including a structured working agreement for AI-assisted sessions — with recovery procedures, mandatory discipline sections, and upstream contribution guidance — reflects an understanding that the <em>process</em> of building a project shapes its quality as much as any single architectural choice. It treats the development environment itself as something worth designing.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/businessmathmcp-stats.svg" alt="BusinessMathMCP statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/businessmathmcp-commits.svg" alt="BusinessMathMCP commit history chart" class="img-fluid" />
+        <img src="/images/showcase/businessmathmcp-releases.svg" alt="BusinessMathMCP release history chart" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmathmcp, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

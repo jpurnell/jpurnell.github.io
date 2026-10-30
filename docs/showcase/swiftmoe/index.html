@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="SwiftMoE streams 200GB+ language models from NVMe through a custom Metal compute pipeline while holding only ~6GB resident in memory — shipping an OpenAI-compatible server in pure Swift with 226 tests and no massive model download required to run them." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>Streaming Giants: Building a Memory-Efficient MoE Inference Engine in Pure Swift | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/swiftmoe" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="Streaming Giants: Building a Memory-Efficient MoE Inference Engine in Pure Swift" />
+    <meta name="twitter:title" content="Streaming Giants: Building a Memory-Efficient MoE Inference Engine in Pure Swift" />
+    <meta property="og:description" content="SwiftMoE streams 200GB+ language models from NVMe through a custom Metal compute pipeline while holding only ~6GB resident in memory — shipping an OpenAI-compatible server in pure Swift with 226 tests and no massive model download required to run them." />
+    <meta name="twitter:description" content="SwiftMoE streams 200GB+ language models from NVMe through a custom Metal compute pipeline while holding only ~6GB resident in memory — shipping an OpenAI-compatible server in pure Swift with 226 tests and no massive model download required to run them." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftmoe" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://orcid.org/0009-0006-7796-4088",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swiftmoe#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/showcase/swiftmoe",
+          "name" : "Streaming Giants: Building a Memory-Efficient MoE Inference Engine in Pure Swift",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swiftmoe#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/showcase/swiftmoe#breadcrumb"
+      },
+      "description" : "SwiftMoE streams 200GB+ language models from NVMe through a custom Metal compute pipeline while holding only ~6GB resident in memory — shipping an OpenAI-compatible server in pure Swift with 226 tests and no massive model download required to run them.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "Streaming Giants: Building a Memory-Efficient MoE Inference Engine in Pure Swift",
+      "url" : "https://www.justinpurnell.com/showcase/swiftmoe"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/portfolio/" class="nav-link text-nowrap">Portfolio</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/quality-gate/" class="nav-link text-nowrap">Quality Gate</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">Streaming Giants: Building a Memory-Efficient MoE Inference Engine in Pure Swift</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">CTokenizer</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">5 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <blockquote>
+          <p>SwiftMoE streams 200GB+ language models from NVMe through a custom Metal compute pipeline while holding only ~6GB resident in memory — shipping an OpenAI-compatible server in pure Swift with 226 tests and no massive model download required to run them.</p>
+        </blockquote>
+        <h2>Problem</h2>
+        <p>Large Mixture-of-Experts language models present a brutal deployment problem: the weights are enormous, the hardware is constrained, and most inference stacks assume you can simply load the entire model into VRAM. A 200GB+ MoE model shatters that assumption. Renting a data center GPU cluster is one answer. Running it locally on Apple Silicon — efficiently — is a far more interesting one.</p>
+        <p>SwiftMoE was built to solve exactly this: enabling inference on massive MoE architectures on consumer Apple Silicon hardware by treating the NVMe SSD as an extended memory tier. The engine streams weight tensors from disk through a custom Metal compute pipeline, keeping resident memory bounded at approximately 6GB regardless of model size. This is not a workaround — it is the architecture.</p>
+        <p>The project also tackles a secondary problem that plagues most research-grade inference tools: coupling to a specific model architecture. SwiftMoE is designed from the ground up to support any MoE topology through a runtime-configurable <code>ModelConfig</code>, with presets for known architectures and no hardcoded constants baked into the engine.</p>
+        <h2>Approach</h2>
+        <p>The project is organized around five targets — the core <code>SwiftMoE</code> library, <code>SwiftMoEServer</code>, <code>SwiftMoEChat</code>, <code>CTokenizer</code>, and <code>CLineNoise</code> — with the main library maintaining a strict pure Swift constraint. The decision to keep C dependencies out of the library proper reflects a deliberate boundary: the core inference engine should be auditable and portable without a C toolchain tangled through its internals.</p>
+        <p>Metal sits at the center of the compute story. The engine implements seven GPU optimization paths with automatic CPU fallback, covering the range of Apple Silicon capabilities and giving the runtime room to select the best available path without burdening the caller. The streaming architecture treats the SSD not as a loading bottleneck but as the primary weight store, paging tensors into GPU memory on demand through the Metal pipeline.</p>
+        <p>The server target ships an OpenAI-compatible <code>/v1/chat/completions</code> HTTP endpoint with Server-Sent Events streaming, bearer-key authentication, sequence budget enforcement, queue deadlines, and cancellation on client disconnect. These are production-grade concerns — rate limiting and graceful cancellation in particular signal that the server was designed to be exposed, not just demoed.</p>
+        <p>Testing strategy deserves particular mention. The project’s <code>MASTER_PLAN.md</code> explicitly calls out “tiny synthetic model fixtures” as the mechanism for running all 226 tests without requiring a 200GB model download. This is a significant architectural decision: it means the test suite is fast, portable, and runnable in CI without special infrastructure. The 226 tests across a single <code>SwiftMoETests</code> target give confidence in the engine’s correctness across configurations that would otherwise require terabytes of model data to exercise.</p>
+        <p>The presence of a <code>CLAUDE.md</code> file and an architecture document with dedicated sections for Hardware, Architecture, “What We Tried (and What Worked),” and Safety indicates a design-first workflow. The “What We Tried” section in particular is a mark of intellectual honesty in the documentation — it records the path taken, not just the destination.</p>
+        <p>The project targets Swift 6.2 and macOS exclusively, an unsurprising choice given the Metal dependency and the Apple Silicon performance story, but a deliberate constraint that keeps the codebase focused rather than diffuse.</p>
+        <h2>Results</h2>
+        <p>Over roughly seven months of development — first commit March 2026, latest commit October 2026 — the project reached a <code>v0.1.0</code> release across 177 commits from two contributors. What shipped at that milestone:</p>
+        <ul>
+          <li>A streaming inference engine capable of handling 200GB+ MoE models within a ~6GB resident memory envelope</li>
+          <li>Seven Metal GPU optimization paths with automatic CPU fallback</li>
+          <li>Runtime-configurable <code>ModelConfig</code> with architecture presets, supporting any MoE topology without recompilation</li>
+          <li>An OpenAI-compatible HTTP server with SSE streaming, authentication, sequence budgets, and cancellation</li>
+          <li>226 passing tests built around synthetic model fixtures — no model download required to validate the engine</li>
+          <li>Pure Swift core library with no C dependencies in the main target</li>
+        </ul>
+        <h2>Judgment Calls</h2>
+        <p>Several decisions across this project reveal the kind of craft that separates a working prototype from a serious engineering effort.</p>
+        <p><strong>The synthetic fixture strategy.</strong> Committing to tiny synthetic model fixtures instead of shipping tests that require real weights is the right call and the harder call. It forces the engine’s abstractions to be honest — if you can’t construct a minimal synthetic model and run inference through it end-to-end, your architecture has coupling problems. The 226 tests are a forcing function for clean design, not just a safety net.</p>
+        <p><strong>Pure Swift core with explicit C boundary.</strong> Accepting <code>CTokenizer</code> and <code>CLineNoise</code> as separate targets while keeping the main library pure Swift draws a clear line between what is core and what is peripheral. Tokenization and line-editing are well-understood problems with existing C implementations; the streaming Metal inference engine is not. Keeping them separate preserves the ability to audit, test, and potentially replace the core without C toolchain concerns.</p>
+        <p><strong>Seven GPU paths with automatic fallback.</strong> Rather than optimizing for a single chip configuration and shipping, the engine enumerates the capability space of Apple Silicon and selects at runtime. This is more work — seven paths to maintain, test, and reason about — but it means the engine runs well on an M1 MacBook Air and an M3 Ultra without different builds or user configuration.</p>
+        <p><strong>Production server semantics at v0.1.</strong> Sequence budgets, queue deadlines, and disconnect cancellation are not features you add to a demo server. They are features you need when real users send unpredictable requests. Shipping these at v0.1 suggests the server was designed to handle the real world from the start, not retrofitted after the fact.</p>
+        <p><strong>The “What We Tried” documentation section.</strong> This is a judgment call that shows up in documentation rather than code. Recording what failed and what worked is genuinely useful to future contributors and to the developer’s own future self. It signals that the project values understanding over the appearance of inevitable success.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/swiftmoe-stats.svg" alt="CTokenizer statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/swiftmoe-commits.svg" alt="CTokenizer commit history chart" class="img-fluid" />
+        <img src="/images/showcase/swiftmoe-releases.svg" alt="CTokenizer release history chart" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftmoe, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
