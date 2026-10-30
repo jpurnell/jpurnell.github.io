@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **Showcase pages regenerated from current source (2026-10-30).** 23 of the 28 pages under
+  `Content/showcase/` were last generated on 12-13 May; they were rewritten by `showcase sync`
+  from each repository's present state and `project/master_plan.md`, and the portfolio
+  overview now covers those 23 projects. Original `date:` values, tags and `project:` groups
+  are kept. `org-judgement-corpus`, `qualitygatecore`, `qualitygatetypes`, `swift-security-rules`
+  and `webscraper` were left as published: their repositories have no master plan, and a page
+  written without one is a guess.
+
+### Added
+- `showcase-manifest.json` (which repository produces which page, with audience, style, group
+  and tags) and `.showcase-state.json` (the commit each page was last generated from), the
+  inputs to `showcase sync` in project-showcase.
+
 ### Added
 - **Portfolio page driven by `Resources/portfolio.json`.** The file is now the single
   source (it previously did not parse and nothing read it). Each entry carries a

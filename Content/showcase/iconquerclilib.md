@@ -1,8 +1,8 @@
 ---
-title: Wiring a Terminal Into a Game Ecosystem: IconquerCLILib
-description: In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool.
+title: IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game
+description: A thin executable backed by a composable library, IconquerCLI brings a Risk-style LLM-powered board game to the terminal by integrating five purpose-built Swift packages into a single cohesive experience.
 date: 2026-05-13 16:38
-lastModified: 2026-05-13
+lastModified: 2026-10-30
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,44 +10,36 @@ project: iConquer
 published: true
 ---
 
-# Wiring a Terminal Into a Game Ecosystem: IconquerCLILib
+# IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game
 
-> In sixteen days and 65 commits, a single developer built the playable terminal client for a Risk-style strategy game — integrating a multi-package Swift ecosystem, LLM-powered AI opponents, and a full TUI experience into one cohesive command-line tool.
+> A thin executable backed by a composable library, IconquerCLI brings a Risk-style LLM-powered board game to the terminal by integrating five purpose-built Swift packages into a single cohesive experience.
 
 ## Problem
 
-iConquer is an ambitious, multi-package Swift strategy game modeled on the classic Risk board game. The ecosystem already included a rules engine (IconquerCore), match orchestration (IconquerMatch), AI strategies (IconquerAI), networking (IconquerClient), and even a Model Context Protocol integration (IconquerMCP). What it lacked was a playable front door that didn't require launching a full SwiftUI application.
+iConquer is a Risk-style turn-based strategy game with ambitions that stretch well beyond the board. Its logic is distributed across a family of specialized Swift packages — a rules engine, a match orchestrator, an AI strategy layer, a Model Context Protocol integration, and a networking client — but none of that machinery is useful without a way to actually play the game.
 
-IconquerCLILib fills that gap. Its mission, as stated in the project's own MASTER_PLAN.md, is to wire together the full iConquer package ecosystem into a playable terminal experience — animated dice rolls, colored territory maps, interactive command parsing — while also serving as a reusable library for the SwiftUI app itself. That dual-target design (a thin `iconquer-cli` executable backed by a full-featured `IconquerCLILib` library) was a deliberate architectural commitment made from the start.
-
-The tool serves three distinct audiences: developers and testers who want to play without the GUI, AI researchers running batch simulations against the game engine, and the SwiftUI app itself, which reuses the library's agent factories and prompt builders.
+IconquerCLI exists to close that gap. It serves three distinct audiences simultaneously: developers and testers who want to run a match without launching a full SwiftUI application; AI researchers who need a headless environment for batch simulations and LLM agent evaluation; and the iConquer SwiftUI app itself, which can reach into `IconquerCLILib` to reuse agent factories and prompt builders. That last point is the architectural insight that shapes everything else: the terminal client is not a throwaway harness, it is a shared library with a thin executable shell on top.
 
 ## Approach
 
-The project launched on April 8, 2026 and shipped v0.5.0 by April 24 — a focused sixteen-day sprint. The pace was enabled by a design-first workflow: before any significant feature landed, a design proposal document was written and the project maintained a CLAUDE.md that structured sessions around explicit architecture sections covering Session Start, Development Workflow, Key Rules, a Quality Gate, and References. This isn't documentation written after the fact — it shaped how each session was entered and exited.
+The project is structured around a deliberate separation between `IconquerCLILib` — where all logic lives — and `iconquer-cli`, a minimal entry point that does nothing but invoke the library. This means every capability the CLI develops is available to any other Swift target that depends on the package, without pulling in the executable.
 
-The library was built on Swift 6.2 with two primary dependencies: `swift-argument-parser` for the CLI interface and `swift-docc-plugin` for documentation generation. The target split — `IconquerCLILib`, `iconquer-cli`, and `IconquerCLITests` — enforced a clean separation of concerns from day one, ensuring the logic layer could be consumed by the SwiftUI app without pulling in executable-level concerns.
+The dependency graph tells the story of the project's scope. SwiftToolsVersion 6.2 governs the package, and it draws on five first-party iConquer packages alongside `SwiftTLSKit` for secure networking, `SwiftCLIKit` for interactive command parsing, `swift-argument-parser` for the top-level CLI surface, and `swift-docc-plugin` for documentation generation. Each dependency has a defined responsibility; the CLI itself adds only the wiring.
 
-AI opponent integration was handled through a uniform `PlayerAgent` protocol inherited from IconquerMatch, behind which three distinct backends are plugged: Ollama for local LLM inference, Apple Intelligence, and MCP-connected agents. This protocol boundary meant that adding or swapping AI backends didn't ripple through the game loop or TUI rendering code.
+AI opponents are handled through multiple backends — Ollama for local LLM inference, Apple Intelligence, and MCP-connected agents — all conforming to the same `PlayerAgent` protocol from `IconquerMatch`. This means the game engine never needs to know which kind of opponent it is facing, and adding a new AI backend is an isolated concern. The CLAUDE.md file present in the repository encodes working conventions — session start procedures, development workflow, key rules, and a quality gate — suggesting the project maintains explicit standards for how work is done, not just what ships.
 
-The pluggable map system deserves mention: map definitions load from either bundled resources or custom JSON files, with validation, giving the tool flexibility for both standard play and researcher-defined scenarios.
+Game modes extend beyond interactive play. A Simulate mode runs batch AI-versus-AI matches for research purposes. A Replay mode re-watches recorded matches. An MCP Play mode hands control to an agent operating through the Model Context Protocol. The map system accepts both bundled resource definitions and custom JSON files, with validation on load.
 
 ## Results
 
-Across sixteen days, the project accumulated 65 commits on a single branch and shipped five tagged releases: v0.1.0 through v0.5.0. The release cadence — roughly one minor version every three days — indicates a disciplined iterative rhythm rather than a single large dump at the end.
+Over roughly six months of development — first commit in April 2026, latest in October 2026 — the project accumulated 95 commits across one contributor and two branches, shipping six public releases: v0.1.0 through v0.6.0. The release cadence tracks steady, incremental delivery rather than a single large drop.
 
-The shipped surface area is substantial: interactive play with animated dice rolls and colored territory maps, a Simulate mode for batch AI-vs-AI runs, a Replay mode for re-watching recorded matches, and an MCP Play mode for agent-driven games via the Model Context Protocol. Each of these modes is a distinct game-management capability beyond simple play.
-
-The library target also serves as a reuse artifact for the broader iConquer SwiftUI application, meaning the work done here compounds value across the ecosystem rather than living only in the terminal.
+The library target ships animated dice rolls, colored territory map rendering, and interactive command parsing. The simulate and replay modes are present alongside standard play. The package is documented via swift-docc-plugin, reflecting an intent that the library surface be legible to external consumers, including the SwiftUI app that depends on it.
 
 ## Judgment Calls
 
-Several decisions here reflect genuine craft rather than default choices.
+The most consequential decision in the project is the library-first architecture. It would have been straightforward to build `iconquer-cli` as a monolithic executable, shipping fast and iterating in place. Instead, the developer separated all logic into `IconquerCLILib` from the start, accepting the additional discipline that entails in exchange for genuine reusability. The SwiftUI app can import the library and get agent factories and prompt builders without any duplication. That is a call that reflects thinking about the broader system, not just the immediate deliverable.
 
-**The library/executable split.** Making `IconquerCLILib` the real target rather than building logic directly into the executable was a consequential choice. It anticipates future consumers — specifically the SwiftUI app — and prevents the terminal-specific code from becoming a dead end. It's the kind of structural decision that feels unnecessary on day one and essential on day sixty.
+The choice to put all five AI backends behind a single `PlayerAgent` protocol is similarly deliberate. It would have been easier to special-case each backend in the game loop. Instead, the protocol boundary keeps the game engine ignorant of the AI implementation, which is what makes the simulate mode viable for research — any agent, local or remote, LLM or deterministic, can be dropped in without changing the match orchestration logic.
 
-**Three AI backends behind one protocol.** Supporting Ollama, Apple Intelligence, and MCP agents could easily have produced three different code paths through the game loop. Routing all three through the `PlayerAgent` protocol from IconquerMatch kept the game loop clean and made each backend independently swappable. The design proposal artifact in the repository suggests this was an explicit architectural decision rather than something that emerged organically.
-
-**Game modes as first-class citizens.** Shipping Simulate, Replay, and MCP Play alongside standard interactive play signals that the tool was designed for the full range of its target users — not just the developer who wanted a quick way to test the rules engine. AI researchers running batch simulations need Simulate mode; replay and MCP support serve different but equally specific needs. The breadth of modes, achieved in sixteen days, points to a developer who planned the feature surface before writing the first line.
-
-**Working with buggy code deliberately.** The Claude Code session log records two friction events tagged as `buggy_code` within a single multi-task session that nonetheless achieved a `mostly_achieved` outcome. Six commits came out of six messages — a high commit-to-message ratio that suggests the session was focused and outcomes were pushed to completion even when the code misbehaved, rather than abandoned mid-stream.
+The CLAUDE.md working document is worth noting as an artifact of process. Its sections — Session Start, Development Workflow, Key Rules, Quality Gate, References — indicate that the developer codified how the project should be worked on, not just what it should do. That kind of explicit process documentation is unusual in solo projects and signals an understanding that consistency and repeatability matter even when only one person is writing the code.

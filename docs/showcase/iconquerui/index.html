@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem." />
+    <meta name="description" content="A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up | Justin Purnell</title>
+    <title>One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up" />
-    <meta name="twitter:title" content="IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up" />
-    <meta property="og:description" content="A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem." />
-    <meta name="twitter:description" content="A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem." />
+    <meta property="og:title" content="One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library" />
+    <meta name="twitter:title" content="One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library" />
+    <meta property="og:description" content="A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code." />
+    <meta name="twitter:description" content="A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerui" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -135,7 +135,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquerui",
-          "name" : "IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up",
+          "name" : "One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library",
           "position" : 2
         }
       ]
@@ -146,12 +146,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquerui#breadcrumb"
       },
-      "description" : "A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem.",
+      "description" : "A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up",
+      "name" : "One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library",
       "url" : "https://www.justinpurnell.com/showcase/iconquerui"
     }
   ]
@@ -180,26 +180,34 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerUI: Building a Cross-Platform Swift UI Library from the Ground Up</h1>
+      <h1 class="mainTitle">One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A solo developer shipped a multi-platform Swift UI component library targeting macOS, iOS, tvOS, and visionOS in under four weeks, releasing v0.1.0 as a foundation for the broader Iconquer ecosystem.</p>
+          <p>A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code.</p>
         </blockquote>
         <h2>Problem</h2>
-        <p>Modern Swift applications increasingly need to run across Apple’s full platform spectrum — Mac, iPhone, Apple TV, and Apple Vision Pro — without maintaining separate UI codebases. For the Iconquer app, this fragmentation posed a real challenge: how do you build UI components that feel native and appropriate on each platform while keeping the underlying logic unified and testable? The answer was to extract UI concerns into a dedicated package, IconquerUI, purpose-built for cross-platform consistency from day one.</p>
+        <p>Cross-platform games on Apple platforms face a familiar trap: build once for iPhone, then scramble to retrofit the same experience onto Mac, TV, and now Vision Pro. The result is usually four codebases that drift apart, carrying different bugs and different feature sets, maintained by the same small team.</p>
+        <p>IconquerUI was built to break that pattern for iConquer, a turn-based strategy game in the Risk tradition. The game needed to feel native on a touchscreen, a trackpad, a Siri Remote, and eventually a pair of eyes wearing Apple Vision Pro — simultaneously, from a single source of truth. The presentation layer needed to be a <em>library</em> that platform shells embed, not an app that gets forked per target.</p>
+        <p>There was a secondary audience beyond players: developers working on the engine and AI needed a real interface to run against, rather than test harnesses or headless simulations. IconquerUI had to serve both.</p>
         <h2>Approach</h2>
-        <p>The project was structured as a Swift Package Manager library targeting Swift Tools version 6.2, the current frontier of Swift’s concurrency and strict-mode capabilities. Rather than bolting on platform support later, the package manifest was written from the start to declare explicit support for macOS, iOS, tvOS, and visionOS — a decision that forces architectural discipline early, since any platform-specific assumption surfaces immediately as a build error on the unsupported targets.</p>
-        <p>The package exposes two targets: <code>IconquerUI</code>, the library itself, and <code>IconquerUITests</code>, a dedicated test target. This separation signals an intent to treat the UI layer as a verifiable unit rather than a collection of visual intuitions. The single-repository, single-contributor structure kept decision-making tight and iteration fast across the four-week development window.</p>
+        <p>The defining architectural decision was the strict separation of concerns encoded in the package structure. IconquerUI holds no game rules. State flows in from <code>IconquerCore</code>, opponent behavior from <code>IconquerAI</code>, session management from <code>IconquerMatch</code>, and remote play from <code>IconquerClient</code>. The UI layer’s only job is to render that state and forward player intent back — a boundary enforced not by convention but by package dependency declarations.</p>
+        <p>This decomposition meant IconquerUI could target <code>macOS</code>, <code>iOS</code>, <code>tvOS</code>, and <code>visionOS</code> simultaneously under Swift Package Manager without each platform shell needing to reimplement anything. The package is built against Swift tools version 6.2, which brought stricter concurrency guarantees — a meaningful choice for a game where turn state, AI responses, and network events all arrive asynchronously.</p>
+        <p>Documentation was treated as a first-class deliverable. The <code>swift-docc-plugin</code> dependency signals that API documentation was built into the package from the beginning, not retrofitted — consistent with a library that other developers (the platform shells, the test harnesses) need to integrate against.</p>
+        <p>Development ran across roughly six months, from April to October 2026, culminating in the <code>IconquerApp@v0.1.0</code> release across 38 commits on a single branch. The single-contributor, single-branch shape of the history points to a focused build with a clear scope held tightly in one person’s head.</p>
         <h2>Results</h2>
-        <p>Over 27 days — from the first commit on April 10, 2026 to the most recent on May 7, 2026 — the developer moved from an empty repository to a tagged release: <strong>IconquerUI v0.1.0</strong>. Eight commits mark a disciplined, incremental build rather than a single large dump of code. The package is live, versioned, and consumable by the parent Iconquer application or any downstream Swift project that declares it as a dependency.</p>
-        <p>The test target shipped alongside the library itself, meaning the v0.1.0 release is not just functional code but testable code — a meaningful distinction for a UI package where regressions can be subtle and platform-specific.</p>
+        <ul>
+          <li><strong>One SwiftUI codebase, four platforms shipped</strong>: iOS, macOS, tvOS, and visionOS all served from a single library target at v0.1.0.</li>
+          <li><strong>38 commits</strong> across approximately six months, landing a first public release of a multi-platform game UI.</li>
+          <li><strong>A dedicated test target</strong> (<code>IconquerUITests</code>) shipped alongside the library, establishing a testing baseline from the initial release.</li>
+          <li><strong>DocC documentation</strong> integrated into the build pipeline, making the library navigable for developers embedding it in platform shells.</li>
+        </ul>
         <h2>Judgment Calls</h2>
-        <p><strong>Targeting visionOS from the start.</strong> It would have been easy to treat visionOS as a future concern. Instead it was included in the initial platform matrix alongside iOS, macOS, and tvOS. This is a bet that spatial computing is a first-class deployment target for Iconquer, not an afterthought — and structuring for it early avoids the painful refactoring that comes from retrofitting a platform into an already-settled component architecture.</p>
-        <p><strong>Swift 6.2 toolchain.</strong> Adopting the leading-edge tools version means opting into Swift’s strictest concurrency checking. For a UI library that will be consumed across asynchronous rendering contexts on multiple platforms, this is the right kind of early pain — catching data-race hazards at compile time rather than in production.</p>
-        <p><strong>Library over framework.</strong> Packaging this as a Swift library rather than a standalone framework keeps it lightweight and composable. Consumers get what they need without carrying unnecessary overhead, and the package remains easy to audit and extend as the Iconquer product evolves.</p>
-        <p><strong>Separating UI from app logic in the repository structure.</strong> The name <code>IconquerUI</code> against the broader <code>IconquerApp</code> path suggests a deliberate layering: the application shell lives in one place, the reusable interface primitives in another. Even at v0.1.0, this boundary is worth establishing — it’s the difference between a project that scales and one that becomes a monolith.</p>
+        <p><strong>Library, not app.</strong> The most consequential decision made early was to ship a library rather than an application. This forecloses certain shortcuts — you cannot hardcode assumptions about the host window, the navigation model, or the input paradigm — but it pays back in leverage. Every platform shell gets the same UI improvements automatically. This is an architectural bet that the short-term constraint is worth the long-term consistency, and it reflects genuine understanding of how SwiftUI’s abstraction model can be exploited across Apple’s platform family.</p>
+        <p><strong>Hard dependency boundaries.</strong> By taking <code>IconquerCore</code>, <code>IconquerAI</code>, <code>IconquerMatch</code>, and <code>IconquerClient</code> as explicit package dependencies rather than bundling game logic into the UI layer, the developer kept the blast radius of UI changes small and the blast radius of engine changes equally contained. The UI cannot accidentally accumulate business logic when the boundary is a package graph edge, not just a folder convention.</p>
+        <p><strong>Swift 6.2 concurrency.</strong> Adopting Swift tools version 6.2 means the package opts into strict concurrency checking. For a game UI that must handle asynchronous AI turns, match session events, and remote player actions without data races, this is the right call — even if it demands more discipline up front. It reflects a preference for catching problems at compile time rather than in production.</p>
+        <p><strong>DocC from day one.</strong> Treating documentation as a dependency rather than a post-ship task is a judgment call that signals the developer was thinking about IconquerUI as a platform for others to build on, not just a personal project. That orientation shapes every API surface decision made along the way.</p>
       </div>
       <div class="showcase-infographics">
         <img src="/images/showcase/iconquerui-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />

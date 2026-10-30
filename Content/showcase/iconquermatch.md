@@ -1,8 +1,8 @@
 ---
-title: IconquerMatch: Orchestrating Turn-Based Strategy From First Principles
-description: A focused Swift 6 library that separates match lifecycle management from game rules, giving the iConquer ecosystem a single, agent-agnostic conductor for running games end-to-end.
+title: IconquerMatch: Orchestrating the Space Between Rules and Players
+description: The match orchestration layer that wires agents, deadlines, and a rules engine into a complete, replayable game — without knowing or caring how any move was produced.
 date: 2026-05-13 16:37
-lastModified: 2026-05-13
+lastModified: 2026-10-30
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,44 @@ project: iConquer
 published: true
 ---
 
-# IconquerMatch: Orchestrating Turn-Based Strategy From First Principles
+# IconquerMatch: Orchestrating the Space Between Rules and Players
 
-> A focused Swift 6 library that separates match lifecycle management from game rules, giving the iConquer ecosystem a single, agent-agnostic conductor for running games end-to-end.
+> The match orchestration layer that wires agents, deadlines, and a rules engine into a complete, replayable game — without knowing or caring how any move was produced.
 
 ## Problem
 
-Turn-based strategy games carry a deceptive complexity beneath their familiar surface. The rules of play — territory ownership, troop counts, attack resolution — are one problem. But *running* a game is another problem entirely: who moves next, how long they have to decide, what happens when an AI agent goes silent, and how the full sequence of decisions gets preserved for replay or analysis. Without a clear boundary between these concerns, that orchestration logic tends to leak into every consumer of the rules engine, creating duplication and fragility.
+Turn-based strategy games have a classic layering problem. The rules engine knows what moves are legal. The user interface knows how to collect input. But nothing in between knows how to run a *game* — how to bind a human or an AI to a seat, tick the clock on a move request, handle a slow or unresponsive agent, record what happened, and eventually declare a winner.
 
-IconquerMatch was built to draw that boundary cleanly for iConquer, a Risk-style turn-based strategy game. It sits as the middle layer in a three-tier architecture — between `IconquerCore` (the rules engine that knows nothing about runtime) and any consumer application: the `IconquerCLI` terminal client, the SwiftUI app running headless matches in the background, or test harnesses simulating thousands of games with mock agents. The library's job is narrow and explicit: bind players to seats, request moves from agents within deadlines, validate and apply those moves through Core, record everything, and produce a final result.
+IconquerMatch was built to fill that gap inside iConquer, a Risk-style strategy game built by J. Purnell as a Swift multi-platform project. The library sits between `IconquerCore` (the rules engine) and any consuming application — the `IconquerCLI` terminal client, the SwiftUI app, or a test harness running simulated games. Its job is precise: run a complete match from first move to final result, reliably, regardless of what's on the other side of each seat.
+
+Without a dedicated orchestration layer, every consumer would have to reimplement deadline enforcement, fallback behavior, and move recording. With it, the game logic stays in Core, the display logic stays in the app, and the match loop lives exactly once.
 
 ## Approach
 
-Justin Purnell established a design-first workflow before writing production code. A single formal design proposal preceded implementation, and a `CLAUDE.md` file was committed alongside the source — encoding session start procedures, development workflow conventions, quality gates, and references. This is a deliberate working style: the architectural thinking is written down and version-controlled, not just held in the developer's head.
+The library is written in Swift 6.2 and targets macOS, iOS, tvOS, and visionOS, reflecting the broader iConquer platform strategy. It declares two dependencies: `IconquerCore`, which provides the rules engine and move validation primitives, and `swift-docc-plugin`, signaling that public API documentation is treated as a first-class deliverable alongside the code itself.
 
-The central abstraction is `PlayerAgent`, a protocol that decouples move production from match orchestration entirely. Whether a move comes from a human waiting at a terminal, a local deterministic AI, an LLM-backed agent, or an MCP agent over a network connection, `MatchRunner` neither knows nor cares. The protocol surface is the only contract.
+The architectural center of the library is the `PlayerAgent` protocol. Rather than modeling human input and AI opponents as different code paths inside the match runner, Purnell abstracted both behind a single interface. A human typing at a terminal, a local minimax AI, an LLM-backed agent, and an MCP-connected remote agent all satisfy the same protocol contract. `MatchRunner` requests a move, waits up to a configurable deadline, and applies whatever comes back through `IconquerCore`'s validator. What produces the move is entirely outside its concern.
 
-Layered onto this is `SeatBinding`, which maps players to agents and carries fallback policy — defining what happens when an agent fails to respond: forfeit, retry, or substitute. Combined with deadline-based move requests, this design prevents a class of failure modes (hung games from slow or unresponsive AI) that only surface at runtime and are painful to debug after the fact. The deadline mechanism was a first-class design decision, not a patch.
+`SeatBinding` handles the mapping of players to agents and defines fallback policy when an agent fails or times out — forfeit, retry, or substitute. This makes failure modes explicit rather than emergent. A match cannot silently hang; it has a declared policy for every seat.
 
-Full move recording via `MoveRecord` was built in from the start rather than added as an afterthought. Every move in a match is captured, enabling replay, analysis, and parity testing across agent implementations. The library targets macOS, iOS, tvOS, and visionOS, and is authored in Swift 6 with `swift-docc-plugin` as its only dependency — a deliberately minimal footprint.
+Every applied move is captured as a `MoveRecord`, building a complete, ordered history over the course of the match. This structure enables replay, post-game analysis, and the kind of deterministic parity testing where two agents play the same game twice and produce identical histories.
+
+The project includes a `CLAUDE.md` file that defines session start procedure, development workflow, quality gate requirements, and references — evidence that the working environment itself was designed deliberately, with repeatable process built in before development scaled.
 
 ## Results
 
-IconquerMatch shipped its initial release — v0.1.0 — sixteen days after the first commit, across five focused commits by a single contributor. The library is live on one branch with a clean release tag. The `IconquerMatch` and `IconquerMatchTests` targets are both present, establishing the testing surface for future agent simulation work. The Swift 6 toolchain adoption means the library is positioned for strict concurrency correctness, which matters for a component that will eventually coordinate async move requests across multiple agents simultaneously.
+IconquerMatch shipped three versioned releases — v0.1.0, v0.1.1, and v0.1.2 — across approximately five months of active development, from April to August 2026. The library accumulated 19 commits across that span, with a single contributor driving the entire arc from initial scaffold to stable minor release.
+
+The project ships with a dedicated test target, `IconquerMatchTests`, which supports the library's role as infrastructure for test harnesses that need to simulate full games with mock agents. A library whose consumers include test harnesses must itself be testable; the target structure reflects that requirement directly.
+
+The three-release cadence across a focused timeline points to deliberate milestone management — shipping working software at each increment rather than accumulating changes toward a single large release.
 
 ## Judgment Calls
 
-Several decisions in this project reflect craft rather than just output.
+The most consequential design decision in IconquerMatch is the one that isn't visible in the code: the choice not to model player types inside the orchestration layer at all. Treating human input and every variety of AI opponent as interchangeable `PlayerAgent` implementations means the match runner is stable against a category of change — adding new agent types — that would otherwise require modifying core infrastructure. It's the kind of seam that only gets placed correctly when it's placed before the system grows.
 
-**The three-tier split itself.** Separating `IconquerCore`, `IconquerMatch`, and consumer applications into distinct packages is a choice with real cost — more moving parts, more explicit interfaces — and real payoff: consumers like `IconquerCLI` and the SwiftUI app can delegate entirely to `MatchRunner` without reimplementing any orchestration logic. The design proposal artifact suggests this boundary was deliberated, not stumbled into.
+The explicit deadline and fallback policy architecture is a similar judgment. Hung games from slow agents are a failure mode that's easy to ignore during early development when every agent is a fast local function. Purnell encoded the deadline as a first-class concept and made fallback behavior a declared property of each seat binding, not an afterthought. The system can't accidentally behave badly in that case because there's no code path that allows it.
 
-**`PlayerAgent` as a protocol, not a class hierarchy.** Making the agent abstraction a protocol means any type can produce moves — including test doubles, mock agents, and future LLM or MCP integrations — without inheriting from a base class. This is the kind of decision that looks obvious in retrospect and is easy to get wrong under time pressure.
+Choosing `swift-docc-plugin` as a project dependency is a smaller but telling signal. Documentation tooling gets added to projects for one of two reasons: organizational mandate, or genuine belief that the public API surface needs to be understood by someone other than the author. For a solo library in a multi-package game ecosystem, it's the latter — an acknowledgment that `IconquerMatch` is infrastructure, and infrastructure has to be legible.
 
-**Deadline and fallback policy as first-class domain concepts.** It would have been simpler to not build deadlines in at v0.1.0 and handle the "slow AI" problem later. Purnell treated it as a correctness requirement from the start. `SeatBinding` carrying explicit fallback policy (forfeit, retry, substitute) means the library's behavior under failure is defined and testable, not undefined and surprising.
-
-**`CLAUDE.md` as a workflow artifact.** Committing a file that encodes session start procedures, development conventions, and quality gates into the repository itself signals a developer who thinks about the conditions under which good work gets done — not just the work itself. It makes the project's working agreements explicit and reviewable.
+The `CLAUDE.md` artifact completes the picture. Defining a quality gate, a development workflow, and session start procedure before the library is finished reflects the same instinct that produced the `PlayerAgent` abstraction: design the environment first, then build inside it.

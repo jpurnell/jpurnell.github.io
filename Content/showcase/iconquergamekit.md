@@ -1,8 +1,8 @@
 ---
-title: IconquerGameKit: Laying the Foundation for a Cross-Platform Game Logic Library
-description: A freshly minted Swift 6.2 package that establishes the scaffolding for shared game logic across Apple's entire platform ecosystem.
+title: IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest
+description: A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required.
 date: 2026-05-12 15:56
-lastModified: 2026-05-12
+lastModified: 2026-10-30
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,35 +10,34 @@ project: iConquer
 published: true
 ---
 
-# IconquerGameKit: Laying the Foundation for a Cross-Platform Game Logic Library
+# IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest
 
-> A freshly minted Swift 6.2 package that establishes the scaffolding for shared game logic across Apple's entire platform ecosystem.
+> A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required.
 
 ## Problem
 
-Building a game that runs well on iPhone, Apple TV, Mac, Apple Watch, and Vision Pro is not a matter of writing one codebase and hoping for the best. Platform-specific quirks, input models, and performance characteristics demand that shared logic be isolated deliberately — cleanly separated from any one host environment. The challenge IconquerGameKit sets out to address is providing a reliable, testable game logic layer that any surface in the Iconquer family can depend on without coupling itself to a specific platform's frameworks or assumptions.
+The iConquer universe spans five Apple platforms — iOS, macOS, tvOS, watchOS, and visionOS — each requiring its own app shell. Without a shared coordination layer, every shell would need to independently wire together the game engine (`IconquerCore`), the match state (`IconquerMatch`), and the AI opponent (`IconquerAI`). That's three packages, one turn loop, and five different teams of opportunity to get it subtly wrong. Drift between platforms is not a bug you catch easily; it's the kind of inconsistency that erodes player trust over time.
+
+`IconquerGameKit` exists to close that gap. Its mission, as stated in the project's own `MASTER_PLAN.md`, is to serve as the "shared game brain for all iConquer platform apps" — a single `GameViewModel` that SwiftUI views bind to, with the full complexity of the engine-match-AI handshake hidden behind one observable interface.
 
 ## Approach
 
-Justin initialized IconquerGameKit as a modern Swift package targeting Swift 6.2, the toolchain's latest structured-concurrency-era release. Rather than scoping the library narrowly, he declared support for all five of Apple's current platforms — macOS, iOS, tvOS, watchOS, and visionOS — from the outset. That upfront declaration is itself an architectural commitment: every API surface added to the library will need to justify its presence across the full matrix, discouraging the kind of platform-creep that tends to make shared libraries quietly un-shareable.
+The architectural decision at the center of this package is deliberate constraint: callers get one thing. Rather than exposing `IconquerCore`, `IconquerMatch`, and `IconquerAI` as composable primitives and trusting each host app to assemble them correctly, `IconquerGameKit` makes composition the library's job. `GameViewModel` is the public surface area; the three dependencies are implementation details.
 
-The package ships with two targets baked in from the first commit: `IconquerGameKit` (the production library) and `IconquerGameKitTests` (its test suite). Standing up the test target at project creation, before any feature code exists, signals an intention to treat testability as a property of the architecture rather than something retrofitted later.
+Built against Swift Tools version 6.2, the package targets the full Apple platform matrix from a single codebase — macOS, iOS, tvOS, watchOS, and visionOS all declared as supported platforms. Documentation is treated as a first-class deliverable, with `swift-docc-plugin` included as a dependency, signaling that this package is meant to be consumed by others who need to understand it, not just by the original author.
 
-The two-commit history — both landing within 18 seconds of each other on April 10, 2026 — reads as a deliberate initialization sequence: repository scaffolding followed immediately by package configuration, with no loose exploration commits muddying the record.
+The package structure is minimal by design: one library target and one test target. Keeping the surface area small is itself a judgment — a package that does too many things becomes the new coordination problem it was meant to solve.
 
 ## Results
 
-- **v0.1.0 shipped** — a versioned, tagged release exists, meaning the package is already suitable for consumption as a dependency by other packages in the Iconquer ecosystem.
-- **Full platform matrix declared**: macOS, iOS, tvOS, watchOS, visionOS — the broadest possible Apple coverage, locked in at day one.
-- **Swift 6.2 tools version** — the project enters the world at the current language standard, avoiding the technical debt of inheriting older concurrency models.
-- **Test target present from the initial commit**, establishing a test-first contract before any domain logic is authored.
+`IconquerGameKit` shipped its `v0.1.0` release after 16 commits across roughly five months of development, from April to September 2026. The package delivers on its core promise: a single `GameViewModel` that platform shells can bind to, built-in maps so a host app can start a game with zero assets of its own, and a turn loop centralized in one place. Every iConquer platform app that adopts this package gets identical game logic without writing a line of engine integration code.
 
 ## Judgment Calls
 
-**Versioning immediately.** Tagging `v0.1.0` on a two-commit repository might look premature, but it reflects sound dependency management thinking. Downstream packages in a multi-repo game project need a stable ref to pin against. A named release — even a nascent one — is more trustworthy than a floating branch tip. Justin made the call that a stable identity matters more than waiting for the library to feel "complete."
+**Making the turn loop non-negotiable.** The most important decision here is what the package does *not* let callers do. By keeping the turn loop inside `GameViewModel` rather than exposing lifecycle hooks for host apps to manage, the package makes correctness structural rather than conventional. A platform shell that tries to bypass the turn loop would have to stop using `GameViewModel` entirely — which is the right kind of friction.
 
-**All five platforms, day one.** It would have been simpler to start with iOS and macOS and add watchOS and tvOS later. The risk of that approach is that late-added platforms surface architectural assumptions baked in during the iOS-first phase — assumptions about screen size, input, or lifecycle that quietly break smaller targets. By declaring the full platform surface at initialization, every subsequent design decision is made with the constraint already present.
+**Bundling maps as a default.** Including built-in maps is a small decision with large downstream consequences. It means the integration story for a new platform shell is genuinely zero-configuration: bind views to `GameViewModel`, pick a map from the bundle, and ship. This lowers the activation energy for adopting the package and reduces the chance that a quick prototype skips the shared library because "setting it up takes time."
 
-**Swift 6.2 without hesitation.** Adopting the latest tools version means opting into Swift 6's strict concurrency checking. For a game logic library that will eventually model state, timers, and potentially networked play, building on structured concurrency from the ground up is the right foundation — even if it asks more of contributors early.
+**Five platforms, one codebase, from the start.** Declaring support for all five Apple platforms at the outset rather than starting with iOS and expanding later reflects a clear understanding of the project's purpose. `IconquerGameKit` exists precisely because platform proliferation creates coordination risk. Scoping it narrowly at the start would have undermined the reason it was built.
 
-The project is young, but its shape is intentional. IconquerGameKit starts narrow on code and wide on commitment, which is exactly the right posture for a shared library that other work will depend on.
+**Documentation as infrastructure.** Including `swift-docc-plugin` in a library with 16 commits and a single contributor suggests that the developer is thinking about this package as something other people will use — treating documentation tooling as part of the build pipeline rather than something to add later. That's a mark of a developer who has been on the receiving end of a poorly documented dependency and decided not to pass that cost along.

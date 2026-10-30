@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A focused Swift package that delivers reproducible, in-process computer opponents across Apple’s entire platform family — without a single network call or LLM dependency in sight." />
+    <meta name="description" content="In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift Game Engine | Justin Purnell</title>
+    <title>IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift Game Engine" />
-    <meta name="twitter:title" content="IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift Game Engine" />
-    <meta property="og:description" content="A focused Swift package that delivers reproducible, in-process computer opponents across Apple’s entire platform family — without a single network call or LLM dependency in sight." />
-    <meta name="twitter:description" content="A focused Swift package that delivers reproducible, in-process computer opponents across Apple’s entire platform family — without a single network call or LLM dependency in sight." />
+    <meta property="og:title" content="IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift" />
+    <meta name="twitter:title" content="IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift" />
+    <meta property="og:description" content="In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim." />
+    <meta name="twitter:description" content="In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerai" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -135,7 +135,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquerai",
-          "name" : "IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift Game Engine",
+          "name" : "IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift",
           "position" : 2
         }
       ]
@@ -146,12 +146,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquerai#breadcrumb"
       },
-      "description" : "A focused Swift package that delivers reproducible, in-process computer opponents across Apple’s entire platform family — without a single network call or LLM dependency in sight.",
+      "description" : "In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift Game Engine",
+      "name" : "IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift",
       "url" : "https://www.justinpurnell.com/showcase/iconquerai"
     }
   ]
@@ -180,29 +180,32 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerAI: Building a Deterministic AI Strategy Layer for a Pure-Swift Game Engine</h1>
+      <h1 class="mainTitle">IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A focused Swift package that delivers reproducible, in-process computer opponents across Apple’s entire platform family — without a single network call or LLM dependency in sight.</p>
+          <p>In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim.</p>
         </blockquote>
         <h2>Problem</h2>
-        <p>As the Iconquer game ecosystem grew into a multi-repo architecture — a core engine, a CLI simulator, an MCP bridge for LLM opponents — one gap remained: reliable, deterministic computer opponents that could run entirely in-process. The CLI’s <code>simulate</code> mode needed opponents it could trust across seeds. Future tournament harnesses needed strategies they could replay. And the eventual <code>IconquerApp</code> needed computer players that would work offline on every Apple platform, from iOS to visionOS, without requiring an active model server or network connection.</p>
-        <p>The challenge wasn’t just implementing game AI. It was drawing the right boundary. LLM-driven players exist in the ecosystem — but they live in <code>IconquerMCP</code>, connecting to the engine over the Model Context Protocol. IconquerAI’s mandate was the opposite: pure Swift, zero network paths, zero third-party LLM SDKs. Getting that separation right from the start would determine whether the package stayed composable or became a liability.</p>
+        <p>IconquerAI exists to solve a specific and underappreciated problem in game AI development: most game opponent engines are either too heavyweight to embed or too opaque to trust. They run in separate processes, mutate game state directly, and produce win-rate claims backed by nothing more than a count and a gut feeling.</p>
+        <p>IconquerAI was built as the pure-Swift AI layer for the Iconquer game system — a package that ships learned agents conforming to <code>PlayerAgent</code> from <code>IconquerMatch</code>, alongside the training pipeline that produced them and the weights those agents carry into production. It is consumed by <code>IconquerCLI</code> for <code>simulate</code> and <code>tournament</code> subcommands, and is designed to eventually power computer opponents inside <code>IconquerApp</code> on Apple platforms. The goal was an AI layer that could be embedded directly in-process, seeded for deterministic replay, and trusted because its claims were measured rather than asserted.</p>
         <h2>Approach</h2>
-        <p>Justin grounded the package in a single protocol — <code>PlayerStrategy</code> — and made a deliberate call to mark it <code>async</code> from day one. The <code>PlayerStrategy</code> conformers shipping now (Random, Greedy) don’t need async, but the protocol doesn’t force a migration later when a strategy backed by CoreML or MLX inference arrives. That forward compatibility was baked in before a line of strategy logic was written.</p>
-        <p>The return type was equally considered. Strategies emit <code>[GameMove]</code> rather than mutating state directly. This action-enum pattern had been deferred from Phase 1 of <code>IconquerCore</code> and finally landed in <code>IconquerCore@v0.2.0</code>; IconquerAI was designed explicitly around it. The driver applies moves; strategies only reason about them. That separation keeps strategies testable in isolation and prevents any strategy from becoming a hidden mutation path into game state.</p>
-        <p>The dependency list reflects the package’s philosophy: <code>mlx-swift</code> for when on-device ML strategies arrive, and <code>swift-docc-plugin</code> to keep documentation a first-class artifact. Swift Tools version 6.0 and explicit platform declarations (<code>macOS</code>, <code>iOS</code>, <code>tvOS</code>, <code>visionOS</code>) signal that cross-platform correctness is a constraint, not an afterthought.</p>
-        <p>Three design proposals preceded implementation, and a <code>CLAUDE.md</code> drove a design-first workflow — with architecture sections covering session startup, development workflow, key rules, a quality gate, and references. This isn’t documentation written after the fact; it’s the scaffolding decisions were made inside.</p>
+        <p>The architectural foundation of IconquerAI is a deliberate separation of concerns expressed through Swift’s type system. Agents emit moves — they do not touch game state. The driver applies them. This single constraint keeps agents testable in isolation, composable in tournament harnesses, and safe to run concurrently without locks.</p>
+        <p>The <code>PlayerAgent</code> protocol is <code>async</code> by design. That decision, made early, means agents that touch I/O — whether that’s MLX inference or an MCP provider — plug into the same protocol surface without requiring a migration later. The package targets macOS, iOS, tvOS, and visionOS simultaneously, and MLX-swift’s integration via <code>mlx-swift</code> as a direct dependency means inference runs on-device using Apple Silicon’s unified memory rather than round-tripping to a server.</p>
+        <p>The training pipeline lives in the <code>iconquer-train</code> executable target, separate from the agent library itself. Self-play generates experience, weights are evaluated, and the pipeline refuses to persist weights that did not improve — a small rule with significant consequences for model hygiene. The <code>iconquer-dashboard</code> target provides instrumentation for monitoring training runs.</p>
+        <p>The package is built on Swift Tools version 6.2 and leans on <code>SwiftCLIKit</code> for command-line ergonomics and <code>swift-docc-plugin</code> for documentation generation, signaling that this is infrastructure meant to be read and maintained, not just run.</p>
         <h2>Results</h2>
-        <p>IconquerAI shipped <code>v0.1.0</code> across 18 commits from a single contributor over roughly five weeks (April 8 to May 11, 2026). The package delivers its core targets — <code>IconquerAI</code> (the strategy library), <code>iconquer-train</code> (a training harness), <code>iconquer-dashboard</code>, and <code>IconquerAITests</code> — against a Swift 6.0 toolchain with strict concurrency enabled. It is consumed by <code>IconquerCLI</code> for simulation mode and positioned for integration into <code>IconquerApp</code> and Phase 3+ tournament infrastructure.</p>
-        <p>The <code>IconquerAITests</code> target provides the test baseline against which the determinism guarantee is validated: strategies seeded with the same RNG value produce the same game moves, enabling reproducible simulation runs.</p>
+        <p>Over roughly six months — first commit April 8, 2026, latest October 6, 2026 — the project reached five tagged releases: v0.1.0 through v0.4.0, with a patch release at v0.3.1 indicating active maintenance and real usage pressure between minor versions. Ninety-eight commits from a single contributor across three branches reflects sustained, disciplined iteration rather than a burst of activity followed by neglect.</p>
+        <p>The package ships four targets: the core <code>IconquerAI</code> library, the <code>iconquer-train</code> self-play training executable, the <code>iconquer-dashboard</code> instrumentation tool, and <code>IconquerAITests</code>. Trained model weights are bundled as part of the package, meaning consumers of <code>IconquerCLI</code> get working AI opponents without any external model download or setup step.</p>
         <h2>Judgment Calls</h2>
-        <p><strong>Async on a protocol that doesn’t need it yet.</strong> Making <code>PlayerStrategy</code> async when Random and Greedy strategies are synchronous computations is a bet on future work. Justin made it anyway, explicitly to avoid a protocol migration when CoreML or MLX inference enters the picture. That’s the kind of call that looks unnecessary until the moment it proves essential.</p>
-        <p><strong>The “blast radius of a fan” boundary.</strong> The MASTER_PLAN is candid about the design philosophy: LLM dependencies, network code, third-party model SDKs — none of it belongs here. The phrase “blast radius of a fan” captures how Justin thinks about coupling. If something in the LLM or network layer fails, breaks, or changes API, IconquerAI shouldn’t feel it. The boundary isn’t just architectural taste; it’s a reliability and maintenance argument.</p>
-        <p><strong>Deferring action types until the core was ready.</strong> <code>[GameMove]</code> as a return type required <code>IconquerCore@v0.2.0</code> to exist first. Rather than inventing a parallel representation or coupling strategies to mutable state, Justin waited for the right primitive to land in the engine before designing around it. The patience shows.</p>
-        <p><strong>A single Claude Code session, honestly annotated.</strong> The recorded session logged friction — one misunderstood request, one wrong approach — and landed on <code>mostly_achieved</code>. That kind of honest accounting in a <code>CLAUDE.md</code>-driven workflow suggests a developer who uses tooling to accelerate judgment, not to obscure where judgment was still required.</p>
+        <p>The most revealing decisions in IconquerAI are not in the code — they are in the constraints the developer chose to impose on the system before writing it.</p>
+        <p><strong>Benchmark criteria are pre-registered in git before the runs that judge them.</strong> This is the discipline of a developer who has seen post-hoc rationalization masquerade as validation. By committing evaluation thresholds before training runs produce numbers, the project eliminates the temptation to adjust the bar to meet the result. It’s a practice borrowed from clinical research and almost never seen in game AI side projects.</p>
+        <p><strong>Win rates carry Wilson confidence intervals and sample sizes.</strong> The <code>WinRateEstimate</code> type doesn’t just store a percentage — it stores the statistical context required to interpret that percentage. A 60% win rate from 20 games means something very different than 60% from 2,000 games, and IconquerAI’s type system encodes that difference explicitly.</p>
+        <p><strong>The training pipeline refuses to save weights it did not improve.</strong> This is a small guard with a large effect: it prevents a common failure mode where a training run that converged early, then wandered, overwrites a better checkpoint. The constraint is enforced in code rather than left to the operator’s discipline.</p>
+        <p><strong>Async-first protocol design.</strong> Making <code>PlayerAgent</code> <code>async</code> from day one, rather than adding <code>async</code> variants later, reflects the kind of foresight that only comes from having lived through a protocol migration. MLX inference is inherently asynchronous; designing the protocol to accommodate that from the start keeps the abstraction honest.</p>
+        <p><strong>Deterministic under fixed seeds.</strong> Scripted agents accept an explicit RNG seed so that any game can be replayed exactly. This is not a convenience feature — it is the foundation of a debugging workflow. When a training run produces an unexpected result, the ability to reproduce the exact game sequence that caused it is the difference between a bug you can find and one you can only approximate.</p>
+        <p>Taken together, these decisions describe a developer who thought carefully about what it means to <em>trust</em> a game AI system — and then built the infrastructure to earn that trust rather than assume it.</p>
       </div>
       <div class="showcase-infographics">
         <img src="/images/showcase/iconquerai-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />

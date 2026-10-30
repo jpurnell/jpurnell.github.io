@@ -1,8 +1,8 @@
 ---
-title: IJSCore: Encoding Institutional Judgment into the Development Loop
-description: A single-day architectural sprint that transformed a theoretical framework for AI-assisted governance into a portable, file-based Swift library — before a single production session began.
+title: IJSCore: Encoding Institutional Judgment as Enforceable Tooling
+description: A Swift library that transforms quality gate telemetry and manual overrides into a self-reinforcing organizational memory, preventing AI-assisted development teams from repeatedly rediscovering the same hard lessons.
 date: 2026-05-12 15:57
-lastModified: 2026-05-12
+lastModified: 2026-10-30
 tags: showcase, project, infrastructure, org-judgement, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,44 +10,42 @@ project: Internal Infrastructure
 published: true
 ---
 
-# Encoding Institutional Values into the Development Loop
+# IJSCore: Encoding Institutional Judgment as Enforceable Tooling
 
-> A single-day architectural sprint that transformed a theoretical framework for AI-assisted governance into a portable, file-based Swift library — before a single production session began.
+> A Swift library that transforms quality gate telemetry and manual overrides into a self-reinforcing organizational memory, preventing AI-assisted development teams from repeatedly rediscovering the same hard lessons.
 
 ## Problem
 
-AI-assisted development introduces a subtle and compounding failure mode: each new session starts cold. Without persistent memory of past decisions, overrides, and rationale, AI agents and human practitioners alike fall into what the project's MASTER_PLAN.md explicitly names "contextual naivety" and "confident wrongness." The wrong answer is delivered with full confidence because the system has no memory that this ground was already contested and resolved.
+Every development organization that leans on AI-assisted tooling faces a quiet, compounding failure mode: each new session starts naive. The AI agent — or the junior developer, or the onboarding engineer — has no memory of why a particular shortcut burned the team last quarter, why a specific override was rejected, or what the accumulated institutional logic behind a quality gate actually is. The result is what IJSCore's own MASTER_PLAN.md names directly: *contextual naivety* and *confident wrongness*.
 
-The broader quality-gate-swift ecosystem had quality gates, but those gates were capturing ephemeral events — a failed check, a manual override, a stakeholder approval. None of that signal was being transformed into durable organizational wisdom. The telemetry existed; the feedback loop did not.
+IJSCore was built to close that loop. It sits inside the `quality-gate-swift` ecosystem and acts as the memory and reasoning layer for quality gate decisions. When a gate fires, when a Decision Owner approves an exception, when a Red-Team Reviewer surfaces a failure mode — those events don't evaporate. They become calibration data. That data is refined into Institutional Pulse documents, which feed back into the start of every subsequent development session, raising the floor of what the system knows before a single line of code is written.
+
+The project serves four distinct roles simultaneously: Decision Owners who carry formal authority over high-risk artifacts, Practitioners producing code through the broader ecosystem, Red-Team Reviewers tasked with adversarial challenge, and AI agents that must recover institutional context before beginning work. Serving all four with the same artifact format — and keeping that format portable enough for any LLM, cloud or local — was a non-negotiable constraint from the start.
 
 ## Approach
 
-JPurnell's response was architectural before it was technical. Seven design proposals were drafted and committed as first-class artifacts, establishing a design-first workflow that forced every implementation decision to be preceded by a written rationale. The MASTER_PLAN.md was treated not as documentation written after the fact, but as the governing contract for the system's mission and scope.
+Jpurnell made a foundational architectural bet early: all artifacts are Markdown and JSON. No proprietary database, no vendor-locked schema, no dependency on a specific cloud provider's embedding store. The entire Institutional Pulse lives in files that any text-based LLM can read directly. This is not a limitation — it's the portability guarantee that makes the closed loop possible across heterogeneous environments.
 
-The system is structured around three named roles — Decision Owners, Practitioners, and Red-Team Reviewers — plus a fourth constituency that distinguishes this project from conventional tooling: AI Agents, treated as first-class consumers of institutional context. Designing explicitly for MCP-ready agents shaped every interface decision.
+The dependency graph reflects considered choices. `quality-gate-corpus-kit` and `quality-gate-types` establish the shared vocabulary for gate events and telemetry. `BusinessMath` handles the believability-weighted feedback calculations that underpin the Dalio-inspired scoring model. `Yams` provides YAML serialization for human-readable configuration artifacts that practitioners and Decision Owners are expected to read and edit directly. `swift-argument-parser` powers the `ijs-telemetry` command-line target, making the system scriptable from CI pipelines without ceremony. `swift-docc-plugin` signals that documentation is treated as a first-class deliverable, not an afterthought.
 
-The toolchain reflects deliberate constraints. Swift 6.0 enforces strict concurrency correctness from the start. Yams handles YAML serialization, keeping all artifacts in human-readable Markdown and JSON — a specific architectural choice that ensures no proprietary database lock-in and compatibility with any LLM, cloud or local. swift-argument-parser covers the CLI surface for `ijs-telemetry`, while swift-docc-plugin signals an intent to treat documentation as a shipped artifact, not an afterthought. The separation into `IJSCore` (library), `ijs-telemetry` (CLI), and `IJSCoreTests` (test target) draws clean boundaries between the domain logic, the operator interface, and the verification layer.
+The theoretical foundations are explicit and intentional. Wingard's five-dimension Judgment System Audit and Dalio's believability-weighted feedback loops are not inspiration — they are encoded directly into the tooling's logic. This is the project's core differentiator: *Judgment as Code*. The system doesn't just log decisions; it weights them by the credibility of the decision-maker and uses that weighting to calibrate future gates.
 
-The conceptual foundation is explicit: Wingard's five-dimension Judgment System Audit and Dalio's believability-weighted feedback loops are encoded as automated, enforceable tooling rather than left as management philosophy. The Institutional Pulse document — a summarized artifact distilled from accumulated telemetry and overrides — becomes the mechanism by which lessons re-enter future sessions.
+The CLAUDE.md present in the repository is itself an artifact of the system's philosophy — a structured context document that ensures any agent or developer entering the codebase begins with institutional orientation rather than a blank slate.
+
+The project targets macOS and is authored against Swift Tools version 6.2, keeping it current with the strict concurrency model that Swift 6 enforces — a meaningful choice for a system designed to process telemetry events that may arrive concurrently from multiple gate sources.
 
 ## Results
 
-The entire foundation was laid in a single four-hour working session on April 28, 2026, across 7 commits from first to final. What shipped in that window:
+IJSCore reached its 1.1.0 release across 59 commits over a six-month span, from late April through late October 2026. The repository carries three distinct targets — `IJSCore` (the library), `ijs-telemetry` (the CLI), and `IJSCoreTests` (the test suite) — reflecting a clean separation between the embeddable core, the operator-facing interface, and the verification layer. Five branches indicate active parallel development across feature work, consistent with a project still in focused expansion.
 
-- A defined package architecture with three targets covering library, CLI, and test surface
-- Seven design proposals establishing the rationale layer before implementation
-- A MASTER_PLAN.md that functions as a living governance document, not just a readme
-- A CLAUDE.md defining session start protocol, development workflow, quality gate rules, and key references — ensuring the system can onboard an AI agent with institutional context from commit one
-- Swift 6.0 strict concurrency compliance as a baseline, not a retrofit
-
-The project is macOS-native and dependency-minimal, with all state represented as files that can be read, diffed, and committed.
+The 1.1.0 designation suggests a stable public API has been established and at least one meaningful iteration beyond the initial release has shipped — the system has moved from proving the concept to refining the contract.
 
 ## Judgment Calls
 
-**Designing for AI agents as first-class users.** Most tooling treats AI assistants as consumers of documentation. IJSCore inverts this: the Institutional Pulse exists specifically to be ingested at session start, and the CLAUDE.md defines exactly how that ingestion should work. This required deciding, before writing implementation code, what an AI agent actually needs to recover context — and then building toward that answer.
+The most revealing decision in IJSCore is the choice to encode *specific theoretical frameworks* — Wingard and Dalio — rather than inventing a proprietary scoring model. This is an act of epistemic humility with a practical payoff: the system's judgment criteria are auditable by anyone who has read the source material, which means Decision Owners can contest the weighting and Red-Team Reviewers have a shared vocabulary for challenge. The framework isn't hidden inside an opaque algorithm; it's named, documented, and enforceable.
 
-**File-based portability as a hard constraint.** Choosing Markdown and JSON over any structured database was a deliberate trade-off: some query expressiveness in exchange for complete portability, LLM compatibility, and auditability through standard version control. That constraint shapes every data model decision downstream.
+The file-based portability constraint deserves equal attention. A database would have been faster to query and easier to index. Jpurnell chose files anyway — specifically because the target users include AI agents running in environments where a database connection cannot be assumed. The artifact format was designed around the weakest consumer in the system, which is the correct direction to optimize.
 
-**Seven design proposals before seven commits.** The 1:1 ratio of design artifacts to commits in the initial sprint is not coincidence — it reflects a working style where written architectural thinking precedes code. In a project whose entire mission is preventing "confident wrongness," it would be internally inconsistent to ship without recorded rationale. The design-first workflow is itself a demonstration of the system's values.
+The `ijs-telemetry` CLI target as a discrete artifact, rather than a script bolted onto the library, reflects an understanding that operators need a stable, scriptable surface they can invoke from CI without depending on the library's internal API. Keeping those contracts separate means the library can evolve without breaking pipeline integrations.
 
-**Encoding named frameworks rather than inventing new ones.** Rather than creating a novel governance vocabulary from scratch, JPurnell grounded the audit dimensions in Wingard's Judgment System Audit and the feedback-weighting in Dalio's believability model. This decision trades novelty for credibility and communicability — practitioners and decision owners can cross-reference the source frameworks rather than learning a proprietary lexicon.
+Finally, the CLAUDE.md file in the repository root is the system eating its own cooking: a structured context document that instantiates the very pattern IJSCore exists to enforce — begin every session with institutional orientation, not a blank slate. The meta-commentary is intentional and clean.

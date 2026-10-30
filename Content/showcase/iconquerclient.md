@@ -1,8 +1,8 @@
 ---
-title: IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems
-description: In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target.
+title: Bridging the Transport Gap: IconquerClient's Transparent Remote Play Architecture
+description: A SwiftNIO-backed WebSocket client library that makes a remote iConquer game session indistinguishable from a local one — and refuses to be less secure than its URL implies.
 date: 2026-05-12 15:56
-lastModified: 2026-05-12
+lastModified: 2026-10-30
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,36 +10,38 @@ project: iConquer
 published: true
 ---
 
-# IconquerClient: A Cross-Platform Swift Networking Client Built for Modern Apple Ecosystems
+# Bridging the Transport Gap: IconquerClient's Transparent Remote Play Architecture
 
-> In roughly two weeks and three focused commits, a lean Swift package took shape — bringing structured networking and async I/O to macOS, iOS, tvOS, and visionOS under a single, well-tested library target.
+> A SwiftNIO-backed WebSocket client library that makes a remote iConquer game session indistinguishable from a local one — and refuses to be less secure than its URL implies.
 
 ## Problem
 
-Networked applications across Apple's platform family often repeat the same boilerplate: connection management, logging integration, async coordination. When the Iconquer ecosystem needed a dedicated client library, the goal was to build something reusable and portable — not another one-off networking layer buried inside a single app target. The challenge was delivering a clean abstraction over Swift NIO's event-driven I/O that felt natural to Swift 6 consumers across every relevant Apple platform.
+Multiplayer games built with a shared local-and-remote codebase face a persistent UI problem: the presentation layer has to know which transport it's talking to. Branch on `isRemote`, thread connection state through view models, handle opaque errors from the network stack — it compounds fast. IconquerClient was built to eliminate that branching entirely for the iConquer ecosystem.
+
+The library serves a specific triangle of consumers: `IconquerApp` and `IconquerUI` on the remote-play path, any Swift client that needs to join a hosted iConquer game, and test harnesses that need to exercise the server's protocol directly. All three of those use cases demand the same thing: a session that behaves like a local game, regardless of what's underneath.
+
+The secondary problem is infrastructure reach. URLSession WebSockets are a Apple-platform-only story. IconquerClient was built from the start to treat server-side Swift and Linux as first-class targets, which ruled out URLSession as a foundation.
 
 ## Approach
 
-The library was structured as a focused Swift Package Manager package, targeting Swift tools version 6.2 and declaring explicit platform support for macOS, iOS, tvOS, and visionOS from the outset. Rather than writing a bespoke I/O layer, the project reached for `swift-nio` as the async networking foundation — a deliberate choice that trades a lighter dependency footprint for production-grade event loop management and connection handling without reinventing low-level primitives.
+The architectural centerpiece is the transport abstraction: a remote game session presented behind the same interface shape as a local one. The UI layer has no branch for "am I talking to a WebSocket or to an in-process engine?" — IconquerClient's conformance to whatever session protocol `IconquerCore` defines handles that. This keeps the presentation layer honest and keeps the library's contract narrow.
 
-Alongside `swift-nio`, `swift-log` was brought in as the observability backbone. Tying log output to the standard Swift logging ecosystem means consumers can route IconquerClient's diagnostic output through their own logging handlers — a small but meaningful integration point for library users who care about operational visibility.
+SwiftNIO is the networking substrate, pulled in alongside `SwiftTLSKit` for TLS handling. That stack compiles and runs on Linux, meaning the same library can be used in server-side test harnesses and in an iOS app without conditional compilation gymnastics. The Swift 6.2 toolchain and strict concurrency settings were chosen to make the async transport story sound from the start, not retrofitted later.
 
-Documentation was treated as a first-class concern from the start: the inclusion of `swift-docc-plugin` signals an intent to ship developer-facing docs as part of the build pipeline, not as an afterthought.
+The error model is typed rather than opaque. Connection failures and server rejections surface as concrete error cases, not `Error`-erased blobs that callers have to inspect with `as?` casts. That decision keeps integration sites clean and makes test harnesses straightforward to write.
 
-The package is organized into two targets — `IconquerClient` and `IconquerClientTests` — keeping the production surface clean and the test boundary explicit.
+The scheme-enforcement rule is the sharpest single policy in the library: `wss://` means TLS or it means an error. There is no silent fallback to plaintext. The URL's scheme is a contract, and violating it is a hard failure rather than a quiet degradation.
 
 ## Results
 
-Over a 13-day development window spanning late April to early May 2026, the library landed across three commits on a single focused branch. The dual-target structure is in place, cross-platform declarations are established, and the dependency graph is locked to three well-maintained Swift open-source packages. The library is positioned for consumption by any Apple-platform application that needs to communicate with Iconquer services, with a public API ready to be documented via DocC.
+IconquerClient shipped two tagged releases — `v0.1.0` and `v0.2.0` — across 26 commits on a timeline running from April to October 2026. The library targets all four Apple platforms (macOS, iOS, tvOS, visionOS) plus the Linux-capable SwiftNIO stack, a breadth that reflects the library's explicit cross-platform mandate. A dedicated `IconquerClientTests` target exists alongside the main library target, providing the test harness surface the MASTER_PLAN.md identified as a first-class consumer. The library's dependency surface is intentional and contained: `IconquerCore` for the shared protocol types, `SwiftTLSKit` and `swift-nio` for the transport, and `swift-docc-plugin` signaling that documentation is treated as a deliverable rather than an afterthought.
 
 ## Judgment Calls
 
-Several decisions here reflect library-authorship thinking rather than application-building instincts.
+**The session shape decision is the most consequential design call in the library.** Presenting a remote session behind the same interface as a local one is not a natural default — it requires discipline about what leaks through the abstraction and what doesn't. The payoff is that `IconquerApp` and `IconquerUI` can be written without transport awareness, which is a significant reduction in view-layer complexity. The cost is that IconquerClient has to own more of the session lifecycle. That tradeoff was made deliberately and held.
 
-**Choosing swift-nio over URLSession.** For a library targeting all four Apple platforms, URLSession would have been the path of least resistance. Reaching for swift-nio instead suggests the client is doing something closer to the metal — likely persistent connections, custom protocols, or multiplexed I/O — where URLSession's abstractions would have gotten in the way.
+**Choosing SwiftNIO over URLSession WebSockets was a platform philosophy decision, not a features decision.** URLSession would have been faster to integrate. SwiftNIO was chosen because Linux and server-side Swift are first-class targets — not aspirational ones. That choice shapes the dependency graph, the concurrency model, and the long-term portability of the library.
 
-**Adopting Swift 6 tooling immediately.** Swift 6's strict concurrency model is stricter to satisfy but produces libraries that are genuinely safer for consumers running their own actor-isolated or structured-concurrency code. Opting into tools version 6.2 early means IconquerClient's public API is designed for Swift concurrency from day one, rather than inheriting the technical debt of an async retrofit.
+**The `wss://` enforcement rule is an opinion expressed in code.** Many networking libraries treat scheme validation as a warning or a configuration option. IconquerClient treats it as a hard invariant: the scheme is a security contract, and a library that silently falls back to plaintext when TLS fails isn't actually providing a security guarantee. Surfacing that as a typed error rather than a silent behavior makes the library's stance legible to every integration site.
 
-**Four-platform declaration upfront.** Listing macOS, iOS, tvOS, and visionOS in the manifest before the library was fully built is a constraint that keeps cross-platform compatibility honest throughout development. It's easier to declare broad support early and let the compiler enforce it than to bolt on platform support after the fact.
-
-**Documentation infrastructure on day one.** Adding `swift-docc-plugin` in the initial dependency set rather than the final one is a subtle tell about working style — documentation isn't a polish pass, it's part of the definition of done.
+**Typed errors over opaque failures reflects a considered stance on API design.** It's more work to define and maintain a concrete error type than to throw a generic `Error`. But it makes test harnesses dramatically easier to write — which matters here because the MASTER_PLAN.md explicitly names test harnesses as a first-class consumer — and it makes integration-site error handling expressive rather than defensive.

@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow." />
+    <meta name="description" content="In five months and 164 commits, one developer took SwiftCLIKit from a bare scaffold to a multi-layered terminal UI library with an embedded SSH server, strict Swift 6 concurrency, and zero C dependencies." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftCLIKit: Building a Native macOS CLI Framework from First Principles | Justin Purnell</title>
+    <title>SwiftCLIKit: A Pure-Swift Terminal UI Stack, Built to Last | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftCLIKit: Building a Native macOS CLI Framework from First Principles" />
-    <meta name="twitter:title" content="SwiftCLIKit: Building a Native macOS CLI Framework from First Principles" />
-    <meta property="og:description" content="A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow." />
-    <meta name="twitter:description" content="A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow." />
+    <meta property="og:title" content="SwiftCLIKit: A Pure-Swift Terminal UI Stack, Built to Last" />
+    <meta name="twitter:title" content="SwiftCLIKit: A Pure-Swift Terminal UI Stack, Built to Last" />
+    <meta property="og:description" content="In five months and 164 commits, one developer took SwiftCLIKit from a bare scaffold to a multi-layered terminal UI library with an embedded SSH server, strict Swift 6 concurrency, and zero C dependencies." />
+    <meta name="twitter:description" content="In five months and 164 commits, one developer took SwiftCLIKit from a bare scaffold to a multi-layered terminal UI library with an embedded SSH server, strict Swift 6 concurrency, and zero C dependencies." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftclikit" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -135,7 +135,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swiftclikit",
-          "name" : "SwiftCLIKit: Building a Native macOS CLI Framework from First Principles",
+          "name" : "SwiftCLIKit: A Pure-Swift Terminal UI Stack, Built to Last",
           "position" : 2
         }
       ]
@@ -146,12 +146,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftclikit#breadcrumb"
       },
-      "description" : "A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow.",
+      "description" : "In five months and 164 commits, one developer took SwiftCLIKit from a bare scaffold to a multi-layered terminal UI library with an embedded SSH server, strict Swift 6 concurrency, and zero C dependencies.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftCLIKit: Building a Native macOS CLI Framework from First Principles",
+      "name" : "SwiftCLIKit: A Pure-Swift Terminal UI Stack, Built to Last",
       "url" : "https://www.justinpurnell.com/showcase/swiftclikit"
     }
   ]
@@ -180,28 +180,31 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftCLIKit: Building a Native macOS CLI Framework from First Principles</h1>
+      <h1 class="mainTitle">SwiftCLIKit: A Pure-Swift Terminal UI Stack, Built to Last</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A solo developer designed and shipped 18 releases of a Swift 6 command-line toolkit — complete with SSH support — across just four days, guided by a rigorous design-first workflow.</p>
+          <p>In five months and 164 commits, one developer took SwiftCLIKit from a bare scaffold to a multi-layered terminal UI library with an embedded SSH server, strict Swift 6 concurrency, and zero C dependencies.</p>
         </blockquote>
         <h2>Problem</h2>
-        <p>Building command-line tools in Swift on macOS has long meant either reaching for third-party frameworks with heavy dependency trees or writing the same boilerplate — argument parsing, terminal formatting, process management — from scratch on every project. Neither path is satisfying for a developer who cares about craft. SwiftCLIKit sets out to close that gap: a purpose-built, opinionated toolkit for macOS CLI development that keeps dependencies lean, leans into Swift 6’s concurrency model, and grows predictably through a disciplined release cadence.</p>
-        <p>The addition of a dedicated <code>SwiftCLIKitSSH</code> target signals an early architectural decision to treat remote shell interaction as a first-class concern, not an afterthought — something that distinguishes SwiftCLIKit from simpler argument-parsing libraries.</p>
+        <p>Building rich terminal applications in Swift has historically meant reaching for C libraries — ncurses, libssh2, or some thin wrapper bridging the gap between Swift and decades-old POSIX tooling. That dependency chain introduces friction: opaque build errors, portability headaches, and concurrency models that fight Swift’s own.</p>
+        <p>SwiftCLIKit was built to close that gap. Its mission, as stated in the project’s own <code>MASTER_PLAN.md</code>, is a pure Swift terminal UI library offering two distinct layers of abstraction — a low-level terminal foundation and a high-level cell-based UI framework — alongside an embedded SSH server module. The constraint is explicit and self-imposed: zero C dependencies beyond system libc.</p>
+        <p>The result is a toolkit that lets Swift developers build terminal applications the way they build everything else in the language: with value types, structured concurrency, and a compiler that catches mistakes at build time rather than runtime.</p>
         <h2>Approach</h2>
-        <p>The project’s most telling characteristic is the design-first workflow embedded directly into the repository. Three design proposals exist before production code stabilizes, and a <code>CLAUDE.md</code> file codifies the architectural contract: Session Start rituals, Development Workflow steps, Key Rules, an Architecture section, a Quality Gate, and a References block. This is not incidental documentation — it is the skeleton the project grows around. Writing that document first forces clarity about what the framework is and is not before a single public API is committed.</p>
-        <p>The dependency surface is deliberately minimal. Beyond the Swift standard library and Apple’s own frameworks, the sole external dependency is <code>swift-nio-ssh</code>, Apple’s battle-tested NIO-backed SSH implementation. Choosing an Apple-maintained package rather than a community wrapper reflects a considered trust hierarchy: the SSH subsystem is complex and security-sensitive enough to warrant a known-quantity foundation, while everything else in the framework stays under direct authorial control.</p>
-        <p>Structurally, the package separates concerns cleanly into named targets: the core <code>SwiftCLIKit</code> library, the additive <code>SwiftCLIKitSSH</code> module, an <code>swiftclikit-examples</code> target that doubles as living documentation, and parallel test targets for both library modules. Adopting Swift tools version 6.0 and constraining to macOS means the codebase can embrace strict concurrency checking and platform-native APIs without hedging for Linux or Windows compatibility.</p>
+        <p>SwiftCLIKit is organized as a multi-target Swift package targeting macOS, iOS, and visionOS, using Swift tools version 6.2 and Swift 6 strict concurrency throughout. The dependency graph is intentional and minimal — <code>swift-nio-ssh</code> for the SSH layer, <code>swift-atomics</code> for lock-free primitives, <code>swift-crypto</code> for cryptographic operations, and <code>swift-docc-plugin</code> for documentation generation. Every dependency is itself a Swift package from Apple or the Swift open-source ecosystem, preserving the no-C-library guarantee at every layer.</p>
+        <p>The target structure tells the architecture story clearly. <code>SwiftCLIKit</code> and <code>SwiftCLIKitSSH</code> form the core library. <code>SwiftGUIKit</code> and <code>SwiftGUIKitSwiftUI</code> extend it into higher-level UI abstractions, with the SwiftUI target bridging terminal concepts into declarative UI where appropriate. <code>QualityGateDashboard</code> and <code>QGDashboardApp</code> represent a full reference application — a quality gate dashboard — that exercises the library in production-like conditions rather than toy examples. The <code>swiftclikit-examples</code> target rounds this out with demonstration code.</p>
+        <p>A <code>CLAUDE.md</code> file is present in the repository, indicating the project maintains documented working conventions — session start procedures, development workflow, key rules, architecture notes, quality gate requirements, and reference material. This is a project designed to be picked up cleanly, whether by the developer returning after weeks away or by an AI pair-programming session that needs context fast.</p>
         <h2>Results</h2>
-        <p>Eighteen tagged releases shipped between April 10 and April 13, 2026 — a version history that spans <code>v0.1.0</code> through <code>v1.14.0</code> in under 96 hours across 14 commits. That ratio of releases to commits reflects a deliberate, increment-by-increment release discipline: changes are small, tagged immediately, and the version history becomes an auditable changelog of the framework’s surface area expanding over time.</p>
-        <p>The dual test targets — <code>SwiftCLIKitTests</code> and <code>SwiftCLIKitSSHTests</code> — establish that both the core library and the SSH extension are held to independent quality gates, meaning SSH additions cannot silently regress core CLI behavior and vice versa. The examples target ensures the public API is validated in realistic usage, not just in unit isolation.</p>
+        <p>SwiftCLIKit shipped 23 releases across a five-month span, from <code>v0.1.0</code> through <code>v2.5.1</code>. The version history shows a developer who respects semantic versioning: a long run of incremental <code>v0.x</code> releases while the API stabilized, two major version increments as the architecture matured, and a consistent cadence of patch and minor releases responding to real feedback.</p>
+        <p>The test surface covers every meaningful layer: <code>SwiftCLIKitTests</code>, <code>SwiftCLIKitSSHTests</code>, <code>SwiftGUIKitTests</code>, and <code>SwiftGUIKitSwiftUITests</code> each correspond to a distinct library target. The <code>QualityGateDashboardTests</code> target validates the reference application layer as well, meaning the test suite exercises the library both in isolation and under real application conditions.</p>
+        <p>The project supports macOS, iOS, and visionOS — a platform stance that anticipates terminal UI use cases beyond the desktop, including visionOS environments where spatial computing might host developer tooling.</p>
         <h2>Judgment Calls</h2>
-        <p><strong>Separating SSH into its own target rather than the core.</strong> Bundling SSH capabilities into the main <code>SwiftCLIKit</code> target would have been the path of least resistance, but it would have forced every consumer to carry the <code>swift-nio-ssh</code> dependency regardless of need. Making <code>SwiftCLIKitSSH</code> an opt-in module keeps the core framework lightweight and the dependency graph honest.</p>
-        <p><strong>Codifying the workflow in <code>CLAUDE.md</code> before the codebase matured.</strong> With a solo project moving fast, the temptation is to keep everything in one’s head. Instead, a structured document with Architecture and Quality Gate sections was committed early — a form of writing-to-think that makes the project legible to a future self (or collaborator) who wasn’t present for the initial decisions.</p>
-        <p><strong>Eighteen releases across four days.</strong> This is not version-number inflation; it is a working philosophy about the cost of integration lag. Small, tagged increments mean that at any moment the <code>v1.x</code> tags represent shippable, tested states of the framework rather than a single monolithic release that accumulates risk invisibly.</p>
-        <p><strong>Pinning to macOS only.</strong> Cross-platform Swift is achievable, but it comes with real costs — conditional compilation noise, the loss of certain Foundation and AppKit primitives, and the inability to assume things like the system keychain or macOS process model. Explicitly constraining the platform is a scope decision that keeps the framework’s promises coherent and its implementation honest.</p>
+        <p>Several decisions here reflect genuine craft rather than default choices.</p>
+        <p><strong>The zero-C-dependency constraint is the defining judgment call.</strong> It would have been faster to wrap ncurses. It would have been easier to shell out to system SSH. Choosing <code>swift-nio-ssh</code> and <code>swift-atomics</code> instead means the entire stack compiles, links, and reasons about concurrency as a unified Swift program. That constraint ripples through every other decision and makes the library something a Swift developer can actually trust.</p>
+        <p><strong>Swift 6 strict concurrency, adopted early.</strong> Swift 6’s concurrency model is strict enough that many existing libraries have deferred migration. Choosing it as a baseline rather than a migration target means SwiftCLIKit’s APIs were designed to be safe under the actor model from the start, not retrofitted. That’s harder upfront and cleaner forever after.</p>
+        <p><strong>The <code>QualityGateDashboard</code> reference application as a first-class target.</strong> Most libraries ship with a small <code>examples</code> directory. Including a full dashboard application as a named target with its own test suite means the library’s abstractions are continuously validated against a real use case. If an API change breaks the dashboard, the build fails. This is self-imposed integration testing at the architecture level.</p>
+        <p><strong>The <code>CLAUDE.md</code> working document.</strong> Its presence — and its structure covering session start, workflow, rules, architecture, and quality gate — signals a developer who thinks about the conditions under which good work happens, not just the work itself. Documenting how to engage with the project is part of building the project.</p>
       </div>
       <div class="showcase-infographics">
         <img src="/images/showcase/swiftclikit-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
