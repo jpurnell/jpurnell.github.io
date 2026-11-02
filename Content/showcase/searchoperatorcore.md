@@ -1,8 +1,8 @@
 ---
-title: Turning Google's Secret Language Into a First-Class Tool
-description: SearchOperatorCore transforms Google's cryptic advanced search syntax into a structured, accessible interface for both AI agents and the humans who rely on them.
+title: Precision at the Prompt: Building a Search Operator Engine for AI Agents and Power Users
+description: SearchOperatorCore transforms Google's advanced search syntax from arcane specialist knowledge into a structured, programmable interface — delivered as both a CLI tool and an MCP server ready for AI agent consumption.
 date: 2026-05-12 15:57
-lastModified: 2026-10-30
+lastModified: 2026-11-02
 tags: showcase, project, GEO-SEO, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,30 +10,42 @@ project: Search Operator
 published: true
 ---
 
-# Turning Google's Secret Language Into a First-Class Tool
+# Precision at the Prompt: Building a Search Operator Engine for AI Agents and Power Users
 
-> SearchOperatorCore transforms Google's cryptic advanced search syntax into a structured, accessible interface for both AI agents and the humans who rely on them.
+> SearchOperatorCore transforms Google's advanced search syntax from arcane specialist knowledge into a structured, programmable interface — delivered as both a CLI tool and an MCP server ready for AI agent consumption.
 
 ## Problem
 
-Google's advanced search operators — `site:`, `filetype:`, `intitle:`, `AROUND(n)`, and dozens more — represent one of the most powerful and least-used features on the internet. The syntax is scattered across blog posts and support pages, inconsistent in its documentation, and entirely unforgiving to anyone who doesn't already know it cold. For a power user, forgetting the exact form of an operator means a degraded search. For an AI agent constructing searches programmatically, it means guesswork encoded into automation.
+Google's advanced search operators — `site:`, `filetype:`, `intitle:`, `AROUND(n)`, and dozens more — represent a largely hidden layer of precision that most users never access. The syntax is powerful but unforgiving: a misplaced colon, a forgotten quote, or an unknown operator name silently degrades a search into noise. For researchers and librarians, this represents a workflow problem. For AI agents trying to construct searches on behalf of users, it represents an integration gap.
 
-SearchOperatorCore was built to close that gap. The project's own MASTER_PLAN.md states the mission plainly: transform the hidden power of Google's advanced search operators into an accessible CLI tool and MCP server, enabling users and AI agents to construct precision search queries without memorizing arcane syntax. The target audience is deliberately broad — AI agents that need to issue precise queries on behalf of users, power users who want a scriptable workflow, and researchers and librarians who depend on repeatable, structured search strategies. These are people for whom search quality is not a convenience but a professional requirement.
+SearchOperatorCore was built to close that gap. Rather than expecting users or AI systems to memorize operator syntax, the project encodes that knowledge into a structured library — surfaced through a CLI for human workflows and through an MCP server for programmatic consumption by AI agents. The mission, as stated in the project's own MASTER_PLAN.md, is unambiguous: *transform the hidden power of Google's advanced search operators into an accessible CLI tool and MCP server*.
+
+The timing reflects a broader shift in how developers are thinking about AI-adjacent tooling. As large language models increasingly act as autonomous agents — browsing, researching, synthesizing — their ability to construct *precise* queries matters enormously. A fuzzy search produces fuzzy results. SearchOperatorCore gives agents the same leverage that a skilled reference librarian brings to a research session.
 
 ## Approach
 
-The project is organized around a multi-target Swift package, a structure that reflects deliberate thinking about separation of concerns. The core logic lives in `SearchOperatorCore`, keeping domain knowledge — what operators exist, how they compose, what rules govern them — completely decoupled from any interface. Two consumption surfaces sit on top of that foundation: `SearchOperatorMCP` and `SearchOperatorMCPServer` expose the functionality to AI agents via the Model Context Protocol, while `SearchOperatorCLI` delivers the same capability as a standalone command-line tool. A dedicated test target exists for each of the two primary layers.
+Jpurnell structured the project as a multi-target Swift package, cleanly separating concerns across four distinct executable and library targets: `SearchOperatorCore` (the domain logic), `SearchOperatorMCP` (MCP protocol integration), `SearchOperatorMCPServer` (the server runtime), and `SearchOperatorCLI` (the command-line interface). This separation reflects deliberate architectural thinking — the core operator library is independently testable and importable, not entangled with transport concerns.
 
-The dependency choices are coherent and minimal. `swift-argument-parser` handles CLI ergonomics with the discipline that library demands. `SwiftMCPServer` and `swift-mcp-sdk` wire the tool into the MCP ecosystem, which is the right architectural bet given that MCP is becoming the standard protocol for connecting AI agents to external capabilities. `swift-docc-plugin` signals that documentation is treated as a deliverable, not an afterthought. The project targets macOS, which is the right scope for a tool aimed at developer and researcher workflows where Swift's native platform strengths apply.
+The dependency choices are equally purposeful. `SwiftMCPServer` and `swift-mcp-sdk` provide the protocol foundation for AI agent communication. `swift-argument-parser` handles the CLI surface with the ergonomics Swift developers expect. `swift-docc-plugin` signals a commitment to documentation as a first-class artifact, not an afterthought.
+
+The project targets macOS and is built against Swift Tools version 6.2, embracing the strict concurrency model that Swift 6 mandates — a meaningful constraint for a server process handling potentially concurrent MCP requests. The presence of a `CLAUDE.md` file indicates that jpurnell invested in capturing architectural context in a form that supports AI-assisted development workflows, consistent with the project's own orientation toward the AI-agent ecosystem.
+
+The architecture sections in the project documentation cover Build & Test, Architecture, Development Guidelines, Deployment, and Coding Rules — a governance structure that suggests the project was designed to scale beyond a personal experiment into something maintainable and extensible.
 
 ## Results
 
-SearchOperatorCore shipped a 1.0.0 release across a six-and-a-half month development window, from April to October 2026. The 30-commit history on a single contributor project reflects consistent, deliberate iteration rather than burst activity — a sign of a developer building something they intend to maintain. Three branches indicate a working development discipline: changes were isolated and integrated rather than committed directly to main. The project is production-ready in the sense that matters most for a tool like this: it has a stable public interface, documented architecture, and a versioned release.
+SearchOperatorCore shipped its 1.0.0 release, marking the point at which the project crossed from prototype to public artifact. The work spans 34 commits across a roughly seven-month development window, from April 2026 through November 2026, across 4 branches — a cadence that reflects sustained, deliberate iteration rather than a burst-and-abandon pattern.
+
+The test suite covers both the core library (`SearchOperatorCoreTests`) and the MCP integration layer (`SearchOperatorMCPTests`), providing coverage at the layer most likely to regress: the boundary between domain logic and protocol. What shipped is a complete dual-interface tool: a CLI that power users and researchers can integrate into scripted workflows, and an MCP server that AI agents can call directly to produce well-formed, operator-enriched Google queries.
 
 ## Judgment Calls
 
-The most revealing decision in this project is the target architecture. It would have been simpler to build a monolithic CLI script or a single-purpose MCP server. Jurnell Purnel instead built a layered package where the domain logic — the actual knowledge about search operators and how to compose them — is fully isolated in `SearchOperatorCore`. Both the CLI and the MCP server are thin interfaces over that foundation. This means the hard-won modeling of Google's operator syntax is a reusable library, not an artifact buried inside a specific tool.
+Several decisions here reveal craft rather than just output.
 
-The dual-interface approach — CLI and MCP side by side — is also worth noting. Most tools pick a lane. By shipping both, Purnell acknowledged that the humans and agents who benefit from structured search query construction have fundamentally different interaction models, and that neither audience should have to compromise. The CLI serves the power user who wants to pipe output into other tools. The MCP server serves the AI agent that needs a structured, callable capability. The same `SearchOperatorCore` powers both without modification.
+**Splitting core from transport.** The decision to keep `SearchOperatorCore` as an independent library target — rather than baking operator logic directly into the CLI or server — reflects a bet that the domain model has value independent of any particular interface. A researcher wanting to embed search query construction in their own tooling can import the core directly. This is the kind of abstraction that feels obvious in retrospect but requires discipline to impose at the start.
 
-The presence of `CLAUDE.md` — a project context file designed to orient an AI coding assistant — and the architecture sections covering development guidelines and coding rules together suggest a developer thinking about the long-term legibility of the codebase, not just its current state. These are the artifacts of someone building for maintainability, whether that future maintainer is themselves, a collaborator, or an AI assistant picking up the thread.
+**Committing to MCP as a first-class interface.** Building MCP support alongside the CLI, rather than treating it as a future extension, reflects a clear-eyed read of where developer tooling is heading. At the moment when most tools are still retrofitting AI interfaces onto human-first designs, jpurnell built for both audiences simultaneously. The target users listed in MASTER_PLAN.md — AI agents, power users, researchers and librarians — aren't an afterthought; they're the design brief.
+
+**Swift 6 concurrency.** Choosing Swift 6.2 tooling for a server process isn't a casual decision. Strict concurrency checking surfaces data-race issues at compile time rather than at runtime in production. For an MCP server handling agent requests, correctness under concurrency matters — and adopting the stricter model early means the codebase doesn't accumulate technical debt that will be painful to unwind later.
+
+**Documentation infrastructure from day one.** Including `swift-docc-plugin` as a dependency signals that jpurnell treated documentation as part of the deliverable, not a polish task deferred until after shipping. For a library whose value proposition is encoding expert knowledge into a programmable interface, the documentation *is* part of the product.

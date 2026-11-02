@@ -1,8 +1,8 @@
 ---
-title: SwiftExcelFunctions: One Registry to Rule Every Formula
-description: A Swift library that exposes Excel's entire function library through a single, format-agnostic registry — delegating all mathematics upstream and obsessing over semantic fidelity rather than approximate results.
+title: SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift
+description: A single-registry function evaluator that speaks Excel's exact semantics — no file format required, no math reimplemented, no room for silent divergence.
 date: 2026-10-30 12:23
-lastModified: 2026-10-30
+lastModified: 2026-11-02
 tags: showcase, swiftexcelfunctions, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,42 +10,42 @@ project: SwiftExcelFunctions
 published: true
 ---
 
-# SwiftExcelFunctions: One Registry to Rule Every Formula
+# SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift
 
-> A Swift library that exposes Excel's entire function library through a single, format-agnostic registry — delegating all mathematics upstream and obsessing over semantic fidelity rather than approximate results.
+> A single-registry function evaluator that speaks Excel's exact semantics — no file format required, no math reimplemented, no room for silent divergence.
 
 ## Problem
 
-Evaluating spreadsheet formulas in Swift is a solved problem in the narrow sense: plenty of libraries can crunch numbers that look like Excel output. The harder problem is getting Excel's *exact* semantics — argument order, error propagation, coercion rules, and the pairing of legacy names with their dotted equivalents — right enough that plausible-but-wrong answers don't slip through undetected.
+Spreadsheet models are ubiquitous in finance, engineering, and analysis, yet evaluating them programmatically in Swift has always required dragging in file-format machinery along for the ride. If you want to know what `NPV(0.08, A1:A10)` computes, existing approaches force you to open a workbook, parse XML, and navigate a cell graph — even when all you actually care about is the formula.
 
-SwiftExcelFunctions was built to serve a specific motivating application: a workbook-correctness CLI that reads a financial model, recomputes every cell independently, and reports wherever the model disagrees with itself. That use case demands a library that can be handed a `FormulaAST` and any `CellValueProvider` and return a result, without touching a ZIP archive, a workbook file, or any I/O at all. The project's `MASTER_PLAN.md` states the mission plainly: *Excel's function library, in Swift. One registry a caller can ask for any function by the name Excel uses, without knowing or caring which package computes it.*
+SwiftExcelFunctions was built to cut that dependency entirely. Its motivating application is a workbook-correctness CLI: read a model, recompute every formula from scratch, and report precisely where the workbook disagrees with itself. That tool needs a formula engine that can stand alone — one that accepts a `FormulaAST` and any `CellValueProvider` and returns an answer, with no I/O, no ZIP, no spreadsheet file in sight.
 
-The downstream consumers make the stakes clear. `BusinessMathExcel` translates workbooks into computational models, and anyone using the library to evaluate spreadsheet formulas in Swift — with or without an actual file — depends on the registry being both complete and semantically exact.
+The harder problem, though, is fidelity. Excel's function library is large and its semantics are precise in ways that are easy to approximate and difficult to get exactly right. `PsiTriangular` takes its arguments in a specific order; `PsiLogNormal` has a particular parameterization. A wrong implementation produces plausible numbers, which is categorically worse than an error, because it fails silently in production models. The project's mission is therefore exact Excel semantics — argument order, coercion rules, error propagation, and legacy/dotted name pairs — delivered through a single registry a caller can query by the name Excel uses.
 
 ## Approach
 
-The architectural center of gravity is the single function registry: a caller names a function the way Excel names it, and the registry resolves and dispatches without the caller needing to know which underlying package does the work. That indirection is load-bearing. It means the library can evolve its internals without breaking callers, and it means the mathematics lives in exactly one place.
+The package is built on Swift 6.2 and targets the full Apple platform family — macOS, iOS, tvOS, watchOS, and visionOS — signaling that the evaluator is designed as an embeddable component, not a command-line-only tool.
 
-That last point was treated as a hard constraint from the start. The `BusinessMath` package owns the mathematics; `SwiftExcelFunctions` delegates to it rather than reimplementing anything. The explicit failure mode the arrangement exists to prevent is a second `NPV` implementation that could silently disagree with the first. The dependency graph — `SwiftExcelCore`, `BusinessMath`, `swift-numerics`, `swift-crypto`, and `SwiftXLSX` — reflects this discipline: each dependency has a clear role, and none of them are duplicated.
+The central architectural commitment is delegation over reimplementation. Mathematical logic lives in `BusinessMath`; `SwiftExcelFunctions` wraps it, names it, and enforces Excel's calling conventions. The explicit goal is to prevent a second `NPV` from ever existing that could disagree with the first. `swift-numerics` and `swift-crypto` extend the numeric and hashing capabilities where needed, while `SwiftExcelCore` provides the formula AST and value types that the evaluator operates on. `SwiftXLSX` appears as a dependency for the corpus and audit tools, keeping file-format concerns quarantined to tooling rather than the core evaluator.
 
-The format-agnostic design is equally deliberate. By accepting a `FormulaAST` and a `CellValueProvider` rather than a file path or a workbook object, the library stays independently useful and independently testable. No file format assumption leaks into the evaluation layer.
+The package target list reveals a thoughtful separation of concerns. Alongside the main `SwiftExcelFunctions` library, there are dedicated targets for `WorkbookCensus`, `WorkbookContainer`, `ConformanceWorkbook`, `WorkbookOracleTool`, `ModelSimulation`, `XlsxAudit`, `NameRoundTrip`, `CorpusWalk`, and `WorkbookAudit` — each isolating a different verification or analysis concern. Test targets mirror the key executables: `SwiftExcelFunctionsTests`, `WorkbookContainerTests`, `WorkbookAuditTests`, `WorkbookCensusTests`, and `CorpusWalkTests`. This structure indicates that testing is not monolithic; different properties of the system are verified through different lenses.
 
-The project is built with Swift Package Manager targeting Swift Tools version 6.2, and ships across macOS, iOS, tvOS, watchOS, and visionOS. The target list tells its own story about the project's architecture: beyond the main `SwiftExcelFunctions` library and its test suite, the package includes specialized executables for corpus walking, workbook auditing, conformance testing, a workbook oracle tool, name round-trip verification, and model simulation — a constellation of supporting tools that exist to verify the registry's behavior against real-world spreadsheet material.
-
-A `CLAUDE.md` file captures session-start conventions, development workflow, quality gates, and key rules, suggesting the project maintains clear working agreements around how changes are introduced and validated.
+A `CLAUDE.md` file is present and structures sessions with explicit phases: Session Start, After Cloning, Development Workflow, Key Rules, a Quality Gate, and References. This reflects a disciplined approach to AI-assisted development — sessions begin from a known state, follow a defined workflow, and exit through a quality gate rather than ending ad hoc.
 
 ## Results
 
-Over roughly eight weeks — first commit in early September 2026, latest commit in late October 2026 — the project accumulated 269 commits across 21 releases. The release history runs from `v0.1.0` through `v0.11.0` and then into a five-alpha `v1.0.0` pre-release sequence, a trajectory that reflects sustained, iterative development rather than a single push. The alpha cadence on `v1.0.0` suggests the library is approaching a stable public API, with the alpha labels signaling intentional caution about committing to surface-area guarantees.
+The project accumulated 270 commits from a single contributor across roughly two months, progressing through 21 releases: from `v0.1.0` through `v0.11.0` and into the `v1.0.0-alpha` series, which reached `alpha.5` by the end of October 2026. That release cadence — a new version roughly every three to four days on average — reflects continuous, deliberate iteration rather than large batched drops.
 
-The package ships fifteen targets in total, covering the core library, multiple audit and census tools, conformance workbooks, and test suites for the library itself, the corpus walker, the workbook auditor, and the workbook census. That breadth of tooling is itself a deliverable: the project ships not just the registry but the infrastructure needed to continuously verify it against real spreadsheet data.
+Three Claude Code sessions contributed 116 commits and 211 messages. Two sessions were classified as multi-task and one as single-task; two achieved mostly their goals, one achieved them fully. The friction profile — five instances of buggy code, two environment issues, one context limit, one misunderstood request, one wrong approach — is consistent with complex technical work where the AI is being pushed into domain-specific territory with exacting correctness requirements. The outcomes nonetheless confirm that the collaboration was net productive across all three sessions.
+
+The package ships across five Apple platforms with a multi-target structure that separates the library, multiple CLI tools, and distinct test suites, giving downstream consumers a stable, independently testable core.
 
 ## Judgment Calls
 
-**Delegating mathematics rather than reimplementing it.** The decision to treat `BusinessMath` as the single source of mathematical truth — and to explicitly document the failure mode of a second implementation — is the project's most important architectural judgment. The `MASTER_PLAN.md` names this directly in the context of `PsiTriangular` and `PsiLogNormal`: getting a parameterization wrong produces plausible numbers, which is *worse* than an error. A wrong answer that looks right will survive review; an error surfaces immediately. Building the delegation constraint into the package structure rather than relying on convention makes it structural rather than aspirational.
+**Delegating math instead of owning it.** The most consequential design decision in the entire project is the one that looks like an omission: SwiftExcelFunctions does not implement its own statistical or financial mathematics. It calls `BusinessMath`. This is not laziness — it is the explicit prevention of a class of failure. Two independent implementations of the same formula, living in the same codebase, will eventually diverge. In a correctness tool that exists to surface disagreement, silent divergence in the tool itself would be catastrophic. Choosing delegation as an architectural invariant reflects a clear-eyed understanding of where the real risk lies.
 
-**Format agnosticism as a first-class design goal.** Accepting `FormulaAST` and `CellValueProvider` as the input contract — rather than a file or a workbook — was a decision that paid dividends in testability and composability. It's the kind of boundary that's easy to get wrong early and expensive to fix later, and the project drew it correctly from the start.
+**Separating evaluation from file I/O.** The decision to accept a `FormulaAST` and a `CellValueProvider` — rather than a workbook — means the evaluator has no surface area for format-related bugs and no dependency on parsing infrastructure. It also makes the library genuinely reusable: any caller that can construct a formula AST and supply cell values can use it, regardless of where those values came from.
 
-**Investing in a tooling ecosystem, not just a library.** The corpus walker, workbook oracle, conformance workbook, audit targets, and name round-trip checker are not incidental. They represent a deliberate choice to build the verification infrastructure alongside the feature code, treating correctness as something that needs continuous, automated evidence rather than periodic manual review. For a library where the failure mode is plausible-but-wrong results, that investment is exactly right.
+**Building a conformance and corpus infrastructure.** The presence of `ConformanceWorkbook`, `WorkbookOracleTool`, `CorpusWalk`, and `XlsxAudit` as first-class targets — each with corresponding test suites — shows that the developer understood from the start that correctness at this level cannot be established through unit tests alone. Verifying Excel semantics requires running against real workbooks and comparing outputs. Building that infrastructure into the package itself, rather than treating it as an afterthought, is a mark of engineering maturity.
 
-**A versioning strategy that signals intent.** Moving through eleven minor versions before entering an alpha pre-release sequence communicates something real: the API surface was treated as unstable and subject to change during the exploratory phase, and the `v1.0.0-alpha` labels now mark a deliberate commitment checkpoint. That's versioning used as communication, not just bookkeeping.
+**Encoding a quality gate into the development workflow.** The `CLAUDE.md` structure, with its explicit Quality Gate phase, means that no session ends without the work passing a defined bar. In a project where the entire value proposition is exactness, making "did this meet the standard?" a mandatory exit condition rather than an optional check is the right call.

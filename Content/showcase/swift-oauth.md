@@ -1,8 +1,8 @@
 ---
 title: SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package
-description: A solo-built Swift library that handles token issuance and token consumption in a single, storage-agnostic package — purpose-built to close a real authentication gap in a live ecosystem of apps.
+description: A solo Swift library project that tackles OAuth's two distinct roles — server and client — in a single, storage-agnostic package, built to eliminate the authentication gap in an ecosystem of Swift services and MCP clients.
 date: 2026-10-30 12:25
-lastModified: 2026-10-30
+lastModified: 2026-11-02
 tags: showcase, swift-oauth, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -12,38 +12,36 @@ published: true
 
 # SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package
 
-> A solo-built Swift library that handles token issuance and token consumption in a single, storage-agnostic package — purpose-built to close a real authentication gap in a live ecosystem of apps.
+> A solo Swift library project that tackles OAuth's two distinct roles — server and client — in a single, storage-agnostic package, built to eliminate the authentication gap in an ecosystem of Swift services and MCP clients.
 
 ## Problem
 
-OAuth 2.0 has two distinct roles that happen to share a name: a server that issues tokens and validates its own, and a client that obtains tokens from someone else and keeps them fresh. Most libraries pick one side. That choice forces teams to either stitch two libraries together — duplicating shared vocabulary like grant types, `TokenResponse`, and PKCE — or write the plumbing themselves.
+OAuth 2.0 has two roles that share a name and almost no behavior. An authorization server issues tokens and validates its own; a client application obtains someone else's and keeps them fresh. Most libraries pick a side. The ecosystem of Swift services and clients that jpurnell maintains — `SwiftMCPServer`, `SwiftMCPClient`, `LedgeOS`, and others — needed both, and they needed them to speak the same vocabulary.
 
-For J. Purnell, the problem was concrete, not hypothetical. `SwiftMCPClient` was authenticating via pasted bearer tokens. The MCP specification itself requires OAuth, which meant that gap wasn't cosmetic — it was a conformance failure. On the other side of the ecosystem, `SwiftMCPServer` needed to act as an authorization server, and `LedgeOS`, `geo-audit`, and `Pare` were lined up as client consumers. The question was never whether to build authentication infrastructure. It was whether to build it once or repeatedly.
+The immediate forcing function was concrete: `SwiftMCPClient` had no authentication beyond a pasted bearer token. It could not connect to an OAuth-protected MCP server, which MCP's own specification requires. That wasn't a missing feature to plan for later — it was a gap the spec had already closed around.
 
-The third pressure was refresh-token rotation. When a refresh token is presented, it is consumed. Three specific failure modes follow from that — races, network drops at the wrong moment, retry logic that re-presents an already-expired token — and each one silently locks a user out of their own data. That problem is complicated enough that it justifies a library over a snippet.
+But the problem jpurnell chose to solve was larger than wiring up a token request. Refresh-token rotation is where OAuth implementations quietly fail users. Presenting a refresh token expires it. If the rotation response is lost, if the new token isn't persisted before it's used, if a concurrent request races ahead — any of these produces a locked-out user and a readable error nowhere. These failure modes are the reason SwiftOAuthCore is a library rather than a snippet copied between projects.
 
 ## Approach
 
-SwiftOAuthCore is structured as a Swift package targeting macOS and iOS, organized into purpose-specific targets that reflect the library's dual mandate: `SwiftOAuthCore` holds shared vocabulary, `SwiftOAuthMTLS` handles mutual TLS, `SwiftOAuthIdentity` manages identity concerns, `SwiftOAuthProvider` implements the server side, and `SwiftOAuthClient` implements the consumer side. A `RedirectWireStub` target exists for testing redirect-based flows without running live infrastructure.
+The package is organized into deliberately scoped targets that mirror the conceptual split in OAuth itself. `SwiftOAuthCore` carries the shared vocabulary — grant types, `TokenResponse`, PKCE, error codes — while `SwiftOAuthProvider` and `SwiftOAuthClient` implement the server and client halves respectively. `SwiftOAuthMTLS` and `SwiftOAuthIdentity` extend the stack for mTLS and identity concerns without bloating the core. A `RedirectWireStub` target supports testing redirect flows without live infrastructure.
 
-The dependency selection reflects the Swift server ecosystem directly — `swift-nio` and `async-http-client` for async networking, `swift-crypto` and `swift-certificates` with `swift-asn1` for cryptographic operations including mTLS, and `swift-docc-plugin` signaling that documentation is treated as a deliverable rather than an afterthought. The addition of `swift-identity` ties into the broader ecosystem where these pieces will be consumed.
+The most consequential architectural decision was making storage a protocol rather than a bundled dependency. The package specifies what must be persisted — tokens, rotation state, client records — not where. A production service behind Postgres brings its own adapter; a test never touches disk. This was a deliberate refusal to make the library's convenience the consumer's constraint.
 
-The most consequential architectural decision is the storage protocol boundary. The library defines what must be persisted — tokens, rotation state, client registrations — but imposes nothing about where. A service running Postgres doesn't pull in SQLite. A test suite doesn't touch disk. This is the kind of decision that looks obvious in retrospect but requires making it explicitly early, before concrete storage assumptions leak into the core abstractions.
-
-The package was built using Swift 6.2 tooling, meaning strict concurrency checking shaped the design from the start rather than being retrofitted later.
+The dependency graph reflects careful curation: `swift-crypto`, `async-http-client`, `swift-nio`, `swift-nio-ssl`, `swift-certificates`, `swift-asn1`, and `swift-identity` are all Apple or Apple-adjacent packages. The package targets Swift 6.2 and runs on both macOS and iOS, keeping the door open for client applications on either platform.
 
 ## Results
 
-Over roughly eleven weeks between early August and late October 2026, Purnell shipped 143 commits across 28 tagged releases — from `v0.0.1` through fourteen minor and patch versions before pivoting to a beta series now at `v1.0.0-beta.9`. That release cadence, averaging more than two releases per week, reflects a library being iterated against real consumer needs rather than developed in isolation.
+SwiftOAuthCore moved from v0.0.1 to v1.0.0-beta.10 across 145 commits and 29 releases in roughly three months — a sustained cadence that reflects both the scope of the problem and the discipline of iterating publicly rather than shipping late. The release history shows continuous forward motion: minor versions advancing the core feature set, point releases handling corrections and adjustments, and a beta series beginning at v1.0.0-beta.1 to signal API stabilization without prematurely locking the surface.
 
-The test coverage spans six dedicated test targets — `SwiftOAuthCoreTests`, `SwiftOAuthMTLSTests`, `SwiftOAuthProviderTests`, `SwiftOAuthConformanceTests`, `SwiftOAuthIdentityTests`, and `SwiftOAuthClientTests` — with a conformance suite that sits separately from unit tests, suggesting the library is being held to specification correctness as a first-class concern. The beta series implies that the API surface is being stabilized with known consumers watching.
+Six distinct test targets — `SwiftOAuthCoreTests`, `SwiftOAuthMTLSTests`, `SwiftOAuthProviderTests`, `SwiftOAuthConformanceTests`, `SwiftOAuthIdentityTests`, and `SwiftOAuthClientTests` — cover both individual modules and cross-cutting conformance, reflecting a testing strategy that tracks the architectural layering rather than bolting verification on at the end.
 
 ## Judgment Calls
 
-**Carrying both halves.** The decision to implement provider and client in one package is the one that most libraries don't make. Purnell's reasoning, documented in the project's own MASTER_PLAN.md, is precise: the two roles share grant types, `TokenResponse`, error codes, and PKCE — specifically, the client generates the PKCE verifier that the server validates. Splitting the package would duplicate that vocabulary and create the conditions for it to drift. The single-package design isn't a shortcut; it's a claim about where the real coupling lives.
+**Carrying both halves.** Splitting server and client into separate packages would have felt cleaner on paper. jpurnell chose not to, and the reasoning is precise: the two roles share grant types, `TokenResponse`, error codes, and PKCE — specifically because the client generates the verifier the server validates. Splitting the package would duplicate that shared vocabulary and create the conditions for it to drift. The unified package is the judgment.
 
-**Making rotation a first-class concern.** Refresh-token rotation is the kind of problem that looks solved until it isn't. Purnell identified three specific failure modes that each produce the same bad outcome — a user locked out of their own data with no readable error — and named them as the reason a library exists at all rather than a code snippet. Building the client half around those failure modes rather than around the happy path is a different kind of discipline, and it's visible in the structural choice to give the client its own test target.
+**Storage as protocol, not prescription.** It would have been faster to ship a SQLite adapter and call it done. The protocol-first approach requires more up-front design — the protocol surface has to be right, because consumers will implement against it — but it means a service already running Postgres doesn't acquire a second database to satisfy the library. The design respects the production environments the library will actually enter.
 
-**Storage as a protocol, not a default.** Choosing to express storage as a protocol boundary rather than bundling a default implementation is a form of respect for the consumer's existing infrastructure. It also makes the test story cleaner — `RedirectWireStub` exists because the redirect flow needs testable infrastructure, and that infrastructure can be ephemeral. The decision suggests Purnell was thinking about how the library would be adopted by real services rather than how it would pass its own tests.
+**Taking rotation seriously as a quality standard.** Jpurnell's own MASTER_PLAN.md names three specific rotation failure modes and frames them as the reason this is a library at all. That framing is unusual and telling — it means the scope of the project was defined not by what was easy to ship but by what was necessary to get right. The `SwiftOAuthConformanceTests` target exists, in part, because correct rotation behavior needs to be verified against a standard, not just against the library's own assumptions.
 
-**Beta discipline.** The shift from a minor-version series to a `v1.0.0-beta` series at `beta.9` reads as intentional semantic signaling — the core is stable enough to stabilize against, but the API contract isn't locked until known consumers have validated it in real use. That's what betas are for, and using them correctly is rarer than it should be.
+**A sustained beta series.** Beginning the v1.0.0 beta track while downstream consumers (`SwiftMCPClient`, `LedgeOS`) haven't yet adopted the library reflects a mature instinct about API stability. The betas give jpurnell room to adjust the surface under real integration pressure before committing to a stable contract — rather than discovering breaking changes after the first dependent ships.

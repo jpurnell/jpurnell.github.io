@@ -1,8 +1,8 @@
 ---
-title: A Personal Site That Compiles Its Own Promises
-description: Justin Purnell rebuilt his personal website as a Swift package, turning broken pages into compile errors and publishing into a single command.
+title: Building a Personal Website Where a Broken Page Is a Compile Error
+description: Justin Purnell rebuilt his personal website as a Swift package, turning layout bugs and missing content into compiler failures instead of deploy-time surprises.
 date: 2026-05-12 15:57
-lastModified: 2026-10-30
+lastModified: 2026-11-02
 tags: showcase, website, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,40 +10,40 @@ project: Website
 published: true
 ---
 
-# A Personal Site That Compiles Its Own Promises
+# Building a Personal Website Where a Broken Page Is a Compile Error
 
-> Justin Purnell rebuilt his personal website as a Swift package, turning broken pages into compile errors and publishing into a single command.
+> Justin Purnell rebuilt his personal website as a Swift package, turning layout bugs and missing content into compiler failures instead of deploy-time surprises.
 
 ## Problem
 
-Most personal sites are built on platforms that separate the author from the machinery — a CMS here, a build service there, a deployment hook somewhere else. When something breaks, it breaks silently at runtime, often only after it reaches a reader. Purnell set out to close that gap.
+Personal websites have a maintenance problem. The toolchain that felt exciting at launch becomes friction eighteen months later — a Node dependency that needs updating, a build pipeline that requires remembering, a deploy step that involves a dashboard click. The content suffers because publishing does.
 
-The site hosts his writing, a project showcase, and a quality-gate series — content that reflects careful thinking and deserves infrastructure to match. The goal was a publishing workflow ruthlessly reduced to `swift run`, with the compiler doing what staging environments usually fail to do: catching structural problems before they ship.
+Justin's site needed to serve two audiences simultaneously: readers coming for the writing, project showcases, and the quality-gate series, and Justin himself, who needed publishing to feel like a first-class development task rather than an operational chore. The goal was reducing the act of shipping a page to `swift run` — nothing more.
 
-He also had a secondary motivation with real architectural consequence: the site is the primary consumer of his own Ignite fork, a Swift static site generator. That means it isn't just a portfolio — it's a proving ground. Any divergence between Ignite's design and real-world authoring gets discovered here, by the author, before it reaches anyone else.
+The deeper problem was correctness. Most static site generators treat pages as template strings evaluated at runtime. A typo in a layout key, a missing variable, a broken component reference — none of these surface until the site is built or, worse, deployed. Justin wanted the type system to do that work instead.
 
 ## Approach
 
-The central architectural bet is that **pages are types**. Rather than templating languages or markdown-with-frontmatter, each page in PersonalSiteLib is a Swift type. Layouts are composed in code. This isn't aesthetics — it's a guarantee: a page that references a non-existent component or passes the wrong data shape fails at compile time, not at reader-time.
+The solution was to make the site itself a Swift package. Under the `PersonalSiteLib` and `IgniteStarter` targets, pages are types and layouts are composed in code. This isn't a configuration file driving a generator; it's a codebase where a broken page is usually a compile error rather than a deploy-time surprise.
 
-The project is a Swift package targeting macOS and iOS, built against Swift 6.2 and organized into three targets: `PersonalSiteLib` (the site itself), `IgniteStarter` (the entry point), and `PersonalSiteTests` (the test suite). Dependencies are intentionally minimal — Ignite for generation, `swift-docc-plugin` for documentation — keeping the dependency surface small and the build predictable.
+The site runs on Ignite, a Swift static site generator, pulling in the `swift-docc-plugin` alongside it. Crucially, this isn't a passive dependency relationship — the repository is the primary consumer of Justin's own Ignite fork, which means divergence in the generator gets exercised here before it reaches anyone else. The personal site acts as a living integration test for the framework work happening in parallel.
 
-Deployment is deliberately low-ceremony: output publishes to a `docs/` directory and is served directly by GitHub Pages, with no external build service in the loop. The constraint is the feature. Removing CI/CD from the deploy path means the author's local toolchain is the only moving part, which suits a solo publishing workflow and avoids the category of failure where a build service diverges from local behavior.
+The deployment story was kept deliberately simple: output lands in `docs/`, and GitHub Pages serves it from there. No external build service, no CI pipeline to maintain, no third-party authentication to renew. The architecture section of `CLAUDE.md` captures two standing rules that reflect this philosophy — never stash, and don't call a change live until it's confirmed. Small disciplines that keep the working tree honest.
 
-The repository's `CLAUDE.md` encodes two architectural disciplines worth noting: never stash, and verify a change is live before calling it done. These aren't arbitrary rules — they're the kind of working norms that prevent the subtle state-drift bugs that plague long-running personal projects maintained in irregular bursts.
+The project spans macOS and iOS as target platforms, and has been maintained across Swift Tools Version 6.2 — a deliberate choice to stay current with the Swift ecosystem's strictness guarantees rather than pin to something older and quieter.
 
 ## Results
 
-Over nearly two years — first commit November 2024, latest October 2026 — the project accumulated 254 commits across a single branch, a pattern consistent with a disciplined trunk-based workflow where the main branch stays deployable. The site shipped and has remained the active home for Purnell's writing and project work throughout that period.
+Over roughly two years of active development — from November 2024 through October 2026 — the project accumulated 258 commits across 2 contributors. The `PersonalSiteTests` target exists as a formal test surface alongside the main library and starter targets. The site publishes via `swift run` to `docs/` and is served directly through GitHub Pages without any external build infrastructure.
 
-As the primary consumer of the Ignite fork, PersonalSiteLib has served its secondary purpose: every authoring friction point, every API mismatch, every layout edge case encountered here has been encountered by the author rather than by a downstream user. The site's existence continuously validates — and stresses — the generator it depends on.
+The architecture delivered on its core promise: a page that doesn't compile doesn't ship. Layout composition errors, missing content bindings, and structural regressions surface at build time rather than in a browser.
 
 ## Judgment Calls
 
-The most revealing decision is the one that looks like a constraint: building on a framework he also maintains. Most developers choose between "use something stable" and "build your own." Purnell chose a third path — use something he's actively evolving, but in a context where he bears all the cost of instability himself. That's a considered risk allocation, not an oversight.
+The most telling decision is the one Justin didn't make: he didn't reach for an established generator with a plugin ecosystem and a large community. He built on his own Ignite fork and made his personal site the first place that fork has to prove itself. That's a higher bar for the tooling and a direct feedback loop between the site's needs and the generator's capabilities.
 
-Choosing `docs/`-based GitHub Pages deployment over a proper CI pipeline is similarly deliberate. It would be easy to read as a shortcut. It's better understood as a recognition that for a solo site with a single author, the build service is complexity without a beneficiary. Removing it makes the system more reliable, not less.
+The `docs/` deployment approach reflects a similar instinct for reducing surface area. Every external service in a deployment pipeline is a thing that can break, expire, or require attention. Eliminating the build service entirely — and trusting GitHub Pages to serve a static folder — means the maintenance burden stays exactly where Justin can see it: in the Swift code itself.
 
-The decision to encode working norms in `CLAUDE.md` — particularly the discipline around never stashing and confirming deploys — reflects an author who has thought about the failure modes of intermittent, long-running projects. Personal sites famously bitrot; half-finished changes get stashed and forgotten; deploys get assumed rather than confirmed. Purnell wrote down the rules that prevent those specific failure modes, which suggests he's encountered them before and decided they weren't acceptable.
+The `CLAUDE.md` architecture notes — don't stash, confirm before calling something live — are small but meaningful. They suggest a developer who thinks about the working conditions under which code gets written, not just the code itself. A stashed change is a context you have to reconstruct; a premature "it's live" is a claim that needs walking back. These aren't rules for a team. They're personal standards written down.
 
-Finally, there's something worth naming about the thesis itself: that a broken page should be a compile error. This is not the path of least resistance. It requires more upfront structure, a steeper authoring model, and a willingness to fight the type system when you just want to publish something. Purnell made that trade explicitly, and 254 commits later, he's still making it.
+What's absent is also instructive: no design proposals, no sessions with AI assistance logged, no elaborate pre-planning documents beyond the `MASTER_PLAN.md`. The work happened in commits — 258 of them — against a clear mission that fit in a few sentences.
