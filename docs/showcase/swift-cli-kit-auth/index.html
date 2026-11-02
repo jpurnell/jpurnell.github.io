@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/swift-cli-kit-auth" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools" />
+    <meta name="twitter:title" content="SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools" />
+    <meta property="og:description" content="A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven." />
+    <meta name="twitter:description" content="A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/swift-cli-kit-auth" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://orcid.org/0009-0006-7796-4088",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth",
+          "name" : "SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth#breadcrumb"
+      },
+      "description" : "A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools",
+      "url" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/portfolio/" class="nav-link text-nowrap">Portfolio</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/quality-gate/" class="nav-link text-nowrap">Quality Gate</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftCLIKitAuth</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <blockquote>
+          <p>A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven.</p>
+        </blockquote>
+        <h2>Problem</h2>
+        <p>Command-line tools that call account-bound services need a way to handle sign-in, but the space between “no accounts at all” and “roll your own auth flow” has historically been a gap rather than a solution. Developers building tools on SwiftCLIKit faced a choice: drag in a heavyweight dependency for features they might not need, or stitch together credential prompts, session management, and SSH handling by hand.</p>
+        <p>SwiftCLIKitAuth was built to close that gap cleanly. Its mission, as stated in its own <code>MASTER_PLAN.md</code>, is to establish <em>who</em> someone is (represented as a SwiftIdentity <code>Subject</code>), <em>how strongly</em> that was proven, and <em>whether the app admits them</em> — from a local terminal or over SSH. The package serves two audiences: authors of CLI tools that need a <code>login</code> command against an account-bound service, and authors of SSH apps that require accounts, built on SwiftCLIKitSSH.</p>
+        <p>Critically, the problem was scoped as tightly as the solution. Apps that don’t need accounts pay nothing. Apps that do add only the packages for the methods they use.</p>
+        <h2>Approach</h2>
+        <p>The design was authored prior to implementation and approved through a formal revision process — <code>2026-10-20_SwiftCLIKitAuth.md</code> reached revision 7 before receiving approval on 2026-10-24, with revisions 8 and 9 decided afterward. That proposal is explicitly designated the authority; the <code>MASTER_PLAN.md</code> tracks delivery against it. This discipline — keeping the design document sovereign over the implementation — reflects a working style that treats architecture as a first-class artifact rather than an afterthought reconstructed from code.</p>
+        <p>The package is structured into two targets with clean separation: <code>SwiftCLIKitAuth</code> for local terminal authentication flows and <code>SwiftCLIKitAuthSSH</code> for SSH-based authentication, each with its own test target. The dependency graph was constructed with deliberate restraint — <code>swift-cli-kit</code>, <code>swift-identity</code>, <code>swift-crypto</code>, <code>swift-nio</code>, and <code>swift-nio-ssh</code> are present because the package genuinely needs them. Third-party auth dependencies such as <code>swift-oauth</code> are explicitly kept <em>out</em>, pushed to the consuming application. This is not an oversight; it’s revision 9 of the design, which specifies that device sign-in takes the app’s closure so that OAuth libraries remain the app’s dependency, not the package’s.</p>
+        <p>Identity verification is delegated entirely to SwiftIdentity’s <code>Authenticator</code>. SwiftCLIKitAuth calls <code>Authenticator.authentication(for:)</code> — the statically dispatched form — gathers credentials, presents prompts, and manages session state. It does not inspect the reason for a refusal. Every failed sign-in surfaces the same message: “Sign-in failed.” This is a privacy guarantee enforced by architectural boundary, not by convention.</p>
+        <h2>Results</h2>
+        <p>Thirty commits across a single contributor produced four versioned releases — <code>v0.1.0</code> through <code>v0.4.0</code> — in just over 25 hours between first commit and latest commit. The pace reflects a design that was already settled before implementation began: when the architecture is resolved up front, implementation can move quickly without thrashing. The package ships with test coverage across both the core auth target and the SSH target (<code>SwiftCLIKitAuthTests</code> and <code>SwiftCLIKitAuthSSHTests</code>), targeting macOS, iOS, and visionOS. Documentation infrastructure is included via <code>swift-docc-plugin</code>, signaling intent for the package to be a publishable, maintainable component rather than internal scaffolding.</p>
+        <h2>Judgment Calls</h2>
+        <p>Several decisions here are worth examining as expressions of craft rather than convenience.</p>
+        <p><strong>The refusal is opaque by design.</strong> Consuming <code>Authenticator.authentication(for:)</code> in its statically dispatched form is not the path of least resistance — it’s the path that prevents any layer of this package from printing a rejection reason. The “Sign-in failed” message isn’t a lazy default; it’s a deliberate privacy posture baked into the call site.</p>
+        <p><strong>Inversion of the OAuth dependency.</strong> It would have been straightforward to take a direct dependency on an OAuth library and offer device sign-in as a first-class capability. Revision 9 of the design rejected this in favor of a closure-based interface that hands responsibility back to the calling application. The package stays thin; the application owns its own auth method dependency. This decision keeps SwiftCLIKitAuth honest about what it actually is — a session and admission layer, not an identity provider.</p>
+        <p><strong>Two targets, not one.</strong> Splitting SSH authentication into <code>SwiftCLIKitAuthSSH</code> means that tools without SSH exposure don’t link against NIO or the SSH stack. The pay-only-for-what-you-use principle stated in the mission is enforced at the package manifest level, not just in documentation.</p>
+        <p><strong>Design sovereignty.</strong> Designating the design proposal — not the code, not the plan — as the authoritative source of truth, and tracking delivery against it rather than updating it to match what shipped, is a discipline that keeps architectural intent legible. Four releases in two days is a fast cadence; the fact that the design was at revision 7 before a line was committed explains how that cadence was possible without drift.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/swift-cli-kit-auth-stats.svg" alt="SwiftCLIKitAuth statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/swift-cli-kit-auth-commits.svg" alt="SwiftCLIKitAuth commit history chart" class="img-fluid" />
+        <img src="/images/showcase/swift-cli-kit-auth-releases.svg" alt="SwiftCLIKitAuth release history chart" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swift-cli-kit-auth, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
