@@ -17,6 +17,5 @@ public struct SiteFooter: HTML {
         .navigationBarStyle(.automatic)
         .class("noPrint")
         .id("site-footer")
-        .style(.borderTop, "0.01em solid #d5d5d5")
     }
 }

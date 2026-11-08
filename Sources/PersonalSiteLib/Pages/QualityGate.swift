@@ -99,21 +99,22 @@ public struct QualityGate: StaticPage {
 
             Text("The Gate and the Mirror — mechanical enforcement and institutional judgment for software you can trust.")
                 .font(.lead)
-                .style(.color, "#666")
+                .style(.color, "var(--secondary-label)")
 
             Section {
                 Text("$ git commit -m \"session loop\"").style(.margin, "0")
-                Text("✗ concurrency  cancellation-checkpoint-after-loop").style(.color, "#c0392b").style(.margin, "0")
-                Text("  commit blocked · 1 error").style(.color, "#c0392b").style(.margin, "0")
+                Text("✗ concurrency  cancellation-checkpoint-after-loop").style(.color, "var(--destructive)").style(.margin, "0")
+                Text("  commit blocked · 1 error").style(.color, "var(--destructive)").style(.margin, "0")
                 Text("$ git commit -m \"session loop\"").style(.margin, "0")
-                Text("✓ 33 checkers · 0 errors · 0 warnings — committed").style(.color, "#2e7d32").style(.margin, "0")
+                Text("✓ 33 checkers · 0 errors · 0 warnings — committed").style(.color, "var(--success)").style(.margin, "0")
             }
-            .style(.fontFamily, "ui-monospace, SFMono-Regular, Menlo, monospace")
+            .data("bs-theme", "dark") // pins the dark appearance to this panel: a terminal stays dark in either theme
+            .style(.fontFamily, "var(--font-mono)")
             .style(.fontSize, "0.85rem")
-            .style(.background, "#0e1116")
-            .style(.color, "#e8edf4")
+            .style(.background, "var(--background)")
+            .style(.color, "var(--label)")
             .style(.padding, "1rem 1.25rem")
-            .style(.borderRadius, "10px")
+            .style(.borderRadius, "var(--radius-container)")
             .style(.marginTop, "1rem")
             .style(.maxWidth, "640px")
             .style(.overflowX, "auto")

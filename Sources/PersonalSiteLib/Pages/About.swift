@@ -1,7 +1,8 @@
 import Foundation
 import Ignite
 
-/// The About page, rendering the `about-Justin` article with a profile photo.
+/// The About page, rendering the `about-Justin` article with a profile photo: the portrait on the label
+/// column (columns 1 to 3) and the text on the reading column (columns 4 to 10).
 public struct About: StaticPage {
     /// Page title used in the `<title>` tag.
     public var title = "About"
@@ -14,15 +15,15 @@ public struct About: StaticPage {
     public var body: some HTML {
         Text("About").font(.title1).class("mainTitle")
         ForEach(articles.all.filter({ $0.path.contains("about-Justin") })) { article in
-            Image(article.image ?? "default", description: (article.metadata["imageDescription"] as? String) ?? "Justin Purnell")
-                .resizable()
-                .accessibilityLabel((article.metadata["imageDescription"] as? String) ?? "Justin Purnell photo")
-                .frame(width: 150, height: 150)
-                .style(.float, "left")
-                .style(.marginRight, "1%")
-                .style(.marginBottom, "1%")
-            Section { article.text }
-//				.frame(width: .percent(70%), maxWidth: .px(800))
+            Section {
+                Image(article.image ?? "default", description: (article.metadata["imageDescription"] as? String) ?? "Justin Purnell")
+                    .resizable()
+                    .accessibilityLabel((article.metadata["imageDescription"] as? String) ?? "Justin Purnell photo")
+                    .class("about-portrait")
+                Section { article.text }
+                    .class("about-text")
+            }
+            .class("about-grid")
         }
     }
 }
