@@ -10,7 +10,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/jpurnell/Ignite.git", revision: "161588651d1e0153a245672ec978ee23a48a4e4b"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
-        // Private repository: HTTPS like the rest of the fleet (CI reads it with a token).
+        // Public repository, fetched over HTTPS like the rest of the fleet.
         .package(url: "https://github.com/jpurnell/DesignTokens.git", from: "0.2.0"),
     ],
     targets: [
