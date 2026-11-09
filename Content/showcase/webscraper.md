@@ -1,8 +1,8 @@
 ---
-title: GEO Audit: Scoring AI Search Visibility with a Scrape-Orchestrate-Report Pipeline
-description: A solo Swift developer built a paid Vapor web service that audits website visibility for AI search and traditional SEO, delegating scoring to a remote MCP server while handling scraping, orchestration, and reporting in a cleanly separated three-target architecture.
+title: GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift
+description: A solo developer designed and shipped a three-layer Vapor application that scrapes websites, delegates scoring to a remote MCP server, and sells per-audit and subscription monitoring plans — all in under eight months.
 date: 2026-05-12 15:58
-lastModified: 2026-11-02
+lastModified: 2026-11-09
 tags: showcase, GEO-SEO, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,40 +10,48 @@ project: GEO Auditor
 published: true
 ---
 
-# GEO Audit: Scoring AI Search Visibility with a Scrape-Orchestrate-Report Pipeline
+# GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift
 
-> A solo Swift developer built a paid Vapor web service that audits website visibility for AI search and traditional SEO, delegating scoring to a remote MCP server while handling scraping, orchestration, and reporting in a cleanly separated three-target architecture.
+> A solo developer designed and shipped a three-layer Vapor application that scrapes websites, delegates scoring to a remote MCP server, and sells per-audit and subscription monitoring plans — all in under eight months.
 
 ## Problem
 
-As AI-powered search engines became a meaningful source of web traffic, website owners were left without reliable tools to understand how visible they were to these systems. Traditional SEO auditors focused on signals Google cared about — meta tags, structured data, crawlability — but the emerging category of Generative Engine Optimization (GEO) demanded something different: awareness of `llms.txt`, AI crawler access policies, and E-E-A-T signals that large language models use to assess source credibility.
+Search is bifurcating. Traditional crawlers still matter, but AI-powered search engines read pages differently — they weight structured data, `llms.txt` declarations, E-E-A-T signals, and machine-readable metadata in ways that standard SEO tools don't measure. Website owners have no easy way to know how visible they are to this new class of searcher.
 
-GEO Audit was built to fill that gap. The service fetches a target website's HTML, headers, `robots.txt`, `sitemap.xml`, and `llms.txt`, routes the extracted data through a remote GeoSEO MCP server for scoring across 18 named dimensions, and returns a structured audit report with actionable recommendations. Users can pay for a single audit or subscribe to weekly or monthly re-audits, with an automated monitoring job dispatching due runs on an hourly schedule.
+GEO Audit was built to close that gap. It accepts a URL, fetches the target site's HTML, headers, `robots.txt`, `sitemap.xml`, and `llms.txt`, routes the extracted data through a remote GeoSEO MCP server for authoritative scoring, and returns an audit report with actionable recommendations. Users can pay for a one-time audit or subscribe to weekly or monthly re-audits that run automatically.
+
+The project is a commercial product, not an internal tool — meaning it had to handle payments, recurring jobs, and a multi-tenant web UI from day one.
 
 ## Approach
 
-The project runs on Vapor 6, backed by Postgres for production persistence and SQLite for test environments, with Redis queuing the monitoring pipeline. The codebase is organized into three SwiftPM library targets that enforce a clean separation of concerns:
+The architecture is deliberately split into three SwiftPM library targets, each with a narrow responsibility.
 
-- **WebScraper** handles all network I/O — fetching HTML, headers, and the suite of supporting files — and validates every URL against SSRF before any request leaves the process. SwiftSoup drives HTML parsing across its 10 source files, and the target is exposed as a reusable library product.
-- **GEOAuditCore** owns the orchestration layer, mapping scraped data onto the 18 MCP tool calls and assembling the report structure. It communicates with the remote GeoSEO MCP server via SwiftMCPClient, keeping scoring logic off the application server entirely.
-- **App** is the Vapor application itself — routing, authentication, Stripe billing integration via stripe-kit, and the Leaf-rendered UI.
+**WebScraper** is the data-gathering layer. It wraps the separately extracted `SwiftWebScraper` package, assembles a `ScrapedSiteData` model from raw HTTP responses, and enforces SSRF URL validation before any network call is made. Keeping the audit model (`ScrapedSiteData`) in this target rather than in the scraping package was a conscious boundary decision: the scraping logic is reusable, but the shape of the data the audit cares about belongs to the audit.
 
-Tests across `WebScraperTests`, `GEOAuditCoreTests`, and `AppTests` use in-memory SQLite and mock HTTP and MCP clients, meaning the full test suite runs without any external service dependencies.
+**GEOAuditCore** is the orchestration layer. It maps scraped data onto 18 named MCP tools — covering meta tags, heading structure, JSON-LD, AI crawler access, E-E-A-T signals, and a composite GEO score, applied per-page and site-wide — and assembles the final report. Scoring is intentionally delegated to the remote GeoSEO MCP server hosted on roseclub.org; the core library stays thin and testable.
+
+**App** is the Vapor web layer. It owns routing, Leaf templates, Stripe payment integration, Fluent persistence (Postgres in production, SQLite in tests), and the Redis-backed queue that drives `MonitoringJob` — an hourly scheduled worker that checks which subscriptions are due and dispatches re-audits.
+
+The test strategy reflects the layered design. `WebScraperTests`, `GEOAuditCoreTests`, and `AppTests` each run against in-memory SQLite and mock HTTP/MCP clients, so the full suite runs locally with no external dependencies.
+
+Documentation was treated as a first-class output: `swift-docc-plugin` is a declared dependency, signaling that both library targets (`WebScraper` and `GEOAuditCore`) are meant to be consumed by others.
 
 ## Results
 
-Over roughly seven months — from March to October 2026 — the project reached a shipping state across 32 commits from a single contributor. The target breakdown spans six named SwiftPM targets. A CLAUDE.md file documents the development environment, module structure, and connection details for the hosted MCP server at roseclub.org, indicating the infrastructure was live and connected. The monitoring pipeline, billing integration, and three-tier pricing model (single audit, weekly, monthly) were all present by the final commit.
+Over roughly seven and a half months — first commit March 21, 2026, latest November 8, 2026 — the project reached 35 commits across 3 branches on a solo contributor's timeline. That pacing reflects sustained, deliberate iteration rather than a sprint.
+
+What shipped is a complete commercial service: a paid web application with Stripe-backed per-audit purchases and subscription tiers, automated monitoring via a scheduled Redis job, a Vapor/Leaf front end, and two reusable Swift library products. The `SwiftWebScraper` dependency was extracted into its own package as recently as November 7, 2026 — one day before the latest commit — demonstrating active architectural refinement even as the product matures.
+
+The three-target structure means both `WebScraper` and `GEOAuditCore` are available as libraries, opening a path for other clients to consume the scraping or orchestration layers independently.
 
 ## Judgment Calls
 
-Several decisions stand out as evidence of architectural judgment rather than just implementation effort.
+**Extracting SwiftWebScraper without moving ScrapedSiteData.** When the scraping logic was pulled into its own open-source package, the temptation would be to move the data model with it. The developer kept `ScrapedSiteData` inside the audit project. This is the right call: the extracted package stays generic and reusable, while the specific shape of data the audit pipeline depends on remains a versioned, explicit contract owned by this product.
 
-**Delegating scoring to a remote MCP server.** Rather than embed GEO scoring logic in the application, the project routes that responsibility to a dedicated external server. This is a meaningful boundary decision — it keeps the application focused on scraping and reporting, allows scoring logic to evolve independently, and acknowledges that the rules of GEO are still being written. The 18-tool MCP interface gives that boundary a well-defined contract.
+**Delegating scoring to a remote MCP server.** Rather than implementing GEO scoring heuristics in Swift and maintaining them as AI search evolves, the app treats scoring as an external, upgradeable service. The 18 named MCP tool calls are the interface; the intelligence lives elsewhere. This keeps `GEOAuditCore` stable and testable while allowing the scoring model to improve without a client release.
 
-**SSRF validation before any fetch.** Because the service accepts arbitrary URLs from users, every fetch candidate in WebScraper is validated against SSRF before a request is issued. Building this into the scraping layer rather than the application layer means the protection travels with the library, not just the endpoint.
+**SSRF validation before any fetch.** Putting URL validation in `WebScraper` before any HTTP call is made is a security-first boundary. In a service that accepts arbitrary user-supplied URLs and fetches them server-side, this is not optional — and placing it at the lowest layer means no path through the orchestration can bypass it.
 
-**Three-target split with library products.** Exposing WebScraper and GEOAuditCore as library products rather than embedding everything in the App target signals intent: these components are designed to be composable and testable in isolation. The mock client strategy in tests proves the abstraction is real — the orchestration layer can be exercised fully without a live MCP server or HTTP client.
+**Swift Tools version 6.2 and strict concurrency.** Targeting the latest Swift toolchain on a commercial product means embracing Swift 6's strict concurrency model from the start, rather than accumulating technical debt that would have to be paid down later. For an async-heavy pipeline — concurrent MCP tool calls, background monitoring jobs, HTTP fetching — getting concurrency semantics right at the foundation is leverage that compounds.
 
-**`llms.txt` as a first-class signal.** Fetching `llms.txt` alongside the standard SEO artifacts (`robots.txt`, `sitemap.xml`) reflects an early commitment to the emerging GEO category. At the time most tooling ignored this file entirely; treating it as a required input to the audit pipeline was a forward-looking choice.
-
-**Swift Tools 6.2 and strict concurrency.** Building on Swift 6.2 means the codebase targets strict concurrency checking, which imposes real discipline on how the async scraping and queuing pipeline is structured. Choosing the leading edge of the Swift ecosystem for a networked service is a deliberate bet on correctness over short-term convenience.
+**In-memory SQLite for the full test suite.** Swapping the production Postgres driver for SQLite in tests, combined with mock HTTP and MCP clients, means every test is fast, deterministic, and runnable without infrastructure. For a solo developer shipping a paid service, that's not a convenience — it's what makes confident iteration possible.

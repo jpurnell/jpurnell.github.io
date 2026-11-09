@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Justin Purnell rebuilt his personal website as a Swift package, turning layout bugs and missing content into compiler failures instead of deploy-time surprises." />
+    <meta name="description" content="Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Building a Personal Website Where a Broken Page Is a Compile Error | Justin Purnell</title>
+    <title>A Personal Site That Fails at Compile Time, Not at Midnight | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Building a Personal Website Where a Broken Page Is a Compile Error" />
-    <meta name="twitter:title" content="Building a Personal Website Where a Broken Page Is a Compile Error" />
-    <meta property="og:description" content="Justin Purnell rebuilt his personal website as a Swift package, turning layout bugs and missing content into compiler failures instead of deploy-time surprises." />
-    <meta name="twitter:description" content="Justin Purnell rebuilt his personal website as a Swift package, turning layout bugs and missing content into compiler failures instead of deploy-time surprises." />
+    <meta property="og:title" content="A Personal Site That Fails at Compile Time, Not at Midnight" />
+    <meta name="twitter:title" content="A Personal Site That Fails at Compile Time, Not at Midnight" />
+    <meta property="og:description" content="Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command." />
+    <meta name="twitter:description" content="Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/personalsitelib" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/personalsitelib",
-          "name" : "Building a Personal Website Where a Broken Page Is a Compile Error",
+          "name" : "A Personal Site That Fails at Compile Time, Not at Midnight",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/personalsitelib#breadcrumb"
       },
-      "description" : "Justin Purnell rebuilt his personal website as a Swift package, turning layout bugs and missing content into compiler failures instead of deploy-time surprises.",
+      "description" : "Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "Building a Personal Website Where a Broken Page Is a Compile Error",
+      "name" : "A Personal Site That Fails at Compile Time, Not at Midnight",
       "url" : "https://www.justinpurnell.com/showcase/personalsitelib"
     }
   ]
@@ -181,30 +181,29 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Building a Personal Website Where a Broken Page Is a Compile Error</h1>
+      <h1 class="mainTitle">A Personal Site That Fails at Compile Time, Not at Midnight</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Website</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>Justin Purnell rebuilt his personal website as a Swift package, turning layout bugs and missing content into compiler failures instead of deploy-time surprises.</p>
+          <p>Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command.</p>
         </blockquote>
         <h2>Problem</h2>
-        <p>Personal websites have a maintenance problem. The toolchain that felt exciting at launch becomes friction eighteen months later — a Node dependency that needs updating, a build pipeline that requires remembering, a deploy step that involves a dashboard click. The content suffers because publishing does.</p>
-        <p>Justin’s site needed to serve two audiences simultaneously: readers coming for the writing, project showcases, and the quality-gate series, and Justin himself, who needed publishing to feel like a first-class development task rather than an operational chore. The goal was reducing the act of shipping a page to <code>swift run</code> — nothing more.</p>
-        <p>The deeper problem was correctness. Most static site generators treat pages as template strings evaluated at runtime. A typo in a layout key, a missing variable, a broken component reference — none of these surface until the site is built or, worse, deployed. Justin wanted the type system to do that work instead.</p>
+        <p>Personal websites occupy a peculiar position in a developer’s toolkit: they’re simultaneously portfolio and workshop, public face and private experiment. The conventional stack — a static site generator driven by Markdown templates and YAML front matter — works until it doesn’t, usually when a misconfigured layout or a missing variable surfaces only after a push to production.</p>
+        <p>Purnell’s site, <code>justinpurnell.com</code>, hosts his writing, a project showcase, and an ongoing quality-gate series. It needed to be reliable enough that its failure modes weren’t embarrassing, and lightweight enough that publishing a new post didn’t become an operation. The deeper motivation was more principled: he was building Ignite, his own Swift static site generator, and needed a real site that exercised that framework under the pressure of actual use before anyone else encountered its rough edges.</p>
         <h2>Approach</h2>
-        <p>The solution was to make the site itself a Swift package. Under the <code>PersonalSiteLib</code> and <code>IgniteStarter</code> targets, pages are types and layouts are composed in code. This isn’t a configuration file driving a generator; it’s a codebase where a broken page is usually a compile error rather than a deploy-time surprise.</p>
-        <p>The site runs on Ignite, a Swift static site generator, pulling in the <code>swift-docc-plugin</code> alongside it. Crucially, this isn’t a passive dependency relationship — the repository is the primary consumer of Justin’s own Ignite fork, which means divergence in the generator gets exercised here before it reaches anyone else. The personal site acts as a living integration test for the framework work happening in parallel.</p>
-        <p>The deployment story was kept deliberately simple: output lands in <code>docs/</code>, and GitHub Pages serves it from there. No external build service, no CI pipeline to maintain, no third-party authentication to renew. The architecture section of <code>CLAUDE.md</code> captures two standing rules that reflect this philosophy — never stash, and don’t call a change live until it’s confirmed. Small disciplines that keep the working tree honest.</p>
-        <p>The project spans macOS and iOS as target platforms, and has been maintained across Swift Tools Version 6.2 — a deliberate choice to stay current with the Swift ecosystem’s strictness guarantees rather than pin to something older and quieter.</p>
+        <p>The central architectural decision was treating the site itself as a Swift package. Pages are types. Layouts are composed in code. The dependency graph — Ignite, <code>swift-docc-plugin</code>, and his own <code>DesignTokens</code> package — is declared in a manifest and resolved by the compiler. When something is structurally wrong, the build fails; nothing reaches GitHub Pages in a broken state.</p>
+        <p>Deployment is deliberately minimal: static output lands in <code>docs/</code> and GitHub Pages serves it directly. No external CI pipeline, no build service, no deployment credentials to rotate. The publishing primitive is <code>swift run</code>.</p>
+        <p>The <code>CLAUDE.md</code> file and the architecture notes embedded in it reveal a working discipline that matches the project’s values. Two rules govern the git workflow: never stash, and don’t mark a change as live until it verifiably is. These aren’t arbitrary preferences — they’re the kind of habits that keep a solo-maintained codebase honest over a long timeline.</p>
+        <p>The site targets both macOS and iOS in its package declaration, a consequence of Ignite’s own platform support rather than any native UI ambition, but it reflects the degree to which the site and its generator are genuinely coupled.</p>
         <h2>Results</h2>
-        <p>Over roughly two years of active development — from November 2024 through October 2026 — the project accumulated 258 commits across 2 contributors. The <code>PersonalSiteTests</code> target exists as a formal test surface alongside the main library and starter targets. The site publishes via <code>swift run</code> to <code>docs/</code> and is served directly through GitHub Pages without any external build infrastructure.</p>
-        <p>The architecture delivered on its core promise: a page that doesn’t compile doesn’t ship. Layout composition errors, missing content bindings, and structural regressions surface at build time rather than in a browser.</p>
+        <p>Over two years — from November 2024 through November 2026 — the project accumulated 267 commits across 4 branches, with 2 contributors. The site ships continuously from <code>docs/</code> with no external build infrastructure. Because it is the primary consumer of the Ignite fork, every divergence in that generator gets exercised here first, in a context with real content and real stakes, before it surfaces for anyone else.</p>
+        <p>The publishing workflow reduced to a single command. The deploy pipeline reduced to a directory and a GitHub setting.</p>
         <h2>Judgment Calls</h2>
-        <p>The most telling decision is the one Justin didn’t make: he didn’t reach for an established generator with a plugin ecosystem and a large community. He built on his own Ignite fork and made his personal site the first place that fork has to prove itself. That’s a higher bar for the tooling and a direct feedback loop between the site’s needs and the generator’s capabilities.</p>
-        <p>The <code>docs/</code> deployment approach reflects a similar instinct for reducing surface area. Every external service in a deployment pipeline is a thing that can break, expire, or require attention. Eliminating the build service entirely — and trusting GitHub Pages to serve a static folder — means the maintenance burden stays exactly where Justin can see it: in the Swift code itself.</p>
-        <p>The <code>CLAUDE.md</code> architecture notes — don’t stash, confirm before calling something live — are small but meaningful. They suggest a developer who thinks about the working conditions under which code gets written, not just the code itself. A stashed change is a context you have to reconstruct; a premature “it’s live” is a claim that needs walking back. These aren’t rules for a team. They’re personal standards written down.</p>
-        <p>What’s absent is also instructive: no design proposals, no sessions with AI assistance logged, no elaborate pre-planning documents beyond the <code>MASTER_PLAN.md</code>. The work happened in commits — 258 of them — against a clear mission that fit in a few sentences.</p>
+        <p>The most consequential decision was the one that looks like scope creep but isn’t: building the generator before shipping the site, then using the site to validate the generator. This creates a tighter feedback loop than any test suite could — real content, real structure, real failure modes. The site doesn’t just consume Ignite; it <em>is</em> Ignite’s integration test.</p>
+        <p>The choice to publish from <code>docs/</code> rather than a separate branch or an external service reflects a preference for auditable simplicity. The output lives in the repository. You can read the history of what shipped alongside the history of what changed in the source. There’s no artifact store to query, no pipeline log to decode.</p>
+        <p>The <code>DesignTokens</code> dependency is a quieter signal: rather than hardcoding values or reaching for a CSS preprocessor, Purnell extracted his design primitives into a named package. The token vocabulary becomes part of the Swift type system, which means color and spacing decisions are as refactorable as any other abstraction.</p>
+        <p>Taken together, these decisions describe a developer who reached for correctness-by-construction rather than process-by-convention — and built a publishing workflow he’d actually use.</p>
       </div>
       <div class="showcase-infographics">
         <img src="/images/showcase/personalsitelib-stats.svg" alt="Website statistics infographic" class="img-fluid" />
