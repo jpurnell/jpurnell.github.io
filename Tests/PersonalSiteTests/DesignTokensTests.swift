@@ -59,4 +59,51 @@ struct DesignTokensAdoptionTests {
         }
         #expect(offenders.isEmpty, "colour literals in Swift: \(offenders)")
     }
+
+    // MARK: Increased contrast (DesignTokens 0.3.0+)
+
+    @Test("tokens.css carries the increased-contrast blocks for light, OS dark and explicit dark")
+    func tokensCarryIncreasedContrast() throws {
+        let css = try Self.read("Assets/css/tokens.css")
+        #expect(css.contains("@media (prefers-contrast: more) {\n  :root {"))
+        #expect(css.contains("@media (prefers-contrast: more) and (prefers-color-scheme: dark) {"))
+        #expect(css.contains("@media (prefers-contrast: more) {\n  [data-theme=\"dark\"],"))
+    }
+
+    @Test("cascade order: base, light contrast, OS dark, explicit dark, then dark contrast overrides")
+    func contrastCascadeOrder() throws {
+        let css = try Self.read("Assets/css/tokens.css")
+        func at(_ needle: String) throws -> String.Index {
+            try #require(css.range(of: needle)?.lowerBound, "missing \(needle)")
+        }
+        let lightContrast = try at("@media (prefers-contrast: more) {\n  :root {")
+        let osDark = try at("@media (prefers-color-scheme: dark) {")
+        let explicitDark = try at("[data-theme=\"dark\"],\n[data-bs-theme=\"dark\"] {")
+        let osDarkContrast = try at("@media (prefers-contrast: more) and (prefers-color-scheme: dark) {")
+        let explicitDarkContrast = try at("@media (prefers-contrast: more) {\n  [data-theme=\"dark\"],")
+        #expect(lightContrast < osDark)
+        #expect(osDark < explicitDark)
+        #expect(explicitDark < osDarkContrast)
+        #expect(osDarkContrast < explicitDarkContrast)
+    }
+
+    @Test("the layout links tokens.css before main.css, so main.css only consumes the tokens")
+    func layoutLinksTokensFirst() throws {
+        let layout = try Self.read("Sources/PersonalSiteLib/Layouts/MainLayout.swift")
+        let tokens = try #require(layout.range(of: "/css/tokens.css")?.lowerBound)
+        let main = try #require(layout.range(of: "/css/main.css")?.lowerBound)
+        #expect(tokens < main)
+    }
+
+    @Test("main.css neither redefines a token nor adds its own contrast or theme blocks")
+    func mainCSSDoesNotShadowTokens() throws {
+        let css = try Self.read("Assets/css/main.css")
+        let tokens = try Self.read("Assets/css/tokens.css")
+        let definition = try Regex(#"(?m)^\s*(--[a-z0-9-]+)\s*:"#)
+        let redefined = css.matches(of: definition).compactMap { $0.output[1].substring.map(String.init) }
+            .filter { tokens.contains("\($0):") }
+        #expect(redefined.isEmpty, "main.css redefines tokens: \(redefined)")
+        #expect(!css.contains("prefers-contrast"))
+        #expect(!css.contains("data-theme"))
+    }
 }

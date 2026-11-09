@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- **DesignTokens 0.2.0 to 0.5.0 (2026-11-09).** `Package.swift` now requires `from: "0.5.0"`
+  (resolved to tag 0.5.0, revision `275a75c`). `Assets/css/tokens.css` was regenerated with
+  `scripts/sync-tokens.sh`; the diff is 55 added lines and no removals: three
+  `@media (prefers-contrast: more)` blocks (light, OS dark, explicit `[data-theme="dark"]`)
+  that override only accent, success, destructive and the eight series colours. Swiss values
+  are otherwise unchanged. `docs/` rebuilt; `docs/css/tokens.css` is the only changed file.
+  New tests pin the blocks, their cascade order (after the base and each dark block they
+  override), the tokens-before-main link order in `MainLayout`, and that `main.css` neither
+  redefines tokens nor adds its own contrast or theme blocks.
+
+### Changed
 - **Showcase pages regenerated from current source (2026-10-30).** 23 of the 28 pages under
   `Content/showcase/` were last generated on 12-13 May; they were rewritten by `showcase sync`
   from each repository's present state and `project/master_plan.md`, and the portfolio
