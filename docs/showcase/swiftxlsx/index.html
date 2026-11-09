@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/swiftxlsx" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format" />
+    <meta name="twitter:title" content="SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format" />
+    <meta property="og:description" content="Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month." />
+    <meta name="twitter:description" content="Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftxlsx" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://orcid.org/0009-0006-7796-4088",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swiftxlsx#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/showcase/swiftxlsx",
+          "name" : "SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swiftxlsx#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/showcase/swiftxlsx#breadcrumb"
+      },
+      "description" : "Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format",
+      "url" : "https://www.justinpurnell.com/showcase/swiftxlsx"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint navbar navbar-expand-md" style="border-bottom: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/portfolio/" class="nav-link text-nowrap">Portfolio</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/quality-gate/" class="nav-link text-nowrap">Quality Gate</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftXLSX</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <blockquote>
+          <p>Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month.</p>
+        </blockquote>
+        <h2>Problem</h2>
+        <p>Excel’s <code>.xlsx</code> format is deceptively complex. Underneath a familiar file extension lives a ZIP archive containing a constellation of XML documents governed by OOXML, a sprawling Microsoft standard that most parsing libraries only partially implement. Developers who need to read <em>and</em> write <code>.xlsx</code> files — preserving formulas, styles, and layout — typically find themselves reaching for C-backed libraries or platform-specific frameworks, neither of which fits comfortably in a Swift ecosystem increasingly targeting both macOS and server-side Linux contexts.</p>
+        <p>SwiftXLSX exists to close that gap. The library provides a pure-Swift, bidirectional engine for reading, writing, and round-tripping Excel files: formulas are parsed and stored as an AST, styles and layout are preserved, and the entire stack — from ZIP archive handling down to the spreadsheet vocabulary — is implemented in Swift with no C dependencies. The project is built with a concrete downstream consumer in mind: BusinessMathExcel, a planned application that imports Excel financial models, extends them with Monte Carlo simulation and optimization, and exports results back to <code>.xlsx</code>. That real-world use case keeps the library honest about what round-trip fidelity actually means.</p>
+        <h2>Approach</h2>
+        <p>Purnell structured the project around a clean separation of concerns expressed through a small, intentional dependency graph. SwiftXLSX itself handles the OOXML layer — reading and writing the XML that defines workbooks, worksheets, formulas, and styles. The ZIP layer is delegated to SwiftZIP, a sibling pure-Swift package. The shared spreadsheet vocabulary — cell types, formula AST nodes, style primitives — lives in SwiftExcelCore, another sibling package. This means SwiftXLSX neither reinvents low-level archive handling nor bleeds domain concepts across package boundaries.</p>
+        <p>Formula handling received particular architectural attention. SwiftXLSX includes a Pratt-precedence parser that produces a <code>FormulaAST</code> defined in SwiftExcelCore, enabling syntax-faithful round-trips: a formula read from an <code>.xlsx</code> file can be parsed, represented structurally, and written back without loss. Crucially, <em>evaluation</em> is not here — that responsibility was deliberately moved to a separate SwiftExcelFunctions package at version 0.13.0 (Architectural Decision 7 in the project’s own records). SwiftXLSX is syntax and storage; it does not conflate parsing with computation.</p>
+        <p>The project targets Swift 6.2 with strict concurrency enabled. All public types conform to <code>Sendable</code>, a non-trivial constraint when modeling a mutable spreadsheet graph, and one that future server-side consumers will depend on. A <code>SaveFidelityTool</code> target sits alongside the main library and tests — a dedicated executable for validating that read→write round-trips produce output that Excel considers equivalent to the source.</p>
+        <p>The presence of a <code>CLAUDE.md</code> file in the repository, with sections covering Session Start protocol, Key Rules, release procedures, and a Quality Gate, reflects a disciplined approach to AI-assisted development: sessions have documented entry points and exit criteria rather than open-ended prompting.</p>
+        <h2>Results</h2>
+        <p>SwiftXLSX shipped 47 releases — from <code>v0.1.0</code> to <code>v0.37.2</code> — across 25 days, with 38 commits from a single contributor. The release cadence reflects a version-everything discipline: minor features, architectural extractions (like the formula evaluator separation at 0.13.0), and patch corrections each received their own tagged release. Five active branches suggest parallel streams of work. The project is live on both macOS and iOS platforms, with a package manifest targeting Swift Tools 6.2.</p>
+        <p>Two Claude Code sessions contributed 14 commits across 26 messages, with both sessions reaching their stated outcomes (one mostly achieved, one fully achieved) and only a single wrong-approach friction event across the entire AI-assisted work — a signal that the sessions were well-scoped before they started.</p>
+        <h2>Judgment Calls</h2>
+        <p>The most telling decision in SwiftXLSX is the extraction of formula evaluation at version 0.13.0. It would have been easy — and initially faster — to build evaluation directly into the library. Purnell chose instead to keep SwiftXLSX as a syntax and storage layer, moving the function library to SwiftExcelFunctions. This is a meaningful trade: it keeps the package’s dependency surface small, makes the evaluation engine independently testable and replaceable, and means that consumers who only need to read or write formulas (rather than compute them) don’t carry the weight of a function library. It’s the kind of decision that looks obvious in retrospect but requires the confidence to act on early.</p>
+        <p>The zero-C-dependency constraint is similarly deliberate. Pure-Swift implementations of ZIP handling and XML processing carry a real cost in initial development effort. The payoff is portability — particularly for server-side Swift targets where C library availability is not guaranteed — and a codebase that Swift developers can actually read, debug, and contribute to without context-switching to a different language. For the BusinessMathExcel use case, where financial models need to move through a Swift computational graph and back out to <code>.xlsx</code>, that portability is load-bearing.</p>
+        <p>The <code>SaveFidelityTool</code> as a first-class build target, rather than a test helper or a script, signals that round-trip correctness is treated as a product property worth instrumenting continuously — not just something to check occasionally before a release.</p>
+      </div>
+      <div class="showcase-infographics">
+        <img src="/images/showcase/swiftxlsx-stats.svg" alt="SwiftXLSX statistics infographic" class="img-fluid" />
+        <img src="/images/showcase/swiftxlsx-commits.svg" alt="SwiftXLSX commit history chart" class="img-fluid" />
+        <img src="/images/showcase/swiftxlsx-releases.svg" alt="SwiftXLSX release history chart" class="img-fluid" />
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftxlsx, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md" style="border-top: 0.01em solid #d5d5d5">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>

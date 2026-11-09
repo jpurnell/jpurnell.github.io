@@ -1,8 +1,8 @@
 ---
-title: QualityGateCore: Building a Plugin-Driven Quality Enforcement Engine for Swift
-description: A deep technical look at how a disciplined design-first workflow produced a modular, CI-ready quality gate system spanning 20+ auditors, multiple output formats, and Swift 6.2's full concurrency model.
+title: QualityGateCore: Building a Static-Analysis Gate That Eats Its Own Cooking
+description: A practitioner's account of how jpurnell designed and shipped a modular, AST-driven quality gate for Swift 6 projects — one that runs its own checkers on every commit of itself.
 date: 2026-05-13 15:44
-lastModified: 2026-05-13
+lastModified: 2026-11-02
 tags: showcase, project, QualityGate, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: deepDive
@@ -10,100 +10,128 @@ project: Internal Infrastructure
 published: true
 ---
 
-# QualityGateCore: Building a Plugin-Driven Quality Enforcement Engine for Swift
+# QualityGateCore: Building a Static-Analysis Gate That Eats Its Own Cooking
 
-> A deep technical look at how a disciplined design-first workflow produced a modular, CI-ready quality gate system spanning 20+ auditors, multiple output formats, and Swift 6.2's full concurrency model.
+> A practitioner's account of how jpurnell designed and shipped a modular, AST-driven quality gate for Swift 6 projects — one that runs its own checkers on every commit of itself.
+
+---
+
+## Overview
+
+QualityGateCore is a static-analysis platform for Swift 6 packages. Where linters tend to operate on text patterns, QualityGateCore works at the level of Swift's compiler artifacts: SwiftSyntax parse trees for syntactic checks, and the compiler's index store for cross-file questions such as dead-code detection, recursion cycles, and symbol reachability. The project is explicit that it is not a replacement for SwiftLint but a complement — it occupies the layer SwiftLint does not: semantic correctness, safety contracts, documentation integrity, and release readiness.
+
+The tool targets four overlapping audiences. Individual developers can install it via Homebrew and run `quality-gate` as a pre-commit or pre-push hook. Teams drop the bundled GitHub Actions workflow into their CI pipeline and get the same gate at merge time. Package authors who want only certain checks can depend on individual checker libraries without pulling in the whole system. And developers writing new checkers build against `QualityGateCore` and `QualityGateTestKit`, which together provide the primitives, the corpus harness, and the test infrastructure needed to calibrate a new rule.
+
+The repository runs its own checkers against itself. That self-hosting stance, stated plainly in the project's `MASTER_PLAN.md`, is the most honest possible statement of confidence in the tool.
+
+---
 
 ## Architecture
 
-QualityGateCore is structured around a deliberate separation of concerns: a thin coordination core, a suite of independently-deployable auditor plugins, and a shared type system that binds them together without coupling their implementations.
+Seven months of active development — first commit March 2026, latest October 2026 — and 779 commits across a three-person team produced a package that is notably wide. The `Package.swift` enumerates roughly 90 targets, each a named SwiftPM library or executable with its own test target. That is not bloat; it is a deliberate modularity strategy. Each checker is a separately importable product, which means a consumer can add `DependencyAuditor` or `ConcurrencyAuditor` as a package dependency without touching anything else.
 
-The package dependency on `quality-gate-types` is the architectural keystone. By externalizing the shared domain model — findings, severity levels, output contracts — every auditor target can be compiled and tested in isolation without pulling in the full tool. This mirrors the philosophy behind Swift's own modular stdlib design and makes the plugin surface area explicit rather than accidental.
-
-The target list tells the full story of scope. Twenty-plus named auditors — `SafetyAuditor`, `ConcurrencyAuditor`, `PointerEscapeAuditor`, `FloatingPointSafetyAuditor`, `StochasticDeterminismAuditor`, `MCPReadinessAuditor`, and many more — each live in their own target with a corresponding test target. The `QualityGateCLI` is the sole entry point that assembles them, while `QualityGateTestKit` provides shared testing infrastructure so auditor authors don't have to reinvent assertion helpers.
+The dependency graph reflects a clear layering philosophy:
 
 ```
 QualityGateCLI
-    └── QualityGateCore (orchestration)
-            ├── SafetyAuditor
-            ├── ConcurrencyAuditor
-            ├── BuildChecker
-            ├── TestRunner
-            ├── DocLinter / DocCoverageChecker
-            ├── UnreachableCodeAuditor
-            ├── RecursionAuditor
-            ├── PointerEscapeAuditor
-            ├── MemoryBuilder / MemoryLifecycleGuard
-            ├── AccessibilityAuditor
-            ├── LoggingAuditor
-            ├── TestQualityAuditor
-            ├── DependencyAuditor
-            ├── ReleaseReadinessAuditor
-            ├── FloatingPointSafetyAuditor
-            ├── MCPReadinessAuditor
-            ├── StochasticDeterminismAuditor
-            └── ... (shared via quality-gate-types)
+    └── GatePlugins, GateCI, ReleaseReadinessAuditor, …
+            └── QualityGateCore
+                    ├── ExternalInputSyntax      (SwiftSyntax wrapper)
+                    ├── SyntaxScope              (scope resolution)
+                    ├── IndexStoreInfra          (indexstore-db bridge)
+                    └── quality-gate-types       (shared value types)
 ```
 
-On thing to note is that the output format itself is a first-class design decision. Since the tool targets three distinct consumers — humans in a terminal, JSON-consuming CI scripts, and GitHub Code Scanning via SARIF — the architecture is structured to treat these as separate rendering concerns downstream of a unified finding model. The `.quality-gate.yml` configuration layer, parsed via `Yams`, allows per-project customization without source changes, which is essential for a tool that must adapt to codebases it cannot control.
+`QualityGateCore` itself exposes the plugin protocol and shared primitives. Individual auditors depend on `QualityGateCore` and, where needed, on `IndexStoreInfra` for symbol-resolution queries. Nothing in the auditor layer depends on another auditor, keeping compile times manageable and checker authors isolated from each other's churn.
 
-We equally considered the SPM integration surface: both `CommandPlugin` and `BuildToolPlugin` modes are supported, acknowledging that developers want different invocation models (on-demand audit versus build-time enforcement).
+Two infrastructure choices deserve attention. First, `indexstore-db` is used rather than running the compiler on demand. This means a single `swift build` populates the index and every cross-file check reads from it, rather than spawning compiler processes per-file. Second, `SwiftSyntax` is consumed through a thin wrapper target, `ExternalInputSyntax`, which normalises the syntax tree into types the rest of the system can depend on without hard-coupling every checker to SwiftSyntax's own evolving API surface.
 
-One key differentiator is our dependency on `swift-syntax`. We allow auditors, when necessary, to perform real AST analysis rather than just use chunky, error-prone regex heuristics — a significant capability investment that pays dividends in precision for auditors like `UnreachableCodeAuditor`, `RecursionAuditor`, and `PointerEscapeAuditor`.
+The read-only `--foreign` mode — for analysing repositories the developer does not own — is architecturally interesting. All writes, including suppressions and calibration data, are redirected to an overlay directory. The `--fix` flag is refused entirely. This is a deliberate safety boundary enforced at the core layer, not a convention, so checker authors cannot accidentally write to foreign source.
+
+---
 
 ## Implementation
 
-The project's 28 design proposals are the most revealing implementation artifact. A design-first workflow at this scale — 76 commits over roughly two months, landing a v1.0.0 release — shows how the code largely executed against pre-reasoned plans rather than discovering structure emergently. We built each proposal by defining the auditor's contract, input expectations, finding schema, and edge cases well before a line of production code was written.
+### The Checker Taxonomy
 
-The `indexstore-db` dependency was a particularly inspired choice. We realized that rather than shelling out to `xcodebuild` or parsing compiler output naively, auditors that need symbol-level information should be able query the index directly. With that, our auditors can do incredible things like cross-file analysis — finding unreachable code paths, tracing pointer escapes across module boundaries, detecting problematic recursion patterns — that text-based approaches simply cannot achieve reliably.
+Looking at the target list, the checkers fall into rough families:
 
-The `StochasticDeterminismAuditor` and `MCPReadinessAuditor` targets deserve special mention as they reflect our forward-thinking scope. The former suggests the tool can flag code paths whose behavior is non-deterministic in ways that would undermine reproducible builds or testing. The latter reflects the project's stated goal of being "MCP-ready" — ensuring tool descriptions are structured for consumption by AI agents, which is an unusually forward-looking quality gate concern.
+- **Safety and correctness**: `SafetyAuditor`, `PointerEscapeAuditor`, `FloatingPointSafetyAuditor`, `BoundedIOAuditor`, `ProcessSafetyAuditor`, `MemoryLifecycleGuard`
+- **Concurrency**: `ConcurrencyAuditor`, `StochasticDeterminismAuditor`, `TemporalDeterminismAuditor`, `GPUSafetyAuditor`
+- **Documentation integrity**: `DocLinter`, `DocCodeAuditor`, `DocGeneratedAuditor`, `DocCoverageChecker`
+- **Code health**: `ComplexityAnalyzer`, `LegibilityAnalyzer`, `DuplicationAuditor`, `UnreachableCodeAuditor`, `RecursionAuditor`, `IdiomAuditor`, `SmellPack`
+- **Infrastructure and release**: `ReleaseReadinessAuditor`, `DependencyAuditor`, `DependencyAdvisory`, `SubmoduleAuditor`, `SwiftVersionChecker`
+- **Platform and HIG**: `HIGAuditor`, `AccessibilityAuditor`, `AppIntentsAuditor`, `PrivacyManifestChecker`, `KeychainSecretsChecker`
 
-Swift 6.2 and the Tools version 6.2 declaration mean the codebase operates under strict concurrency checking. For a tool that coordinates parallel auditor execution, this is both constraint and quality signal: the compiler itself enforces the absence of data races in the orchestration layer.
+The documentation checks are the most distinctive. `DocCodeAuditor` extracts code fences from DocC articles, assembles them into a synthesised Swift program, and compiles it. `DocGeneratedAuditor` goes a step further: it runs that program and compares its output against figures claimed in the documentation. This is test-in-documentation at the level of contract, not convention.
 
-```swift
-// Conceptual shape of the core auditor protocol, inferred from the architecture
-public protocol Auditor: Sendable {
-    var identifier: String { get }
-    func audit(context: AuditContext) async throws -> [Finding]
-}
+### Dated Suppression
+
+The debt-management workflow — `quality-gate adopt` followed eventually by `quality-gate re-verify` — is one of the more thoughtful UX decisions in the system. Instead of a permanent suppression comment that accrues silently, every adopted finding carries an expiry date. When the date lapses, `re-verify` returns the finding to the active queue. This makes technical debt visible and time-bounded rather than invisible and permanent.
+
+A typical adoption record in the overlay might look like:
+
+```yaml
+# .quality-gate/debt.yml
+- id: ConcurrencyAuditor/actor-isolation-violation
+  file: Sources/Networking/Session.swift
+  line: 47
+  adopted: 2026-08-15
+  expires: 2026-11-15
+  note: "Refactor blocked on upstream SE-XXXX"
 ```
 
-The `MemoryBuilder` and `MemoryLifecycleGuard` pairing reflect a two-phase approach to memory analysis: construction of a memory ownership graph followed by runtime guard verification — a design that separates static analysis from dynamic contract enforcement.
+The `ContextAuditor` and `ControlMapping` targets suggest that the system also reasons about whether a suppression's stated rationale still applies — checking, for instance, whether the upstream blocker has since resolved.
 
-The three Claude Code sessions (32 messages, 8 commits) show targeted, bounded AI assistance: two single-task sessions and one multi-task session, all reaching `fully_achieved` outcomes. 
+### Precision Calibration
+
+`quality-gate calibrate --coverage` collects sample counts and false-positive rates per checker. The infrastructure for this lives in `CorpusService` and `quality-gate-corpus-kit`. Running calibration against a known corpus produces precision reports that checker authors can use to tune thresholds, and that teams can use to decide which checks to enable in their gate. This is not common in open-source linters, which typically leave precision measurement as an exercise for the consumer.
+
+### Claude Code Integration Patterns
+
+jpurnell ran nine Claude Code sessions against this project, generating 113 commits and 238 messages. The session type distribution — four multi-task sessions, one iterative refinement, one exploration — reflects how the project was actually built: complex checkers developed over extended sessions rather than quick one-shot completions. The friction log shows `buggy_code` appearing nine times and `self_corrected_false_alarm` three times, suggesting a working pattern where generated code was treated as a draft to be verified rather than a final artifact. All nine sessions reached at least a mostly-achieved outcome, and five were fully achieved, indicating that the sessions were well-scoped and that jpurnell caught and corrected issues before they landed in the main branch. Two `privacy_overreach` friction events are notable given the project's domain — a static-analysis tool that reads source code has an obvious surface area for over-reach, and the session logs suggest that boundary was actively managed.
+
+---
 
 ## Testing Strategy
 
-Every auditor target is paired with a dedicated test target, and `QualityGateTestKit` exists as a shared testing infrastructure library — a strong signal that test quality is itself a first-class concern. A tool that audits `TestQualityAuditor` configurations while also shipping a `TestQualityAuditor` auditor has a pleasingly recursive quality commitment.
+The package ships test targets that mirror every checker target: `SafetyAuditorTests`, `ConcurrencyAuditorTests`, `DocCodeAuditorTests`, and so on across roughly 45 test targets. This is not incidental; it reflects a product decision that checker quality is a first-class concern rather than an afterthought.
 
-The `QualityGateTestKit` target deserves examination on its own terms. Shared test infrastructure across 20+ auditor test targets shows how we invested in making correct testing easy. This likely includes fixture project helpers, finding assertion DSLs, and mock `AuditContext` builders that let each auditor test suite focus on behavioral assertions rather than plumbing.
+`QualityGateTestKit` is the internal testing library. Checker authors write tests against it, which provides fixture Swift source, expected-finding matchers, and helpers for exercising the index-store integration without a full build.
 
 ```swift
-// Likely pattern within QualityGateTestKit
-extension XCTestCase {
-    func assertFindings(
-        _ findings: [Finding],
-        contain rule: RuleIdentifier,
-        severity: Severity = .warning,
-        file: StaticString = #file,
-        line: UInt = #line
-    ) { ... }
+import QualityGateTestKit
+
+final class ConcurrencyAuditorTests: CheckerTestCase {
+    func testActorIsolationViolationIsReported() throws {
+        let source = """
+        actor Counter {
+            var value = 0
+        }
+        func increment(_ c: Counter) {
+            c.value += 1  // isolation violation
+        }
+        """
+        let findings = try audit(source, with: ConcurrencyAuditor())
+        XCTAssertFinding(findings, id: "actor-isolation-violation", line: 5)
+    }
 }
 ```
 
-The `SafetyAuditorTests`, `ConcurrencyAuditorTests`, and `PointerEscapeAuditorTests` targets in particular must contend with the challenge of constructing valid Swift AST fixtures that exercise specific code patterns. The `swift-syntax` dependency enables this: test cases can programmatically construct syntax trees representing problematic patterns without relying on separate fixture files that drift from compiler reality.
+The `JudgmentWorkbenchTests` target, which has no obvious paired library target, suggests a separate harness for subjective evaluation — running the full gate against known-good and known-bad corpora and measuring whether the checker's judgment aligns with human review. Combined with `CIParityTests` and `ForeignModeAcceptanceTests`, the test suite covers not just individual checkers but the integration points that matter in production: CI behaviour and foreign-mode write isolation.
 
-The design-proposal workflow feeds directly into test quality. When auditor behavior is specified in writing before implementation, test cases can be derived directly from acceptance criteria rather than reverse-engineered from behavior. This is particularly valuable for edge cases in auditors like `RecursionAuditor` (mutual recursion? indirect enum recursion?) where the specification surface is non-obvious.
+The self-hosting property provides an ongoing integration test. When a checker is modified, the gate runs against the repository itself on the next commit. If the modified checker produces false positives or regressions, they surface immediately — on the project's own code, not a synthetic fixture.
+
+---
 
 ## Lessons
 
-**Modular target decomposition pays compound interest.** The decision to give every auditor its own SPM target — rather than organizing by feature layer within a monolithic library — means that build times stay proportional to change scope, test runs can be parallelized at the target level, and new auditors can be added without touching existing code. This lesson transfers directly to any tool that has a family of independently-motivated behaviors.
+**Modularity pays its cost at design time, not maintenance time.** Defining 90 targets up front in `Package.swift` feels excessive until a consumer needs only `DependencyAuditor`. The narrow interface per checker means changes to one auditor have zero compile-time impact on any other, and the target list serves as the public API of the platform. jpurnell's decision to enforce this boundary from the first release — v1.0.0 shipped in the same month the project started — meant the architecture was load-bearing from the beginning rather than retrofitted.
 
-**Shared type packages prevent integration debt.** Externalizing `quality-gate-types` into its own dependency means the CLI, the core, and every auditor agree on the same finding model without circular dependencies. Projects that skip this step often discover late that their internal models have diverged and that the integration layer has become load-bearing complexity.
+**Self-hosting is a forcing function for quality.** A tool that runs its own checks on its own code cannot tolerate noisy or fragile checks. Every false positive in the self-hosted run is immediately disruptive to the development workflow. This constraint visibly shaped the calibration infrastructure: the false-positive rate is not an abstract concern but something jpurnell encounters on every commit.
 
-**Design proposals are executable specifications.** With 28 proposals backing 76 commits, we had roughly one proposal per two to three commits — tight enough that proposals were genuinely guiding implementation rather than serving as post-hoc documentation. The practice of writing down the *why* and *what* before the *how* produced a codebase where architectural intent is recoverable without reading the commit history.
+**Documentation as executable specification.** The `DocCodeAuditor` and `DocGeneratedAuditor` pattern — compile the code in the docs, run it, compare its output to the claimed figures — transfers directly to any project where correctness claims live in prose. The pattern decouples documentation accuracy from human diligence and instead enforces it mechanically. jpurnell has applied variants of this approach in other tooling contexts: wherever a document asserts a number, that number should be produced by code, not typed by hand.
 
-**Output format is an API contract.** The decision to treat SARIF as a first-class output format — not an afterthought — means the tool integrates with GitHub Code Scanning without requiring wrapper scripts. For a CLI tool targeting CI/CD pipelines, the consumer of the output is as important as the producer of it. This framing (tool output as API) transfers to any developer tool where downstream systems need to parse results.
+**Dated suppressions over permanent ones.** The `adopt`/`re-verify` workflow transferred directly to larger team settings. Permanent suppression comments tend to be forgotten; suppressions with expiry dates are revisited. The expiry date is not enforced automatically — the developer still has to decide what to do — but the tooling makes the debt visible and ensures it is not silently inherited by future maintainers.
 
-**Swift 6.2 strict concurrency as quality gate for the quality gate tool itself.** Operating under complete concurrency checking in the orchestration layer forced correct-by-construction async designs for parallel auditor execution. The discipline imposed by the compiler on this codebase mirrors the discipline the tool imposes on its target projects — a productive form of dogfooding.
+**Treat generated code as a draft.** The Claude Code session logs, with their `buggy_code` friction count of nine across nine sessions, reflect a pragmatic stance: AI-assisted code generation accelerates exploration but requires the same review discipline as any other external contribution. The fully-achieved and mostly-achieved outcome distribution suggests that scoping sessions tightly — matching the multi-task sessions to genuine multi-part problems rather than open-ended generation — is the lever that matters most for quality.

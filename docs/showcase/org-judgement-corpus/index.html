@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A focused Swift utility for constructing and managing a corpus of labeled judgments, built and committed in under four minutes." />
+    <meta name="description" content="jpurnell designed and built org-judgement-corpus as the durable, append-only data substrate that gives his Institutional Judgment System a memory — turning ephemeral CI gate runs into a queryable history of portfolio health." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Building a Judgment Corpus Tool for Organizational Data | Justin Purnell</title>
+    <title>The Ground Truth Layer: Building a Portfolio-Wide Quality Memory | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Building a Judgment Corpus Tool for Organizational Data" />
-    <meta name="twitter:title" content="Building a Judgment Corpus Tool for Organizational Data" />
-    <meta property="og:description" content="A focused Swift utility for constructing and managing a corpus of labeled judgments, built and committed in under four minutes." />
-    <meta name="twitter:description" content="A focused Swift utility for constructing and managing a corpus of labeled judgments, built and committed in under four minutes." />
+    <meta property="og:title" content="The Ground Truth Layer: Building a Portfolio-Wide Quality Memory" />
+    <meta name="twitter:title" content="The Ground Truth Layer: Building a Portfolio-Wide Quality Memory" />
+    <meta property="og:description" content="jpurnell designed and built org-judgement-corpus as the durable, append-only data substrate that gives his Institutional Judgment System a memory — turning ephemeral CI gate runs into a queryable history of portfolio health." />
+    <meta name="twitter:description" content="jpurnell designed and built org-judgement-corpus as the durable, append-only data substrate that gives his Institutional Judgment System a memory — turning ephemeral CI gate runs into a queryable history of portfolio health." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/org-judgement-corpus" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/org-judgement-corpus",
-          "name" : "Building a Judgment Corpus Tool for Organizational Data",
+          "name" : "The Ground Truth Layer: Building a Portfolio-Wide Quality Memory",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/org-judgement-corpus#breadcrumb"
       },
-      "description" : "A focused Swift utility for constructing and managing a corpus of labeled judgments, built and committed in under four minutes.",
+      "description" : "jpurnell designed and built org-judgement-corpus as the durable, append-only data substrate that gives his Institutional Judgment System a memory — turning ephemeral CI gate runs into a queryable history of portfolio health.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "Building a Judgment Corpus Tool for Organizational Data",
+      "name" : "The Ground Truth Layer: Building a Portfolio-Wide Quality Memory",
       "url" : "https://www.justinpurnell.com/showcase/org-judgement-corpus"
     }
   ]
@@ -181,23 +181,38 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Building a Judgment Corpus Tool for Organizational Data</h1>
+      <h1 class="mainTitle">The Ground Truth Layer: Building a Portfolio-Wide Quality Memory</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">2 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">5 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A focused Swift utility for constructing and managing a corpus of labeled judgments, built and committed in under four minutes.</p>
+          <p>jpurnell designed and built org-judgement-corpus as the durable, append-only data substrate that gives his Institutional Judgment System a memory — turning ephemeral CI gate runs into a queryable history of portfolio health.</p>
         </blockquote>
         <h2>Problem</h2>
-        <p>Evaluation pipelines and ranking systems live or die by the quality of their training signal. Without a structured, reproducible way to collect and store human judgments against organizational data, teams fall back on ad hoc spreadsheets or one-off scripts that don’t compose. The <code>org-judgement-corpus</code> project addresses the need for a dedicated tool to assemble and maintain a corpus of explicit judgments — the kind of labeled ground truth that powers relevance tuning, classification, and quality assessment workflows.</p>
+        <p>Every CI system produces output, and almost none of it survives. Test results flash past in a log, quality metrics exist for the duration of a pull request, and the moment a pipeline concludes the signal is gone. For a developer maintaining a portfolio of Swift projects — spanning families as distinct as BusinessMath and BioFeedbackKit — that evaporation means there is no honest answer to the question: <em>is the portfolio getting better or worse over time?</em></p>
+        <p>org-judgement-corpus was built to answer that question. It is the data layer for jpurnell’s broader Institutional Judgment System: a dedicated repository whose sole responsibility is to receive, store, and serve structured telemetry from quality-gate runs across every project in <code>manifest.yml</code>. It does not run code, expose an API, or ship a product. Its two Swift targets are intentionally empty scaffolds — placeholders that satisfy toolchain conventions while making clear that the real contents are data, not logic. The mission, stated plainly in the project’s own <code>MASTER_PLAN.md</code>, is a corpus of records.</p>
         <h2>Approach</h2>
-        <p>The project is implemented in Swift, positioning it within a native macOS or command-line tooling context where performance and type safety matter for data integrity work. The choice of Swift for a corpus management utility reflects a deliberate preference for compiled, statically typed tooling over interpreted alternatives — a tradeoff that favors correctness and long-term maintainability over rapid prototyping convenience.</p>
-        <p>The repository was established with a clear directory structure under a dedicated <code>Tools</code> grouping within a broader Swift development workspace, suggesting this is one instrument in a larger organized toolkit rather than a standalone experiment.</p>
+        <p>The central architectural insight was that a repository <em>is</em> an appropriate database for this workload — provided the schema, merge strategy, and directory layout are designed deliberately rather than left to chance.</p>
+        <p>Telemetry is written into <code>telemetry/</code> under a two-level hierarchy: one directory per project, one timestamped JSON bundle per gate run (<code>YYYY-MM-DD/HHmmss_*.json</code>). Each bundle separates concerns into distinct files — metadata, complexity, orientation, and calibration — rather than collapsing everything into a single document. This separation means consumers can load only the slices they need and the diff history in git remains legible.</p>
+        <p>The concurrent-write problem — CI pipelines from multiple projects pushing telemetry simultaneously — is handled at the git layer rather than with a lock or a queue. A <code>.gitattributes</code> rule sets <code>telemetry/*/index.jsonl merge=union</code>, allowing git itself to merge append-only index files without conflict. This is a disciplined choice: it trades away the ability to ever rewrite those indexes in exchange for zero-coordination writes from any number of CI workers.</p>
+        <p>Data integrity failures are handled honestly. Rather than silently dropping gate output that failed checksum verification or arrived outside the merge window, jpurnell routes it to <code>stranded-telemetry/</code> with a README explaining why each record was not merged into the main corpus. The stranded directory is checksum-verified and retained — the failure is documented, not discarded.</p>
+        <p>Above the raw telemetry, a generation layer produces human-readable signal. <code>pulse/</code> contains 138 daily and 11 weekly directories, each holding a structured <code>PULSE_*.json</code> alongside a Markdown <code>NARRATIVE_*.md</code>. The narrative front matter records which model wrote it — a provenance decision that treats AI-generated prose as something to be audited rather than trusted blindly.</p>
+        <p><code>manifest.yml</code> acts as the authoritative registry of the portfolio itself, recording per-project lifecycle state, <code>changedAt</code> timestamps, optional tier overrides, and group membership. It is the single source of truth for what the corpus is tracking.</p>
         <h2>Results</h2>
-        <p>The project reached an initial committed state in approximately four minutes — from first commit at 23:08 to second at 23:11 on April 28, 2026. Two commits represent the scaffold: the project standing up and an immediate follow-on refinement, which is a recognizable pattern for a developer who commits early and iterates rather than holding work locally. The repository is on a single branch, consistent with a tool at its founding stage, not yet requiring feature branching.</p>
+        <p>Over roughly six months — first commit April 28, 2026, latest November 2, 2026 — the corpus accumulated 1,680 commits across 3 contributors, with CI tooling (<code>ijs-telemetry push</code> from org-judgement-system) accounting for the bulk of the write volume. The repository now holds:</p>
+        <ul>
+          <li><strong>111 project directories</strong> under <code>telemetry/</code>, representing the full monitored portfolio</li>
+          <li><strong>138 daily and 11 weekly Pulse directories</strong> — a continuous narrative record of portfolio health</li>
+          <li>A functioning concurrent-write merge strategy verified across real multi-pipeline conditions</li>
+          <li>A <code>stranded-telemetry/</code> archive that proves the integrity system has been exercised, not just designed</li>
+        </ul>
+        <p>The corpus is live infrastructure: CI clones it, pushes to it, and moves on. jpurnell reads the Pulse documents and portfolio metrics as a regular practice.</p>
         <h2>Judgment Calls</h2>
-        <p>The most telling decision here is the <em>decision to build at all</em>. Reaching for a dedicated, versioned, compiled Swift tool for corpus management — rather than a Python notebook or a CSV — signals that the developer treats evaluation infrastructure as first-class software. Judgment corpora are often the unglamorous scaffolding behind machine learning and search quality work; giving that scaffolding a proper home in a typed language with its own repository is an architectural opinion, not a default.</p>
-        <p>The placement under <code>Tools</code> within a structured Swift workspace also reflects a broader philosophy: individual utilities belong in a coherent ecosystem, making them discoverable and reusable rather than buried in project-specific directories. Even at two commits, this project carries evidence of a developer who thinks about where things live before they think about what they do.</p>
+        <p><strong>Choosing a repository over a database.</strong> The decision to store telemetry in git rather than in a time-series database or object store is the most consequential architectural call in the project. Git provides free history, free diffs, free blame, and — crucially — a merge model that can be customized per path. The tradeoff is that the corpus will grow without bound and bulk queries require tooling rather than SQL. jpurnell accepted that tradeoff explicitly: the access pattern is <em>append frequently, read occasionally and holistically</em>, which git handles well.</p>
+        <p><strong>The union merge rule.</strong> Setting <code>merge=union</code> on index files is a sharp tool. It means those files will always grow and never be corrected by a merge. Choosing it anyway signals confidence that the append-only invariant will hold — and that concurrent correctness is worth more than the flexibility to patch history.</p>
+        <p><strong>Separating stranded telemetry from the main corpus.</strong> A simpler system would either accept all data or silently drop failures. Routing problematic records to <code>stranded-telemetry/</code> with documented reasons is a quality signal in itself: it means the corpus can be trusted precisely because its rejection criteria are visible and auditable.</p>
+        <p><strong>Front-matter model provenance in Pulse narratives.</strong> Recording which model authored each <code>NARRATIVE_*.md</code> treats AI-generated content as a first-class data attribute rather than an implementation detail. As models change and outputs evolve, that provenance makes it possible to reason about consistency across the historical record — a form of data hygiene that most teams skip entirely.</p>
+        <p><strong>Empty Swift targets as honest scaffolding.</strong> Keeping the Swift targets present but empty is a small act of architectural honesty. They satisfy toolchain and CI expectations without pretending the repository contains application logic it does not. The shape of the project tells the truth about what it is.</p>
       </div>
       <div class="showcase-infographics">
         <img src="/images/showcase/org-judgement-corpus-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
