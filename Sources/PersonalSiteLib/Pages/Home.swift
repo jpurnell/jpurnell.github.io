@@ -14,7 +14,6 @@ public struct Home: StaticPage {
         Text("Justin Purnell")
             .font(.title1)
             .class("siteTitle")
-            .padding(.horizontal, 10)
 
         // Visually-hidden content for AI crawlers and screen readers
         Group {

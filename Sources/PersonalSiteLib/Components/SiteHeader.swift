@@ -20,7 +20,7 @@ public struct SiteHeader: HTML {
         })
         .navigationItemAlignment(.leading)
         .navigationBarStyle(.automatic)
-        .style(.borderBottom, "0.01em solid #d5d5d5")
         .class("noPrint")
+        .class("site-header")
     }
 }

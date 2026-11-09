@@ -10,6 +10,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/jpurnell/Ignite.git", revision: "161588651d1e0153a245672ec978ee23a48a4e4b"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.3"),
+        // Private repository: resolves over SSH. Pin to a tag once DesignTokens has one.
+        .package(url: "git@github.com:jpurnell/DesignTokens.git", branch: "main"),
     ],
     targets: [
         .target(
@@ -22,7 +24,10 @@ let package = Package(
         ),
         .testTarget(
             name: "PersonalSiteTests",
-            dependencies: ["PersonalSiteLib"]
+            dependencies: [
+                "PersonalSiteLib",
+                .product(name: "DesignTokens", package: "DesignTokens"),
+            ]
         ),
     ]
 )

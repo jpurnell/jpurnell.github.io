@@ -17,6 +17,7 @@ public struct MainLayout: Layout {
     /// The full document including head metadata, structured data, and body chrome.
     public var body: some Document {
         Head {
+            MetaLink(href: "/css/tokens.css", rel: .stylesheet)
             MetaLink(href: "/css/main.css", rel: .stylesheet)
 
             MetaTag(name: "fediverse:creator", content: "@jpurnell@mastodon.social")
