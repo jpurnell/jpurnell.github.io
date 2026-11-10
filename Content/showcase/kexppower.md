@@ -1,5 +1,5 @@
 ---
-title: "Spinner: I Power KEXP 90.3 FM, Everywhere"
+title: Spinner: I Power KEXP 90.3 FM, Everywhere
 description: A personal Apple-platform listener for KEXP 90.3 FM, built around how I find music: the live playlist first, then everywhere I go, from iPhone and Apple Watch to the car, with Siri and Shortcuts.
 date: 2026-11-10 15:37
 lastModified: 2026-11-10
