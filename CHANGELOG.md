@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- **DesignTokens 0.6.0 to 0.9.0 (2026-11-10).** `Package.swift` now requires `from: "0.9.0"`
+  (resolved at tag 0.9.0). `scripts/sync-tokens.sh` produces a byte-identical `tokens.css`, so no
+  token value the site uses changed. The showcase SVGs were regenerated against it; eight differ,
+  all from commit counts that moved today, none from styling.
+
+### Changed
 - **Showcase graphics regenerated from the design system (2026-11-10).** All 114 SVGs for the 38
   manifest pages were rewritten by `showcase sync --infographics-only` from project-showcase's
   DesignTokens-based generators (previously a hard-coded navy and cyan palette). Each file embeds
