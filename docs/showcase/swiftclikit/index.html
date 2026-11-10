@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="From zero to 23 releases in six months, jpurnell built a production-grade terminal UI library — with an embedded SSH server — that makes no compromises on Swift 6 strict concurrency and zero C dependencies." />
+    <meta name="description" content="A two-layer terminal UI framework for Swift 6, covering everything from raw ANSI escape handling to a cell-based component system, with an embedded SSH server and no C dependencies beyond system libc." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftCLIKit: A Pure Swift Terminal UI Framework Built for the Modern Concurrency Era | Justin Purnell</title>
+    <title>SwiftCLIKit: A Pure Swift Terminal UI Library | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftCLIKit: A Pure Swift Terminal UI Framework Built for the Modern Concurrency Era" />
-    <meta name="twitter:title" content="SwiftCLIKit: A Pure Swift Terminal UI Framework Built for the Modern Concurrency Era" />
-    <meta property="og:description" content="From zero to 23 releases in six months, jpurnell built a production-grade terminal UI library — with an embedded SSH server — that makes no compromises on Swift 6 strict concurrency and zero C dependencies." />
-    <meta name="twitter:description" content="From zero to 23 releases in six months, jpurnell built a production-grade terminal UI library — with an embedded SSH server — that makes no compromises on Swift 6 strict concurrency and zero C dependencies." />
+    <meta property="og:title" content="SwiftCLIKit: A Pure Swift Terminal UI Library" />
+    <meta name="twitter:title" content="SwiftCLIKit: A Pure Swift Terminal UI Library" />
+    <meta property="og:description" content="A two-layer terminal UI framework for Swift 6, covering everything from raw ANSI escape handling to a cell-based component system, with an embedded SSH server and no C dependencies beyond system libc." />
+    <meta name="twitter:description" content="A two-layer terminal UI framework for Swift 6, covering everything from raw ANSI escape handling to a cell-based component system, with an embedded SSH server and no C dependencies beyond system libc." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftclikit" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swiftclikit",
-          "name" : "SwiftCLIKit: A Pure Swift Terminal UI Framework Built for the Modern Concurrency Era",
+          "name" : "SwiftCLIKit: A Pure Swift Terminal UI Library",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftclikit#breadcrumb"
       },
-      "description" : "From zero to 23 releases in six months, jpurnell built a production-grade terminal UI library — with an embedded SSH server — that makes no compromises on Swift 6 strict concurrency and zero C dependencies.",
+      "description" : "A two-layer terminal UI framework for Swift 6, covering everything from raw ANSI escape handling to a cell-based component system, with an embedded SSH server and no C dependencies beyond system libc.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftCLIKit: A Pure Swift Terminal UI Framework Built for the Modern Concurrency Era",
+      "name" : "SwiftCLIKit: A Pure Swift Terminal UI Library",
       "url" : "https://www.justinpurnell.com/showcase/swiftclikit"
     }
   ]
@@ -181,38 +181,340 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftCLIKit: A Pure Swift Terminal UI Framework Built for the Modern Concurrency Era</h1>
+      <h1 class="mainTitle">SwiftCLIKit: A Pure Swift Terminal UI Library</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>From zero to 23 releases in six months, jpurnell built a production-grade terminal UI library — with an embedded SSH server — that makes no compromises on Swift 6 strict concurrency and zero C dependencies.</p>
+          <p>A two-layer terminal UI framework for Swift 6, covering everything from raw ANSI escape handling to a cell-based component system, with an embedded SSH server and no C dependencies beyond system libc.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Building rich terminal applications in Swift has historically meant reaching for C libraries — ncurses, libssh, or some other POSIX-era toolkit bolted together with unsafe bridging code. jpurnell set out to close that gap. SwiftCLIKit is a pure Swift terminal UI library that offers two distinct layers of abstraction: a low-level terminal foundation for developers who need direct control, and a high-level cell-based UI framework for those who want to build rich interactive interfaces without reinventing the renderer.</p>
-        <p>The library also ships an embedded SSH server module, SwiftCLIKitSSH, meaning applications built on it can serve remote terminal sessions without pulling in a single external C dependency beyond system libc. It targets macOS, iOS, and visionOS, positioning itself as a serious cross-platform toolkit rather than a weekend experiment.</p>
-        <p>The scope is ambitious enough to justify a <code>MASTER_PLAN.md</code> at the root of the repository — a living document that codifies the mission, the architecture, and the quality bar.</p>
+        <h2>Motivation</h2>
+        <p>I wanted a terminal UI library I could use in my own Swift tools without reaching for C-backed frameworks or wrapping ncurses. The constraints I set going in were specific: pure Swift, Swift 6 strict concurrency throughout, and support for the full Apple platform matrix plus Linux. The embedded SSH server module came from a practical need — being able to serve a terminal UI over SSH without introducing a separate process or a dependency on an external daemon. The result needed to be production-ready, not a proof of concept, so I tracked quality through a formal gate rather than leaving it informal.</p>
         <h2>Approach</h2>
-        <p>The package is organized into a coherent target graph that reflects its layered design philosophy. <code>SwiftCLIKit</code> forms the core foundation. <code>SwiftGUIKit</code> and <code>SwiftGUIKitSwiftUI</code> build the higher-level UI abstractions on top of it, with the SwiftUI target providing a bridge for developers already living in that ecosystem. <code>SwiftCLIKitSSH</code> encapsulates the SSH server functionality, backed by <code>swift-nio-ssh</code> and <code>swift-crypto</code> — both Apple-maintained packages that keep the dependency chain trustworthy and pure Swift.</p>
-        <p>The <code>QualityGateDashboard</code> target — along with its companion CLI entrypoint <code>qg-dashboard</code> and app target <code>QGDashboardApp</code> — suggests jpurnell built a first-party quality monitoring tool directly within the project itself, using SwiftCLIKit as its own runtime. This is the kind of dogfooding that surfaces real ergonomic issues before external users ever encounter them.</p>
-        <p>Swift 6 strict concurrency is not a checkbox here — it’s a stated design constraint throughout. Choosing <code>swift-atomics</code> as a dependency signals that concurrency correctness reaches down to the primitive level, not just the actor boundary. The <code>CLAUDE.md</code> file encodes session startup context, development workflow, key rules, architecture notes, quality gate criteria, and references — a practice that keeps both the developer and any AI-assisted sessions oriented to the project’s invariants from the first message.</p>
-        <p>The design-first workflow is minimal by artifact count, but the architecture is encoded in prose and policy rather than formal proposals: <code>MASTER_PLAN.md</code> serves as the authoritative design document, and <code>CLAUDE.md</code> operationalizes it at the development-session level.</p>
+        <p>The library has two layers of abstraction. The low-level foundation handles terminal I/O, ANSI escape sequences, raw mode, and the event loop. The high-level layer is cell-based: components occupy cells in a grid, and layout and rendering are expressed in terms of that model. Keeping the two layers separate means a consumer can use the foundation directly if the cell model doesn’t fit their use case.</p>
+        <p>The SSH module (<code>SwiftCLIKitSSH</code>) is built on <code>swift-nio-ssh</code> and exposes the same high-level component API over an SSH session. Cryptographic work goes through <code>swift-crypto</code>. Atomic operations use <code>swift-atomics</code>. Documentation is generated via <code>swift-docc-plugin</code>. The <code>DesignTokens</code> dependency carries shared visual constants — colors, spacing, type — that also feed the SwiftUI bridge target (<code>SwiftGUIKitSwiftUIKit</code>).</p>
+        <p>The package targets macOS, iOS, tvOS, watchOS, and visionOS. Most targets are relevant to macOS and Linux for actual terminal use; the broader platform list covers the GUI kit targets (<code>SwiftGUIKit</code>, <code>SwiftGUIKitSwiftUI</code>) which bring the same design tokens and some shared primitives into UIKit/SwiftUI contexts.</p>
+        <p>A <code>CLAUDE.md</code> file defines the development workflow, architecture rules, quality gate requirements, and session-start instructions. That document was the authoritative reference during one Claude Code session, which produced one commit across five messages with a fully-achieved outcome.</p>
         <h2>Results</h2>
-        <p>SwiftCLIKit reached 170 commits across a six-month window — from May to November 2026 — shipping 23 public releases. The version history tells its own story: <code>v0.1.0</code> through <code>v0.5.0</code> represent the foundational build-out, <code>v1.0.0</code> through <code>v1.4.0</code> the stabilization arc, and the <code>v2.x</code> series — nine releases culminating in <code>v2.5.1</code> — reflects active iteration on a production-capable codebase.</p>
-        <p>The test suite spans five dedicated test targets: <code>SwiftCLIKitTests</code>, <code>SwiftCLIKitSSHTests</code>, <code>SwiftGUIKitTests</code>, <code>SwiftGUIKitSwiftUITests</code>, and <code>QualityGateDashboardTests</code>. Each major library target has a corresponding test target, indicating coverage was treated as a first-class deliverable across the entire framework surface, not an afterthought.</p>
-        <p>The project ships across macOS, iOS, and visionOS, and the <code>swiftclikit-examples</code> target provides consumable reference implementations for new adopters.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here reveal craft that output metrics alone don’t capture.</p>
-        <p><strong>Zero C dependencies as a hard constraint.</strong> This is the most consequential design decision in the project, and it’s not a minor inconvenience to honor — it means reimplementing or carefully composing functionality that most terminal libraries take for granted via native C bindings. jpurnell chose this constraint deliberately, and the dependency list bears it out: <code>swift-nio-ssh</code>, <code>swift-atomics</code>, <code>swift-crypto</code>, <code>swift-docc-plugin</code>, and <code>DesignTokens</code> are all Swift-native packages.</p>
-        <p><strong>Two-layer abstraction design.</strong> Offering both a low-level terminal foundation and a high-level cell-based UI framework in a single library is a genuinely difficult design problem — the layers have to be coherent enough that the high-level API doesn’t leak low-level concerns, but composable enough that sophisticated users can drop down when they need to. The fact that <code>SwiftGUIKitSwiftUI</code> exists as a distinct target suggests jpurnell thought carefully about where SwiftUI integration belongs architecturally: as an optional layer, not a dependency of the core.</p>
-        <p><strong>Building the quality dashboard in-house.</strong> Embedding <code>QualityGateDashboard</code> as a first-party consumer of SwiftCLIKit is a forcing function. Any API that’s painful to use gets felt immediately. It’s also a demonstration artifact — a non-trivial application that ships as part of the package itself.</p>
-        <p><strong>Encoding project context in <code>CLAUDE.md</code>.</strong> The presence of an AI session context file, combined with a Claude Code session that fully achieved its goal in five messages, reflects a working style oriented toward high-leverage, well-scoped collaboration. The session context document ensures that architectural constraints — strict concurrency, the zero-C-dependency rule, the quality gate criteria — are not rediscovered each time but are ambient to every session.</p>
-        <p><strong>Shipping on visionOS.</strong> Terminal UI on visionOS is not an obvious market. Including it signals that jpurnell is building toward the library’s potential ceiling, not just its immediate floor.</p>
+        <p>The project reached v2.7.0 across 189 commits from a single contributor between May and November 2026, with 26 releases total starting from v0.1.0. The release history shows a v1 stabilization phase, a v2.0.0 breaking-change release, and steady minor and patch releases through v2.7.0. Targets with dedicated test suites include <code>SwiftCLIKitTests</code>, <code>SwiftCLIKitSSHTests</code>, <code>SwiftGUIKitTests</code>, and <code>SwiftGUIKitSwiftUITests</code>. A <code>QualityGateDashboard</code> target and its companion CLI (<code>qg-dashboard</code>) and app (<code>QGDashboardApp</code>) expose quality metrics in a terminal UI built with the library itself.</p>
+        <h2>Decisions</h2>
+        <p><strong>Zero C dependencies beyond libc.</strong> This ruled out wrapping ncurses or termbox, which simplified the build on Linux and removed a category of Swift/C interop complexity. It also meant implementing terminal capability handling in Swift directly, which added work upfront but kept the dependency graph clean.</p>
+        <p><strong>Swift 6 strict concurrency from the start.</strong> Adopting <code>Sendable</code> requirements, actors, and structured concurrency at project start rather than retrofitting them later meant that some API shapes were constrained by the concurrency model early. That added friction during initial design but avoided a large migration later.</p>
+        <p><strong>Two-layer architecture.</strong> Separating the terminal foundation from the cell-based UI layer was a deliberate design decision to avoid locking consumers into one model. Whether this separation has been used in practice by anyone other than the library’s own higher-level targets is unknown.</p>
+        <p><strong>SSH module as a first-class target.</strong> Making <code>SwiftCLIKitSSH</code> part of the same package rather than a separate repository keeps the API surface synchronized across releases, but it also means the <code>swift-nio-ssh</code> dependency is present in the package graph for all consumers, even those who don’t need SSH.</p>
+        <p><strong>Quality gate tooling built with the library.</strong> Using the library to build its own dashboard (<code>QGDashboardApp</code>, <code>qg-dashboard</code>) serves as a continuous integration test of the high-level API, though it conflates the roles of test harness and monitoring tool in ways that may need disentangling as the project grows.</p>
+        <p><strong>GUI kit targets.</strong> <code>SwiftGUIKit</code> and <code>SwiftGUIKitSwiftUI</code> are present in the package but their scope and relationship to the terminal-first mission are not fully resolved. They share <code>DesignTokens</code> with the terminal targets, but how much further that convergence should go is an open question.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swiftclikit-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swiftclikit-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swiftclikit-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftCLIKit statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftCLIKit
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              189
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              26
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              5
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftCLIKit commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftCLIKit — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~23/month · peak 79 (189 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="134" width="67" height="14" /> 
+            <rect class="ig-bar" x="94" y="144" width="67" height="4" /> 
+            <rect class="ig-bar" x="163" y="145" width="67" height="3" /> 
+            <rect class="ig-bar" x="232" y="97" width="67" height="51" /> 
+            <rect class="ig-bar" x="301" y="139" width="67" height="9" /> 
+            <rect class="ig-bar" x="370" y="141" width="67" height="7" /> 
+            <rect class="ig-bar" x="439" y="64" width="67" height="84" /> 
+            <rect class="ig-bar" x="508" y="122" width="67" height="26" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="59" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="128" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="197" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="266" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="335" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="404" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="473" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="542" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftCLIKit release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftCLIKit — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              26 releases · latest v2.7.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="524" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="524" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="524" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="495" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="495" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="495" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="493" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="490" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="490" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="482" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="479" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="479" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="450" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="444" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="405" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="257" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="254" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="237" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="237" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="125" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="119" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="44" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="44" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="44" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="44" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="44" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="525" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v2.7.0
+            </text> 
+            <text class="ig-label" x="47" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.5.0
+            </text> 
+            <text class="ig-label" x="445" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v2.0.0
+            </text> 
+            <text class="ig-label" x="120" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v1.0.0
+            </text> 
+            <text class="ig-muted" x="59" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="128" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="197" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="266" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="335" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="404" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="473" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="542" y="112" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftclikit, infrastructure, selfReflection</p>

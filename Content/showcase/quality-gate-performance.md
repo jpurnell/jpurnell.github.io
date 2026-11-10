@@ -5,6 +5,7 @@ date: 2026-07-05 11:34
 lastModified: 2026-07-05
 tags: showcase, project, QualityGate, performance, infrastructure, selfReflection
 layout: ShowcaseLayout
+infographics: qualitygatecore
 style: deepDive
 project: Internal Infrastructure
 published: true

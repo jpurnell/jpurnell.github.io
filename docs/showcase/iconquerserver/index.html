@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A SwiftNIO WebSocket server that acts as the canonical referee for iConquer, a turn-based territory-conquest game — validating every move, brokering lobbies, and serving humans and AI agents over the same wire protocol." />
+    <meta name="description" content="A SwiftNIO WebSocket server that acts as the authoritative referee for iConquer, a turn-based territory-conquest game, handling authentication, lobby management, and move validation for human and AI players over a shared wire protocol." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerServer: Building a Server-Authoritative Multiplayer Backend in Swift 6 | Justin Purnell</title>
+    <title>IconquerServer: Real-Time Multiplayer Backend for iConquer | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerServer: Building a Server-Authoritative Multiplayer Backend in Swift 6" />
-    <meta name="twitter:title" content="IconquerServer: Building a Server-Authoritative Multiplayer Backend in Swift 6" />
-    <meta property="og:description" content="A SwiftNIO WebSocket server that acts as the canonical referee for iConquer, a turn-based territory-conquest game — validating every move, brokering lobbies, and serving humans and AI agents over the same wire protocol." />
-    <meta name="twitter:description" content="A SwiftNIO WebSocket server that acts as the canonical referee for iConquer, a turn-based territory-conquest game — validating every move, brokering lobbies, and serving humans and AI agents over the same wire protocol." />
+    <meta property="og:title" content="IconquerServer: Real-Time Multiplayer Backend for iConquer" />
+    <meta name="twitter:title" content="IconquerServer: Real-Time Multiplayer Backend for iConquer" />
+    <meta property="og:description" content="A SwiftNIO WebSocket server that acts as the authoritative referee for iConquer, a turn-based territory-conquest game, handling authentication, lobby management, and move validation for human and AI players over a shared wire protocol." />
+    <meta name="twitter:description" content="A SwiftNIO WebSocket server that acts as the authoritative referee for iConquer, a turn-based territory-conquest game, handling authentication, lobby management, and move validation for human and AI players over a shared wire protocol." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerserver" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquerserver",
-          "name" : "IconquerServer: Building a Server-Authoritative Multiplayer Backend in Swift 6",
+          "name" : "IconquerServer: Real-Time Multiplayer Backend for iConquer",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquerserver#breadcrumb"
       },
-      "description" : "A SwiftNIO WebSocket server that acts as the canonical referee for iConquer, a turn-based territory-conquest game — validating every move, brokering lobbies, and serving humans and AI agents over the same wire protocol.",
+      "description" : "A SwiftNIO WebSocket server that acts as the authoritative referee for iConquer, a turn-based territory-conquest game, handling authentication, lobby management, and move validation for human and AI players over a shared wire protocol.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerServer: Building a Server-Authoritative Multiplayer Backend in Swift 6",
+      "name" : "IconquerServer: Real-Time Multiplayer Backend for iConquer",
       "url" : "https://www.justinpurnell.com/showcase/iconquerserver"
     }
   ]
@@ -181,33 +181,306 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerServer: Building a Server-Authoritative Multiplayer Backend in Swift 6</h1>
+      <h1 class="mainTitle">IconquerServer: Real-Time Multiplayer Backend for iConquer</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A SwiftNIO WebSocket server that acts as the canonical referee for iConquer, a turn-based territory-conquest game — validating every move, brokering lobbies, and serving humans and AI agents over the same wire protocol.</p>
+          <p>A SwiftNIO WebSocket server that acts as the authoritative referee for iConquer, a turn-based territory-conquest game, handling authentication, lobby management, and move validation for human and AI players over a shared wire protocol.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Multiplayer games rot from the edges when clients are trusted. Conflicting state, cheating, and race conditions are endemic to any architecture where the client is allowed to mutate game state directly. IconquerServer exists to solve this from first principles: the server owns the canonical <code>Game</code> state, and clients are nothing more than move-submitters waiting for authoritative broadcasts.</p>
-        <p>iConquer is a Risk-style territory-conquest game, and its backend needs to do more than just relay messages. It must validate turn order, check state-hash consistency, enforce rule legality, manage lobby flow, time turns, and handle AI opponents connecting over the same protocol as human players. IconquerServer is the single piece of infrastructure that makes all of that possible — for iOS/macOS app clients, CLI players, and MCP agents alike.</p>
+        <h2>Motivation</h2>
+        <p>iConquer is a Risk-style territory-conquest game that needs a shared, server-authoritative backend the moment more than one player sits down. Without a server holding canonical state, clients can disagree on whose turn it is, what moves are legal, or what the board looks like — problems that compound fast in a game built around turn order and contested territory. I built IconquerServer to be that single source of truth: a process that owns the <code>Game</code> object, validates every submitted move, and pushes authoritative state to every connected client.</p>
+        <p>A secondary goal was protocol unification. The game has human app clients, a CLI, and AI/agent players that connect via MCP. Rather than maintain separate channels for each, I wanted one <code>ClientMessage</code>/<code>ServerMessage</code> JSON contract that all of them speak. The server doesn’t need to know whether it’s talking to a person or an agent.</p>
         <h2>Approach</h2>
-        <p>Jpurnell built IconquerServer on SwiftNIO with WebSocket transport and SSL via swift-nio-ssl, choosing the reactive, non-blocking event model as the foundation for a server that needs to hold many concurrent connections without per-thread overhead. The wire protocol is JSON (<code>ClientMessage</code>/<code>ServerMessage</code>), deliberately kept uniform so that human clients, CLI tooling, and AI agents connect through the same contract — no special agent channel, no secondary API.</p>
-        <p>The most consequential architectural choice was committing to <strong>Swift 6 strict concurrency throughout</strong>. Every stateful component — <code>ClientConnection</code>, <code>LobbyManager</code>, <code>GameRoom</code>, <code>TurnTimer</code>, and <code>TokenAuthenticator</code> — is modeled as a Swift actor. Non-Sendable NIO channel handles are never held across actor boundaries; instead they’re bridged through captured <code>@Sendable</code> closures. This is a discipline-heavy approach that trades short-term ergonomic friction for a compile-time guarantee that there are no data races in the system. With <code>.v6</code> language mode enforced on every target, the zero-warning quality gate means that guarantee is continuously verified.</p>
-        <p>The dependency graph reflects a deliberate decomposition. <code>IconquerCore</code> holds canonical game state and rules; <code>IconquerMatch</code> handles match orchestration; <code>IconquerAI</code> supplies agent players. IconquerServer imports all three but owns none of their logic — it is purely the network and referee layer wired on top of them. SwiftArgumentParser drives the CLI entry point (<code>iconquer-server</code>), swift-log handles structured logging, and SwiftDocC is included from the start, signaling that public API documentation is treated as a first-class artifact.</p>
+        <p>The server is built on SwiftNIO and SwiftNIO-SSL, with TLS handled by SwiftTLSKit. The domain logic lives in three separate packages — IconquerCore (canonical <code>Game</code> state and rules), IconquerMatch (match orchestration), and IconquerAI (opponent players) — that IconquerServer imports and coordinates. This keeps the referee logic out of the networking layer.</p>
+        <p>Concurrency is handled with Swift actors throughout. Every stateful component — <code>ClientConnection</code>, <code>LobbyManager</code>, <code>GameRoom</code>, <code>TurnTimer</code>, and <code>TokenAuthenticator</code> — is its own actor. NIO’s channel handlers are non-Sendable by nature, so rather than hold channel references across actor boundaries, I capture write operations in <code>@Sendable</code> closures. The entire codebase compiles under Swift 6 strict concurrency with zero warnings as a hard quality gate.</p>
+        <p>The move-validation path enforces three checks in sequence before any move is applied: correct turn order, state-hash consistency (the client’s view of the board must match the server’s), and rule legality as defined by IconquerCore. Only then does the server apply the move and broadcast the updated state.</p>
+        <p>Authentication uses bearer tokens checked by <code>TokenAuthenticator</code> before a connection advances past the initial handshake. The project is built with Swift Package Manager under tools version 6.2, targeting macOS, and uses swift-argument-parser for the server binary’s command-line interface and swift-log for structured logging.</p>
         <h2>Results</h2>
-        <p>IconquerServer reached four public releases across roughly five and a half months of development, progressing from v0.1.0 through v0.2.2 across 43 commits. The v0.1.0 milestone, as described in the project’s own <code>MASTER_PLAN.md</code>, delivered a coherent skeleton: networking, lobby, room management, authentication, turn timers, and wire-protocol plumbing are all implemented and unit-tested. The project ships with an <code>IconquerServerTests</code> target that exercises this infrastructure.</p>
-        <p>The server is structured for macOS deployment and exposes a clean command-line interface through the <code>iconquer-server</code> executable target. By v0.2.x, the release cadence indicates active iteration on top of the v0.1.0 foundation — tightening behavior in the paths that were already wired in, while the roadmap items (real map loading, AI wiring into live gameplay, full match orchestration) remain explicitly acknowledged as next work.</p>
-        <h2>Judgment Calls</h2>
-        <p><strong>Choosing Swift 6 strict concurrency as a non-negotiable.</strong> This is the kind of decision that costs time early and pays dividends continuously. SwiftNIO’s channel pipeline is inherently non-Sendable, which means integrating it cleanly with actor-isolated state requires deliberate bridging patterns. Jpurnell chose to solve this problem correctly once — using <code>@Sendable</code> closure capture as the boundary — rather than suppressing warnings or deferring the discipline. The result is a server whose concurrency model is verifiable at compile time, not just plausible at code review.</p>
-        <p><strong>One wire protocol for humans and agents.</strong> Many multiplayer backends grow a separate “bot API” over time, which becomes a maintenance burden and a source of behavioral drift. By deciding upfront that AI agents connect over the same <code>ClientMessage</code>/<code>ServerMessage</code> JSON contract as human clients, Jpurnell ensured that the server’s referee logic never has to distinguish between player types. An agent that beats the turn timer and a human who does the same are handled identically — which also means AI integration testing exercises the real protocol path.</p>
-        <p><strong>Honest scope accounting in <code>MASTER_PLAN.md</code>.</strong> The project’s own design document explicitly names what is and isn’t wired into the live gameplay path as of v0.1.0. This kind of written clarity about the gap between “implemented” and “integrated” is evidence of engineering maturity — it prevents the skeleton from being mistaken for the house, and it gives collaborators (and future-self) an accurate map of where the real work remains.</p>
-        <p><strong>SwiftDocC as a day-one dependency.</strong> Including the documentation plugin before the project is feature-complete signals that public API surfaces are being designed to be explained, not just used. In a system with multiple client types — apps, CLI, agents — documentation isn’t optional infrastructure; it’s the contract.</p>
+        <p>The project reached v0.2.2 across 43 commits and four releases (v0.1.0, v0.2.0, v0.2.1, v0.2.2) between April and October 2026. The IconquerServerTests target covers the networking, lobby, room, authentication, and timer plumbing. The binary target <code>iconquer-server</code> is the deployable server process.</p>
+        <p>As of the latest release, the following are functional: WebSocket connection handling, bearer-token authentication, lobby routing, game room management, turn timers, chat message broadcast, game-over notifications, and the full <code>ClientMessage</code>/<code>ServerMessage</code> wire protocol.</p>
+        <h2>Decisions</h2>
+        <p><strong>Server-authoritative referee over client-side state.</strong> Clients never hold mutable game state; they submit moves and receive updates. This eliminates an entire category of synchronization bugs and cheat vectors, at the cost of every move requiring a round-trip. For a turn-based game the latency tradeoff is acceptable.</p>
+        <p><strong>One wire protocol for all client types.</strong> Unifying human clients, CLI, and AI agents on the same JSON contract means protocol changes propagate once. The tradeoff is that the protocol has to be expressive enough for all three, which adds some surface area compared to purpose-built channels.</p>
+        <p><strong>Actor-per-component concurrency model.</strong> Isolating each stateful component into its own actor made Swift 6 strict-concurrency compliance tractable. The <code>@Sendable</code> closure bridge for NIO channels is the most structurally unusual part of the design; it avoids the alternative of wrapping channels in unsafe wrappers or disabling concurrency checking locally.</p>
+        <p><strong>Domain logic in separate packages.</strong> IconquerCore, IconquerMatch, and IconquerAI are independent dependencies rather than targets within this package. This lets game rules evolve without touching server infrastructure, and in principle allows other executables (CLI, test harnesses) to import the same logic directly.</p>
+        <p><strong>What is not yet wired.</strong> Real map loading, AI opponent integration, and full match orchestration are declared in the architecture but not connected to the live gameplay path as of v0.2.2. The structure for these exists — IconquerMatch and IconquerAI are listed dependencies — but the runtime path from a completed lobby to a fully orchestrated match with AI participants is not yet complete. That is the primary open surface of the project.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquerserver-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquerserver-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquerserver-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerServer statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerServer
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              43
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerServer commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerServer — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~6/month · peak 26 (43 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="142" width="76" height="6" /> 
+            <rect class="ig-bar" x="103" y="145" width="76" height="3" /> 
+            <rect class="ig-bar" x="182" y="139" width="76" height="9" /> 
+            <rect class="ig-bar" x="261" y="139" width="76" height="9" /> 
+            <rect class="ig-bar" x="340" y="132" width="76" height="16" /> 
+            <rect class="ig-bar" x="419" y="139" width="76" height="9" /> 
+            <rect class="ig-bar" x="498" y="64" width="76" height="84" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerServer release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerServer — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              4 releases · latest v0.2.2
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="514" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="509" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="509" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="272" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="515" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.2.2
+            </text> 
+            <text class="ig-label" x="273" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.1.0
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>

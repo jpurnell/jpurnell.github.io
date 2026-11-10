@@ -1,8 +1,8 @@
 ---
-title: development-guidelines: A Versioned Rulebook That Enforces Itself
-description: A vendorable, AI-readable specification for Design-First TDD in Swift — where every rule that can be checked has a quality gate behind it, and every rule that failed in practice carries its own evidence.
+title: development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development
+description: A self-contained, vendorable set of rules, scaffolding, and quality-gate tooling that installs a Design-First TDD workflow into a Swift project before the first line of production code is written.
 date: 2026-05-13 16:39
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, project, infrastructure, Quality Gate, development-guidelines, selfReflection
 layout: ShowcaseLayout
 style: deepDive
@@ -10,72 +10,56 @@ project: Internal Infrastructure
 published: true
 ---
 
-# development-guidelines: A Versioned Rulebook That Enforces Itself
+# development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development
 
-> A vendorable, AI-readable specification for Design-First TDD in Swift — where every rule that can be checked has a quality gate behind it, and every rule that failed in practice carries its own evidence.
+> A self-contained, vendorable set of rules, scaffolding, and quality-gate tooling that installs a Design-First TDD workflow into a Swift project before the first line of production code is written.
 
 ## Overview
 
-Most development guidelines are advisory documents — they tell teams what to do and then trust that humans remember to do it. `development-guidelines` takes a different position: rules that can be mechanically verified *should* be mechanically verified, and rules that have failed in practice should say so, plainly, alongside the record of that failure.
+`development-guidelines` is a rulebook—not a framework, not a library—that describes exactly how I want a Swift project to behave from day one. It covers the full lifecycle: how sessions start (both human and AI), how code gets written (Design-First TDD), what a quality gate checks before a commit lands, and what scaffolding (`setup.swift`, skills, hooks) wires all of that into a new or existing project.
 
-The project is a versioned, vendorable rulebook for AI-assisted Swift development. It defines a workflow called Design-First TDD — the practice of writing architectural proposals before writing code — and pairs that workflow with a zero-tolerance quality gate for warnings. Alongside the prose rules, it ships `setup.swift`, a collection of skills, and hooks that install the process into a new Swift project on its first day rather than retrofitting it later.
+There are three audiences. First, me, when I start a new package and want the process in place before the first commit rather than bolted on after the first few hundred lines. Second, Claude Code, which reads `CLAUDE.md` at session start and uses the rules to know what is and is not acceptable in this codebase. Third, my own packages downstream, which act as the live test of whether any given rule is actually followable in practice.
 
-Three audiences drive the design. First, developers starting or adopting a Swift project who want process in place before the first commit, not bolted on after technical debt accumulates. Second, AI assistants — Claude Code specifically — that read the rulebook at session start and operate within its constraints. Third, the author's own packages, which are the first and most demanding consumers: if a rule can't be followed in practice, the package that breaks it becomes the evidence for revising or removing it.
-
-The project shipped its first release as `v2.0.0` and has since iterated through seventeen versioned releases up to `v2.6.2`, spanning roughly seven and a half months of active development across 167 commits on eight branches. That release cadence — steady minor releases with occasional patches — reflects a living document under continuous pressure from real consumers.
+The project exists because advisory style guides drift. Rules that nobody checks stop being rules. This repository treats enforcement as a first-class concern: every rule that can be mechanically verified has a quality-gate checker behind it. Rules that turned out to be wrong in practice are recorded in the document alongside the failure, so the document carries its own evidence of what was tried and what broke.
 
 ## Architecture
 
-The central architectural decision is vendoring over cloning. ADR-013 establishes that each consuming project owns exactly one copy of the guidelines tree, and updates are replacements rather than merges. This is a deliberate rejection of the symlink or submodule patterns that introduce ambiguity about which version of the rules is active in a given project. When a project vendor-copies the guidelines at `v2.4.1` and later updates to `v2.6.2`, the old tree is deleted and the new tree written in its place. There is no merge history, no conflict resolution, no uncertainty about provenance.
+The repository is structured around a small number of concerns that stay separated.
 
-The document's own `CLAUDE.md` organizes the rules into a structure that an AI assistant can navigate at session start:
+**The rulebook itself** lives as markdown, with `CLAUDE.md` as the entry point for AI sessions and a set of referenced documents covering the development workflow, key rules, observability requirements for consumer-facing apps, and the quality gate specification. The architecture sections in `CLAUDE.md` map directly to those concerns: Session Start, Development Workflow, Key Rules, Observability, Quality Gate, References.
 
-- **Session Start** — what to read before writing any code
-- **Development Workflow** — the ordered steps Design-First TDD requires
-- **Key Rules** — the specific constraints with their rationale
-- **Observability (Consumer-Facing Apps)** — instrumentation requirements
-- **Quality Gate** — the zero-tolerance checker definitions
-- **References** — ADR index and related documents
+**Vendoring over cloning** is the central structural decision, captured in ADR-013. Each consuming project owns its own copy of the guidelines tree. An update is a wholesale replacement, not a merge. This eliminates the question of which rules apply in a given project: the copy in the tree is authoritative, there is no remote to reconcile with, and the history of that copy is the history of when rules changed in that project. The tradeoff is that propagating a rule change to ten projects means ten replacements, but that cost is intentional—it forces a deliberate decision at each site rather than a silent pull.
 
-This structure is not incidental. Because Claude Code reads `CLAUDE.md` at the beginning of each session, the document's organization is effectively an API — the ordering of sections determines what an AI assistant learns first. Session Start appears before Development Workflow, which appears before Key Rules, because the intended reading order is also the intended operating order.
+**The quality gate** is a zero-tolerance warning policy enforced by a checker that runs before commits land. Zero tolerance here means what it says: warnings are treated as errors. The gate does not distinguish between a warning that "matters" and one that does not, because that distinction requires judgment at review time and review-time judgment is the thing the gate is replacing.
 
-The quality gate is a first-class architectural component, not an appendix. Every rule that admits mechanical verification has a corresponding checker. The zero-tolerance posture on warnings is representative: it is not a preference or a style guide note. It is a gate. A build that emits warnings does not pass. This distinction — enforced versus advisory — is the sharpest edge of the project's design philosophy.
+**`setup.swift`** is the scaffolding entry point. It takes an empty or new project and installs the hooks, skills, and configuration that the rules require, so the project is compliant from the first commit rather than from whenever a developer remembers to add things.
 
 ## Implementation
 
-The most interesting implementation challenge is one that most documentation projects never confront: how do you know whether your rules are followable? The answer embedded in `development-guidelines` is empirical rather than theoretical. The author's own packages are designated as the first consumers, and failures in those packages become evidence recorded in the document itself.
+The 167 commits across 17 releases (v2.0.0 through v2.6.2) show a project that revised its own rules repeatedly as downstream packages exercised them.
 
-This creates an unusual feedback loop. A rule is written, adopted in a consuming package, and either holds or breaks under real conditions. If it breaks, the failure is not quietly corrected — it is recorded alongside the rule. The document carries its own evidence of what has been tried and what the outcome was. Over seventeen releases, this cycle has produced a rulebook that documents not just what the author believes is correct but what has been verified to work in practice.
+The most important pattern in the rulebook is Design-First TDD: the design document for a component is written before any code, the tests are written against the design, and the implementation follows the tests. This ordering matters because it prevents the common failure mode where tests are written to describe code that already exists rather than to constrain code that is about to be written. The rules specify what a design document must contain and what constitutes a passing test before the implementation phase begins.
 
-The `setup.swift` script represents the other implementation pole: not rules-as-prose but rules-as-code. Rather than telling a developer to create certain directories, configure certain hooks, and install certain skills, `setup.swift` does those things. The first day of a new project is automated into compliance before a human has had an opportunity to skip a step.
+The skills system gives Claude Code named, invokable procedures. Rather than describing a workflow in prose and hoping the AI infers the steps, a skill names the procedure and lists its preconditions, steps, and postconditions. Session start is itself a skill: when Claude Code opens a session, it reads `CLAUDE.md`, invokes the session-start skill, and arrives at a known state before any user instruction is processed.
 
-The Design-First workflow — writing an architectural proposal before writing implementation — is enforced through hook scaffolding. The hooks create checkpoints where the workflow can verify that proposal documents exist before certain phases of development proceed. This is the quality gate philosophy applied to process rather than to build output.
+The hooks integrate the quality gate into the commit lifecycle. The gate runs on every commit attempt, not on a schedule, so a warning cannot land in the tree and wait for a CI run to surface it.
 
-```swift
-// The kind of enforcement setup.swift establishes:
-// a hook fires before a commit, checks for required artifacts,
-// and exits non-zero if the process has been skipped.
-// The rule is not a suggestion at that point — it is a gate.
-```
-
-The versioning scheme itself reflects implementation care. The presence of `v2.5.0-beta.1` in the release history shows that major rule changes are staged through pre-release versions before being locked into consuming projects — a responsible approach when the consumers are active packages rather than hypothetical future users.
+One pattern that recurred across the release history is that rules which seem precise in prose turn out to be ambiguous when a checker tries to implement them. The resolution in every case was to revise the rule to match what the checker could actually verify, then record the original formulation and the reason for the change. This kept the document and the gate synchronized rather than letting them diverge into separate sources of truth.
 
 ## Testing Strategy
 
-Testing a guidelines document requires inverting the usual relationship between specification and test. Normally a test suite verifies that code conforms to a spec. Here, the consuming packages *are* the test suite — each package that adopts the guidelines and continues to build cleanly is evidence that the rules are internally consistent and followable.
+The downstream packages are the primary test harness. Each package that vendors these guidelines and runs the quality gate on its own commits is exercising the rules against real code. When a rule causes a false positive or turns out to be unenforceable, it surfaces as a failure in a real project, not a hypothetical.
 
-The quality gate provides a formal testing surface. Because warnings are zero-tolerance, any consuming package that emits a warning under the guidelines is a test failure — not of the package, but of the guidelines' completeness. If a rule's intent cannot be expressed in code that produces no warnings, the rule needs revision.
+The zero-warning policy applies to the guidelines repository itself, which is enforced by the same gate the rules describe. This creates a minimal feedback loop: the rules cannot specify a gate that the rules repository itself fails to pass.
 
-The ADR record functions as a regression suite for architectural decisions. Each ADR captures the context, the decision, and the consequences. When a later decision revisits the same terrain, the earlier ADR constrains the solution space. This prevents the document from oscillating between contradictory positions across releases.
-
-The practice of recording failed rules alongside their failures is a form of negative testing. A rules document that has never recorded a failure is a document that has never been seriously tested. By the time the project reached `v2.6.2`, its failure record is part of its credibility.
+The beta release track (visible in v2.5.0-beta.1 preceding v2.5.0) provided a path for testing rule changes in downstream packages before promoting them to a stable release. A consuming project could vendor the beta, run its own gate, and report whether the new rules were followable before the change was finalized.
 
 ## Lessons
 
-The most transferable lesson is the distinction between advisory and enforced. In subsequent projects, this shaped how Purnell frames any process requirement: if it matters enough to write down, it matters enough to check automatically. The corollary — if it cannot be checked automatically, its importance should be stated honestly rather than implied — has influenced how he documents constraints that genuinely require human judgment.
+**Enforcement changes what rules you write.** When a rule has no checker, you write rules that sound good. When a rule needs a checker, you write rules that can be mechanically verified. The second kind of rule is more constrained but more honest about what it actually requires.
 
-The vendoring pattern from ADR-013 transferred directly to how he thinks about shared configuration in general. The instinct to reach for a symlink or a submodule is strong, but the vendoring model's clarity about ownership — one project, one copy, updates are replacements — eliminates an entire category of drift and ambiguity that shared-reference approaches introduce.
+**Vendoring transfers cleanly to documentation.** I apply the same replacement-over-merge approach to other reference materials in projects. One owner, one copy, explicit replacement when it changes. The question "which version of this applies here" is always answerable by looking at the tree.
 
-The design of `CLAUDE.md` as a session-start API for AI assistants influenced how he structures documentation in AI-assisted projects more broadly. The ordering of a document is not neutral when the reader is a language model that will act on what it reads in the sequence it reads it. Structure becomes interface.
+**Recording failures in the document is worth the awkwardness.** It is uncomfortable to leave evidence of a rule that did not work inside the document that replaced it. But the alternative—silently removing the failed rule—loses the reason the replacement rule is shaped the way it is. Downstream readers (including future me) can see what was tried, why it failed, and what the current rule is trying to avoid.
 
-Finally, the practice of using his own packages as the first consumers of the guidelines imposed a productive discipline: no rule could survive that he was not willing to live under himself. Across 167 commits and seventeen releases, that constraint kept the document grounded in the concrete rather than drifting toward the aspirational.
+**AI session initialization benefits from explicit state.** The session-start skill pattern transferred to other projects that use Claude Code. Rather than relying on context from the conversation history, the skill brings the AI to a known state from scratch. Sessions that start with an explicit initialization step produce more consistent behavior than sessions that accumulate state implicitly.

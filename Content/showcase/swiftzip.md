@@ -1,8 +1,8 @@
 ---
-title: SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies
-description: A from-scratch ZIP reader and writer built entirely on Foundation and Apple's Compression framework, shipping five releases in four months to serve as the archive backbone for SwiftXLSX and any Swift project that refuses to carry C baggage.
+title: SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer
+description: A zero-dependency Swift package for reading and writing ZIP archives, including .xlsx, .docx, .jar, and other ZIP-based formats, targeting Swift 6 strict concurrency.
 date: 2026-11-02 11:39
-lastModified: 2026-11-02
+lastModified: 2026-11-10
 tags: showcase, swiftzip, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,42 @@ project: SwiftZIP
 published: true
 ---
 
-# SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies
+# SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer
 
-> A from-scratch ZIP reader and writer built entirely on Foundation and Apple's Compression framework, shipping five releases in four months to serve as the archive backbone for SwiftXLSX and any Swift project that refuses to carry C baggage.
+> A zero-dependency Swift package for reading and writing ZIP archives, including .xlsx, .docx, .jar, and other ZIP-based formats, targeting Swift 6 strict concurrency.
 
-## Problem
+## Motivation
 
-ZIP is everywhere — inside `.xlsx` spreadsheets, `.docx` documents, `.jar` archives, and a hundred other formats that wear a different extension on top of the same container format. Yet Swift's ecosystem has historically offered two unsatisfying choices: wrap a C library like libz or minizip (pulling in build complexity and concurrency headaches), or depend on a heavy general-purpose package that brings far more than needed.
+I built SwiftZIP to serve as the archive layer for SwiftXLSX, a separate library for reading and writing Excel files. The .xlsx format is a ZIP container holding XML files, so any .xlsx implementation needs a way to pack and unpack those archives. Rather than wrapping libz or minizip — both C libraries that complicate embedding and add build-system surface area — I wanted a pure-Swift solution that apps and libraries could add without pulling in anything outside Foundation and Apple's Compression framework.
 
-Jpurnell built SwiftZIP to eliminate that tradeoff entirely. The mission, as stated in `MASTER_PLAN.md`, is blunt: "a pure-Swift ZIP archive reader and writer with zero external dependencies, suitable for embedding in any Swift project." The primary consumer is SwiftXLSX, a sibling library that needs to read and write `.xlsx` archives reliably, but the design targets any Swift library author who wants ZIP support without the dependency weight.
+The secondary goal was making it generally useful to any Swift library author who needs ZIP support. The package targets macOS, iOS, watchOS, and visionOS, so it had to work across Apple's platforms without conditional compilation workarounds for a C dependency.
 
 ## Approach
 
-SwiftZIP is written in Swift 6 with a Tools version of 6.2, which means strict concurrency compliance was a design constraint from day one — not a retrofit. Every public type is `Sendable`, a discipline that matters especially when ZIP parsing is done on background threads or in async document-processing pipelines. This was a deliberate architectural choice: lock in the concurrency story early rather than scramble to add `@unchecked Sendable` annotations later.
+The package is a single Swift target, `SwiftZIP`, with a companion test target `SwiftZIPTests`. The only declared dependency is `swift-docc-plugin`, kept solely for documentation generation — it has no effect on the runtime library itself, which keeps the zero-external-dependencies claim accurate for library consumers.
 
-Compression is handled exclusively through Apple's Compression framework using `COMPRESSION_ZLIB` for Deflate, which keeps the dependency surface to Foundation plus one Apple-provided system library. There is no libz, no minizip, no C wrapper layer. The entry-based API is the public face: callers work with archive entries rather than raw byte streams, keeping the interface approachable for the spreadsheet and document use cases that motivated the project.
+Compression uses Apple's `Compression` framework with `COMPRESSION_ZLIB` for Deflate, so there is no libz linkage. CRC-32 verification runs on read to catch corrupt or truncated entries. The API is entry-based: callers work with archive entries rather than raw byte offsets, which keeps the interface stable across internal layout changes.
 
-The project ships with a `CLAUDE.md` file that encodes session startup behavior, development workflow, key rules, and a quality gate — a signal that Jpurnell treated the working environment itself as something worth structuring, ensuring consistency across any development session whether assisted or not.
+The package is written against Swift 6 with strict concurrency enabled. All public types conform to `Sendable`, which was a deliberate requirement from the start rather than something retrofitted.
+
+A `CLAUDE.md` file is present in the repository and defines session startup steps, development workflow, key rules, and a quality gate. I used Claude Code for one multi-task session that produced 3 of the 32 total commits. That session encountered five friction events — two incorrect claims, two instances of buggy code, and one wrong approach — and was ultimately marked fully achieved. The CLAUDE.md quality gate exists partly to constrain that kind of session: it specifies what must pass before a commit lands.
 
 ## Results
 
-SwiftZIP reached five releases — 0.3.0, 0.6.0, 0.7.0, 0.8.0, and 0.8.1 — across roughly four months of active development, from the first commit in early June 2026 through early October 2026. The project accumulated 32 commits across 4 branches. It supports macOS, iOS, watchOS, and visionOS, covering the full Apple platform family. The sole external dependency listed in the package manifest is `swift-docc-plugin`, used only for documentation generation — confirming that zero runtime external dependencies is a hard invariant, not a marketing claim.
+The project has shipped five releases — 0.3.0, 0.6.0, 0.7.0, 0.8.0, and 0.8.1 — across roughly four months of development (June to October 2026), with 32 commits from a single contributor across 4 branches. The library supports both reading and writing ZIP archives with Deflate compression, stored (uncompressed) entries, and CRC-32 integrity verification on read. It is Swift 6 compliant and builds on macOS, iOS, watchOS, and visionOS.
 
-The library delivers both read and write paths (unusual for minimal ZIP libraries, which often cover only one direction), Deflate compression via `COMPRESSION_ZLIB`, and CRC-32 integrity verification on read.
+No test count is available from the project data, though a `SwiftZIPTests` target exists. Documentation is generated via swift-docc-plugin.
 
-## Judgment Calls
+## Decisions
 
-Several decisions here reveal craft over convenience.
+**Zero external dependencies.** The defining constraint. Using Foundation and the Compression framework means the package integrates into any Swift Package Manager project without a C toolchain requirement or vendored C source. The tradeoff is that Deflate support is limited to what Apple's Compression framework exposes — there is no access to lower-level zlib options.
 
-**Deflate via Compression framework, not libz.** This is the load-bearing tradeoff. Using Apple's `Compression` framework means no additional package dependency and no C bridging layer, but it also means trusting the platform implementation rather than a widely-audited open-source one. Jpurnell made that bet deliberately — the target platforms are all Apple, so the framework is always present, and the zero-dependency promise is worth more than the hypothetical portability to Linux that a libz approach might offer.
+**Entry-based API.** Callers interact with named entries rather than byte ranges or file offsets. This hides the ZIP local-file-header layout from consumers and gives room to change internal parsing without breaking call sites.
 
-**Swift 6 strict concurrency from the start.** Retrofitting `Sendable` conformance onto an existing codebase is painful. By targeting Swift 6 tools at project inception and designing `Sendable` in throughout, Jpurnell avoided that pain entirely. For a library intended to be embedded in other people's async pipelines — spreadsheet readers, document processors, file transfer tools — this is exactly the right call.
+**Swift 6 strict concurrency from the start.** Making all public types `Sendable` up front avoided a later retrofitting pass. This was a requirement driven by SwiftXLSX's own concurrency model.
 
-**A documented quality gate in CLAUDE.md.** The presence of a structured `CLAUDE.md` with an explicit quality gate section suggests Jpurnell uses that file not just as an AI-assistant convenience but as a lightweight specification of what "done" means. That kind of environment codification keeps standards consistent regardless of how any given session starts.
+**CLAUDE.md with a quality gate.** I added a machine-readable session guide after finding that unguided AI-assisted sessions introduced more friction. The quality gate section specifies what must pass before committing. The one Claude Code session logged five friction events against 16 messages, which is the data point that makes this constraint feel worth keeping.
 
-**One AI-assisted session, five friction events, one fully achieved outcome.** A single recorded Claude Code session produced 3 commits across 16 messages and logged 5 friction events (2 incorrect claims, 2 instances of buggy code, 1 wrong approach) — all resolved to a fully achieved outcome. That pattern reflects a developer who engaged AI assistance with skepticism, caught errors, and course-corrected rather than accepting generated code uncritically. The friction log is not a failure record; it's evidence of editorial judgment applied to generated output.
+**Version numbers below 1.0.** The release history runs from 0.3.0 to 0.8.1. The gap between 0.3.0 and 0.6.0 suggests some internal versioning was not tagged publicly. There is no 1.0 yet, which leaves the API subject to change — intentional while SwiftXLSX's requirements are still being worked out.
+
+**What is unfinished.** There is no public test count in the project data, so test coverage is unknown from the outside. The package does not document support for ZIP64 (large-file extensions), encryption, or comment fields — whether those are deferred, out of scope, or simply not mentioned in available metadata is not clear from what I have.

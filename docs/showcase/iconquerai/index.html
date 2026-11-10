@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim." />
+    <meta name="description" content="A pure-Swift package that provides learned and scripted PlayerAgent implementations, a self-play training pipeline built on MLX, and benchmarking infrastructure consumed by CLI simulators and tournament harnesses." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift | Justin Purnell</title>
+    <title>IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift" />
-    <meta name="twitter:title" content="IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift" />
-    <meta property="og:description" content="In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim." />
-    <meta name="twitter:description" content="In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim." />
+    <meta property="og:title" content="IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer" />
+    <meta name="twitter:title" content="IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer" />
+    <meta property="og:description" content="A pure-Swift package that provides learned and scripted PlayerAgent implementations, a self-play training pipeline built on MLX, and benchmarking infrastructure consumed by CLI simulators and tournament harnesses." />
+    <meta name="twitter:description" content="A pure-Swift package that provides learned and scripted PlayerAgent implementations, a self-play training pipeline built on MLX, and benchmarking infrastructure consumed by CLI simulators and tournament harnesses." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerai" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquerai",
-          "name" : "IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift",
+          "name" : "IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquerai#breadcrumb"
       },
-      "description" : "In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim.",
+      "description" : "A pure-Swift package that provides learned and scripted PlayerAgent implementations, a self-play training pipeline built on MLX, and benchmarking infrastructure consumed by CLI simulators and tournament harnesses.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift",
+      "name" : "IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer",
       "url" : "https://www.justinpurnell.com/showcase/iconquerai"
     }
   ]
@@ -181,37 +181,309 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift</h1>
+      <h1 class="mainTitle">IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim.</p>
+          <p>A pure-Swift package that provides learned and scripted <code>PlayerAgent</code> implementations, a self-play training pipeline built on MLX, and benchmarking infrastructure consumed by CLI simulators and tournament harnesses.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>IconquerAI exists to solve a specific and underappreciated problem in game AI development: most game opponent engines are either too heavyweight to embed or too opaque to trust. They run in separate processes, mutate game state directly, and produce win-rate claims backed by nothing more than a count and a gut feeling.</p>
-        <p>IconquerAI was built as the pure-Swift AI layer for the Iconquer game system — a package that ships learned agents conforming to <code>PlayerAgent</code> from <code>IconquerMatch</code>, alongside the training pipeline that produced them and the weights those agents carry into production. It is consumed by <code>IconquerCLI</code> for <code>simulate</code> and <code>tournament</code> subcommands, and is designed to eventually power computer opponents inside <code>IconquerApp</code> on Apple platforms. The goal was an AI layer that could be embedded directly in-process, seeded for deterministic replay, and trusted because its claims were measured rather than asserted.</p>
+        <h2>Motivation</h2>
+        <p>IconquerAI is one layer in a larger Iconquer project. The game logic and match driver live in <code>IconquerMatch</code>; <code>IconquerCLI</code> and <code>IconquerApp</code> consume opponents from the outside. This package sits between them: it owns the agents, the training pipeline that produces their weights, and the measurement tools that say whether a new model is actually better than the old one.</p>
+        <p>I built it as a separate package so the AI concerns — model files, training runs, benchmark history — stay out of the game engine and the UI shell. The goal was to be able to run a training pass on a Linux server, check the resulting weights against a pre-registered benchmark criterion, and ship the artifact without touching the other packages.</p>
+        <p>The secondary goal was to make the measurement trustworthy enough that “this agent improved” is a statement with a sample size and an interval attached, not just a spot-check win percentage.</p>
         <h2>Approach</h2>
-        <p>The architectural foundation of IconquerAI is a deliberate separation of concerns expressed through Swift’s type system. Agents emit moves — they do not touch game state. The driver applies them. This single constraint keeps agents testable in isolation, composable in tournament harnesses, and safe to run concurrently without locks.</p>
-        <p>The <code>PlayerAgent</code> protocol is <code>async</code> by design. That decision, made early, means agents that touch I/O — whether that’s MLX inference or an MCP provider — plug into the same protocol surface without requiring a migration later. The package targets macOS, iOS, tvOS, and visionOS simultaneously, and MLX-swift’s integration via <code>mlx-swift</code> as a direct dependency means inference runs on-device using Apple Silicon’s unified memory rather than round-tripping to a server.</p>
-        <p>The training pipeline lives in the <code>iconquer-train</code> executable target, separate from the agent library itself. Self-play generates experience, weights are evaluated, and the pipeline refuses to persist weights that did not improve — a small rule with significant consequences for model hygiene. The <code>iconquer-dashboard</code> target provides instrumentation for monitoring training runs.</p>
-        <p>The package is built on Swift Tools version 6.2 and leans on <code>SwiftCLIKit</code> for command-line ergonomics and <code>swift-docc-plugin</code> for documentation generation, signaling that this is infrastructure meant to be read and maintained, not just run.</p>
+        <p>The package targets macOS, iOS, tvOS, and visionOS, using Swift 6.2 and Swift Package Manager tooling. The four targets are <code>IconquerAI</code> (the agent library), <code>iconquer-train</code> (the self-play training executable), <code>iconquer-dashboard</code> (a benchmarking and reporting tool), and <code>IconquerAITests</code>.</p>
+        <p>The central protocol is <code>PlayerAgent</code> from <code>IconquerMatch</code>, which is <code>async</code>. That choice flows through everything: agents that call MLX or any I/O provider conform to the same protocol without needing a wrapper, because the protocol already allows suspension. Agents emit moves; the match driver in <code>IconquerMatch</code> applies them. That separation means an agent can be tested against a scripted opponent without spinning up a full app.</p>
+        <p>MLX inference runs in-process via <code>mlx-swift</code>. Self-play produces training data, the <code>iconquer-train</code> executable updates weights, and the pipeline refuses to persist weights it did not change — a guard against silent no-ops in the training loop.</p>
+        <p>Benchmark criteria are written to the repository before the runs that use them. That ordering makes it harder to adjust the threshold after seeing the result. Win rates are reported as <code>WinRateEstimate</code> values carrying Wilson confidence intervals and sample counts.</p>
+        <p>Scripted agents accept an explicit RNG seed so a game sequence can be reproduced exactly given the same seed, which matters for debugging training regressions.</p>
+        <p>The <code>CLAUDE.md</code> file records session-start procedures, the development workflow, key rules, the quality gate, and references. One Claude Code session contributed 2 commits across 8 messages, with a fully-achieved outcome on a multi-task session.</p>
         <h2>Results</h2>
-        <p>Over roughly six months — first commit April 8, 2026, latest October 6, 2026 — the project reached five tagged releases: v0.1.0 through v0.4.0, with a patch release at v0.3.1 indicating active maintenance and real usage pressure between minor versions. Ninety-eight commits from a single contributor across three branches reflects sustained, disciplined iteration rather than a burst of activity followed by neglect.</p>
-        <p>The package ships four targets: the core <code>IconquerAI</code> library, the <code>iconquer-train</code> self-play training executable, the <code>iconquer-dashboard</code> instrumentation tool, and <code>IconquerAITests</code>. Trained model weights are bundled as part of the package, meaning consumers of <code>IconquerCLI</code> get working AI opponents without any external model download or setup step.</p>
-        <h2>Judgment Calls</h2>
-        <p>The most revealing decisions in IconquerAI are not in the code — they are in the constraints the developer chose to impose on the system before writing it.</p>
-        <p><strong>Benchmark criteria are pre-registered in git before the runs that judge them.</strong> This is the discipline of a developer who has seen post-hoc rationalization masquerade as validation. By committing evaluation thresholds before training runs produce numbers, the project eliminates the temptation to adjust the bar to meet the result. It’s a practice borrowed from clinical research and almost never seen in game AI side projects.</p>
-        <p><strong>Win rates carry Wilson confidence intervals and sample sizes.</strong> The <code>WinRateEstimate</code> type doesn’t just store a percentage — it stores the statistical context required to interpret that percentage. A 60% win rate from 20 games means something very different than 60% from 2,000 games, and IconquerAI’s type system encodes that difference explicitly.</p>
-        <p><strong>The training pipeline refuses to save weights it did not improve.</strong> This is a small guard with a large effect: it prevents a common failure mode where a training run that converged early, then wandered, overwrites a better checkpoint. The constraint is enforced in code rather than left to the operator’s discipline.</p>
-        <p><strong>Async-first protocol design.</strong> Making <code>PlayerAgent</code> <code>async</code> from day one, rather than adding <code>async</code> variants later, reflects the kind of foresight that only comes from having lived through a protocol migration. MLX inference is inherently asynchronous; designing the protocol to accommodate that from the start keeps the abstraction honest.</p>
-        <p><strong>Deterministic under fixed seeds.</strong> Scripted agents accept an explicit RNG seed so that any game can be replayed exactly. This is not a convenience feature — it is the foundation of a debugging workflow. When a training run produces an unexpected result, the ability to reproduce the exact game sequence that caused it is the difference between a bug you can find and one you can only approximate.</p>
-        <p>Taken together, these decisions describe a developer who thought carefully about what it means to <em>trust</em> a game AI system — and then built the infrastructure to earn that trust rather than assume it.</p>
+        <p>The project reached v0.4.0 across five releases (v0.1.0 through v0.4.0, with a v0.3.1 patch) over roughly six months, accumulating 98 commits from one contributor across 3 branches. <code>IconquerCLI</code>’s <code>simulate</code> and <code>tournament</code> subcommands use the package as their primary agent source. The <code>iconquer-dashboard</code> target produces benchmark reports with Wilson-interval win rates. Model weights ship with the package and are updated when a training run passes its pre-registered criteria.</p>
+        <h2>Decisions</h2>
+        <p><strong><code>PlayerAgent</code> is <code>async</code> by design.</strong> The alternative was a synchronous protocol with a separate async wrapper for MLX agents. Making the protocol async from the start meant every agent — scripted or learned — conforms to one interface, and adding a new I/O-backed agent later doesn’t require a protocol migration.</p>
+        <p><strong>Agents return moves rather than mutating state.</strong> This keeps the agent implementation stateless with respect to the board, makes unit testing straightforward, and matches the driver model in <code>IconquerMatch</code>.</p>
+        <p><strong>Benchmark criteria are committed before runs.</strong> This is a process constraint rather than a code feature. It trades flexibility (you can’t adjust the bar after seeing a preliminary result) for auditability.</p>
+        <p><strong>Training refuses to save unchanged weights.</strong> Early in the pipeline it was possible for a training run to complete, report no error, and write back the same weights it started with. The explicit check catches that case and surfaces it as a failure rather than a silent pass.</p>
+        <p><strong>What is unfinished:</strong> The <code>IconquerApp</code> integration — wiring agents as opt-in computer opponents in the SwiftUI shell — is listed as Phase 2 and was scoped to v0.3.0 and later. As of v0.4.0, the CLI remains the primary consumer. The plan describes a remote Linux-server tournament orchestrator as a target consumer, but there is no evidence in the history that this path has been exercised beyond local CLI runs.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquerai-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquerai-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquerai-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerAI statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerAI
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              98
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              5
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerAI commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerAI — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~14/month · peak 41 (98 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="120" width="76" height="28" /> 
+            <rect class="ig-bar" x="103" y="118" width="76" height="30" /> 
+            <rect class="ig-bar" x="182" y="132" width="76" height="16" /> 
+            <rect class="ig-bar" x="261" y="140" width="76" height="8" /> 
+            <rect class="ig-bar" x="340" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="419" y="134" width="76" height="14" /> 
+            <rect class="ig-bar" x="498" y="130" width="76" height="18" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerAI release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerAI — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              5 releases · latest v0.4.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="511" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="423" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="423" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="267" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="41" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="512" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.4.0
+            </text> 
+            <text class="ig-label" x="47" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.1.0
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>

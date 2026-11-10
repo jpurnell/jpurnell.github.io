@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month." />
+    <meta name="description" content="A bidirectional XLSX library in Swift that handles ZIP, XML, formulas, styles, and layout — with no C library dependencies." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format | Justin Purnell</title>
+    <title>SwiftXLSX: A Pure-Swift Library for Reading and Writing Excel Files | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format" />
-    <meta name="twitter:title" content="SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format" />
-    <meta property="og:description" content="Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month." />
-    <meta name="twitter:description" content="Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month." />
+    <meta property="og:title" content="SwiftXLSX: A Pure-Swift Library for Reading and Writing Excel Files" />
+    <meta name="twitter:title" content="SwiftXLSX: A Pure-Swift Library for Reading and Writing Excel Files" />
+    <meta property="og:description" content="A bidirectional XLSX library in Swift that handles ZIP, XML, formulas, styles, and layout — with no C library dependencies." />
+    <meta name="twitter:description" content="A bidirectional XLSX library in Swift that handles ZIP, XML, formulas, styles, and layout — with no C library dependencies." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftxlsx" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swiftxlsx",
-          "name" : "SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format",
+          "name" : "SwiftXLSX: A Pure-Swift Library for Reading and Writing Excel Files",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftxlsx#breadcrumb"
       },
-      "description" : "Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month.",
+      "description" : "A bidirectional XLSX library in Swift that handles ZIP, XML, formulas, styles, and layout — with no C library dependencies.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format",
+      "name" : "SwiftXLSX: A Pure-Swift Library for Reading and Writing Excel Files",
       "url" : "https://www.justinpurnell.com/showcase/swiftxlsx"
     }
   ]
@@ -181,33 +181,316 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftXLSX: A Pure-Swift Round-Trip Engine for Excel's Open XML Format</h1>
+      <h1 class="mainTitle">SwiftXLSX: A Pure-Swift Library for Reading and Writing Excel Files</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftXLSX</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>Building a bidirectional XLSX library from scratch in Swift — handling ZIP, XML, formula parsing, and strict concurrency — across 47 releases in under a month.</p>
+          <p>A bidirectional XLSX library in Swift that handles ZIP, XML, formulas, styles, and layout — with no C library dependencies.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Excel’s <code>.xlsx</code> format is deceptively complex. Underneath a familiar file extension lives a ZIP archive containing a constellation of XML documents governed by OOXML, a sprawling Microsoft standard that most parsing libraries only partially implement. Developers who need to read <em>and</em> write <code>.xlsx</code> files — preserving formulas, styles, and layout — typically find themselves reaching for C-backed libraries or platform-specific frameworks, neither of which fits comfortably in a Swift ecosystem increasingly targeting both macOS and server-side Linux contexts.</p>
-        <p>SwiftXLSX exists to close that gap. The library provides a pure-Swift, bidirectional engine for reading, writing, and round-tripping Excel files: formulas are parsed and stored as an AST, styles and layout are preserved, and the entire stack — from ZIP archive handling down to the spreadsheet vocabulary — is implemented in Swift with no C dependencies. The project is built with a concrete downstream consumer in mind: BusinessMathExcel, a planned application that imports Excel financial models, extends them with Monte Carlo simulation and optimization, and exports results back to <code>.xlsx</code>. That real-world use case keeps the library honest about what round-trip fidelity actually means.</p>
+        <h2>Motivation</h2>
+        <p>Excel files are ZIP archives containing XML, governed by the Open XML / OOXML specification. Most Swift options for working with them either wrap C libraries or only handle one direction — read or write, not both. I wanted a pure-Swift library that could round-trip a real .xlsx file: read it, preserve its formulas, styles, and layout, modify it, and write it back out without data loss.</p>
+        <p>The immediate downstream consumer is BusinessMathExcel, a planned package that imports Excel financial models into BusinessMath’s computational graph, extends them with Monte Carlo simulation and optimization, and exports results back to .xlsx. That use case demands full structural fidelity, not just basic cell read/write.</p>
+        <p>SwiftXLSX is one piece of a three-package system. SwiftZIP handles the archive layer. SwiftExcelCore holds the shared spreadsheet vocabulary — cell types, formula AST definitions, and other primitives used across the system. SwiftXLSX sits on top of both and owns the XLSX-specific reading and writing logic, including formula parsing.</p>
         <h2>Approach</h2>
-        <p>Purnell structured the project around a clean separation of concerns expressed through a small, intentional dependency graph. SwiftXLSX itself handles the OOXML layer — reading and writing the XML that defines workbooks, worksheets, formulas, and styles. The ZIP layer is delegated to SwiftZIP, a sibling pure-Swift package. The shared spreadsheet vocabulary — cell types, formula AST nodes, style primitives — lives in SwiftExcelCore, another sibling package. This means SwiftXLSX neither reinvents low-level archive handling nor bleeds domain concepts across package boundaries.</p>
-        <p>Formula handling received particular architectural attention. SwiftXLSX includes a Pratt-precedence parser that produces a <code>FormulaAST</code> defined in SwiftExcelCore, enabling syntax-faithful round-trips: a formula read from an <code>.xlsx</code> file can be parsed, represented structurally, and written back without loss. Crucially, <em>evaluation</em> is not here — that responsibility was deliberately moved to a separate SwiftExcelFunctions package at version 0.13.0 (Architectural Decision 7 in the project’s own records). SwiftXLSX is syntax and storage; it does not conflate parsing with computation.</p>
-        <p>The project targets Swift 6.2 with strict concurrency enabled. All public types conform to <code>Sendable</code>, a non-trivial constraint when modeling a mutable spreadsheet graph, and one that future server-side consumers will depend on. A <code>SaveFidelityTool</code> target sits alongside the main library and tests — a dedicated executable for validating that read→write round-trips produce output that Excel considers equivalent to the source.</p>
-        <p>The presence of a <code>CLAUDE.md</code> file in the repository, with sections covering Session Start protocol, Key Rules, release procedures, and a Quality Gate, reflects a disciplined approach to AI-assisted development: sessions have documented entry points and exit criteria rather than open-ended prompting.</p>
+        <p>The package targets macOS and iOS, written in Swift with the Swift 6.2 toolchain. All public types are <code>Sendable</code>, meeting strict concurrency requirements from the start rather than retrofitting them later.</p>
+        <p>Formula handling uses a Pratt precedence parser that produces a <code>FormulaAST</code> defined in SwiftExcelCore. The parser handles round-trip fidelity: a formula read from a file produces an AST that serializes back to the same string. Formula <em>evaluation</em> is not in scope here — that moved to a separate package, SwiftExcelFunctions, in release 0.13.0.</p>
+        <p>The repository has three targets: <code>SwiftXLSX</code> (the library), <code>SwiftXLSXTests</code> (the test suite), and <code>SaveFidelityTool</code>, a standalone tool for verifying that a read-then-write cycle produces output that matches the input at the XML level.</p>
+        <p>Documentation uses the swift-docc-plugin. Architecture decisions, session startup rules, and the quality gate are documented in a CLAUDE.md file that also guided two Claude Code sessions used during development. Those sessions contributed 14 of the 38 commits across 26 messages, covering one single-task session and one multi-task session.</p>
         <h2>Results</h2>
-        <p>SwiftXLSX shipped 47 releases — from <code>v0.1.0</code> to <code>v0.37.2</code> — across 25 days, with 38 commits from a single contributor. The release cadence reflects a version-everything discipline: minor features, architectural extractions (like the formula evaluator separation at 0.13.0), and patch corrections each received their own tagged release. Five active branches suggest parallel streams of work. The project is live on both macOS and iOS platforms, with a package manifest targeting Swift Tools 6.2.</p>
-        <p>Two Claude Code sessions contributed 14 commits across 26 messages, with both sessions reaching their stated outcomes (one mostly achieved, one fully achieved) and only a single wrong-approach friction event across the entire AI-assisted work — a signal that the sessions were well-scoped before they started.</p>
-        <h2>Judgment Calls</h2>
-        <p>The most telling decision in SwiftXLSX is the extraction of formula evaluation at version 0.13.0. It would have been easy — and initially faster — to build evaluation directly into the library. Purnell chose instead to keep SwiftXLSX as a syntax and storage layer, moving the function library to SwiftExcelFunctions. This is a meaningful trade: it keeps the package’s dependency surface small, makes the evaluation engine independently testable and replaceable, and means that consumers who only need to read or write formulas (rather than compute them) don’t carry the weight of a function library. It’s the kind of decision that looks obvious in retrospect but requires the confidence to act on early.</p>
-        <p>The zero-C-dependency constraint is similarly deliberate. Pure-Swift implementations of ZIP handling and XML processing carry a real cost in initial development effort. The payoff is portability — particularly for server-side Swift targets where C library availability is not guaranteed — and a codebase that Swift developers can actually read, debug, and contribute to without context-switching to a different language. For the BusinessMathExcel use case, where financial models need to move through a Swift computational graph and back out to <code>.xlsx</code>, that portability is load-bearing.</p>
-        <p>The <code>SaveFidelityTool</code> as a first-class build target, rather than a test helper or a script, signals that round-trip correctness is treated as a product property worth instrumenting continuously — not just something to check occasionally before a release.</p>
+        <p>The library has shipped 46 tagged releases, from v0.1.0 through v0.37.2, over a development window of roughly 25 days (September 12 to October 7, 2026). The release cadence — roughly two per day on average — reflects incremental feature additions tracked through 5 branches.</p>
+        <p>The SaveFidelityTool target exists specifically to measure round-trip accuracy at the XML level, which is the primary correctness criterion for a bidirectional library.</p>
+        <p>The package is available on macOS and iOS and carries no C library dependencies: its full dependency chain is Foundation, SwiftZIP, and SwiftExcelCore, all pure Swift.</p>
+        <h2>Decisions</h2>
+        <p><strong>Formula evaluation moved out at 0.13.0.</strong> The function evaluation library left for SwiftExcelFunctions at that release. This kept SwiftXLSX focused on syntax and storage — parsing formulas into an AST and serializing them back — without taking on the separate problem of computing results. That boundary also makes it possible to swap or extend the evaluator without touching the file I/O layer.</p>
+        <p><strong>SwiftExcelCore as a shared vocabulary package.</strong> Cell types, the FormulaAST, and other primitives live in a sibling package rather than inside SwiftXLSX. This lets BusinessMathExcel and SwiftExcelFunctions share the same types without depending on the XLSX layer.</p>
+        <p><strong>SwiftZIP for the archive layer.</strong> Rather than writing ZIP handling directly or depending on a C library like libzip, I used SwiftZIP, another package in the same project. This keeps the pure-Swift constraint intact across the full stack.</p>
+        <p><strong>Strict concurrency from the start.</strong> Making all public types <code>Sendable</code> under Swift 6.2 strict concurrency rules was done at the library’s foundation rather than deferred. The cost was upfront design constraint; the benefit is that SwiftXLSX can be used in async Swift 6 contexts, including server-side Swift, without actor isolation warnings.</p>
+        <p><strong>SaveFidelityTool as a first-class target.</strong> Round-trip fidelity is the hardest thing to test with unit tests alone. Having a dedicated tool that compares input and output XML directly gives a concrete, reproducible check for regressions in the write path.</p>
+        <p><strong>What is unfinished.</strong> BusinessMathExcel, the stated primary consumer of this library, is planned but not yet built. The library’s design decisions are informed by that use case, but it has not yet been validated against a real financial model import/export cycle. The extent of formula coverage — which Excel functions parse correctly and which do not — is not quantified in the available project data.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swiftxlsx-stats.svg" alt="SwiftXLSX statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swiftxlsx-commits.svg" alt="SwiftXLSX commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swiftxlsx-releases.svg" alt="SwiftXLSX release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftXLSX statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftXLSX
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              38
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              46
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftXLSX commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftXLSX — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~19/month · peak 35 (38 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="274" height="84" /> 
+            <rect class="ig-bar" x="301" y="141" width="274" height="7" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftXLSX release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftXLSX — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              46 releases · latest v0.37.2
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="290" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="262" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="262" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="207" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="207" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="207" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="198" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="198" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="198" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="189" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="189" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="189" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="179" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="124" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="115" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="106" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="106" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="97" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="87" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="41" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="41" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="32" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="23" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="23" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="23" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="23" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="23" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="23" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="291" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.37.2
+            </text> 
+            <text class="ig-label" x="47" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.7.0
+            </text> 
+            <text class="ig-muted" x="162" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="438" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftxlsx, selfReflection</p>

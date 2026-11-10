@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven." />
+    <meta name="description" content="A Swift package that gathers credentials, runs prompts, and manages sign-in sessions for command-line tools and SSH apps built on SwiftCLIKit, without owning any identity decisions." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools | Justin Purnell</title>
+    <title>SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools" />
-    <meta name="twitter:title" content="SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools" />
-    <meta property="og:description" content="A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven." />
-    <meta name="twitter:description" content="A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven." />
+    <meta property="og:title" content="SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps" />
+    <meta name="twitter:title" content="SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps" />
+    <meta property="og:description" content="A Swift package that gathers credentials, runs prompts, and manages sign-in sessions for command-line tools and SSH apps built on SwiftCLIKit, without owning any identity decisions." />
+    <meta name="twitter:description" content="A Swift package that gathers credentials, runs prompts, and manages sign-in sessions for command-line tools and SSH apps built on SwiftCLIKit, without owning any identity decisions." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swift-cli-kit-auth" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth",
-          "name" : "SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools",
+          "name" : "SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth#breadcrumb"
       },
-      "description" : "A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven.",
+      "description" : "A Swift package that gathers credentials, runs prompts, and manages sign-in sessions for command-line tools and SSH apps built on SwiftCLIKit, without owning any identity decisions.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools",
+      "name" : "SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps",
       "url" : "https://www.justinpurnell.com/showcase/swift-cli-kit-auth"
     }
   ]
@@ -181,34 +181,269 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools</h1>
+      <h1 class="mainTitle">SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftCLIKitAuth</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven.</p>
+          <p>A Swift package that gathers credentials, runs prompts, and manages sign-in sessions for command-line tools and SSH apps built on SwiftCLIKit, without owning any identity decisions.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Command-line tools that call account-bound services need a way to handle sign-in, but the space between “no accounts at all” and “roll your own auth flow” has historically been a gap rather than a solution. Developers building tools on SwiftCLIKit faced a choice: drag in a heavyweight dependency for features they might not need, or stitch together credential prompts, session management, and SSH handling by hand.</p>
-        <p>SwiftCLIKitAuth was built to close that gap cleanly. Its mission, as stated in its own <code>MASTER_PLAN.md</code>, is to establish <em>who</em> someone is (represented as a SwiftIdentity <code>Subject</code>), <em>how strongly</em> that was proven, and <em>whether the app admits them</em> — from a local terminal or over SSH. The package serves two audiences: authors of CLI tools that need a <code>login</code> command against an account-bound service, and authors of SSH apps that require accounts, built on SwiftCLIKitSSH.</p>
-        <p>Critically, the problem was scoped as tightly as the solution. Apps that don’t need accounts pay nothing. Apps that do add only the packages for the methods they use.</p>
+        <h2>Motivation</h2>
+        <p>SwiftCLIKit provides a foundation for building command-line tools in Swift. Some of those tools need accounts — a <code>mytool login</code> flow, or an SSH app that authenticates users before granting access. Without a shared package for this, every tool author would have to wire up credential prompts, session state, and sign-in flows from scratch, and would have to make their own choices about how to handle refusals and what to depend on.</p>
+        <p>SwiftCLIKitAuth is the answer to that problem. Its mission, as stated in the project’s MASTER_PLAN.md, is to establish who someone is (as a SwiftIdentity <code>Subject</code>), how strongly that was proven, and whether the app admits them — from a local terminal or over SSH. Identity verification itself stays in SwiftIdentity’s <code>Authenticator</code>. This package gathers credentials, shows prompts, admits or refuses, and holds the session. Tools that don’t need accounts pay nothing; tools that do add only the packages for the sign-in methods they use.</p>
+        <p>The design was driven by a proposal written before coding started — <code>2026-10-20_SwiftCLIKitAuth.md</code>, approved on 2026-10-24 at revision 7, with revisions 8 and 9 decided afterward. That proposal is the authority for what the package does and how it is shaped.</p>
         <h2>Approach</h2>
-        <p>The design was authored prior to implementation and approved through a formal revision process — <code>2026-10-20_SwiftCLIKitAuth.md</code> reached revision 7 before receiving approval on 2026-10-24, with revisions 8 and 9 decided afterward. That proposal is explicitly designated the authority; the <code>MASTER_PLAN.md</code> tracks delivery against it. This discipline — keeping the design document sovereign over the implementation — reflects a working style that treats architecture as a first-class artifact rather than an afterthought reconstructed from code.</p>
-        <p>The package is structured into two targets with clean separation: <code>SwiftCLIKitAuth</code> for local terminal authentication flows and <code>SwiftCLIKitAuthSSH</code> for SSH-based authentication, each with its own test target. The dependency graph was constructed with deliberate restraint — <code>swift-cli-kit</code>, <code>swift-identity</code>, <code>swift-crypto</code>, <code>swift-nio</code>, and <code>swift-nio-ssh</code> are present because the package genuinely needs them. Third-party auth dependencies such as <code>swift-oauth</code> are explicitly kept <em>out</em>, pushed to the consuming application. This is not an oversight; it’s revision 9 of the design, which specifies that device sign-in takes the app’s closure so that OAuth libraries remain the app’s dependency, not the package’s.</p>
-        <p>Identity verification is delegated entirely to SwiftIdentity’s <code>Authenticator</code>. SwiftCLIKitAuth calls <code>Authenticator.authentication(for:)</code> — the statically dispatched form — gathers credentials, presents prompts, and manages session state. It does not inspect the reason for a refusal. Every failed sign-in surfaces the same message: “Sign-in failed.” This is a privacy guarantee enforced by architectural boundary, not by convention.</p>
+        <p>The package is structured around a clean separation of concerns enforced by its dependency rules:</p>
+        <p><strong>Identity decisions stay out.</strong> SwiftCLIKitAuth calls <code>Authenticator.authentication(for:)</code>, the statically dispatched form from SwiftIdentity. Because it uses that form, no layer in this package can print a reason for a refusal. Every failed sign-in surfaces as “Sign-in failed” — the package cannot leak why.</p>
+        <p><strong>Method packages are not pulled in.</strong> For device sign-in flows (such as OAuth), the app provides a closure. That means swift-oauth becomes the app’s dependency, not SwiftCLIKitAuth’s. This was a deliberate decision from revision 9 of the design proposal, keeping the package’s dependency footprint minimal and giving app authors control over what they pull in.</p>
+        <p><strong>Two targets for two contexts.</strong> The package splits into <code>SwiftCLIKitAuth</code> for local terminal sign-in and <code>SwiftCLIKitAuthSSH</code> for SSH app scenarios. Each has its own test target. SSH support builds on swift-nio and swift-nio-ssh; cryptographic operations use swift-crypto. The swift-docc-plugin is included for documentation generation.</p>
+        <p>Platforms supported are macOS, iOS, and visionOS, using Swift Package Manager with tools version 6.2.</p>
         <h2>Results</h2>
-        <p>Thirty commits across a single contributor produced four versioned releases — <code>v0.1.0</code> through <code>v0.4.0</code> — in just over 25 hours between first commit and latest commit. The pace reflects a design that was already settled before implementation began: when the architecture is resolved up front, implementation can move quickly without thrashing. The package ships with test coverage across both the core auth target and the SSH target (<code>SwiftCLIKitAuthTests</code> and <code>SwiftCLIKitAuthSSHTests</code>), targeting macOS, iOS, and visionOS. Documentation infrastructure is included via <code>swift-docc-plugin</code>, signaling intent for the package to be a publishable, maintainable component rather than internal scaffolding.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here are worth examining as expressions of craft rather than convenience.</p>
-        <p><strong>The refusal is opaque by design.</strong> Consuming <code>Authenticator.authentication(for:)</code> in its statically dispatched form is not the path of least resistance — it’s the path that prevents any layer of this package from printing a rejection reason. The “Sign-in failed” message isn’t a lazy default; it’s a deliberate privacy posture baked into the call site.</p>
-        <p><strong>Inversion of the OAuth dependency.</strong> It would have been straightforward to take a direct dependency on an OAuth library and offer device sign-in as a first-class capability. Revision 9 of the design rejected this in favor of a closure-based interface that hands responsibility back to the calling application. The package stays thin; the application owns its own auth method dependency. This decision keeps SwiftCLIKitAuth honest about what it actually is — a session and admission layer, not an identity provider.</p>
-        <p><strong>Two targets, not one.</strong> Splitting SSH authentication into <code>SwiftCLIKitAuthSSH</code> means that tools without SSH exposure don’t link against NIO or the SSH stack. The pay-only-for-what-you-use principle stated in the mission is enforced at the package manifest level, not just in documentation.</p>
-        <p><strong>Design sovereignty.</strong> Designating the design proposal — not the code, not the plan — as the authoritative source of truth, and tracking delivery against it rather than updating it to match what shipped, is a discipline that keeps architectural intent legible. Four releases in two days is a fast cadence; the fact that the design was at revision 7 before a line was committed explains how that cadence was possible without drift.</p>
+        <p>The project reached v0.4.0 across 30 commits from a single contributor, with four releases shipped: v0.1.0, v0.2.0, v0.3.0, and v0.4.0. All commits landed within a two-day window between October 26 and 27, 2026.</p>
+        <p>The package delivers:</p>
+        <ul>
+          <li>Local terminal sign-in flow (<code>SwiftCLIKitAuth</code> target)</li>
+          <li>SSH app sign-in flow (<code>SwiftCLIKitAuthSSH</code> target)</li>
+          <li>Test coverage via <code>SwiftCLIKitAuthTests</code> and <code>SwiftCLIKitAuthSSHTests</code></li>
+          <li>Documentation via swift-docc-plugin</li>
+        </ul>
+        <h2>Decisions</h2>
+        <p><strong>Design-first, then code.</strong> The approved design proposal preceded all implementation. Revisions 8 and 9 were decided during delivery and shaped the closure-based device sign-in approach and the statically dispatched authenticator call. I followed the proposal as the authority rather than letting implementation decisions drift from it.</p>
+        <p><strong>Static dispatch for authentication.</strong> Using <code>Authenticator.authentication(for:)</code> instead of a dynamically dispatched form means no code path in this package can inspect or surface a refusal reason. This was a deliberate privacy constraint: the package cannot accidentally expose why someone was refused.</p>
+        <p><strong>Closure injection for OAuth-style flows.</strong> Rather than depending on swift-oauth directly, device sign-in takes a closure from the app. This keeps swift-oauth out of the package’s dependency graph and lets app authors manage that dependency themselves. The tradeoff is that app authors have a little more wiring to do, but they retain full control over their dependency surface.</p>
+        <p><strong>Split targets by context.</strong> Separating the terminal and SSH targets means an app that only needs local sign-in does not pull in swift-nio or swift-nio-ssh. This follows the stated goal that apps pay only for what they use.</p>
+        <p><strong>What is unfinished or uncertain.</strong> The MASTER_PLAN.md tracks delivery against the proposal, and the project reached v0.4.0 within two days. What remains open — additional sign-in methods, further platform coverage, or additional session management features — is not documented in the available inputs, so I cannot state it here.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swift-cli-kit-auth-stats.svg" alt="SwiftCLIKitAuth statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swift-cli-kit-auth-commits.svg" alt="SwiftCLIKitAuth commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swift-cli-kit-auth-releases.svg" alt="SwiftCLIKitAuth release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftCLIKitAuth statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftCLIKitAuth
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              30
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              3
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftCLIKitAuth commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftCLIKitAuth — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~30/month · peak 30 (30 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="550" height="84" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftCLIKitAuth release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftCLIKitAuth — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              4 releases · latest v0.4.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="486" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="468" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="468" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="468" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="487" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.4.0
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swift-cli-kit-auth, selfReflection</p>

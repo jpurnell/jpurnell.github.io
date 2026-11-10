@@ -1,8 +1,8 @@
 ---
-title: BusinessMathMCP: Giving AI Agents a Calculator They Can Trust
-description: A production MCP server that wraps a battle-tested Swift financial library into a large, coherent tool surface — so AI agents can compute discount rates, run statistical models, and perform valuations without estimating.
+title: BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library
+description: An MCP server that exposes BusinessMath's financial and statistical functions as callable tools for AI agents.
 date: 2026-10-30 12:25
-lastModified: 2026-11-09
+lastModified: 2026-11-10
 tags: showcase, businessmathmcp, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,36 +10,36 @@ project: BusinessMathMCP
 published: true
 ---
 
-# BusinessMathMCP: Giving AI Agents a Calculator They Can Trust
+# BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library
 
-> A production MCP server that wraps a battle-tested Swift financial library into a large, coherent tool surface — so AI agents can compute discount rates, run statistical models, and perform valuations without estimating.
+> An MCP server that exposes BusinessMath's financial and statistical functions as callable tools for AI agents.
 
-## Problem
+## Motivation
 
-Large language models are surprisingly bad at math. Not because they lack the formulas — they've seen them all — but because they *approximate*. When an AI agent estimates a net present value or interpolates a yield curve, it is doing something fundamentally different from computing one. For financial work, that gap matters.
+BusinessMath is a Swift library of financial and statistical calculations — valuation, statistics, optimisation, forecasting. The library produces deterministic results from tested code: the same inputs always give the same output, and the derivation is inspectable. That property is useful for AI agents, which otherwise estimate numerical answers rather than compute them.
 
-BusinessMathMCP exists to close that gap. The project is an MCP (Model Context Protocol) server that exposes the BusinessMath Swift library as a suite of callable tools. When a Claude agent or any MCP-capable host needs to run a valuation, fit a statistical distribution, or solve an optimisation problem, it reaches out to BusinessMathMCP and gets back a deterministic, auditable answer — the same answer the same inputs would have produced yesterday, or will produce tomorrow, derived from code that has already been tested.
-
-The server is not trying to be a pocket calculator with a handful of endpoints. Its stated mission, drawn directly from the project's own MASTER_PLAN.md, is to expose *the library's breadth as the product*: a large, coherent tool surface rather than a curated subset. That scope is what makes it useful to AI agents doing serious financial analysis — valuation, statistics, optimisation, forecasting — rather than toy arithmetic.
+The gap I wanted to close was access. An agent running in Claude Desktop or Claude Code has no way to call a Swift library directly. BusinessMathMCP bridges that by wrapping the library as an MCP server, so any MCP-capable host can invoke the calculations as tools without anyone writing Swift. The breadth of the tool surface is the point — not a handful of calculator endpoints, but the full library exposed coherently.
 
 ## Approach
 
-The project is a Swift package targeting macOS, written against Swift Tools version 6.2 and built on two core dependencies: the BusinessMath library itself, which carries the financial and statistical correctness, and SwiftMCPServer, which handles the protocol layer. Swift Numerics rounds out the numeric stack. swift-docc-plugin is included, signaling an intention toward documentation as a first-class output.
+The server is built on SwiftMCPServer and targets macOS. The package declares three targets: `BusinessMathMCP` for the core logic, `BusinessMathMCPServer` for the runnable server process, and `BusinessMathMCPTests` for the test suite. `swift-numerics` handles numerical types where the standard library falls short, and `swift-docc-plugin` is included for documentation generation.
 
-The package is split into three targets that reflect a clear separation of concerns. `BusinessMath` (the upstream library) owns the domain logic. `BusinessMathMCPServer` owns the protocol translation — the work of turning library functions into MCP-callable tools with well-shaped schemas. `BusinessMathMCPTests` validates that translation. The structure makes an important architectural statement: financial correctness is *delegated* to the upstream library, already solved and already tested there. BusinessMathMCP's job is faithful exposure, not reimplementation.
+The dependency on `businessMath` is deliberate and load-bearing: financial correctness is the library's problem, already solved and tested there. BusinessMathMCP does not reimplement calculations; it translates between the MCP tool-call interface and library calls, then returns the results.
 
-The CLAUDE.md file — present and structured around a mandatory session-start recovery protocol, an upstream contribution model, and a disciplined process section — indicates that the project was developed with an AI-assisted workflow in mind from the beginning. The architecture sections covering `/recover`, environment gotchas, and repo facts suggest a developer who anticipated handing context back and forth and built scaffolding to make that reliable.
+A `CLAUDE.md` file is present in the repository. It documents session startup conventions, a mandatory process discipline carried over from the BusinessMath project, an upstream contribution model for pushing fixes back to the library, and environment gotchas. That file shaped how ongoing work in the repository is structured, even in sessions not tracked through Claude Code's session log.
 
 ## Results
 
-Over roughly nine months of development — from February to November 2026 — the project accumulated 93 commits across 5 branches, shipping to a stable v1.0.0 release. A single contributor drove the entire codebase to production. The package is MCP-ready, targeting Claude Desktop and Claude Code as first-class hosts, and positions BusinessMath's library breadth as a deployable capability for AI agents that need financial computation they can depend on.
+The project reached v1.0.0 across 93 commits from 2 contributors over branches that tracked different areas of development. The release covers the initial public tool surface derived from BusinessMath. Tests live in the `BusinessMathMCPTests` target; the specific count is not recorded here, but the test target exists as a first-class part of the build.
 
-## Judgment Calls
+## Decisions
 
-**Delegation over duplication.** The most consequential design decision in the project is what it chose *not* to do: reimplement financial logic. By treating BusinessMath as the authoritative source of correctness and confining BusinessMathMCP to the protocol translation layer, the developer avoided the classic trap of a wrapper that slowly diverges from its upstream. The upstream contribution model documented in CLAUDE.md formalizes this — improvements flow back to the library, not into the server.
+**Wrap, don't reimplement.** Every calculation delegates to BusinessMath. This keeps the MCP layer thin and means numerical correctness is inherited rather than re-litigated. When a bug exists it belongs to one place, and fixing it upstream fixes it for every host.
 
-**Breadth as a design goal.** Many MCP servers are narrow by choice, exposing a handful of high-value endpoints and stopping there. BusinessMathMCP made the opposite bet: that a large, coherent tool surface is itself the differentiator. This is a harder surface to maintain and document, but it means an agent doing a full valuation workflow — forecasting, discounting, statistical modeling — doesn't have to context-switch between tools or fall back to estimation midway through.
+**Large tool surface as the differentiator.** A minimal server with a few financial endpoints would be easier to build but less useful. The goal was to expose the library's breadth, so the tool count scales with BusinessMath's coverage rather than being curated down.
 
-**Determinism as a feature, not a footnote.** The MASTER_PLAN.md explicitly frames deterministic, auditable answers as the product's core value proposition — the *opposite* of an LLM estimating a discount rate. Naming that contrast directly in the project's governing document shows a developer who understood the market position clearly: BusinessMathMCP is not augmenting AI reasoning, it is replacing a specific category of AI reasoning with something more trustworthy.
+**Swift and macOS only.** SwiftMCPServer and the dependency on a Swift library make cross-platform support impractical without significant additional work. That constraint is accepted; the target hosts — Claude Desktop and Claude Code on macOS — fit within it.
 
-**Documentation infrastructure on day one.** Including swift-docc-plugin in the dependencies before v1.0.0 shipped is a small signal with meaningful implications. It reflects a judgment that a tool surface this broad is only as useful as its documentation — and that documentation tooling is infrastructure, not a cleanup task.
+**Upstream contribution model.** The `CLAUDE.md` architecture section defines a process for pushing fixes discovered in the MCP layer back to BusinessMath. This is unfinished in the sense that it depends on how frequently the two projects diverge, and the boundaries of that model are still being worked out in practice.
+
+What remains open is how completely the library surface is covered by the current tool set, and whether the tool descriptions are precise enough for agents to select the right calculation without additional guidance. Those questions can only be answered by running agents against the server across a range of tasks.

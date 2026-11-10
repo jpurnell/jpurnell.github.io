@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="In seven months and 187 commits, jpurnell built a production-grade inference engine capable of streaming 200GB+ language models through a custom Metal compute pipeline while holding just ~6GB in resident memory — no Python, no C, no compromises." />
+    <meta name="description" content="A macOS inference engine that streams 200GB+ MoE language models from NVMe through a Metal compute pipeline while holding roughly 6GB in resident memory, with an OpenAI-compatible HTTP front end." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon | Justin Purnell</title>
+    <title>Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon" />
-    <meta name="twitter:title" content="Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon" />
-    <meta property="og:description" content="In seven months and 187 commits, jpurnell built a production-grade inference engine capable of streaming 200GB+ language models through a custom Metal compute pipeline while holding just ~6GB in resident memory — no Python, no C, no compromises." />
-    <meta name="twitter:description" content="In seven months and 187 commits, jpurnell built a production-grade inference engine capable of streaming 200GB+ language models through a custom Metal compute pipeline while holding just ~6GB in resident memory — no Python, no C, no compromises." />
+    <meta property="og:title" content="Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon" />
+    <meta name="twitter:title" content="Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon" />
+    <meta property="og:description" content="A macOS inference engine that streams 200GB+ MoE language models from NVMe through a Metal compute pipeline while holding roughly 6GB in resident memory, with an OpenAI-compatible HTTP front end." />
+    <meta name="twitter:description" content="A macOS inference engine that streams 200GB+ MoE language models from NVMe through a Metal compute pipeline while holding roughly 6GB in resident memory, with an OpenAI-compatible HTTP front end." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftmoe" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swiftmoe",
-          "name" : "Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon",
+          "name" : "Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftmoe#breadcrumb"
       },
-      "description" : "In seven months and 187 commits, jpurnell built a production-grade inference engine capable of streaming 200GB+ language models through a custom Metal compute pipeline while holding just ~6GB in resident memory — no Python, no C, no compromises.",
+      "description" : "A macOS inference engine that streams 200GB+ MoE language models from NVMe through a Metal compute pipeline while holding roughly 6GB in resident memory, with an OpenAI-compatible HTTP front end.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon",
+      "name" : "Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon",
       "url" : "https://www.justinpurnell.com/showcase/swiftmoe"
     }
   ]
@@ -181,40 +181,311 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon</h1>
+      <h1 class="mainTitle">Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">CTokenizer</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">5 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>In seven months and 187 commits, jpurnell built a production-grade inference engine capable of streaming 200GB+ language models through a custom Metal compute pipeline while holding just ~6GB in resident memory — no Python, no C, no compromises.</p>
+          <p>A macOS inference engine that streams 200GB+ MoE language models from NVMe through a Metal compute pipeline while holding roughly 6GB in resident memory, with an OpenAI-compatible HTTP front end.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Mixture-of-Experts language models represent the current frontier of open-weight AI, but running them locally is a hardware problem masquerading as a software problem. A 200GB model simply does not fit in any consumer GPU’s VRAM. The standard response is to offload layers to CPU, accept brutal throughput penalties, or skip the problem entirely and call a cloud API.</p>
-        <p>CTokenizer — the working name for the repository, which houses the broader <strong>SwiftMoE</strong> project — takes a third path. The project is a Swift inference engine purpose-built for Apple Silicon that treats the NVMe SSD as a first-class memory tier. Rather than loading a model into RAM and hoping for the best, it streams weights on demand through a custom Metal compute pipeline, keeping resident memory bounded at roughly 6GB regardless of model size. The result is that a Mac with a fast SSD can run models that would otherwise require a server rack.</p>
-        <p>The project also ships a complete, OpenAI-compatible HTTP service layer, meaning any client that speaks the <code>/v1/chat/completions</code> API — from curl to production applications — can point at a local SwiftMoE server and get streaming responses with no modification.</p>
+        <h2>Motivation</h2>
+        <p>I wanted to run large Mixture-of-Experts language models locally on Apple Silicon without loading the full weights into RAM. The models I had in mind exceed 200GB — far beyond what fits in unified memory — so the only viable path was streaming weights directly from NVMe storage at inference time and processing them through the GPU. No existing open-source Swift tooling addressed that specific combination: MoE architectures, Metal compute, weight streaming, and a production-style HTTP interface. I built SwiftMoE to cover all of it in one package.</p>
+        <p>A secondary goal was testability. Running tests against a 210GB model is impractical, so I needed a fixture strategy that would let the full test suite run on any development machine without a model download.</p>
         <h2>Approach</h2>
-        <p>The architecture is organized around a clean separation of concerns that the project’s own <code>MASTER_PLAN.md</code> treats as load-bearing, not aspirational.</p>
-        <p>The core inference library (<code>SwiftMoE</code> target) is pure Swift with no C dependencies and no networking code. GPU work happens across seven distinct Metal optimization paths, with automatic CPU fallback when a path isn’t viable. The design acknowledges that Apple Silicon spans a wide performance range — a path that’s optimal on an M3 Ultra may not be the right choice on an M1 — and handles this at runtime rather than compile time.</p>
-        <p>Model agnosticism is achieved through a runtime-configurable <code>ModelConfig</code> with architecture presets. There are no hardcoded architecture constants anywhere in the main library. A new MoE architecture can be expressed as a config rather than a code change, which keeps the core engine from accreting model-specific branches over time.</p>
-        <p>The HTTP layer (<code>SwiftMoEHTTP</code>, <code>SwiftMoEServer</code>) sits as a separate target and brings in SwiftHTTPService, SwiftTLSKit, and swift-nio. The service implements SSE streaming, bearer-key authentication, TLS termination, and a notably disciplined set of request bounds: sequence budgets, queue deadlines, disconnect-triggered cancellation, and a hard two-hour ceiling on any single response. These aren’t afterthoughts — they reflect real thinking about what happens when a long-running local inference server meets adversarial or simply careless clients.</p>
-        <p>The interactive <code>SwiftMoEChat</code> target wraps CLineNoise (the repository’s only non-pure-Swift component, and appropriately isolated) to provide a local REPL interface.</p>
-        <p>The project carries a <code>CLAUDE.md</code> and operates under a design-first workflow, with architecture documented across sections covering results, hardware considerations, project structure, and a candid “What We Tried (and What Worked)” retrospective — evidence that architectural decisions were recorded and reasoned through, not just accumulated.</p>
+        <p>The project is organized as a multi-target Swift package under Swift Tools 6.2, targeting macOS. The main library (<code>CTokenizer</code>, <code>SwiftMoE</code>) contains no networking code and no C dependencies. The HTTP layer lives in <code>SwiftMoEHTTP</code>, built on <code>SwiftHTTPService</code> and <code>SwiftTLSKit</code>, and the server entry point is in <code>SwiftMoEServer</code>. A REPL target (<code>SwiftMoEChat</code>) uses <code>CLineNoise</code> for interactive use.</p>
+        <p>The compute side implements seven GPU optimization paths in Metal, each selected automatically at runtime, with a CPU fallback when no suitable GPU path matches. Architecture behavior — layer counts, expert counts, routing strategy — is driven by a runtime <code>ModelConfig</code> with named presets rather than compiled-in constants. This is what makes the engine model-agnostic: swapping in a different MoE architecture means providing a different config, not recompiling.</p>
+        <p>The HTTP service exposes <code>/v1/chat/completions</code> with SSE streaming, bearer-key authentication, and TLS. Each request is bounded: there is a sequence budget, a queue deadline, cancellation on client disconnect, and a hard two-hour ceiling on any single response. These bounds exist to prevent runaway inference from tying up the server indefinitely.</p>
+        <p>The <code>CLAUDE.md</code> and <code>MASTER_PLAN.md</code> files in the repository document the architecture, hardware assumptions, what was tried and what worked, and safety considerations. The project followed a design-first workflow; those documents shaped the structure before and during implementation.</p>
+        <p>The test suite uses tiny synthetic model fixtures — small enough to construct in memory — so all 255 tests run without any external model files.</p>
+        <p>Dependencies are <code>swift-nio</code> (async networking), <code>SwiftHTTPService</code>, <code>SwiftTLSKit</code>, and <code>swift-docc-plugin</code> for documentation generation.</p>
         <h2>Results</h2>
-        <p>SwiftMoE has shipped three releases across a seven-month development window: v0.1.0, v0.2.0, and v0.2.1. The project is built against Swift Tools version 6.2 and targets macOS on Apple Silicon.</p>
-        <p>The test suite stands at <strong>255 tests</strong>, written against tiny synthetic model fixtures. This is a meaningful design choice: the test suite validates the full inference pipeline without requiring anyone to download a 210GB model. GPU paths, config parsing, token handling, and HTTP behavior can all be exercised in CI on commodity hardware. 255 tests across a system this complex — spanning Metal compute, streaming I/O, HTTP, and TLS — represents real coverage discipline.</p>
-        <p>The 187-commit history across five branches and two contributors reflects sustained, iterative development rather than a single burst of activity. The codebase has been actively shaped and reshaped over time.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here are easy to make wrong and harder to make right.</p>
-        <p><strong>Bounding the unbounded.</strong> The two-hour response ceiling, sequence budgets, and cancellation-on-disconnect in the HTTP service are the kind of safety rails that get skipped in early versions and retrofitted painfully later. Including them before v1.0 suggests jpurnell was thinking about the operational reality of running a local inference server, not just the happy path.</p>
-        <p><strong>Synthetic fixtures over real models.</strong> Testing a 200GB-model inference engine without 200GB of test data requires building the right abstractions. The decision to invest in synthetic model fixtures means the test suite is actually runnable, which means it actually runs — a distinction that matters more than it sounds.</p>
-        <p><strong>Seven GPU paths with CPU fallback.</strong> Committing to seven Metal optimization paths is a significant surface area to maintain. But the alternative — a single path tuned for one chip — would make the engine brittle across Apple Silicon generations. The automatic fallback to CPU means the engine degrades gracefully rather than failing hard on unexpected hardware.</p>
-        <p><strong>Architecture as configuration.</strong> Hardcoding model architecture constants is the fastest path to a working demo and the slowest path to a general tool. The runtime <code>ModelConfig</code> with presets inverts this tradeoff deliberately, accepting more upfront design complexity to avoid a future where every new MoE architecture requires a fork.</p>
-        <p><strong>Strict layering.</strong> Keeping networking out of the core library and C code out of the main targets isn’t accidental cleanliness — it’s a structural choice that keeps the inference engine testable, portable, and auditable in isolation. The boundaries are enforced by the package manifest, not just by convention.</p>
+        <p>The project shipped three releases — v0.1.0, v0.2.0, and v0.2.1 — across 187 commits from two contributors between March and October 2026. The test suite stands at 255 tests, all running against synthetic fixtures. The engine streams models larger than 200GB from NVMe while maintaining approximately 6GB resident memory. The HTTP layer is OpenAI-compatible and handles streaming responses with the safety bounds described above.</p>
+        <h2>Decisions</h2>
+        <p><strong>Weight streaming over full load.</strong> Keeping ~6GB resident while serving 200GB+ models means NVMe throughput becomes the bottleneck rather than memory capacity. The Metal pipeline is designed around this: data moves from disk to GPU without staging a full model in unified memory.</p>
+        <p><strong>Runtime <code>ModelConfig</code> with presets.</strong> Hardcoding architecture constants would have made the engine specific to one model family. A configurable runtime description costs some simplicity but means the same binary can serve different MoE architectures without recompilation.</p>
+        <p><strong>Seven GPU paths plus CPU fallback.</strong> Different hardware configurations and tensor shapes benefit from different Metal kernels. Rather than pick one general path, I enumerated seven and let the engine select at runtime. The CPU fallback is there for correctness testing and edge cases, not performance.</p>
+        <p><strong>Synthetic fixtures for testing.</strong> A test suite that requires a 210GB download would not run in CI or on most development machines. Tiny synthetic fixtures make all 255 tests self-contained. The tradeoff is that end-to-end accuracy against real model weights is not covered by automated tests.</p>
+        <p><strong>Networking isolated to its own targets.</strong> <code>SwiftMoEHTTP</code> and <code>SwiftMoEServer</code> carry all networking code. The core library has no network dependency. This keeps the inference logic independently testable and deployable.</p>
+        <p><strong>Safety bounds on requests.</strong> The sequence budget, queue deadline, disconnect cancellation, and two-hour response cap are not optional features — they are built into the request lifecycle. Without them, a slow or stalled inference could block the server indefinitely. What remains uncertain is how these bounds interact with very long context requests on slower NVMe configurations; that has not been benchmarked across hardware.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swiftmoe-stats.svg" alt="CTokenizer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swiftmoe-commits.svg" alt="CTokenizer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swiftmoe-releases.svg" alt="CTokenizer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="CTokenizer statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              CTokenizer
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              187
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              3
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              2 contributors
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="CTokenizer commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              CTokenizer — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~23/month · peak 144 (187 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="67" height="84" /> 
+            <rect class="ig-bar" x="94" y="147" width="67" height="1" /> 
+            <rect class="ig-bar" x="163" y="147" width="67" height="1" /> 
+            <rect class="ig-bar" x="232" y="147" width="67" height="1" /> 
+            <rect class="ig-bar" x="301" y="147" width="67" height="1" /> 
+            <rect class="ig-bar" x="370" y="146" width="67" height="2" /> 
+            <rect class="ig-bar" x="439" y="146" width="67" height="2" /> 
+            <rect class="ig-bar" x="508" y="132" width="67" height="16" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="59" y="166" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="128" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="197" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="266" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="335" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="404" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="473" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="542" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="CTokenizer release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              CTokenizer — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              3 releases · latest v0.2.1
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="571" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="571" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="524" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="554" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.2.1
+            </text> 
+            <text class="ig-muted" x="59" y="112" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="128" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="197" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="266" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="335" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="404" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="473" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="542" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftmoe, selfReflection</p>

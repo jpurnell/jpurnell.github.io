@@ -1,8 +1,8 @@
 ---
-title: ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware
-description: A native Swift package powering a faithful Applesoft BASIC runtime across iPad, Mac, and Vision Pro — complete with graphics, sound, and period-accurate presentation.
+title: ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App
+description: A Swift package that provides the core layer — editor state, terminal model, graphics, and sound — sitting between the ApplesoftBASICLib interpreter and the native SwiftUI apps targeting iPad, Mac, and Vision Pro.
 date: 2026-05-12 15:55
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, project, applesoftbasic, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,40 +10,34 @@ project: ApplesoftBASIC
 published: true
 ---
 
-# ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware
+# ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App
 
-> A native Swift package powering a faithful Applesoft BASIC runtime across iPad, Mac, and Vision Pro — complete with graphics, sound, and period-accurate presentation.
+> A Swift package that provides the core layer — editor state, terminal model, graphics, and sound — sitting between the ApplesoftBASICLib interpreter and the native SwiftUI apps targeting iPad, Mac, and Vision Pro.
 
-## Problem
+## Motivation
 
-Applesoft BASIC shaped a generation of programmers. For millions of people who grew up typing listings from *Compute!* magazine or *Creative Computing*, the Apple II was their first encounter with software as something you could make yourself. But that experience has effectively been stranded in time — emulators exist, but they carry the weight of full system emulation and rarely feel at home on modern hardware.
+The goal is an app that lets people run Applesoft BASIC programs on modern Apple hardware the way they remember them: green characters on a black screen, lo-res and hi-res graphics, and the speaker sounds that accompanied them. The target audience is people who grew up with the Apple II, learners who want a small and complete language they can read all at once, and anyone who owns a stack of vintage magazine listings with no machine to run them on.
 
-ApplesoftBASICAppCore is the library layer beneath an app designed to solve that problem directly. The project's stated mission is an iPad, Mac, and Vision Pro application that runs Applesoft BASIC programs with a retro terminal experience — editor, terminal, lo-res and hi-res graphics, and speaker sound — on top of a dedicated interpreter. It targets three distinct audiences: people revisiting the Apple II BASIC they grew up with, learners encountering a small and immediately legible language for the first time, and owners of vintage listings from books and magazines who have nowhere to run them anymore. That last group in particular has been poorly served — a dog-eared copy of a 1982 type-in program is useless without something that speaks the full language.
-
-The key differentiator the project stakes its claim on is running the real language, not a subset. Graphics and sound are included, not deferred.
+The constraint I set was running the real language — not a simplified subset — which meant building on top of ApplesoftBASICLib, a separate interpreter package I had already written. What ApplesoftBASICAppCore does is provide the layer above that interpreter: the editor state, the terminal model, the graphics surface, and sound, packaged so that SwiftUI views on each platform can consume them without duplicating logic across targets.
 
 ## Approach
 
-The project is structured as a Swift package targeting macOS and iOS simultaneously, using Swift tools version 6.2. The separation of concerns is deliberate: ApplesoftBASICAppCore and its companion test target, ApplesoftBASICAppCoreTests, form a library layer decoupled from any specific UI host. This architecture means the same interpreter core can underpin a Mac app, an iPad app, and a Vision Pro experience without forking logic — the platform-specific presentation layer sits above it.
+I structured this as a Swift package rather than embedding the logic directly in each app target. The package declares two targets: `ApplesoftBASICAppCore` for the library itself and `ApplesoftBASICAppCoreTests` for its test suite. It supports macOS and iOS, which covers iPad and Mac; Vision Pro support extends from the iOS target. The only external dependency besides ApplesoftBASICLib is the swift-docc-plugin, which I added to generate reference documentation from source comments.
 
-The sole declared dependency is swift-docc-plugin, which signals that documentation is treated as a first-class concern rather than an afterthought. For a project whose audience includes nostalgic users and first-time learners, that emphasis on legible, browsable documentation is an appropriate investment.
+The Swift 6 tools version means the package participates in Swift's strict concurrency model. Because the terminal model and graphics state are written to from the interpreter and read from SwiftUI views, I needed to be explicit about actor isolation and sendability from the start rather than retrofitting it later.
 
-The decision to build natively — one Swift codebase across three platforms — rather than wrapping a web runtime or porting a C emulator directly reflects a conviction that the experience on each device should feel native. Period-accurate presentation, specifically the PrintChar21 and PRNumber3 fonts rendered green-on-black, is not cosmetic flair; for the target audience, that fidelity is the point.
+Period-accurate presentation — PrintChar21 and PRNumber3 fonts, green-on-black color — is a constraint carried in from the project design. Font rendering and the color scheme are part of the terminal model's responsibilities inside this package, so the platform layers don't each implement them independently.
 
 ## Results
 
-Over roughly six months of development, from April to October 2026, the project reached three formal releases: v1.0.0, v1.1.0, and v1.2.0. That cadence — three versioned milestones in six months from a solo contributor — reflects sustained, deliberate progress rather than a sprint-and-abandon pattern. The 31 commits across a single branch suggest a developer working methodically, with releases used as genuine checkpoints rather than marketing events.
+The package has shipped across three releases: v1.0.0, v1.1.0, and v1.2.0, all within a development window running from April to October 2026. There are 31 commits from one contributor across that period. The package compiles for macOS and iOS under Swift 6 strict concurrency. The test target exists and runs as part of the package; the input data doesn't include a specific test count.
 
-The package ships with a dedicated test target, establishing a baseline for interpreter correctness that matters considerably when the language runtime is the product. A BASIC interpreter that silently mishandles edge cases in the real language isn't serving its audience — it's just another incomplete implementation.
+## Decisions
 
-## Judgment Calls
+**Separate package, not an embedded framework.** Keeping ApplesoftBASICAppCore as a standalone Swift package means the iOS, macOS, and visionOS app targets can all consume it without code duplication, and it can be tested in isolation from any UI.
 
-Several decisions here reveal considered craft rather than default choices.
+**Swift 6 concurrency from the start.** The package was initialized at Swift tools version 6.2 rather than an earlier version. The terminal and graphics models are mutated by the interpreter and observed by views on potentially different actors, so opting into Swift 6's concurrency rules at the outset meant catching isolation problems at compile time rather than as runtime data races.
 
-**Full language fidelity over a useful subset.** The easiest version of this project omits hi-res graphics and PEEK/POKE sound — they're hard, they vary by hardware behavior, and most users might not immediately notice. Committing to the full language instead is a harder promise but the right one for users who want to run their actual vintage listings without hunting for which features were cut.
+**DocC documentation via swift-docc-plugin.** The plugin is the only non-interpreter dependency. Because the package is meant to be the boundary that platform developers (currently just me, but potentially others) program against, keeping the public API documented in source was something I wanted from the beginning.
 
-**Library-first architecture.** Structuring ApplesoftBASICAppCore as a standalone Swift package rather than embedding the interpreter logic directly in the app is a meaningful architectural choice. It enforces a discipline boundary between the runtime and the UI, makes the core independently testable, and leaves the door open to other consumers — a command-line tool, a SwiftUI preview harness, a Playgrounds integration — without restructuring the codebase.
-
-**Native across three platforms from one codebase.** Vision Pro support isn't obviously necessary for a retro BASIC environment, but its inclusion speaks to a developer thinking about where the audience for this kind of experience will be, not just where it is today. A learner encountering Applesoft BASIC for the first time in a spatial computing environment in 2026 is a coherent use case, and the architecture accommodates it without compromise.
-
-**DoCC as a documentation strategy.** Choosing swift-docc-plugin over no documentation infrastructure — particularly for a project serving nostalgic users and learners — reflects an understanding that the interpreter's public interface needs to be discoverable. A library this opinionated about its mission should be equally opinionated about how it explains itself.
+**What is unfinished or uncertain.** The three releases indicate the package is in active development rather than finished. Vision Pro is listed as a target platform in the mission but the visionOS-specific interaction model — how a user edits and runs programs in that environment — isn't something the input data describes as resolved. Sound, lo-res graphics, and hi-res graphics are all called out as requirements; how completely each is implemented in v1.2.0 isn't recorded in the available data.

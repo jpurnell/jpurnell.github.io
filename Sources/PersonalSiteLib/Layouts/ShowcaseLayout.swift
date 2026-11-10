@@ -38,18 +38,9 @@ public struct ShowcaseLayout: ArticlePage {
 
         if let infoSlug = infographicSlug {
             Section {
-                Image("/images/showcase/\(infoSlug)-stats.svg",
-                      description: "\(infographicLabel) statistics")
-                    .resizable()
-                    .accessibilityLabel("\(infographicLabel) statistics infographic")
-                Image("/images/showcase/\(infoSlug)-commits.svg",
-                      description: "\(infographicLabel) commit history")
-                    .resizable()
-                    .accessibilityLabel("\(infographicLabel) commit history chart")
-                Image("/images/showcase/\(infoSlug)-releases.svg",
-                      description: "\(infographicLabel) release history")
-                    .resizable()
-                    .accessibilityLabel("\(infographicLabel) release history chart")
+                InlineSVG("\(infoSlug)-stats.svg", alt: "\(infographicLabel) statistics")
+                InlineSVG("\(infoSlug)-commits.svg", alt: "\(infographicLabel) commit history")
+                InlineSVG("\(infoSlug)-releases.svg", alt: "\(infographicLabel) release history")
             }
             .class("showcase-infographics")
         }

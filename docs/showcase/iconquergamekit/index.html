@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required." />
+    <meta name="description" content="A Swift package that wraps the iConquer engine, match, and AI libraries into a single observable interface so every platform app binds to one GameViewModel instead of wiring three dependencies themselves." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest | Justin Purnell</title>
+    <title>IconquerGameKit: Shared Game Logic Layer for iConquer | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest" />
-    <meta name="twitter:title" content="IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest" />
-    <meta property="og:description" content="A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required." />
-    <meta name="twitter:description" content="A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required." />
+    <meta property="og:title" content="IconquerGameKit: Shared Game Logic Layer for iConquer" />
+    <meta name="twitter:title" content="IconquerGameKit: Shared Game Logic Layer for iConquer" />
+    <meta property="og:description" content="A Swift package that wraps the iConquer engine, match, and AI libraries into a single observable interface so every platform app binds to one GameViewModel instead of wiring three dependencies themselves." />
+    <meta name="twitter:description" content="A Swift package that wraps the iConquer engine, match, and AI libraries into a single observable interface so every platform app binds to one GameViewModel instead of wiring three dependencies themselves." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquergamekit" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquergamekit",
-          "name" : "IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest",
+          "name" : "IconquerGameKit: Shared Game Logic Layer for iConquer",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquergamekit#breadcrumb"
       },
-      "description" : "A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required.",
+      "description" : "A Swift package that wraps the iConquer engine, match, and AI libraries into a single observable interface so every platform app binds to one GameViewModel instead of wiring three dependencies themselves.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest",
+      "name" : "IconquerGameKit: Shared Game Logic Layer for iConquer",
       "url" : "https://www.justinpurnell.com/showcase/iconquergamekit"
     }
   ]
@@ -181,32 +181,269 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest</h1>
+      <h1 class="mainTitle">IconquerGameKit: Shared Game Logic Layer for iConquer</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required.</p>
+          <p>A Swift package that wraps the iConquer engine, match, and AI libraries into a single observable interface so every platform app binds to one <code>GameViewModel</code> instead of wiring three dependencies themselves.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>The iConquer universe spans five Apple platforms — iOS, macOS, tvOS, watchOS, and visionOS — each requiring its own app shell. Without a shared coordination layer, every shell would need to independently wire together the game engine (<code>IconquerCore</code>), the match state (<code>IconquerMatch</code>), and the AI opponent (<code>IconquerAI</code>). That’s three packages, one turn loop, and five different teams of opportunity to get it subtly wrong. Drift between platforms is not a bug you catch easily; it’s the kind of inconsistency that erodes player trust over time.</p>
-        <p><code>IconquerGameKit</code> exists to close that gap. Its mission, as stated in the project’s own <code>MASTER_PLAN.md</code>, is to serve as the “shared game brain for all iConquer platform apps” — a single <code>GameViewModel</code> that SwiftUI views bind to, with the full complexity of the engine-match-AI handshake hidden behind one observable interface.</p>
+        <h2>Motivation</h2>
+        <p>The iConquer project targets five Apple platforms — iOS, macOS, tvOS, visionOS, and watchOS. Without a shared layer, each platform shell would need to wire up <code>IconquerCore</code>, <code>IconquerMatch</code>, and <code>IconquerAI</code> independently, manage its own turn loop, and risk diverging from the others over time. I built <code>IconquerGameKit</code> to prevent that: one package holds the game brain, and every shell just binds to it.</p>
+        <p>The package also ships built-in maps, which means a host app can start a game without supplying any assets of its own.</p>
         <h2>Approach</h2>
-        <p>The architectural decision at the center of this package is deliberate constraint: callers get one thing. Rather than exposing <code>IconquerCore</code>, <code>IconquerMatch</code>, and <code>IconquerAI</code> as composable primitives and trusting each host app to assemble them correctly, <code>IconquerGameKit</code> makes composition the library’s job. <code>GameViewModel</code> is the public surface area; the three dependencies are implementation details.</p>
-        <p>Built against Swift Tools version 6.2, the package targets the full Apple platform matrix from a single codebase — macOS, iOS, tvOS, watchOS, and visionOS all declared as supported platforms. Documentation is treated as a first-class deliverable, with <code>swift-docc-plugin</code> included as a dependency, signaling that this package is meant to be consumed by others who need to understand it, not just by the original author.</p>
-        <p>The package structure is minimal by design: one library target and one test target. Keeping the surface area small is itself a judgment — a package that does too many things becomes the new coordination problem it was meant to solve.</p>
+        <p>The package exposes a single <code>GameViewModel</code> marked as <code>@Observable</code>, which SwiftUI views can bind to directly. Internally it wraps <code>IconquerCore</code> for game rules, <code>IconquerMatch</code> for session management, and <code>IconquerAI</code> for the opponent. The turn loop lives here rather than in any shell, so the sequencing of human input, AI response, and state updates is defined once.</p>
+        <p>The package is written in Swift and targets Swift Tools version 6.2. It includes <code>swift-docc-plugin</code> as a dependency, so documentation can be generated from source. The targets are <code>IconquerGameKit</code> for the library and <code>IconquerGameKitTests</code> for tests. Supported platforms are macOS, iOS, tvOS, watchOS, and visionOS.</p>
         <h2>Results</h2>
-        <p><code>IconquerGameKit</code> shipped its <code>v0.1.0</code> release after 16 commits across roughly five months of development, from April to September 2026. The package delivers on its core promise: a single <code>GameViewModel</code> that platform shells can bind to, built-in maps so a host app can start a game with zero assets of its own, and a turn loop centralized in one place. Every iConquer platform app that adopts this package gets identical game logic without writing a line of engine integration code.</p>
-        <h2>Judgment Calls</h2>
-        <p><strong>Making the turn loop non-negotiable.</strong> The most important decision here is what the package does <em>not</em> let callers do. By keeping the turn loop inside <code>GameViewModel</code> rather than exposing lifecycle hooks for host apps to manage, the package makes correctness structural rather than conventional. A platform shell that tries to bypass the turn loop would have to stop using <code>GameViewModel</code> entirely — which is the right kind of friction.</p>
-        <p><strong>Bundling maps as a default.</strong> Including built-in maps is a small decision with large downstream consequences. It means the integration story for a new platform shell is genuinely zero-configuration: bind views to <code>GameViewModel</code>, pick a map from the bundle, and ship. This lowers the activation energy for adopting the package and reduces the chance that a quick prototype skips the shared library because “setting it up takes time.”</p>
-        <p><strong>Five platforms, one codebase, from the start.</strong> Declaring support for all five Apple platforms at the outset rather than starting with iOS and expanding later reflects a clear understanding of the project’s purpose. <code>IconquerGameKit</code> exists precisely because platform proliferation creates coordination risk. Scoping it narrowly at the start would have undermined the reason it was built.</p>
-        <p><strong>Documentation as infrastructure.</strong> Including <code>swift-docc-plugin</code> in a library with 16 commits and a single contributor suggests that the developer is thinking about this package as something other people will use — treating documentation tooling as part of the build pipeline rather than something to add later. That’s a mark of a developer who has been on the receiving end of a poorly documented dependency and decided not to pass that cost along.</p>
+        <p>The repository has 16 commits from one contributor across one branch, spanning April to September 2026. The package compiles and targets all five Apple platforms. <code>IconquerUI</code> and the platform app shells can bind to <code>GameViewModel</code> without reimplementing match or AI wiring.</p>
+        <h2>Decisions</h2>
+        <p><strong>Single observable view model as the public surface.</strong> Rather than exposing the three underlying packages separately, <code>GameViewModel</code> is the only type callers need. This keeps platform shells thin and makes the integration point predictable.</p>
+        <p><strong>Built-in maps shipped with the package.</strong> A host app that has no map assets of its own can still start a game. The tradeoff is that the package carries those assets regardless of whether a host app wants to supply its own.</p>
+        <p><strong>Swift 6.2 and strict concurrency.</strong> Swift 6 concurrency rules apply, which affects how the turn loop is structured and how the AI calls are dispatched. This was a constraint I accepted early given the multi-platform targets.</p>
+        <p><strong>No design-first workflow.</strong> There are no design proposals and the project was not developed against mockups. The shape of the API came from the needs of <code>IconquerUI</code> and the platform shells.</p>
+        <p>What remains unfinished or uncertain: the test target exists but the commit history does not indicate how much coverage it currently has. watchOS is listed as a supported platform, but human-vs-AI gameplay on watchOS raises interaction questions that the package itself does not resolve — that falls to whatever shell runs there.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquergamekit-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquergamekit-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquergamekit-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerGameKit statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerGameKit
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              16
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              0
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              5
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerGameKit commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerGameKit — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~2/month · peak 6 (16 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="120" width="90" height="28" /> 
+            <rect class="ig-bar" x="209" y="106" width="90" height="42" /> 
+            <rect class="ig-bar" x="301" y="106" width="90" height="42" /> 
+            <rect class="ig-bar" x="393" y="64" width="90" height="84" /> 
+            <rect class="ig-bar" x="485" y="120" width="90" height="28" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="70" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="254" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="346" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="530" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerGameKit release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerGameKit — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              none yet
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <text class="ig-muted" x="300" y="94" font-size="13" text-anchor="middle">
+              No releases yet
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>

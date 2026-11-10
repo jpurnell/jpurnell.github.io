@@ -1,8 +1,8 @@
 ---
-title: SwiftMCPServer: Owning the Protocol So Consumers Don't Have To
-description: A production-grade Swift implementation of the Model Context Protocol server with HTTP transport, designed so that the engineers building on top of it never have to think about framing, authentication, or the wire.
+title: SwiftMCPServer: A Swift MCP Server Library with HTTP Transport
+description: A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts.
 date: 2026-05-12 15:58
-lastModified: 2026-11-09
+lastModified: 2026-11-10
 tags: showcase, project, swiftmcpserver, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,36 @@ project: Internal Infrastructure
 published: true
 ---
 
-# SwiftMCPServer: Owning the Protocol So Consumers Don't Have To
+# SwiftMCPServer: A Swift MCP Server Library with HTTP Transport
 
-> A production-grade Swift implementation of the Model Context Protocol server with HTTP transport, designed so that the engineers building on top of it never have to think about framing, authentication, or the wire.
+> A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts.
 
-## Problem
+## Motivation
 
-The Model Context Protocol emerged as the connective tissue between language models and the tools, resources, and prompts that give them context. Implementing it correctly — handling framing, session lifecycle, HTTP transport, and authentication — is exactly the kind of infrastructure problem that every server author would otherwise solve slightly differently, slightly wrong, and completely on their own.
+The Model Context Protocol defines how AI models communicate with external servers — exchanging tools, resources, and prompts in a structured way. When I started building MCP-compatible servers in Swift, I kept reimplementing the same transport and framing layer: HTTP handling, session management, authentication, protocol encoding. That layer has nothing to do with what a specific server actually does, so I pulled it out into a standalone library.
 
-SwiftMCPServer exists to absorb that complexity. Its stated mission, drawn directly from its own `MASTER_PLAN.md`, is to own **protocol and transport**. A server built on it supplies tools, resources, and prompts; it should not have to think about MCP framing, HTTP, or auth. That is the entire contract, and the project's history suggests the developer has held that line consistently.
+The goal was a clean separation: this package owns protocol and transport; anything built on top of it owns the domain logic. A server author should be able to declare tools and respond to requests without touching MCP framing or HTTP at all.
 
 ## Approach
 
-The package is built on a mature foundation: SwiftNIO for async networking, SwiftNIO SSL for transport security, SwiftCrypto for cryptographic primitives, and `swift-oauth` for authentication. The dependency on `swift-mcp-sdk` anchors the implementation to the protocol specification itself, while `SwiftDiagnosticsKit` suggests attention to surfacing errors clearly — a detail that matters when the library's consumers are debugging their own tools, not the transport layer.
+The package is written in Swift and targets macOS, using Swift Tools version 6.2. The core dependencies are `swift-mcp-sdk` for the MCP protocol layer, `swift-nio` and `swift-nio-ssl` for the HTTP transport, `swift-crypto` for cryptographic operations, and `swift-oauth` for authentication. `SwiftDiagnosticsKit` handles structured error reporting, and `swift-docc-plugin` supports documentation generation.
 
-The package declares four targets: the main `SwiftMCPServer` library, `ConformanceFixtures`, `ConformanceServer`, and `SwiftMCPServerTests`. The presence of dedicated conformance targets is notable. Rather than leaning entirely on unit tests, the developer built a conformance server — a runnable, inspectable artifact whose job is to demonstrate that the library correctly implements the protocol. This is the kind of structural decision that separates library authors from application developers.
+The package is organized into four targets: `SwiftMCPServer` as the main library, `ConformanceFixtures` and `ConformanceServer` as test infrastructure for verifying protocol conformance, and `SwiftMCPServerTests` for the test suite. The conformance targets exist specifically to validate that the library behaves correctly against the protocol spec, not just against its own internal expectations.
 
-The project maintains a `CLAUDE.md` with explicit architecture sections covering session start, development workflow, key rules, a quality gate, and references. That document exists primarily to encode working norms and constraints — evidence that the developer thought carefully about what future contributors (or their own future self) would need to know to work correctly in the codebase.
-
-Swift Tools version 6.2 and a macOS platform target reflect a deliberate commitment to current Swift concurrency semantics, which is the right foundation for a networking library that lives and dies by its async behavior.
+A `CLAUDE.md` file is present in the repository, which I used to document session startup context, development workflow conventions, key rules, quality gates, and references. This served as working documentation for maintaining consistency across the development process.
 
 ## Results
 
-SwiftMCPServer shipped 41 releases across roughly seven and a half months, from version 1.0.0 in March 2026 to 5.5.0 in November 2026. That cadence — moving from 1.x to 5.x in under a year, with 177 commits across 19 branches — reflects a library that was actively in use and responding to real integration feedback.
+The project has 177 commits across 19 branches, with 41 tagged releases spanning from 1.0.0 through 5.5.0. Development started in March 2026 and the latest commit is from November 2026. The release history shows a consistent cadence of both minor feature releases and patch fixes — the jump from major version 1 through major version 5 reflects significant protocol or API evolution as the MCP spec and my own understanding of the problem matured.
 
-The version history tells its own story. The 1.x and 2.x series show early stabilization work, with patch releases and minor additions. The jump to 3.0.0, 4.0.0, and 5.0.0 each represent breaking-change moments — API surfaces being reconsidered as the protocol's requirements became clearer and consumer needs sharpened. The subsequent minor and patch releases within each major series (3.1.0 through 3.3.2, 4.1.0 through 4.5.0, 5.0.1 through 5.5.0) show a developer who ships incrementally and fixes what needs fixing rather than holding back changes.
+There are 2 contributors to the repository.
 
-## Judgment Calls
+## Decisions
 
-**Conformance over coverage.** The `ConformanceServer` target is the most revealing structural choice in the package. Unit tests verify behavior in isolation; a conformance server verifies that the whole thing actually speaks the protocol correctly against real or simulated clients. Building this as a first-class target, not an afterthought, signals that the developer understood the difference between a library that passes its tests and a library that actually works.
+**Using swift-nio for transport.** NIO is the standard low-level networking library in the Swift ecosystem. Using it directly means more code than a higher-level HTTP framework, but it gives full control over connection lifecycle and streaming behavior, which matters for a protocol that involves long-lived sessions.
 
-**Three major versions in one year.** Some developers treat major version bumps as failures — evidence that the API wasn't right the first time. The more honest read is that three breaking changes over seven months means the developer was willing to correct the abstraction when it wasn't serving consumers, rather than accumulating compatibility debt. The steady growth in minor releases within each major series suggests that once the shape of an interface settled, it was extended cleanly.
+**Separating conformance fixtures into their own target.** Protocol conformance is easier to verify when you have a dedicated server implementation whose only job is to be correct. `ConformanceServer` exists for this reason — it's not a demo, it's a test fixture that runs against the actual library.
 
-**The contract as documentation.** Encoding the library's mission in `MASTER_PLAN.md` as a crisp ownership statement — "this package owns protocol and transport" — does something a README rarely achieves. It gives every future architectural decision a test: does this belong here? That kind of explicit boundary-setting is harder than it looks and tends to prevent the slow accumulation of responsibilities that makes libraries difficult to reason about.
+**Frequent releases.** The jump from 1.x to 5.x in roughly eight months means the public API changed substantially and repeatedly. Some of that reflects the MCP spec itself evolving; some reflects decisions I revised once I saw how server authors actually used the library. The major version increments signal breaking changes rather than rewrites.
 
-**Swift 6 concurrency as a foundation.** Adopting Swift Tools 6.2 means the developer accepted the stricter concurrency checking that Swift 6 introduced. For a library built on SwiftNIO, that's not a cosmetic choice — it's a commitment to making the async contract legible and correct at the type level, which benefits every consumer who builds on top of it.
+**What's unfinished or uncertain.** The `CLAUDE.md` references a quality gate, but I haven't yet formalized what exactly must pass before a release. The conformance testing infrastructure exists, but the boundary between "conformance" and "unit test" is still blurry in practice. Transport support is currently HTTP only; other MCP transports (stdio, for example) are not covered by this package.

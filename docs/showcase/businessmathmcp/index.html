@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A production MCP server that wraps a battle-tested Swift financial library into a large, coherent tool surface — so AI agents can compute discount rates, run statistical models, and perform valuations without estimating." />
+    <meta name="description" content="An MCP server that exposes BusinessMath’s financial and statistical functions as callable tools for AI agents." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>BusinessMathMCP: Giving AI Agents a Calculator They Can Trust | Justin Purnell</title>
+    <title>BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="BusinessMathMCP: Giving AI Agents a Calculator They Can Trust" />
-    <meta name="twitter:title" content="BusinessMathMCP: Giving AI Agents a Calculator They Can Trust" />
-    <meta property="og:description" content="A production MCP server that wraps a battle-tested Swift financial library into a large, coherent tool surface — so AI agents can compute discount rates, run statistical models, and perform valuations without estimating." />
-    <meta name="twitter:description" content="A production MCP server that wraps a battle-tested Swift financial library into a large, coherent tool surface — so AI agents can compute discount rates, run statistical models, and perform valuations without estimating." />
+    <meta property="og:title" content="BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library" />
+    <meta name="twitter:title" content="BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library" />
+    <meta property="og:description" content="An MCP server that exposes BusinessMath’s financial and statistical functions as callable tools for AI agents." />
+    <meta name="twitter:description" content="An MCP server that exposes BusinessMath’s financial and statistical functions as callable tools for AI agents." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/businessmathmcp" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/businessmathmcp",
-          "name" : "BusinessMathMCP: Giving AI Agents a Calculator They Can Trust",
+          "name" : "BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/businessmathmcp#breadcrumb"
       },
-      "description" : "A production MCP server that wraps a battle-tested Swift financial library into a large, coherent tool surface — so AI agents can compute discount rates, run statistical models, and perform valuations without estimating.",
+      "description" : "An MCP server that exposes BusinessMath’s financial and statistical functions as callable tools for AI agents.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "BusinessMathMCP: Giving AI Agents a Calculator They Can Trust",
+      "name" : "BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library",
       "url" : "https://www.justinpurnell.com/showcase/businessmathmcp"
     }
   ]
@@ -181,33 +181,318 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">BusinessMathMCP: Giving AI Agents a Calculator They Can Trust</h1>
+      <h1 class="mainTitle">BusinessMathMCP: An MCP Server Wrapping a Swift Financial Library</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">BusinessMathMCP</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A production MCP server that wraps a battle-tested Swift financial library into a large, coherent tool surface — so AI agents can compute discount rates, run statistical models, and perform valuations without estimating.</p>
+          <p>An MCP server that exposes BusinessMath’s financial and statistical functions as callable tools for AI agents.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Large language models are surprisingly bad at math. Not because they lack the formulas — they’ve seen them all — but because they <em>approximate</em>. When an AI agent estimates a net present value or interpolates a yield curve, it is doing something fundamentally different from computing one. For financial work, that gap matters.</p>
-        <p>BusinessMathMCP exists to close that gap. The project is an MCP (Model Context Protocol) server that exposes the BusinessMath Swift library as a suite of callable tools. When a Claude agent or any MCP-capable host needs to run a valuation, fit a statistical distribution, or solve an optimisation problem, it reaches out to BusinessMathMCP and gets back a deterministic, auditable answer — the same answer the same inputs would have produced yesterday, or will produce tomorrow, derived from code that has already been tested.</p>
-        <p>The server is not trying to be a pocket calculator with a handful of endpoints. Its stated mission, drawn directly from the project’s own MASTER_PLAN.md, is to expose <em>the library’s breadth as the product</em>: a large, coherent tool surface rather than a curated subset. That scope is what makes it useful to AI agents doing serious financial analysis — valuation, statistics, optimisation, forecasting — rather than toy arithmetic.</p>
+        <h2>Motivation</h2>
+        <p>BusinessMath is a Swift library of financial and statistical calculations — valuation, statistics, optimisation, forecasting. The library produces deterministic results from tested code: the same inputs always give the same output, and the derivation is inspectable. That property is useful for AI agents, which otherwise estimate numerical answers rather than compute them.</p>
+        <p>The gap I wanted to close was access. An agent running in Claude Desktop or Claude Code has no way to call a Swift library directly. BusinessMathMCP bridges that by wrapping the library as an MCP server, so any MCP-capable host can invoke the calculations as tools without anyone writing Swift. The breadth of the tool surface is the point — not a handful of calculator endpoints, but the full library exposed coherently.</p>
         <h2>Approach</h2>
-        <p>The project is a Swift package targeting macOS, written against Swift Tools version 6.2 and built on two core dependencies: the BusinessMath library itself, which carries the financial and statistical correctness, and SwiftMCPServer, which handles the protocol layer. Swift Numerics rounds out the numeric stack. swift-docc-plugin is included, signaling an intention toward documentation as a first-class output.</p>
-        <p>The package is split into three targets that reflect a clear separation of concerns. <code>BusinessMath</code> (the upstream library) owns the domain logic. <code>BusinessMathMCPServer</code> owns the protocol translation — the work of turning library functions into MCP-callable tools with well-shaped schemas. <code>BusinessMathMCPTests</code> validates that translation. The structure makes an important architectural statement: financial correctness is <em>delegated</em> to the upstream library, already solved and already tested there. BusinessMathMCP’s job is faithful exposure, not reimplementation.</p>
-        <p>The CLAUDE.md file — present and structured around a mandatory session-start recovery protocol, an upstream contribution model, and a disciplined process section — indicates that the project was developed with an AI-assisted workflow in mind from the beginning. The architecture sections covering <code>/recover</code>, environment gotchas, and repo facts suggest a developer who anticipated handing context back and forth and built scaffolding to make that reliable.</p>
+        <p>The server is built on SwiftMCPServer and targets macOS. The package declares three targets: <code>BusinessMathMCP</code> for the core logic, <code>BusinessMathMCPServer</code> for the runnable server process, and <code>BusinessMathMCPTests</code> for the test suite. <code>swift-numerics</code> handles numerical types where the standard library falls short, and <code>swift-docc-plugin</code> is included for documentation generation.</p>
+        <p>The dependency on <code>businessMath</code> is deliberate and load-bearing: financial correctness is the library’s problem, already solved and tested there. BusinessMathMCP does not reimplement calculations; it translates between the MCP tool-call interface and library calls, then returns the results.</p>
+        <p>A <code>CLAUDE.md</code> file is present in the repository. It documents session startup conventions, a mandatory process discipline carried over from the BusinessMath project, an upstream contribution model for pushing fixes back to the library, and environment gotchas. That file shaped how ongoing work in the repository is structured, even in sessions not tracked through Claude Code’s session log.</p>
         <h2>Results</h2>
-        <p>Over roughly nine months of development — from February to November 2026 — the project accumulated 93 commits across 5 branches, shipping to a stable v1.0.0 release. A single contributor drove the entire codebase to production. The package is MCP-ready, targeting Claude Desktop and Claude Code as first-class hosts, and positions BusinessMath’s library breadth as a deployable capability for AI agents that need financial computation they can depend on.</p>
-        <h2>Judgment Calls</h2>
-        <p><strong>Delegation over duplication.</strong> The most consequential design decision in the project is what it chose <em>not</em> to do: reimplement financial logic. By treating BusinessMath as the authoritative source of correctness and confining BusinessMathMCP to the protocol translation layer, the developer avoided the classic trap of a wrapper that slowly diverges from its upstream. The upstream contribution model documented in CLAUDE.md formalizes this — improvements flow back to the library, not into the server.</p>
-        <p><strong>Breadth as a design goal.</strong> Many MCP servers are narrow by choice, exposing a handful of high-value endpoints and stopping there. BusinessMathMCP made the opposite bet: that a large, coherent tool surface is itself the differentiator. This is a harder surface to maintain and document, but it means an agent doing a full valuation workflow — forecasting, discounting, statistical modeling — doesn’t have to context-switch between tools or fall back to estimation midway through.</p>
-        <p><strong>Determinism as a feature, not a footnote.</strong> The MASTER_PLAN.md explicitly frames deterministic, auditable answers as the product’s core value proposition — the <em>opposite</em> of an LLM estimating a discount rate. Naming that contrast directly in the project’s governing document shows a developer who understood the market position clearly: BusinessMathMCP is not augmenting AI reasoning, it is replacing a specific category of AI reasoning with something more trustworthy.</p>
-        <p><strong>Documentation infrastructure on day one.</strong> Including swift-docc-plugin in the dependencies before v1.0.0 shipped is a small signal with meaningful implications. It reflects a judgment that a tool surface this broad is only as useful as its documentation — and that documentation tooling is infrastructure, not a cleanup task.</p>
+        <p>The project reached v1.0.0 across 93 commits from 2 contributors over branches that tracked different areas of development. The release covers the initial public tool surface derived from BusinessMath. Tests live in the <code>BusinessMathMCPTests</code> target; the specific count is not recorded here, but the test target exists as a first-class part of the build.</p>
+        <h2>Decisions</h2>
+        <p><strong>Wrap, don’t reimplement.</strong> Every calculation delegates to BusinessMath. This keeps the MCP layer thin and means numerical correctness is inherited rather than re-litigated. When a bug exists it belongs to one place, and fixing it upstream fixes it for every host.</p>
+        <p><strong>Large tool surface as the differentiator.</strong> A minimal server with a few financial endpoints would be easier to build but less useful. The goal was to expose the library’s breadth, so the tool count scales with BusinessMath’s coverage rather than being curated down.</p>
+        <p><strong>Swift and macOS only.</strong> SwiftMCPServer and the dependency on a Swift library make cross-platform support impractical without significant additional work. That constraint is accepted; the target hosts — Claude Desktop and Claude Code on macOS — fit within it.</p>
+        <p><strong>Upstream contribution model.</strong> The <code>CLAUDE.md</code> architecture section defines a process for pushing fixes discovered in the MCP layer back to BusinessMath. This is unfinished in the sense that it depends on how frequently the two projects diverge, and the boundaries of that model are still being worked out in practice.</p>
+        <p>What remains open is how completely the library surface is covered by the current tool set, and whether the tool descriptions are precise enough for agents to select the right calculation without additional guidance. Those questions can only be answered by running agents against the server across a range of tasks.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/businessmathmcp-stats.svg" alt="BusinessMathMCP statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/businessmathmcp-commits.svg" alt="BusinessMathMCP commit history chart" class="img-fluid" />
-        <img src="/images/showcase/businessmathmcp-releases.svg" alt="BusinessMathMCP release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="BusinessMathMCP statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              BusinessMathMCP
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              93
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              2 contributors
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="BusinessMathMCP commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              BusinessMathMCP — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~9/month · peak 40 (93 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="132" width="53" height="16" /> 
+            <rect class="ig-bar" x="80" y="64" width="53" height="84" /> 
+            <rect class="ig-bar" x="135" y="146" width="53" height="2" /> 
+            <rect class="ig-bar" x="190" y="146" width="53" height="2" /> 
+            <rect class="ig-bar" x="301" y="140" width="53" height="8" /> 
+            <rect class="ig-bar" x="356" y="134" width="53" height="14" /> 
+            <rect class="ig-bar" x="411" y="121" width="53" height="27" /> 
+            <rect class="ig-bar" x="466" y="119" width="53" height="29" /> 
+            <rect class="ig-bar" x="521" y="138" width="53" height="10" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="52" y="166" font-size="10" text-anchor="middle">
+              Feb
+            </text> 
+            <text class="ig-muted" x="107" y="166" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="217" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="272" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="328" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="383" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="493" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="548" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="BusinessMathMCP release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              BusinessMathMCP — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              1 release · latest v1.0.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="35" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="47" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v1.0.0
+            </text> 
+            <text class="ig-muted" x="52" y="112" font-size="10" text-anchor="middle">
+              Feb
+            </text> 
+            <text class="ig-muted" x="107" y="112" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="162" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="217" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="272" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="328" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="383" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="438" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="493" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="548" y="112" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: businessmathmcp, selfReflection</p>

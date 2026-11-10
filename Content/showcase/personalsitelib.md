@@ -1,8 +1,8 @@
 ---
-title: A Personal Site That Fails at Compile Time, Not at Midnight
-description: Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command.
+title: Personal Website Built on a Swift Static Site Generator
+description: A Swift package that generates my personal site using Ignite, where pages are types and a broken page is usually a compile error rather than a deploy error.
 date: 2026-05-12 15:57
-lastModified: 2026-11-09
+lastModified: 2026-11-10
 tags: showcase, website, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,32 @@ project: Website
 published: true
 ---
 
-# A Personal Site That Fails at Compile Time, Not at Midnight
+# Personal Website Built on a Swift Static Site Generator
 
-> Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command.
+> A Swift package that generates my personal site using Ignite, where pages are types and a broken page is usually a compile error rather than a deploy error.
 
-## Problem
+## Motivation
 
-Personal websites occupy a peculiar position in a developer's toolkit: they're simultaneously portfolio and workshop, public face and private experiment. The conventional stack — a static site generator driven by Markdown templates and YAML front matter — works until it doesn't, usually when a misconfigured layout or a missing variable surfaces only after a push to production.
-
-Purnell's site, `justinpurnell.com`, hosts his writing, a project showcase, and an ongoing quality-gate series. It needed to be reliable enough that its failure modes weren't embarrassing, and lightweight enough that publishing a new post didn't become an operation. The deeper motivation was more principled: he was building Ignite, his own Swift static site generator, and needed a real site that exercised that framework under the pressure of actual use before anyone else encountered its rough edges.
+I wanted a personal site that would host writing, a project showcase, and a quality-gate series, and I wanted publishing to be a single `swift run` rather than a multi-step operation involving external services. The other constraint was that I was already building and maintaining a fork of [Ignite](../../Ignite/project/master_plan.md), and I needed a real consumer of that fork — something that would surface divergence before anyone else encountered it. This site is that consumer. It is also published from a `docs/` directory directly to GitHub Pages, which removes any external build service from the pipeline.
 
 ## Approach
 
-The central architectural decision was treating the site itself as a Swift package. Pages are types. Layouts are composed in code. The dependency graph — Ignite, `swift-docc-plugin`, and his own `DesignTokens` package — is declared in a manifest and resolved by the compiler. When something is structurally wrong, the build fails; nothing reaches GitHub Pages in a broken state.
+The site is a Swift package. Pages are types; layouts are composed in code. The consequence of that decision is that a malformed page tends to produce a compile error rather than a broken deploy. The package targets are `PersonalSiteLib`, which holds the site's types and content logic, `IgniteStarter`, which drives the build, and `PersonalSiteTests`, which covers behavior I want to verify automatically. It depends on Ignite directly, on `swift-docc-plugin` for documentation, and on a `DesignTokens` package that centralizes the visual constants the site uses. The package is declared against Swift tools version 6.2 and targets macOS and iOS.
 
-Deployment is deliberately minimal: static output lands in `docs/` and GitHub Pages serves it directly. No external CI pipeline, no build service, no deployment credentials to rotate. The publishing primitive is `swift run`.
-
-The `CLAUDE.md` file and the architecture notes embedded in it reveal a working discipline that matches the project's values. Two rules govern the git workflow: never stash, and don't mark a change as live until it verifiably is. These aren't arbitrary preferences — they're the kind of habits that keep a solo-maintained codebase honest over a long timeline.
-
-The site targets both macOS and iOS in its package declaration, a consequence of Ignite's own platform support rather than any native UI ambition, but it reflects the degree to which the site and its generator are genuinely coupled.
+There are no design proposals and no design-first workflow. Visual decisions are encoded in `DesignTokens` and applied in code. The `CLAUDE.md` file records working conventions — notably, never stash and do not call a change live until it is verified — but no Claude Code sessions contributed commits to this repository.
 
 ## Results
 
-Over two years — from November 2024 through November 2026 — the project accumulated 267 commits across 4 branches, with 2 contributors. The site ships continuously from `docs/` with no external build infrastructure. Because it is the primary consumer of the Ignite fork, every divergence in that generator gets exercised here first, in a context with real content and real stakes, before it surfaces for anyone else.
+The repository has 276 commits from 2 contributors across 4 branches, with work running from November 2024 through November 2026. The site generates and deploys from `docs/` via GitHub Pages with no external CI service involved. The `PersonalSiteTests` target exists and runs as part of the package, though the input does not record a specific passing-test count.
 
-The publishing workflow reduced to a single command. The deploy pipeline reduced to a directory and a GitHub setting.
+## Decisions
 
-## Judgment Calls
+**Pages as types.** Encoding pages in Swift rather than a template language means the compiler catches structural errors before deployment. The tradeoff is that contributors need to be comfortable with Swift.
 
-The most consequential decision was the one that looks like scope creep but isn't: building the generator before shipping the site, then using the site to validate the generator. This creates a tighter feedback loop than any test suite could — real content, real structure, real failure modes. The site doesn't just consume Ignite; it *is* Ignite's integration test.
+**Primary consumer of the Ignite fork.** Running the site against my own Ignite fork means changes to the generator get exercised here first. That creates an intentional feedback loop: anything that breaks the site surface breaks before it reaches other users.
 
-The choice to publish from `docs/` rather than a separate branch or an external service reflects a preference for auditable simplicity. The output lives in the repository. You can read the history of what shipped alongside the history of what changed in the source. There's no artifact store to query, no pipeline log to decode.
+**`docs/`-based GitHub Pages deployment.** Committing the generated output to `docs/` and pointing Pages at that directory eliminates the need for a build service. The tradeoff is that generated files live in the repository.
 
-The `DesignTokens` dependency is a quieter signal: rather than hardcoding values or reaching for a CSS preprocessor, Purnell extracted his design primitives into a named package. The token vocabulary becomes part of the Swift type system, which means color and spacing decisions are as refactorable as any other abstraction.
+**`DesignTokens` as a dependency.** Visual constants are extracted into a separate package rather than scattered across page types. This keeps the site's layout code focused on structure, but it adds a dependency that must stay in sync with any visual changes.
 
-Taken together, these decisions describe a developer who reached for correctness-by-construction rather than process-by-convention — and built a publishing workflow he'd actually use.
+**What is unfinished or uncertain.** The test target exists but the extent of its coverage is not recorded here. The relationship between this site and the Ignite fork means changes to the generator can affect the site in ways that only become visible at build time — the compile-error guarantee applies to the site's own types, not to generator behavior changes upstream.

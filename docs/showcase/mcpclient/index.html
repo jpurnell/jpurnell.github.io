@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A solo developer built a spec-compliant, multi-platform MCP client in Swift 6 — shipping nine releases over seven months by making deliberate tradeoffs between purity and capability." />
+    <meta name="description" content="A Swift 6 library implementing the Model Context Protocol client specification across HTTP/SSE, WebSocket, and stdio transports for macOS, iOS, tvOS, and watchOS." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftMCPClient: A Production Swift Client for the Model Context Protocol | Justin Purnell</title>
+    <title>Swift MCP Client Library for Multi-Platform Apple Ecosystem | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftMCPClient: A Production Swift Client for the Model Context Protocol" />
-    <meta name="twitter:title" content="SwiftMCPClient: A Production Swift Client for the Model Context Protocol" />
-    <meta property="og:description" content="A solo developer built a spec-compliant, multi-platform MCP client in Swift 6 — shipping nine releases over seven months by making deliberate tradeoffs between purity and capability." />
-    <meta name="twitter:description" content="A solo developer built a spec-compliant, multi-platform MCP client in Swift 6 — shipping nine releases over seven months by making deliberate tradeoffs between purity and capability." />
+    <meta property="og:title" content="Swift MCP Client Library for Multi-Platform Apple Ecosystem" />
+    <meta name="twitter:title" content="Swift MCP Client Library for Multi-Platform Apple Ecosystem" />
+    <meta property="og:description" content="A Swift 6 library implementing the Model Context Protocol client specification across HTTP/SSE, WebSocket, and stdio transports for macOS, iOS, tvOS, and watchOS." />
+    <meta name="twitter:description" content="A Swift 6 library implementing the Model Context Protocol client specification across HTTP/SSE, WebSocket, and stdio transports for macOS, iOS, tvOS, and watchOS." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/mcpclient" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/mcpclient",
-          "name" : "SwiftMCPClient: A Production Swift Client for the Model Context Protocol",
+          "name" : "Swift MCP Client Library for Multi-Platform Apple Ecosystem",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/mcpclient#breadcrumb"
       },
-      "description" : "A solo developer built a spec-compliant, multi-platform MCP client in Swift 6 — shipping nine releases over seven months by making deliberate tradeoffs between purity and capability.",
+      "description" : "A Swift 6 library implementing the Model Context Protocol client specification across HTTP/SSE, WebSocket, and stdio transports for macOS, iOS, tvOS, and watchOS.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftMCPClient: A Production Swift Client for the Model Context Protocol",
+      "name" : "Swift MCP Client Library for Multi-Platform Apple Ecosystem",
       "url" : "https://www.justinpurnell.com/showcase/mcpclient"
     }
   ]
@@ -181,41 +181,317 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftMCPClient: A Production Swift Client for the Model Context Protocol</h1>
+      <h1 class="mainTitle">Swift MCP Client Library for Multi-Platform Apple Ecosystem</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A solo developer built a spec-compliant, multi-platform MCP client in Swift 6 — shipping nine releases over seven months by making deliberate tradeoffs between purity and capability.</p>
+          <p>A Swift 6 library implementing the Model Context Protocol client specification across HTTP/SSE, WebSocket, and stdio transports for macOS, iOS, tvOS, and watchOS.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>The Model Context Protocol (MCP) is an emerging standard for connecting AI agents and applications to external tools, resources, and prompts. When Jpurnell began this project in March 2026, the Swift ecosystem had no production-quality client library for it. Server-side Swift developers building Vapor or Hummingbird apps, iOS developers adding AI-powered features, and CLI tool authors following the Claude Desktop pattern all faced the same gap: they’d have to roll their own MCP integration from scratch.</p>
-        <p>SwiftMCPClient fills that gap. The library handles connection and session management across multiple transport types — HTTP/SSE, Streamable HTTP, WebSockets, and stdio for local subprocess communication — and exposes a unified interface for discovering and invoking MCP tools, resources, and prompts. The target is anywhere Swift runs, from a server rack to an Apple Watch.</p>
+        <h2>Motivation</h2>
+        <p>The Model Context Protocol defines a standard way for AI applications to connect to servers that expose tools, resources, and prompts. When I started this project in March 2026, there was no production-ready Swift client for MCP. That gap mattered for a few concrete use cases: Swift server-side apps built on Vapor or Hummingbird that need tool-use in an AI pipeline, iOS and macOS apps wanting MCP-powered features, and CLI tools following the Claude Desktop pattern of connecting to local subprocess servers.</p>
+        <p>I wanted a library that would work wherever Swift runs — not just on Apple platforms but server-side — and that would be spec-compliant against the MCP specification (currently 2024-11-05).</p>
         <h2>Approach</h2>
-        <p>Jpurnell built the library against Swift 6’s strict concurrency model from the start. The entire codebase is actor-based and fully <code>Sendable</code>-compliant, which means consumers don’t inherit data-race risks when embedding the client in their own concurrent code. This was a deliberate commitment made early — retrofitting strict concurrency onto an existing codebase is significantly harder than designing for it up front.</p>
-        <p>The architecture centers on pluggable transports defined by protocol, making it straightforward to add new transport backends without touching core session logic. The project targets macOS 14+, iOS 17+, tvOS 17+, and watchOS 10+, reflecting a genuine multi-platform commitment backed by the Swift Package Manager configuration rather than just a marketing claim.</p>
-        <p>The dependency list evolved honestly. The original mission statement in <code>MASTER_PLAN.md</code> declared a “zero dependencies — Foundation only” differentiator, but the project’s own planning document explicitly acknowledges this is no longer true and explains why: AsyncHTTPClient and NIO support Streamable HTTP, WebSocketKit enables WebSocket transport, swift-crypto and swift-oauth underpin the OAuth flow. Every dependency maps to a named, shipped feature. The honest restatement — “minimal, purposeful dependencies” — reflects a developer willing to update their own assumptions in writing when reality changes.</p>
-        <p>The project includes a <code>CLAUDE.md</code> configuration file, indicating a structured AI-assisted development workflow with explicit session start procedures, development conventions, key rules, and a quality gate. Tooling support was treated as part of the project’s infrastructure.</p>
-        <p>Three targets beyond the core library shipped alongside it: <code>MCPClientTests</code>, <code>MCPExplorer</code> (an interactive tool for browsing MCP servers), and <code>MCPDump</code> (a diagnostic CLI utility). Documentation infrastructure is present via the <code>swift-docc-plugin</code> dependency.</p>
+        <p>The library is structured around a protocol-based transport layer. Each transport — HTTP/SSE, Streamable HTTP, WebSocket, and stdio — implements the same interface, so the session layer above it doesn’t care how bytes move. This made it straightforward to add WebSocket support later without touching session logic.</p>
+        <p>The dependency list reflects which transports shipped: AsyncHTTPClient and SwiftNIO for Streamable HTTP, WebSocketKit for WebSocket transport, swift-crypto and swift-oauth for the OAuth flow. The original MASTER_PLAN.md described the project as zero-dependency; that claim was retired as each dependency was deliberately taken on for a named feature. The honest characterization now is minimal, purposeful dependencies.</p>
+        <p>The entire library targets Swift 6 strict concurrency. Session and transport types are actors or Sendable structs, with no shared mutable state crossing concurrency boundaries. That constraint shaped nearly every type boundary in the codebase.</p>
+        <p>Targets in the package serve distinct purposes: <code>MCPClient</code> is the library itself, <code>MCPExplorer</code> is a companion tool for interactively browsing an MCP server’s capabilities, and <code>MCPDump</code> is a diagnostic CLI that records raw protocol traffic. Both tools exercise the library against real servers, which surfaced edge cases that unit tests missed.</p>
         <h2>Results</h2>
-        <ul>
-          <li><strong>110 commits</strong> across a roughly seven-month active development window (March–October 2026)</li>
-          <li><strong>Nine versioned releases</strong> shipped: v0.2.0 through v0.14.0, demonstrating a consistent release cadence rather than a single big-bang delivery</li>
-          <li><strong>Four transport types</strong> implemented: HTTP/SSE, Streamable HTTP, WebSocket, and stdio</li>
-          <li><strong>Multi-platform package</strong> supporting macOS, iOS, tvOS, and watchOS under Swift 6 strict concurrency</li>
-          <li><strong>Three companion executables</strong> shipped: MCPExplorer, MCPExplorerTests, and MCPDump</li>
-          <li>Spec alignment tracked against MCP specification version 2024-11-05</li>
-        </ul>
-        <h2>Judgment Calls</h2>
-        <p>The most revealing decision in the project is the dependency story. Jpurnell wrote a mission statement declaring zero external dependencies, then systematically violated it — and documented the violation honestly in the project’s own planning file rather than quietly rewriting history or letting a stale claim stand. That’s not an admission of failure; it’s evidence of a developer who lets shipped capability drive architecture rather than letting an early slogan constrain good engineering. Each dependency was taken on for a specific, shipped transport or security feature, and the plan was updated to say so explicitly.</p>
-        <p>The version numbering tells a related story. Nine releases over seven months, starting at v0.2.0, suggests a developer comfortable shipping work-in-progress under versioned contracts — incrementing deliberately rather than holding everything back for a 1.0. The jump from v0.4.0 directly to v0.9.0 in the release history hints at a period of accelerated capability work, likely the addition of multiple transport backends in sequence.</p>
-        <p>Targeting all four Apple platforms plus server-side Swift from the beginning is also a meaningful commitment. It constrains every API decision: anything that works only on macOS can’t go into the core library. Enforcing that constraint across 110 commits without a team requires discipline.</p>
-        <p>The inclusion of <code>MCPExplorer</code> and <code>MCPDump</code> as first-class targets — not afterthoughts in a scripts directory — signals a developer who thinks about the experience of using the library, not just the correctness of its implementation. Diagnostic tooling ships with the product because debugging MCP connections is part of the job.</p>
+        <p>The project reached v0.14.0 across nine releases between March and October 2026, accumulating 110 commits on 3 branches. It supports macOS 14+, iOS 17+, tvOS 17+, and watchOS 10+. The package ships four transport implementations, an OAuth flow, and two bundled tools (MCPExplorer and MCPDump). Tests live in <code>MCPClientTests</code> and <code>MCPExplorerTests</code>.</p>
+        <h2>Decisions</h2>
+        <p><strong>Protocol-based transports over a concrete transport hierarchy.</strong> A protocol boundary means adding a custom transport requires implementing one type with no changes to session code. The tradeoff is some indirection; the payoff is that the WebSocket transport arrived without touching existing code.</p>
+        <p><strong>Accepting AsyncHTTPClient and SwiftNIO.</strong> The original plan said zero dependencies. Streamable HTTP required a real HTTP client with streaming support, and Foundation’s URLSession made that awkward on Linux. Taking AsyncHTTPClient was the cleaner path and the dependency was already a transitive presence in many server-side Swift projects. The same logic applied to WebSocketKit for the WebSocket transport.</p>
+        <p><strong>Swift 6 strict concurrency from the start.</strong> This added friction early — many types needed explicit Sendable conformances and actor isolation — but it meant the library was ready for Swift 6 when it finalized rather than requiring a migration pass later.</p>
+        <p><strong>Tracking the 2024-11-05 spec.</strong> The MCP specification is still evolving. The library targets one named revision, which means future spec changes will require deliberate update work. The alternative — tracking main — would introduce instability that’s harder to reason about for library consumers.</p>
+        <p><strong>What remains unfinished.</strong> The MASTER_PLAN.md notes the spec-alignment claim needs continuous attention as the MCP specification updates. The dependency list is purposeful but not minimal in an absolute sense; a future decision to drop WebSocketKit if that transport sees low adoption is open. Test coverage numbers aren’t recorded in the available data, so I can’t characterize how thoroughly the transport layer is exercised by the existing test targets.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/mcpclient-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/mcpclient-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
-        <img src="/images/showcase/mcpclient-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="MCPClient statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              MCPClient
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              110
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              9
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="MCPClient commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              MCPClient — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~13/month · peak 52 (110 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="124" width="67" height="24" /> 
+            <rect class="ig-bar" x="94" y="147" width="67" height="1" /> 
+            <rect class="ig-bar" x="163" y="145" width="67" height="3" /> 
+            <rect class="ig-bar" x="232" y="144" width="67" height="4" /> 
+            <rect class="ig-bar" x="301" y="144" width="67" height="4" /> 
+            <rect class="ig-bar" x="370" y="124" width="67" height="24" /> 
+            <rect class="ig-bar" x="439" y="64" width="67" height="84" /> 
+            <rect class="ig-bar" x="508" y="118" width="67" height="30" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="59" y="166" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="128" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="197" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="266" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="335" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="404" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="473" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="542" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="MCPClient release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              MCPClient — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              9 releases · latest v0.14.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="522" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="513" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="442" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="439" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="437" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="246" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="76" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="76" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="76" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="523" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.14.0
+            </text> 
+            <text class="ig-label" x="77" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.4.0
+            </text> 
+            <text class="ig-muted" x="59" y="112" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="128" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="197" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="266" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="335" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="404" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="473" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="542" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: mcpclient, infrastructure, selfReflection</p>

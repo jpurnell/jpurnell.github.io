@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code." />
+    <meta name="description" content="IconquerUI is the shared SwiftUI library that renders iConquer — a turn-based strategy game — across iOS, macOS, tvOS, and visionOS from a single codebase." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library | Justin Purnell</title>
+    <title>SwiftUI Presentation Layer for a Cross-Platform Risk-Style Strategy Game | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library" />
-    <meta name="twitter:title" content="One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library" />
-    <meta property="og:description" content="A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code." />
-    <meta name="twitter:description" content="A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code." />
+    <meta property="og:title" content="SwiftUI Presentation Layer for a Cross-Platform Risk-Style Strategy Game" />
+    <meta name="twitter:title" content="SwiftUI Presentation Layer for a Cross-Platform Risk-Style Strategy Game" />
+    <meta property="og:description" content="IconquerUI is the shared SwiftUI library that renders iConquer — a turn-based strategy game — across iOS, macOS, tvOS, and visionOS from a single codebase." />
+    <meta name="twitter:description" content="IconquerUI is the shared SwiftUI library that renders iConquer — a turn-based strategy game — across iOS, macOS, tvOS, and visionOS from a single codebase." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerui" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquerui",
-          "name" : "One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library",
+          "name" : "SwiftUI Presentation Layer for a Cross-Platform Risk-Style Strategy Game",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquerui#breadcrumb"
       },
-      "description" : "A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code.",
+      "description" : "IconquerUI is the shared SwiftUI library that renders iConquer — a turn-based strategy game — across iOS, macOS, tvOS, and visionOS from a single codebase.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library",
+      "name" : "SwiftUI Presentation Layer for a Cross-Platform Risk-Style Strategy Game",
       "url" : "https://www.justinpurnell.com/showcase/iconquerui"
     }
   ]
@@ -181,39 +181,275 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">One UI to Rule Every Platform: Building IconquerUI as a Cross-Platform SwiftUI Library</h1>
+      <h1 class="mainTitle">SwiftUI Presentation Layer for a Cross-Platform Risk-Style Strategy Game</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A single SwiftUI presentation layer that powers a Risk-style strategy game across iOS, macOS, tvOS, and visionOS — without duplicating a line of UI code.</p>
+          <p>IconquerUI is the shared SwiftUI library that renders iConquer — a turn-based strategy game — across iOS, macOS, tvOS, and visionOS from a single codebase.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Cross-platform games on Apple platforms face a familiar trap: build once for iPhone, then scramble to retrofit the same experience onto Mac, TV, and now Vision Pro. The result is usually four codebases that drift apart, carrying different bugs and different feature sets, maintained by the same small team.</p>
-        <p>IconquerUI was built to break that pattern for iConquer, a turn-based strategy game in the Risk tradition. The game needed to feel native on a touchscreen, a trackpad, a Siri Remote, and eventually a pair of eyes wearing Apple Vision Pro — simultaneously, from a single source of truth. The presentation layer needed to be a <em>library</em> that platform shells embed, not an app that gets forked per target.</p>
-        <p>There was a secondary audience beyond players: developers working on the engine and AI needed a real interface to run against, rather than test harnesses or headless simulations. IconquerUI had to serve both.</p>
+        <h2>Motivation</h2>
+        <p>iConquer is a Risk-style turn-based strategy game targeting four Apple platforms. The practical problem I wanted to solve early was duplication: a conventional approach would mean rebuilding or forking the UI for each platform shell. Instead, I structured the presentation as a library — <code>IconquerUI</code> — that any platform host can embed. The library holds no game logic. Rules live in <code>IconquerCore</code>, AI opponents in <code>IconquerAI</code>, session management in <code>IconquerMatch</code>, and remote play in <code>IconquerClient</code>. IconquerUI’s only job is to render state from those packages and route user input back to them.</p>
         <h2>Approach</h2>
-        <p>The defining architectural decision was the strict separation of concerns encoded in the package structure. IconquerUI holds no game rules. State flows in from <code>IconquerCore</code>, opponent behavior from <code>IconquerAI</code>, session management from <code>IconquerMatch</code>, and remote play from <code>IconquerClient</code>. The UI layer’s only job is to render that state and forward player intent back — a boundary enforced not by convention but by package dependency declarations.</p>
-        <p>This decomposition meant IconquerUI could target <code>macOS</code>, <code>iOS</code>, <code>tvOS</code>, and <code>visionOS</code> simultaneously under Swift Package Manager without each platform shell needing to reimplement anything. The package is built against Swift tools version 6.2, which brought stricter concurrency guarantees — a meaningful choice for a game where turn state, AI responses, and network events all arrive asynchronously.</p>
-        <p>Documentation was treated as a first-class deliverable. The <code>swift-docc-plugin</code> dependency signals that API documentation was built into the package from the beginning, not retrofitted — consistent with a library that other developers (the platform shells, the test harnesses) need to integrate against.</p>
-        <p>Development ran across roughly six months, from April to October 2026, culminating in the <code>IconquerApp@v0.1.0</code> release across 38 commits on a single branch. The single-contributor, single-branch shape of the history points to a focused build with a clear scope held tightly in one person’s head.</p>
+        <p>The package targets macOS, iOS, tvOS, and visionOS simultaneously and is written in Swift, with the package manifest using Swift Tools version 6.2. I declared it as a library product with two targets: <code>IconquerUI</code> for the production code and <code>IconquerUITests</code> for the test suite. The dependency list — <code>IconquerCore</code>, <code>IconquerClient</code>, <code>IconquerAI</code>, <code>IconquerMatch</code>, and <code>swift-docc-plugin</code> — reflects a deliberate separation: each domain concern is a distinct package, and <code>IconquerUI</code> consumes them all without owning any of their logic.</p>
+        <p>Structuring the presentation layer this way means the platform shells (the actual app targets for each OS) are thin wrappers. They embed <code>IconquerUI</code> and supply whatever platform-specific chrome the App Store submission requires, but the screens, navigation, and game rendering live here.</p>
+        <p>Documentation generation is wired in via <code>swift-docc-plugin</code>, so API docs can be produced directly from the package without a separate tooling step.</p>
+        <p>No external design tool proposals were produced and no design-first workflow was in place. Layout and adaptive decisions were worked out directly in SwiftUI code.</p>
         <h2>Results</h2>
-        <ul>
-          <li><strong>One SwiftUI codebase, four platforms shipped</strong>: iOS, macOS, tvOS, and visionOS all served from a single library target at v0.1.0.</li>
-          <li><strong>38 commits</strong> across approximately six months, landing a first public release of a multi-platform game UI.</li>
-          <li><strong>A dedicated test target</strong> (<code>IconquerUITests</code>) shipped alongside the library, establishing a testing baseline from the initial release.</li>
-          <li><strong>DocC documentation</strong> integrated into the build pipeline, making the library navigable for developers embedding it in platform shells.</li>
-        </ul>
-        <h2>Judgment Calls</h2>
-        <p><strong>Library, not app.</strong> The most consequential decision made early was to ship a library rather than an application. This forecloses certain shortcuts — you cannot hardcode assumptions about the host window, the navigation model, or the input paradigm — but it pays back in leverage. Every platform shell gets the same UI improvements automatically. This is an architectural bet that the short-term constraint is worth the long-term consistency, and it reflects genuine understanding of how SwiftUI’s abstraction model can be exploited across Apple’s platform family.</p>
-        <p><strong>Hard dependency boundaries.</strong> By taking <code>IconquerCore</code>, <code>IconquerAI</code>, <code>IconquerMatch</code>, and <code>IconquerClient</code> as explicit package dependencies rather than bundling game logic into the UI layer, the developer kept the blast radius of UI changes small and the blast radius of engine changes equally contained. The UI cannot accidentally accumulate business logic when the boundary is a package graph edge, not just a folder convention.</p>
-        <p><strong>Swift 6.2 concurrency.</strong> Adopting Swift tools version 6.2 means the package opts into strict concurrency checking. For a game UI that must handle asynchronous AI turns, match session events, and remote player actions without data races, this is the right call — even if it demands more discipline up front. It reflects a preference for catching problems at compile time rather than in production.</p>
-        <p><strong>DocC from day one.</strong> Treating documentation as a dependency rather than a post-ship task is a judgment call that signals the developer was thinking about IconquerUI as a platform for others to build on, not just a personal project. That orientation shapes every API surface decision made along the way.</p>
+        <p>The repository has 38 commits from a single contributor across a development window that opened in April 2026 and reached its latest commit in October 2026. All four platform targets — iOS, macOS, tvOS, and visionOS — are declared and buildable from the same package. The library is structured to be embedded by platform app shells rather than shipped as a standalone app, so there is no single App Store release tied directly to this package.</p>
+        <h2>Decisions</h2>
+        <p><strong>Library, not an app.</strong> Making <code>IconquerUI</code> a library product rather than an application target is the central architectural choice. It means every platform gets the same screens from the same source, and fixes or additions propagate everywhere without per-platform merges.</p>
+        <p><strong>No game state ownership.</strong> The UI holds no rules, no AI, and no session state. This keeps the view layer replaceable and testable independently — a different renderer could be substituted without touching <code>IconquerCore</code> or <code>IconquerAI</code>.</p>
+        <p><strong>Single SwiftUI codebase across four form factors.</strong> tvOS and visionOS have meaningfully different input models and screen distances than iOS and macOS. Covering all four in one target means every layout decision has to account for those differences. Where SwiftUI’s adaptive tools fall short, conditional compilation or environment-based branching fills the gap.</p>
+        <p><strong>swift-docc-plugin as a declared dependency.</strong> Including it in the package manifest rather than as an ad hoc tool means any contributor can generate documentation with a single command against the package, without installing anything separately.</p>
+        <p>What remains unfinished or uncertain: the test target exists but the commit history does not indicate how extensively <code>IconquerUITests</code> is populated. The spatial layout work for visionOS is the newest and least settled of the four platforms, since the interaction model there diverges most from the others.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquerui-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquerui-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquerui-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerUI statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerUI
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              38
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              0
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerUI commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerUI — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~5/month · peak 11 (38 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="118" width="76" height="30" /> 
+            <rect class="ig-bar" x="103" y="95" width="76" height="53" /> 
+            <rect class="ig-bar" x="182" y="126" width="76" height="22" /> 
+            <rect class="ig-bar" x="261" y="103" width="76" height="45" /> 
+            <rect class="ig-bar" x="340" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="419" y="126" width="76" height="22" /> 
+            <rect class="ig-bar" x="498" y="118" width="76" height="30" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerUI release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerUI — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              none yet
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <text class="ig-muted" x="300" y="94" font-size="13" text-anchor="middle">
+              No releases yet
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>

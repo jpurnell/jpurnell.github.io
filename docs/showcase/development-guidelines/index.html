@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A vendorable, AI-readable specification for Design-First TDD in Swift — where every rule that can be checked has a quality gate behind it, and every rule that failed in practice carries its own evidence." />
+    <meta name="description" content="A self-contained, vendorable set of rules, scaffolding, and quality-gate tooling that installs a Design-First TDD workflow into a Swift project before the first line of production code is written." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>development-guidelines: A Versioned Rulebook That Enforces Itself | Justin Purnell</title>
+    <title>development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="development-guidelines: A Versioned Rulebook That Enforces Itself" />
-    <meta name="twitter:title" content="development-guidelines: A Versioned Rulebook That Enforces Itself" />
-    <meta property="og:description" content="A vendorable, AI-readable specification for Design-First TDD in Swift — where every rule that can be checked has a quality gate behind it, and every rule that failed in practice carries its own evidence." />
-    <meta name="twitter:description" content="A vendorable, AI-readable specification for Design-First TDD in Swift — where every rule that can be checked has a quality gate behind it, and every rule that failed in practice carries its own evidence." />
+    <meta property="og:title" content="development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development" />
+    <meta name="twitter:title" content="development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development" />
+    <meta property="og:description" content="A self-contained, vendorable set of rules, scaffolding, and quality-gate tooling that installs a Design-First TDD workflow into a Swift project before the first line of production code is written." />
+    <meta name="twitter:description" content="A self-contained, vendorable set of rules, scaffolding, and quality-gate tooling that installs a Design-First TDD workflow into a Swift project before the first line of production code is written." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/development-guidelines" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/development-guidelines",
-          "name" : "development-guidelines: A Versioned Rulebook That Enforces Itself",
+          "name" : "development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/development-guidelines#breadcrumb"
       },
-      "description" : "A vendorable, AI-readable specification for Design-First TDD in Swift — where every rule that can be checked has a quality gate behind it, and every rule that failed in practice carries its own evidence.",
+      "description" : "A self-contained, vendorable set of rules, scaffolding, and quality-gate tooling that installs a Design-First TDD workflow into a Swift project before the first line of production code is written.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "development-guidelines: A Versioned Rulebook That Enforces Itself",
+      "name" : "development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development",
       "url" : "https://www.justinpurnell.com/showcase/development-guidelines"
     }
   ]
@@ -181,57 +181,327 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">development-guidelines: A Versioned Rulebook That Enforces Itself</h1>
+      <h1 class="mainTitle">development-guidelines: A Versioned Rulebook for AI-Assisted Swift Development</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Internal Infrastructure</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">6 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A vendorable, AI-readable specification for Design-First TDD in Swift — where every rule that can be checked has a quality gate behind it, and every rule that failed in practice carries its own evidence.</p>
+          <p>A self-contained, vendorable set of rules, scaffolding, and quality-gate tooling that installs a Design-First TDD workflow into a Swift project before the first line of production code is written.</p>
         </blockquote>
         <h2>Overview</h2>
-        <p>Most development guidelines are advisory documents — they tell teams what to do and then trust that humans remember to do it. <code>development-guidelines</code> takes a different position: rules that can be mechanically verified <em>should</em> be mechanically verified, and rules that have failed in practice should say so, plainly, alongside the record of that failure.</p>
-        <p>The project is a versioned, vendorable rulebook for AI-assisted Swift development. It defines a workflow called Design-First TDD — the practice of writing architectural proposals before writing code — and pairs that workflow with a zero-tolerance quality gate for warnings. Alongside the prose rules, it ships <code>setup.swift</code>, a collection of skills, and hooks that install the process into a new Swift project on its first day rather than retrofitting it later.</p>
-        <p>Three audiences drive the design. First, developers starting or adopting a Swift project who want process in place before the first commit, not bolted on after technical debt accumulates. Second, AI assistants — Claude Code specifically — that read the rulebook at session start and operate within its constraints. Third, the author’s own packages, which are the first and most demanding consumers: if a rule can’t be followed in practice, the package that breaks it becomes the evidence for revising or removing it.</p>
-        <p>The project shipped its first release as <code>v2.0.0</code> and has since iterated through seventeen versioned releases up to <code>v2.6.2</code>, spanning roughly seven and a half months of active development across 167 commits on eight branches. That release cadence — steady minor releases with occasional patches — reflects a living document under continuous pressure from real consumers.</p>
+        <p><code>development-guidelines</code> is a rulebook—not a framework, not a library—that describes exactly how I want a Swift project to behave from day one. It covers the full lifecycle: how sessions start (both human and AI), how code gets written (Design-First TDD), what a quality gate checks before a commit lands, and what scaffolding (<code>setup.swift</code>, skills, hooks) wires all of that into a new or existing project.</p>
+        <p>There are three audiences. First, me, when I start a new package and want the process in place before the first commit rather than bolted on after the first few hundred lines. Second, Claude Code, which reads <code>CLAUDE.md</code> at session start and uses the rules to know what is and is not acceptable in this codebase. Third, my own packages downstream, which act as the live test of whether any given rule is actually followable in practice.</p>
+        <p>The project exists because advisory style guides drift. Rules that nobody checks stop being rules. This repository treats enforcement as a first-class concern: every rule that can be mechanically verified has a quality-gate checker behind it. Rules that turned out to be wrong in practice are recorded in the document alongside the failure, so the document carries its own evidence of what was tried and what broke.</p>
         <h2>Architecture</h2>
-        <p>The central architectural decision is vendoring over cloning. ADR-013 establishes that each consuming project owns exactly one copy of the guidelines tree, and updates are replacements rather than merges. This is a deliberate rejection of the symlink or submodule patterns that introduce ambiguity about which version of the rules is active in a given project. When a project vendor-copies the guidelines at <code>v2.4.1</code> and later updates to <code>v2.6.2</code>, the old tree is deleted and the new tree written in its place. There is no merge history, no conflict resolution, no uncertainty about provenance.</p>
-        <p>The document’s own <code>CLAUDE.md</code> organizes the rules into a structure that an AI assistant can navigate at session start:</p>
-        <ul>
-          <li><strong>Session Start</strong> — what to read before writing any code</li>
-          <li><strong>Development Workflow</strong> — the ordered steps Design-First TDD requires</li>
-          <li><strong>Key Rules</strong> — the specific constraints with their rationale</li>
-          <li><strong>Observability (Consumer-Facing Apps)</strong> — instrumentation requirements</li>
-          <li><strong>Quality Gate</strong> — the zero-tolerance checker definitions</li>
-          <li><strong>References</strong> — ADR index and related documents</li>
-        </ul>
-        <p>This structure is not incidental. Because Claude Code reads <code>CLAUDE.md</code> at the beginning of each session, the document’s organization is effectively an API — the ordering of sections determines what an AI assistant learns first. Session Start appears before Development Workflow, which appears before Key Rules, because the intended reading order is also the intended operating order.</p>
-        <p>The quality gate is a first-class architectural component, not an appendix. Every rule that admits mechanical verification has a corresponding checker. The zero-tolerance posture on warnings is representative: it is not a preference or a style guide note. It is a gate. A build that emits warnings does not pass. This distinction — enforced versus advisory — is the sharpest edge of the project’s design philosophy.</p>
+        <p>The repository is structured around a small number of concerns that stay separated.</p>
+        <p><strong>The rulebook itself</strong> lives as markdown, with <code>CLAUDE.md</code> as the entry point for AI sessions and a set of referenced documents covering the development workflow, key rules, observability requirements for consumer-facing apps, and the quality gate specification. The architecture sections in <code>CLAUDE.md</code> map directly to those concerns: Session Start, Development Workflow, Key Rules, Observability, Quality Gate, References.</p>
+        <p><strong>Vendoring over cloning</strong> is the central structural decision, captured in ADR-013. Each consuming project owns its own copy of the guidelines tree. An update is a wholesale replacement, not a merge. This eliminates the question of which rules apply in a given project: the copy in the tree is authoritative, there is no remote to reconcile with, and the history of that copy is the history of when rules changed in that project. The tradeoff is that propagating a rule change to ten projects means ten replacements, but that cost is intentional—it forces a deliberate decision at each site rather than a silent pull.</p>
+        <p><strong>The quality gate</strong> is a zero-tolerance warning policy enforced by a checker that runs before commits land. Zero tolerance here means what it says: warnings are treated as errors. The gate does not distinguish between a warning that “matters” and one that does not, because that distinction requires judgment at review time and review-time judgment is the thing the gate is replacing.</p>
+        <p><strong><code>setup.swift</code></strong> is the scaffolding entry point. It takes an empty or new project and installs the hooks, skills, and configuration that the rules require, so the project is compliant from the first commit rather than from whenever a developer remembers to add things.</p>
         <h2>Implementation</h2>
-        <p>The most interesting implementation challenge is one that most documentation projects never confront: how do you know whether your rules are followable? The answer embedded in <code>development-guidelines</code> is empirical rather than theoretical. The author’s own packages are designated as the first consumers, and failures in those packages become evidence recorded in the document itself.</p>
-        <p>This creates an unusual feedback loop. A rule is written, adopted in a consuming package, and either holds or breaks under real conditions. If it breaks, the failure is not quietly corrected — it is recorded alongside the rule. The document carries its own evidence of what has been tried and what the outcome was. Over seventeen releases, this cycle has produced a rulebook that documents not just what the author believes is correct but what has been verified to work in practice.</p>
-        <p>The <code>setup.swift</code> script represents the other implementation pole: not rules-as-prose but rules-as-code. Rather than telling a developer to create certain directories, configure certain hooks, and install certain skills, <code>setup.swift</code> does those things. The first day of a new project is automated into compliance before a human has had an opportunity to skip a step.</p>
-        <p>The Design-First workflow — writing an architectural proposal before writing implementation — is enforced through hook scaffolding. The hooks create checkpoints where the workflow can verify that proposal documents exist before certain phases of development proceed. This is the quality gate philosophy applied to process rather than to build output.</p>
-        <pre><code class="language-swift">// The kind of enforcement setup.swift establishes:
-// a hook fires before a commit, checks for required artifacts,
-// and exits non-zero if the process has been skipped.
-// The rule is not a suggestion at that point — it is a gate.
-</code></pre>
-        <p>The versioning scheme itself reflects implementation care. The presence of <code>v2.5.0-beta.1</code> in the release history shows that major rule changes are staged through pre-release versions before being locked into consuming projects — a responsible approach when the consumers are active packages rather than hypothetical future users.</p>
+        <p>The 167 commits across 17 releases (v2.0.0 through v2.6.2) show a project that revised its own rules repeatedly as downstream packages exercised them.</p>
+        <p>The most important pattern in the rulebook is Design-First TDD: the design document for a component is written before any code, the tests are written against the design, and the implementation follows the tests. This ordering matters because it prevents the common failure mode where tests are written to describe code that already exists rather than to constrain code that is about to be written. The rules specify what a design document must contain and what constitutes a passing test before the implementation phase begins.</p>
+        <p>The skills system gives Claude Code named, invokable procedures. Rather than describing a workflow in prose and hoping the AI infers the steps, a skill names the procedure and lists its preconditions, steps, and postconditions. Session start is itself a skill: when Claude Code opens a session, it reads <code>CLAUDE.md</code>, invokes the session-start skill, and arrives at a known state before any user instruction is processed.</p>
+        <p>The hooks integrate the quality gate into the commit lifecycle. The gate runs on every commit attempt, not on a schedule, so a warning cannot land in the tree and wait for a CI run to surface it.</p>
+        <p>One pattern that recurred across the release history is that rules which seem precise in prose turn out to be ambiguous when a checker tries to implement them. The resolution in every case was to revise the rule to match what the checker could actually verify, then record the original formulation and the reason for the change. This kept the document and the gate synchronized rather than letting them diverge into separate sources of truth.</p>
         <h2>Testing Strategy</h2>
-        <p>Testing a guidelines document requires inverting the usual relationship between specification and test. Normally a test suite verifies that code conforms to a spec. Here, the consuming packages <em>are</em> the test suite — each package that adopts the guidelines and continues to build cleanly is evidence that the rules are internally consistent and followable.</p>
-        <p>The quality gate provides a formal testing surface. Because warnings are zero-tolerance, any consuming package that emits a warning under the guidelines is a test failure — not of the package, but of the guidelines’ completeness. If a rule’s intent cannot be expressed in code that produces no warnings, the rule needs revision.</p>
-        <p>The ADR record functions as a regression suite for architectural decisions. Each ADR captures the context, the decision, and the consequences. When a later decision revisits the same terrain, the earlier ADR constrains the solution space. This prevents the document from oscillating between contradictory positions across releases.</p>
-        <p>The practice of recording failed rules alongside their failures is a form of negative testing. A rules document that has never recorded a failure is a document that has never been seriously tested. By the time the project reached <code>v2.6.2</code>, its failure record is part of its credibility.</p>
+        <p>The downstream packages are the primary test harness. Each package that vendors these guidelines and runs the quality gate on its own commits is exercising the rules against real code. When a rule causes a false positive or turns out to be unenforceable, it surfaces as a failure in a real project, not a hypothetical.</p>
+        <p>The zero-warning policy applies to the guidelines repository itself, which is enforced by the same gate the rules describe. This creates a minimal feedback loop: the rules cannot specify a gate that the rules repository itself fails to pass.</p>
+        <p>The beta release track (visible in v2.5.0-beta.1 preceding v2.5.0) provided a path for testing rule changes in downstream packages before promoting them to a stable release. A consuming project could vendor the beta, run its own gate, and report whether the new rules were followable before the change was finalized.</p>
         <h2>Lessons</h2>
-        <p>The most transferable lesson is the distinction between advisory and enforced. In subsequent projects, this shaped how Purnell frames any process requirement: if it matters enough to write down, it matters enough to check automatically. The corollary — if it cannot be checked automatically, its importance should be stated honestly rather than implied — has influenced how he documents constraints that genuinely require human judgment.</p>
-        <p>The vendoring pattern from ADR-013 transferred directly to how he thinks about shared configuration in general. The instinct to reach for a symlink or a submodule is strong, but the vendoring model’s clarity about ownership — one project, one copy, updates are replacements — eliminates an entire category of drift and ambiguity that shared-reference approaches introduce.</p>
-        <p>The design of <code>CLAUDE.md</code> as a session-start API for AI assistants influenced how he structures documentation in AI-assisted projects more broadly. The ordering of a document is not neutral when the reader is a language model that will act on what it reads in the sequence it reads it. Structure becomes interface.</p>
-        <p>Finally, the practice of using his own packages as the first consumers of the guidelines imposed a productive discipline: no rule could survive that he was not willing to live under himself. Across 167 commits and seventeen releases, that constraint kept the document grounded in the concrete rather than drifting toward the aspirational.</p>
+        <p><strong>Enforcement changes what rules you write.</strong> When a rule has no checker, you write rules that sound good. When a rule needs a checker, you write rules that can be mechanically verified. The second kind of rule is more constrained but more honest about what it actually requires.</p>
+        <p><strong>Vendoring transfers cleanly to documentation.</strong> I apply the same replacement-over-merge approach to other reference materials in projects. One owner, one copy, explicit replacement when it changes. The question “which version of this applies here” is always answerable by looking at the tree.</p>
+        <p><strong>Recording failures in the document is worth the awkwardness.</strong> It is uncomfortable to leave evidence of a rule that did not work inside the document that replaced it. But the alternative—silently removing the failed rule—loses the reason the replacement rule is shaped the way it is. Downstream readers (including future me) can see what was tried, why it failed, and what the current rule is trying to avoid.</p>
+        <p><strong>AI session initialization benefits from explicit state.</strong> The session-start skill pattern transferred to other projects that use Claude Code. Rather than relying on context from the conversation history, the skill brings the AI to a known state from scratch. Sessions that start with an explicit initialization step produce more consistent behavior than sessions that accumulate state implicitly.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/development-guidelines-stats.svg" alt="Internal Infrastructure statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/development-guidelines-commits.svg" alt="Internal Infrastructure commit history chart" class="img-fluid" />
-        <img src="/images/showcase/development-guidelines-releases.svg" alt="Internal Infrastructure release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="development-guidelines statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              development-guidelines
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              167
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="300" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="300" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              17
+            </text> 
+            <text class="ig-muted" x="300" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="development-guidelines commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              development-guidelines — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~20/month · peak 49 (167 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="123" width="67" height="25" /> 
+            <rect class="ig-bar" x="94" y="80" width="67" height="68" /> 
+            <rect class="ig-bar" x="163" y="112" width="67" height="36" /> 
+            <rect class="ig-bar" x="232" y="140" width="67" height="8" /> 
+            <rect class="ig-bar" x="301" y="140" width="67" height="8" /> 
+            <rect class="ig-bar" x="370" y="64" width="67" height="84" /> 
+            <rect class="ig-bar" x="439" y="130" width="67" height="18" /> 
+            <rect class="ig-bar" x="508" y="112" width="67" height="36" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="59" y="166" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="128" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="197" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="266" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="335" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="404" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="473" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="542" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="development-guidelines release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              development-guidelines — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              17 releases · latest v2.6.2
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="566" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="566" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="566" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="559" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="559" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="557" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="501" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="474" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="439" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="424" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="413" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="406" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="381" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="379" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="379" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="379" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="377" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="554" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v2.6.2
+            </text> 
+            <text class="ig-label" x="378" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v2.0.0
+            </text> 
+            <text class="ig-muted" x="59" y="112" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="128" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="197" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="266" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="335" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="404" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="473" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="542" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: infrastructure, Quality Gate, development-guidelines, selfReflection</p>

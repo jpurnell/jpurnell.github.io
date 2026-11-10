@@ -78,9 +78,50 @@ public struct Basics: Codable {
     public let location: Location
     /// Social media profiles.
     public let socialProfiles: [SocialProfile]
+    /// The owner's pronouns, for tools that write about them.
+    ///
+    /// Stored, not published: nothing on the site or in its structured data states them, and
+    /// schema.org's `Person` has no property for them. `nil` when none are given.
+    public let pronouns: Pronouns?
 
     /// Full display name combining first and last name.
     public var name: String { "\(firstName) \(lastName)" }
+}
+
+/// The pronouns a person uses, in the three forms a sentence needs.
+///
+/// Stored as separate words, not one string like "he/him", because a writer has to put the right
+/// one in the right place: "he wrote it", "thanks to him", "his project".
+public struct Pronouns: Codable, Equatable, Sendable {
+    /// The subject form, as in "he wrote it".
+    public let subject: String
+    /// The object form, as in "thanks to him".
+    public let object: String
+    /// The possessive determiner, as in "his project".
+    public let possessive: String
+    private let displayOverride: String?
+
+    /// How the pronouns are written out, such as "he/him": the override if one was given, else
+    /// subject and object.
+    public var display: String { displayOverride ?? "\(subject)/\(object)" }
+
+    private enum CodingKeys: String, CodingKey {
+        case subject, object, possessive
+        case displayOverride = "display"
+    }
+
+    /// Creates a set of pronouns.
+    /// - Parameters:
+    ///   - subject: The subject form.
+    ///   - object: The object form.
+    ///   - possessive: The possessive determiner.
+    ///   - display: A written form to use instead of "subject/object", such as "he/him, any is fine".
+    public init(subject: String, object: String, possessive: String, display: String? = nil) {
+        self.subject = subject
+        self.object = object
+        self.possessive = possessive
+        self.displayOverride = display
+    }
 }
 
 /// A geographic location with address components.

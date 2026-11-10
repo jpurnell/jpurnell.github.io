@@ -1,8 +1,8 @@
 ---
-title: IconquerMCP: Giving AI Agents a Game to Play
-description: An MCP server that wraps a deterministic turn-based strategy engine, letting AI agents create, join, and compete in full multiplayer games through standard Model Context Protocol tools and resources.
+title: IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy
+description: An MCP server that wraps the iConquer game engine so AI agents can create, join, and play turn-based strategy games through standard tools and resources.
 date: 2026-05-12 15:56
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,40 +10,48 @@ project: iConquer
 published: true
 ---
 
-# IconquerMCP: Giving AI Agents a Game to Play
+# IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy
 
-> An MCP server that wraps a deterministic turn-based strategy engine, letting AI agents create, join, and compete in full multiplayer games through standard Model Context Protocol tools and resources.
+> An MCP server that wraps the iConquer game engine so AI agents can create, join, and play turn-based strategy games through standard tools and resources.
 
-## Problem
+## Motivation
 
-Most AI agent tooling hands models a hammer — a discrete action with a discrete result. IconquerMCP hands them a chessboard.
+iConquer is a turn-based strategy game engine I had already built as `IconquerCore`. Once I had a deterministic, seed-reproducible engine and a multiplayer coordination layer in `IconquerMatch`, the natural next question was whether AI agents could play it — not through a bespoke API, but through a standard protocol that any capable host could speak.
 
-The project exposes the iConquer game engine to any MCP-capable host, including Claude Desktop, Claude Code, and automated tournament harnesses. Rather than wrapping a single-shot API call, it surfaces an entire turn-based strategy game as a living, stateful interface: tools for taking actions and resources for observing the world. Agents don't just invoke a function and read a return value — they join a game, read a board, reason about their position, and commit a move, just as a human player would.
+MCP (Model Context Protocol) is that protocol. It defines a structured way for language model hosts to call tools and read resources, which maps cleanly onto a game loop: actions become tools, board state becomes resources. Building `IconquerMCP` meant I could point Claude Desktop, Claude Code, or any tournament harness at the server and get agent play without writing custom glue for each host.
 
-The motivation is both practical and exploratory. Agent-vs-agent bake-offs need a fair, reproducible arena. Researchers and developers need a way to stress-test reasoning models against something that has genuine state, turn order, and adversarial pressure. IconquerMCP was built to be that arena — one where the rules are enforced by a deterministic engine and the participants are AI.
+The goal was not a demo. The MASTER_PLAN describes three real consumer categories: AI agents speaking MCP, Claude-family hosts, and tournament or bake-off harnesses running agent-vs-agent matches. I wanted a server that could serve all three from one implementation.
 
 ## Approach
 
-The architecture is deliberately layered. IconquerMCP does not implement game logic itself — it delegates entirely to `IconquerCore` for the engine and `IconquerMatch` for multiplayer session management. The MCP server layer is thin by design: its job is translation, exposing engine concepts as properly typed MCP tools and resources rather than leaking implementation details upward.
+The package is structured around three targets: the library (`IconquerMCP`), a command-line executable (`iconquer-mcp`), and a test suite (`IconquerMCPTests`). The library wraps `IconquerCore` and `IconquerMatch` using `SwiftMCPServer` as the protocol transport layer. The executable is what an MCP host actually launches.
 
-The Swift package is built against Tools version 6.2 on macOS, using `SwiftMCPServer` as the protocol adapter. This dependency selection reflects a clear philosophy: use the canonical Swift MCP library rather than rolling a bespoke protocol implementation, keeping the surface area that could diverge from the spec to a minimum.
+The two key design mappings are:
 
-`IconquerCore`'s deterministic seeding was a foundational choice. Because game outcomes can be reproduced from a seed, every agent run is auditable. Tournament harnesses can replay a game, developers can bisect unexpected model behavior, and benchmark comparisons are apples-to-apples. Non-determinism would have undermined the entire evaluation use case.
+- **Tools → game actions.** Creating a game, joining as a player, submitting a move, and ending a turn are each exposed as discrete MCP tools with typed parameters.
+- **Resources → observable state.** Board state, player hands, match metadata, and game history are exposed as resources the agent can read between actions.
 
-The presence of a `CLAUDE.md` file — covering session start procedures, development workflow, key rules, and a quality gate — signals that the project was designed with agentic collaboration in mind from the outset. The tooling is documented not just for human contributors but for AI ones.
+Because `IconquerCore` is deterministic from a seed, agent sessions are reproducible. A tournament harness can set a known seed, run two agents, and replay the exact same game to debug or audit results. `IconquerMatch` handles the multiplayer coordination so multiple agents can share a single running game through the server without stepping on each other.
+
+The repository includes a `CLAUDE.md` covering session startup, development workflow, key rules, a quality gate, and references. That document defines the working contract for anyone (or any agent) doing work inside the repo.
+
+The project uses Swift 6.2 with `swift-docc-plugin` available for documentation generation.
 
 ## Results
 
-IconquerMCP shipped three public releases over a six-month window, from v0.1.0 through v0.3.0, across 23 commits from a single developer. The project progressed from initial scaffolding to a versioned, multi-release library with a dedicated test target (`IconquerMCPTests`) and integrated documentation tooling via `swift-docc-plugin`. The dual-target structure — a library target (`IconquerMCP`) and an executable (`iconquer-mcp`) — means the server can be embedded as a dependency or run as a standalone process, covering both integration and deployment scenarios.
+The project reached two tagged releases over roughly six months of development across 23 commits from a single contributor.
 
-## Judgment Calls
+- **v0.1.0** — initial release establishing the server structure and core tool/resource mappings
+- **v0.3.0** — current release, extending the implementation across two more minor versions
 
-Several decisions here reveal deliberate craft rather than default choices.
+The server runs on macOS and is consumable by any MCP-capable host that can launch a subprocess and communicate over the protocol.
 
-**Thin server, thick engine.** The choice to keep MCP-layer logic minimal and trust `IconquerCore` for all game rules means the server doesn't accumulate business logic it doesn't own. When the engine changes, the server follows — it doesn't fork behavior.
+## Decisions
 
-**Resources, not just tools.** Many MCP integrations expose only tools (actions). Surfacing game state as *resources* (observable state) is the architecturally correct move: it lets agents poll or subscribe to board state independently of action-taking, which more closely mirrors how a real player experiences a game and gives agent frameworks more to work with.
+**Swift over other languages.** `IconquerCore` and `IconquerMatch` are Swift packages. Keeping `IconquerMCP` in Swift meant I could depend on them directly without an FFI layer or a serialization boundary between the engine and the server. The tradeoff is that the server is macOS-only, which is acceptable given that MCP hosts running local game servers are almost always on a Mac anyway.
 
-**Determinism as a first-class feature.** Seeded reproducibility wasn't incidental — it was load-bearing for the tournament and bake-off use case. Building on `IconquerCore`'s deterministic engine rather than a non-deterministic one meant that every interesting property of the system (fairness, debuggability, benchmarking) fell into place naturally.
+**`SwiftMCPServer` as the transport layer.** Rather than implement the MCP wire protocol myself, I took a dependency on `SwiftMCPServer`. This kept the implementation focused on the game-specific tool and resource definitions rather than protocol mechanics.
 
-**A CLAUDE.md for an AI-native project.** Writing explicit operating instructions for AI collaborators on a project designed to host AI players is a layered bit of intentionality. It suggests the developer thinks carefully about the full environment their code will live in — not just the runtime, but the development loop itself.
+**Tools and resources as the primary abstraction.** The MCP distinction between tools (things an agent does) and resources (things an agent reads) maps well onto a game loop, but it required deciding which parts of game state are resources and which are side effects of tool calls. The current split treats board state as a resource and all mutations as tools.
+
+**What is unfinished.** The project is at v0.3.0. The MASTER_PLAN describes tournament and bake-off harnesses as a target consumer, but the degree to which the server has been tested under actual multi-agent tournament conditions is not reflected in the commit history. There are no recorded Claude Code sessions, so the development work was done through conventional tooling. The test target exists but test counts are not available to report here.

@@ -5,6 +5,65 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **`basics.pronouns` in `cv.json` (2026-11-10).** An optional `Pronouns` value on `Basics`
+  (`subject`, `object`, `possessive`, and an optional `display` such as "he/him, any is fine"),
+  set to he/him/his. It is stored, not published: nothing on the page or in the JSON-LD states it,
+  because schema.org's `Person` has no such property, and a test pins that the structured data
+  carries neither the key nor the value. A CV without the field still decodes. project-showcase
+  reads it so generated pages use the right pronouns instead of a guess.
+- **Showcase graphics are inlined (`InlineSVG`).** The charts were `<img>` tags, which cannot see
+  the page's theme and so ignored the site's light/dark toggle. They are now inlined, resolving the
+  page's own token variables; their CSS is scoped to the chart so it cannot restyle the page, and a
+  missing or non-SVG file falls back to an `<img>`.
+
+### Changed
+- **Showcase pages regenerated in first person (2026-11-10).** All 39 project pages and the portfolio
+  overview were rewritten in my voice, with no praise of the work, and the KEXPPower page was added
+  (`settled: true`, so syncing never rewrites it). Graphics use one title size, a heavy rule under it,
+  no card border, and a shared month axis for the commit and release charts. Syncing now rewrites a
+  page's prose only after a minor release bump; otherwise it refreshes the graphics alone.
+- **DesignTokens 0.6.0 to 0.11.0 (2026-11-10).** `Package.swift` now requires `from: "0.11.0"`
+  (resolved at tag 0.11.0). `scripts/sync-tokens.sh` produces a byte-identical `tokens.css`, so no
+  token value the site uses changed. The showcase SVGs were regenerated against it; eight differ,
+  all from commit counts that moved today, none from styling.
+
+### Changed
+- **Showcase graphics regenerated from the design system (2026-11-10).** All 114 SVGs for the 38
+  manifest pages were rewritten by `showcase sync --infographics-only` from project-showcase's
+  DesignTokens-based generators (previously a hard-coded navy and cyan palette). Each file embeds
+  light, dark, increased-contrast and increased-contrast-dark values from DesignTokens 0.6.0.
+  The commit-activity chart now sizes each month's bar by its real commit count; before, every
+  bar was full height. `docs/` rebuilt.
+
+### Fixed
+- **`quality-gate-performance` lost its three graphics when the orphans were removed.** The
+  layout builds a page's SVG URLs from its filename, so the article still requested
+  `quality-gate-performance-{stats,commits,releases}.svg`; the files were a stale snapshot of the
+  `quality-gate-swift` repository with no manifest entry of their own. The article now sets
+  `infographics: qualitygatecore`, so it shows the live card for the same repository and stays
+  current with each sync. `portfolio-overview` requested `portfolio-overview-*.svg`, which never
+  existed on `main`; it now sets `infographics: none`, the layout's opt-out for overview pages.
+  A sweep of every `docs/showcase` page finds no graphic link without a file.
+
+### Removed
+- Nine orphaned SVGs (`docclint`, `mlxtest`, `quality-gate-performance`, three each). None was in
+  `showcase-manifest.json`, so sync never refreshed them and they kept the old palette.
+  `mlxtest` was iConquer's internal name (its page is `iconquer`) and `docclint` was a one-commit
+  snapshot of `docc-lint`, neither with a page. `quality-gate-performance` did have a page; see
+  Fixed.
+
+### Changed
+- **DesignTokens 0.2.0 to 0.5.0 (2026-11-09).** `Package.swift` now requires `from: "0.5.0"`
+  (resolved to tag 0.5.0, revision `275a75c`). `Assets/css/tokens.css` was regenerated with
+  `scripts/sync-tokens.sh`; the diff is 55 added lines and no removals: three
+  `@media (prefers-contrast: more)` blocks (light, OS dark, explicit `[data-theme="dark"]`)
+  that override only accent, success, destructive and the eight series colours. Swiss values
+  are otherwise unchanged. `docs/` rebuilt; `docs/css/tokens.css` is the only changed file.
+  New tests pin the blocks, their cascade order (after the base and each dark block they
+  override), the tokens-before-main link order in `MainLayout`, and that `main.css` neither
+  redefines tokens nor adds its own contrast or theme blocks.
+
 ### Changed
 - **Showcase pages regenerated from current source (2026-10-30).** 23 of the 28 pages under
   `Content/showcase/` were last generated on 12-13 May; they were rewritten by `showcase sync`

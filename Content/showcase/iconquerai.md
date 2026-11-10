@@ -1,8 +1,8 @@
 ---
-title: IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift
-description: In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim.
+title: IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer
+description: A pure-Swift package that provides learned and scripted `PlayerAgent` implementations, a self-play training pipeline built on MLX, and benchmarking infrastructure consumed by CLI simulators and tournament harnesses.
 date: 2026-05-12 15:56
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,44 +10,44 @@ project: iConquer
 published: true
 ---
 
-# IconquerAI: Building a Measured, In-Process AI Opponent Engine in Pure Swift
+# IconquerAI: In-Process AI Agents and Self-Play Training Pipeline for Iconquer
 
-> In six months and 98 commits, one developer took IconquerAI from a blank repository to a versioned, multi-platform Swift package shipping trained model weights, a self-play training pipeline, and statistically rigorous benchmarking — all without a single unsound performance claim.
+> A pure-Swift package that provides learned and scripted `PlayerAgent` implementations, a self-play training pipeline built on MLX, and benchmarking infrastructure consumed by CLI simulators and tournament harnesses.
 
-## Problem
+## Motivation
 
-IconquerAI exists to solve a specific and underappreciated problem in game AI development: most game opponent engines are either too heavyweight to embed or too opaque to trust. They run in separate processes, mutate game state directly, and produce win-rate claims backed by nothing more than a count and a gut feeling.
+IconquerAI is one layer in a larger Iconquer project. The game logic and match driver live in `IconquerMatch`; `IconquerCLI` and `IconquerApp` consume opponents from the outside. This package sits between them: it owns the agents, the training pipeline that produces their weights, and the measurement tools that say whether a new model is actually better than the old one.
 
-IconquerAI was built as the pure-Swift AI layer for the Iconquer game system — a package that ships learned agents conforming to `PlayerAgent` from `IconquerMatch`, alongside the training pipeline that produced them and the weights those agents carry into production. It is consumed by `IconquerCLI` for `simulate` and `tournament` subcommands, and is designed to eventually power computer opponents inside `IconquerApp` on Apple platforms. The goal was an AI layer that could be embedded directly in-process, seeded for deterministic replay, and trusted because its claims were measured rather than asserted.
+I built it as a separate package so the AI concerns — model files, training runs, benchmark history — stay out of the game engine and the UI shell. The goal was to be able to run a training pass on a Linux server, check the resulting weights against a pre-registered benchmark criterion, and ship the artifact without touching the other packages.
+
+The secondary goal was to make the measurement trustworthy enough that "this agent improved" is a statement with a sample size and an interval attached, not just a spot-check win percentage.
 
 ## Approach
 
-The architectural foundation of IconquerAI is a deliberate separation of concerns expressed through Swift's type system. Agents emit moves — they do not touch game state. The driver applies them. This single constraint keeps agents testable in isolation, composable in tournament harnesses, and safe to run concurrently without locks.
+The package targets macOS, iOS, tvOS, and visionOS, using Swift 6.2 and Swift Package Manager tooling. The four targets are `IconquerAI` (the agent library), `iconquer-train` (the self-play training executable), `iconquer-dashboard` (a benchmarking and reporting tool), and `IconquerAITests`.
 
-The `PlayerAgent` protocol is `async` by design. That decision, made early, means agents that touch I/O — whether that's MLX inference or an MCP provider — plug into the same protocol surface without requiring a migration later. The package targets macOS, iOS, tvOS, and visionOS simultaneously, and MLX-swift's integration via `mlx-swift` as a direct dependency means inference runs on-device using Apple Silicon's unified memory rather than round-tripping to a server.
+The central protocol is `PlayerAgent` from `IconquerMatch`, which is `async`. That choice flows through everything: agents that call MLX or any I/O provider conform to the same protocol without needing a wrapper, because the protocol already allows suspension. Agents emit moves; the match driver in `IconquerMatch` applies them. That separation means an agent can be tested against a scripted opponent without spinning up a full app.
 
-The training pipeline lives in the `iconquer-train` executable target, separate from the agent library itself. Self-play generates experience, weights are evaluated, and the pipeline refuses to persist weights that did not improve — a small rule with significant consequences for model hygiene. The `iconquer-dashboard` target provides instrumentation for monitoring training runs.
+MLX inference runs in-process via `mlx-swift`. Self-play produces training data, the `iconquer-train` executable updates weights, and the pipeline refuses to persist weights it did not change — a guard against silent no-ops in the training loop.
 
-The package is built on Swift Tools version 6.2 and leans on `SwiftCLIKit` for command-line ergonomics and `swift-docc-plugin` for documentation generation, signaling that this is infrastructure meant to be read and maintained, not just run.
+Benchmark criteria are written to the repository before the runs that use them. That ordering makes it harder to adjust the threshold after seeing the result. Win rates are reported as `WinRateEstimate` values carrying Wilson confidence intervals and sample counts.
+
+Scripted agents accept an explicit RNG seed so a game sequence can be reproduced exactly given the same seed, which matters for debugging training regressions.
+
+The `CLAUDE.md` file records session-start procedures, the development workflow, key rules, the quality gate, and references. One Claude Code session contributed 2 commits across 8 messages, with a fully-achieved outcome on a multi-task session.
 
 ## Results
 
-Over roughly six months — first commit April 8, 2026, latest October 6, 2026 — the project reached five tagged releases: v0.1.0 through v0.4.0, with a patch release at v0.3.1 indicating active maintenance and real usage pressure between minor versions. Ninety-eight commits from a single contributor across three branches reflects sustained, disciplined iteration rather than a burst of activity followed by neglect.
+The project reached v0.4.0 across five releases (v0.1.0 through v0.4.0, with a v0.3.1 patch) over roughly six months, accumulating 98 commits from one contributor across 3 branches. `IconquerCLI`'s `simulate` and `tournament` subcommands use the package as their primary agent source. The `iconquer-dashboard` target produces benchmark reports with Wilson-interval win rates. Model weights ship with the package and are updated when a training run passes its pre-registered criteria.
 
-The package ships four targets: the core `IconquerAI` library, the `iconquer-train` self-play training executable, the `iconquer-dashboard` instrumentation tool, and `IconquerAITests`. Trained model weights are bundled as part of the package, meaning consumers of `IconquerCLI` get working AI opponents without any external model download or setup step.
+## Decisions
 
-## Judgment Calls
+**`PlayerAgent` is `async` by design.** The alternative was a synchronous protocol with a separate async wrapper for MLX agents. Making the protocol async from the start meant every agent — scripted or learned — conforms to one interface, and adding a new I/O-backed agent later doesn't require a protocol migration.
 
-The most revealing decisions in IconquerAI are not in the code — they are in the constraints the developer chose to impose on the system before writing it.
+**Agents return moves rather than mutating state.** This keeps the agent implementation stateless with respect to the board, makes unit testing straightforward, and matches the driver model in `IconquerMatch`.
 
-**Benchmark criteria are pre-registered in git before the runs that judge them.** This is the discipline of a developer who has seen post-hoc rationalization masquerade as validation. By committing evaluation thresholds before training runs produce numbers, the project eliminates the temptation to adjust the bar to meet the result. It's a practice borrowed from clinical research and almost never seen in game AI side projects.
+**Benchmark criteria are committed before runs.** This is a process constraint rather than a code feature. It trades flexibility (you can't adjust the bar after seeing a preliminary result) for auditability.
 
-**Win rates carry Wilson confidence intervals and sample sizes.** The `WinRateEstimate` type doesn't just store a percentage — it stores the statistical context required to interpret that percentage. A 60% win rate from 20 games means something very different than 60% from 2,000 games, and IconquerAI's type system encodes that difference explicitly.
+**Training refuses to save unchanged weights.** Early in the pipeline it was possible for a training run to complete, report no error, and write back the same weights it started with. The explicit check catches that case and surfaces it as a failure rather than a silent pass.
 
-**The training pipeline refuses to save weights it did not improve.** This is a small guard with a large effect: it prevents a common failure mode where a training run that converged early, then wandered, overwrites a better checkpoint. The constraint is enforced in code rather than left to the operator's discipline.
-
-**Async-first protocol design.** Making `PlayerAgent` `async` from day one, rather than adding `async` variants later, reflects the kind of foresight that only comes from having lived through a protocol migration. MLX inference is inherently asynchronous; designing the protocol to accommodate that from the start keeps the abstraction honest.
-
-**Deterministic under fixed seeds.** Scripted agents accept an explicit RNG seed so that any game can be replayed exactly. This is not a convenience feature — it is the foundation of a debugging workflow. When a training run produces an unexpected result, the ability to reproduce the exact game sequence that caused it is the difference between a bug you can find and one you can only approximate.
-
-Taken together, these decisions describe a developer who thought carefully about what it means to *trust* a game AI system — and then built the infrastructure to earn that trust rather than assume it.
+**What is unfinished:** The `IconquerApp` integration — wiring agents as opt-in computer opponents in the SwiftUI shell — is listed as Phase 2 and was scoped to v0.3.0 and later. As of v0.4.0, the CLI remains the primary consumer. The plan describes a remote Linux-server tournament orchestrator as a target consumer, but there is no evidence in the history that this path has been exercised beyond local CLI runs.

@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="An MCP server that wraps a deterministic turn-based strategy engine, letting AI agents create, join, and compete in full multiplayer games through standard Model Context Protocol tools and resources." />
+    <meta name="description" content="An MCP server that wraps the iConquer game engine so AI agents can create, join, and play turn-based strategy games through standard tools and resources." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerMCP: Giving AI Agents a Game to Play | Justin Purnell</title>
+    <title>IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerMCP: Giving AI Agents a Game to Play" />
-    <meta name="twitter:title" content="IconquerMCP: Giving AI Agents a Game to Play" />
-    <meta property="og:description" content="An MCP server that wraps a deterministic turn-based strategy engine, letting AI agents create, join, and compete in full multiplayer games through standard Model Context Protocol tools and resources." />
-    <meta name="twitter:description" content="An MCP server that wraps a deterministic turn-based strategy engine, letting AI agents create, join, and compete in full multiplayer games through standard Model Context Protocol tools and resources." />
+    <meta property="og:title" content="IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy" />
+    <meta name="twitter:title" content="IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy" />
+    <meta property="og:description" content="An MCP server that wraps the iConquer game engine so AI agents can create, join, and play turn-based strategy games through standard tools and resources." />
+    <meta name="twitter:description" content="An MCP server that wraps the iConquer game engine so AI agents can create, join, and play turn-based strategy games through standard tools and resources." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquermcp" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquermcp",
-          "name" : "IconquerMCP: Giving AI Agents a Game to Play",
+          "name" : "IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquermcp#breadcrumb"
       },
-      "description" : "An MCP server that wraps a deterministic turn-based strategy engine, letting AI agents create, join, and compete in full multiplayer games through standard Model Context Protocol tools and resources.",
+      "description" : "An MCP server that wraps the iConquer game engine so AI agents can create, join, and play turn-based strategy games through standard tools and resources.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerMCP: Giving AI Agents a Game to Play",
+      "name" : "IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy",
       "url" : "https://www.justinpurnell.com/showcase/iconquermcp"
     }
   ]
@@ -181,35 +181,311 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerMCP: Giving AI Agents a Game to Play</h1>
+      <h1 class="mainTitle">IconquerMCP: A Model Context Protocol Server for Agent-Driven Turn-Based Strategy</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>An MCP server that wraps a deterministic turn-based strategy engine, letting AI agents create, join, and compete in full multiplayer games through standard Model Context Protocol tools and resources.</p>
+          <p>An MCP server that wraps the iConquer game engine so AI agents can create, join, and play turn-based strategy games through standard tools and resources.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Most AI agent tooling hands models a hammer — a discrete action with a discrete result. IconquerMCP hands them a chessboard.</p>
-        <p>The project exposes the iConquer game engine to any MCP-capable host, including Claude Desktop, Claude Code, and automated tournament harnesses. Rather than wrapping a single-shot API call, it surfaces an entire turn-based strategy game as a living, stateful interface: tools for taking actions and resources for observing the world. Agents don’t just invoke a function and read a return value — they join a game, read a board, reason about their position, and commit a move, just as a human player would.</p>
-        <p>The motivation is both practical and exploratory. Agent-vs-agent bake-offs need a fair, reproducible arena. Researchers and developers need a way to stress-test reasoning models against something that has genuine state, turn order, and adversarial pressure. IconquerMCP was built to be that arena — one where the rules are enforced by a deterministic engine and the participants are AI.</p>
+        <h2>Motivation</h2>
+        <p>iConquer is a turn-based strategy game engine I had already built as <code>IconquerCore</code>. Once I had a deterministic, seed-reproducible engine and a multiplayer coordination layer in <code>IconquerMatch</code>, the natural next question was whether AI agents could play it — not through a bespoke API, but through a standard protocol that any capable host could speak.</p>
+        <p>MCP (Model Context Protocol) is that protocol. It defines a structured way for language model hosts to call tools and read resources, which maps cleanly onto a game loop: actions become tools, board state becomes resources. Building <code>IconquerMCP</code> meant I could point Claude Desktop, Claude Code, or any tournament harness at the server and get agent play without writing custom glue for each host.</p>
+        <p>The goal was not a demo. The MASTER_PLAN describes three real consumer categories: AI agents speaking MCP, Claude-family hosts, and tournament or bake-off harnesses running agent-vs-agent matches. I wanted a server that could serve all three from one implementation.</p>
         <h2>Approach</h2>
-        <p>The architecture is deliberately layered. IconquerMCP does not implement game logic itself — it delegates entirely to <code>IconquerCore</code> for the engine and <code>IconquerMatch</code> for multiplayer session management. The MCP server layer is thin by design: its job is translation, exposing engine concepts as properly typed MCP tools and resources rather than leaking implementation details upward.</p>
-        <p>The Swift package is built against Tools version 6.2 on macOS, using <code>SwiftMCPServer</code> as the protocol adapter. This dependency selection reflects a clear philosophy: use the canonical Swift MCP library rather than rolling a bespoke protocol implementation, keeping the surface area that could diverge from the spec to a minimum.</p>
-        <p><code>IconquerCore</code>’s deterministic seeding was a foundational choice. Because game outcomes can be reproduced from a seed, every agent run is auditable. Tournament harnesses can replay a game, developers can bisect unexpected model behavior, and benchmark comparisons are apples-to-apples. Non-determinism would have undermined the entire evaluation use case.</p>
-        <p>The presence of a <code>CLAUDE.md</code> file — covering session start procedures, development workflow, key rules, and a quality gate — signals that the project was designed with agentic collaboration in mind from the outset. The tooling is documented not just for human contributors but for AI ones.</p>
+        <p>The package is structured around three targets: the library (<code>IconquerMCP</code>), a command-line executable (<code>iconquer-mcp</code>), and a test suite (<code>IconquerMCPTests</code>). The library wraps <code>IconquerCore</code> and <code>IconquerMatch</code> using <code>SwiftMCPServer</code> as the protocol transport layer. The executable is what an MCP host actually launches.</p>
+        <p>The two key design mappings are:</p>
+        <ul>
+          <li><strong>Tools → game actions.</strong> Creating a game, joining as a player, submitting a move, and ending a turn are each exposed as discrete MCP tools with typed parameters.</li>
+          <li><strong>Resources → observable state.</strong> Board state, player hands, match metadata, and game history are exposed as resources the agent can read between actions.</li>
+        </ul>
+        <p>Because <code>IconquerCore</code> is deterministic from a seed, agent sessions are reproducible. A tournament harness can set a known seed, run two agents, and replay the exact same game to debug or audit results. <code>IconquerMatch</code> handles the multiplayer coordination so multiple agents can share a single running game through the server without stepping on each other.</p>
+        <p>The repository includes a <code>CLAUDE.md</code> covering session startup, development workflow, key rules, a quality gate, and references. That document defines the working contract for anyone (or any agent) doing work inside the repo.</p>
+        <p>The project uses Swift 6.2 with <code>swift-docc-plugin</code> available for documentation generation.</p>
         <h2>Results</h2>
-        <p>IconquerMCP shipped three public releases over a six-month window, from v0.1.0 through v0.3.0, across 23 commits from a single developer. The project progressed from initial scaffolding to a versioned, multi-release library with a dedicated test target (<code>IconquerMCPTests</code>) and integrated documentation tooling via <code>swift-docc-plugin</code>. The dual-target structure — a library target (<code>IconquerMCP</code>) and an executable (<code>iconquer-mcp</code>) — means the server can be embedded as a dependency or run as a standalone process, covering both integration and deployment scenarios.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here reveal deliberate craft rather than default choices.</p>
-        <p><strong>Thin server, thick engine.</strong> The choice to keep MCP-layer logic minimal and trust <code>IconquerCore</code> for all game rules means the server doesn’t accumulate business logic it doesn’t own. When the engine changes, the server follows — it doesn’t fork behavior.</p>
-        <p><strong>Resources, not just tools.</strong> Many MCP integrations expose only tools (actions). Surfacing game state as <em>resources</em> (observable state) is the architecturally correct move: it lets agents poll or subscribe to board state independently of action-taking, which more closely mirrors how a real player experiences a game and gives agent frameworks more to work with.</p>
-        <p><strong>Determinism as a first-class feature.</strong> Seeded reproducibility wasn’t incidental — it was load-bearing for the tournament and bake-off use case. Building on <code>IconquerCore</code>’s deterministic engine rather than a non-deterministic one meant that every interesting property of the system (fairness, debuggability, benchmarking) fell into place naturally.</p>
-        <p><strong>A CLAUDE.md for an AI-native project.</strong> Writing explicit operating instructions for AI collaborators on a project designed to host AI players is a layered bit of intentionality. It suggests the developer thinks carefully about the full environment their code will live in — not just the runtime, but the development loop itself.</p>
+        <p>The project reached two tagged releases over roughly six months of development across 23 commits from a single contributor.</p>
+        <ul>
+          <li><strong>v0.1.0</strong> — initial release establishing the server structure and core tool/resource mappings</li>
+          <li><strong>v0.3.0</strong> — current release, extending the implementation across two more minor versions</li>
+        </ul>
+        <p>The server runs on macOS and is consumable by any MCP-capable host that can launch a subprocess and communicate over the protocol.</p>
+        <h2>Decisions</h2>
+        <p><strong>Swift over other languages.</strong> <code>IconquerCore</code> and <code>IconquerMatch</code> are Swift packages. Keeping <code>IconquerMCP</code> in Swift meant I could depend on them directly without an FFI layer or a serialization boundary between the engine and the server. The tradeoff is that the server is macOS-only, which is acceptable given that MCP hosts running local game servers are almost always on a Mac anyway.</p>
+        <p><strong><code>SwiftMCPServer</code> as the transport layer.</strong> Rather than implement the MCP wire protocol myself, I took a dependency on <code>SwiftMCPServer</code>. This kept the implementation focused on the game-specific tool and resource definitions rather than protocol mechanics.</p>
+        <p><strong>Tools and resources as the primary abstraction.</strong> The MCP distinction between tools (things an agent does) and resources (things an agent reads) maps well onto a game loop, but it required deciding which parts of game state are resources and which are side effects of tool calls. The current split treats board state as a resource and all mutations as tools.</p>
+        <p><strong>What is unfinished.</strong> The project is at v0.3.0. The MASTER_PLAN describes tournament and bake-off harnesses as a target consumer, but the degree to which the server has been tested under actual multi-agent tournament conditions is not reflected in the commit history. There are no recorded Claude Code sessions, so the development work was done through conventional tooling. The test target exists but test counts are not available to report here.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquermcp-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquermcp-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquermcp-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerMCP statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerMCP
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              23
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerMCP commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerMCP — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~3/month · peak 10 (23 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="123" width="76" height="25" /> 
+            <rect class="ig-bar" x="103" y="140" width="76" height="8" /> 
+            <rect class="ig-bar" x="261" y="115" width="76" height="33" /> 
+            <rect class="ig-bar" x="340" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="498" y="106" width="76" height="42" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerMCP release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerMCP — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              2 releases · latest v0.3.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="516" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="267" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="517" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.3.0
+            </text> 
+            <text class="ig-label" x="268" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.1.0
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>

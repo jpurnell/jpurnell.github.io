@@ -1,8 +1,8 @@
 ---
-title: Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift
-description: A ground-up reimplementation of Applesoft BASIC in Swift 6.2 that treats historical fidelity as a hard requirement, not an aspiration — built to celebrate Apple's 50th birthday.
+title: Applesoft BASIC Interpreter in Swift
+description: A library-first Applesoft BASIC interpreter written in Swift 6.2, targeting faithful reproduction of 1979 behavior on modern Apple platforms.
 date: 2026-05-12 15:55
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, project, applesoftbasic, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,46 +10,49 @@ project: ApplesoftBASIC
 published: true
 ---
 
-# Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift
+# Applesoft BASIC Interpreter in Swift
 
-> A ground-up reimplementation of Applesoft BASIC in Swift 6.2 that treats historical fidelity as a hard requirement, not an aspiration — built to celebrate Apple's 50th birthday.
+> A library-first Applesoft BASIC interpreter written in Swift 6.2, targeting faithful reproduction of 1979 behavior on modern Apple platforms.
 
-## Problem
+## Motivation
 
-When Apple turned fifty, Jordan Purnell wanted to mark the occasion with something substantial: a working Applesoft BASIC interpreter capable of running real programs from 1979 exactly as they ran then. Not an approximation, not a nostalgia-themed toy, but a faithful execution environment for vintage listings.
+Applesoft BASIC shipped on the Apple II in 1977 and defined how a generation of people first wrote programs. I built this interpreter to mark Apple's 50th birthday, with a specific constraint: a listing from 1979 should behave the way it did then, including the edge cases and error messages that surprised people at the time. "Close enough" was not the target.
 
-The project serves three distinct audiences. Retrocomputing enthusiasts and educators who want to run original Applesoft code without spinning up a full Apple II emulator get a lightweight, embeddable option. `ApplesoftBASICApp` — an iPad front end — gets a clean library it can wrap without modification. And developers curious how an interpreter is structured get a codebase written in a language small enough that the whole thing can be read and understood.
+The project serves a few distinct audiences. Someone with a vintage BASIC listing should be able to run it without loading an emulator. The iPad app `ApplesoftBASICApp` needs an embeddable interpreter it can call into. And anyone curious how an interpreter is structured can read this one end to end, because Applesoft is small enough to hold in your head.
 
-The mandate, stated plainly in the project's own `MASTER_PLAN.md`, is unambiguous: *faithful is the requirement, not merely the description.* A program written in 1979 should behave the way it did — including the parts that were surprising then.
+I also wanted to implement the graphics subsystem — lo-res and hi-res Apple II color graphics — not just text output. That meant the interpreter had to carry `AppleIIColors`, `GraphicsRenderer`, and `HPlotPoint` as real concerns, not afterthoughts.
 
 ## Approach
 
-Purnell structured the project as a library first. `ApplesoftBASICLib` is the interpreter core; `ApplesoftBASIC` is a thin command-line host; `ApplesoftBASICApp` is the iPad front end. That layering means the interpreter isn't coupled to any particular interface — it can be embedded, tested, and exercised independently.
+The package is organized around a library target, `ApplesoftBASICLib`, with a command-line host (`ApplesoftBASIC`), a C-based line editor (`CLineEditor`), and a test suite (`ApplesoftBASICTests`). Keeping the interpreter in a library target from the start meant the iPad front end and the terminal host could share the same core without duplication.
 
-The decision to target both macOS and iOS from the start, under Swift 6.2, imposed strict concurrency discipline from day one rather than as a retrofit. Swift 6's complete concurrency checking is unforgiving, and meeting it on an interpreter — where state mutations happen at the speed of an eval loop — required deliberate design around value types and isolation boundaries.
+The line editor is a separate C target rather than a Swift reimplementation. The original Apple II editing experience — the way the cursor moved, the way lines were entered — is part of what fidelity means here, so it got its own component.
 
-Graphics support went beyond text output. `AppleIIColors`, `GraphicsRenderer`, and `HPlotPoint` bring lo-res and hi-res Apple II graphics into the library, because the visual output of those programs is part of what fidelity means. A BASIC listing that draws something should draw it.
+The project targets macOS and iOS under Swift 6.2 and declares two dependencies: `swift-docc-plugin` for documentation generation and `SwiftDeterminism` to enforce deterministic behavior in the interpreter. Determinism matters because a faithful interpreter should produce the same output from the same input unconditionally, and `SwiftDeterminism` makes that a compile-time and runtime constraint rather than a convention.
 
-Perhaps the most characterful decision was `CLineEditor` — a separate target implementing the original Apple II line-editing experience. The editing behavior is part of the historical artifact. Purnell chose to build it rather than substitute a modern text field.
-
-`SwiftDeterminism` appears as a dependency, signaling an investment in reproducible, predictable behavior — exactly what you want when the correctness baseline is a 45-year-old ROM.
-
-The `CLAUDE.md` file documents the development workflow, quality gates, and key rules, serving as an explicit architectural record of the standards the codebase is held to.
+There are no design proposals on file; the architecture is documented in `MASTER_PLAN.md` and a `CLAUDE.md` that covers session start procedures, development workflow, key rules, the quality gate, and references. Those documents shaped the structural decisions before code was written.
 
 ## Results
 
-Over roughly six months — first commit April 2026, latest October 2026 — Purnell shipped two public releases: `v0.1.0` and `v0.1.1`, across 45 commits on a focused single-contributor repository. The project spans four distinct targets, covers both Apple platforms, and integrates documentation tooling via `swift-docc-plugin`, meaning the interpreter's public API is documented rather than merely functional.
+The project reached two releases — v0.1.0 and v0.1.1 — across 45 commits from one contributor between April and October 2026. The package builds for macOS and iOS. The targets that shipped are:
 
-The `ApplesoftBASICTests` target exists as a named testing surface — meaningful for an interpreter, where correctness is defined by matching historical behavior across edge cases, error conditions, and the specific quirks of the original implementation.
+- `ApplesoftBASICLib` — the embeddable interpreter core
+- `ApplesoftBASIC` — a terminal host
+- `CLineEditor` — the line-editing component
+- `ApplesoftBASICTests` — the test suite
 
-## Judgment Calls
+Documentation is available via the `swift-docc-plugin` integration.
 
-Several decisions here reveal how Purnell thinks about software.
+## Decisions
 
-**Fidelity as a constraint, not a goal.** Most compatibility projects drift — they get "close enough" and then optimize for modern ergonomics. Purnell wrote the opposite rule into the mission statement: where 1979 behavior and modern taste disagree, 1979 wins, including the error messages. That's a discipline commitment that has to be enforced in code review, in test design, and in the face of every temptation to paper over a weird edge case.
+**Fidelity over convenience.** Where the 1979 behavior and modern expectations disagree, the 1979 behavior wins. This applies to error messages, numeric handling, and any quirk that was present in the original ROM. That constraint is explicit in `MASTER_PLAN.md` and shapes every implementation choice that touches language semantics.
 
-**Library-first architecture.** Shipping `ApplesoftBASICLib` as the primary artifact — with both the CLI and the iPad app as consumers — means the interpreter is testable, reusable, and not accidentally coupled to its host. It's the kind of structural decision that doesn't show up in any single commit but shapes the entire project.
+**Library first.** Structuring the interpreter as `ApplesoftBASICLib` rather than a monolithic executable meant the iPad front end could embed it directly. This required deciding early what the interpreter's public surface looked like and keeping host-specific concerns — terminal I/O, graphics rendering — out of the core.
 
-**Building the line editor.** `CLineEditor` could have been skipped. Modern text input is readily available on both platforms. Purnell built it anyway, because the editing experience is part of what running Applesoft BASIC *felt like*. That's the judgment of someone thinking about the whole experience, not just the execution semantics.
+**C line editor.** `CLineEditor` is a C target because rewriting the editing behavior in Swift risked drifting from the original feel. Using C lets the implementation stay close to how line editing worked on the original hardware.
 
-**Graphics as a first-class concern.** Including lo-res and hi-res graphics rendering isn't a convenience feature — it's a statement about what fidelity actually means. Text-only would have been easier. The choice not to stop there reflects a clear-eyed definition of the problem being solved.
+**SwiftDeterminism as a dependency.** Adding `SwiftDeterminism` makes the determinism requirement enforceable rather than aspirational. The tradeoff is a dependency; the reason is that a BASIC interpreter that produces different output on repeated runs is not faithful.
+
+**Graphics included.** `AppleIIColors`, `GraphicsRenderer`, and `HPlotPoint` are part of the library, not optional extras. This increases scope but is necessary if the goal is running actual Apple II listings, many of which used lo-res or hi-res graphics.
+
+**What is unfinished.** The project is at v0.1.1. The full breadth of Applesoft BASIC — every statement, every edge case in the number formatter, the full graphics command set — takes time to cover and verify. The test suite exists, but the number of cases it covers relative to the full Applesoft surface area is not documented in the available data. The iPad front end `ApplesoftBASICApp` is referenced as a consumer but is a separate project.

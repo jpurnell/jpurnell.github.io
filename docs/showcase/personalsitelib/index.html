@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command." />
+    <meta name="description" content="A Swift package that generates my personal site using Ignite, where pages are types and a broken page is usually a compile error rather than a deploy error." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>A Personal Site That Fails at Compile Time, Not at Midnight | Justin Purnell</title>
+    <title>Personal Website Built on a Swift Static Site Generator | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="A Personal Site That Fails at Compile Time, Not at Midnight" />
-    <meta name="twitter:title" content="A Personal Site That Fails at Compile Time, Not at Midnight" />
-    <meta property="og:description" content="Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command." />
-    <meta name="twitter:description" content="Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command." />
+    <meta property="og:title" content="Personal Website Built on a Swift Static Site Generator" />
+    <meta name="twitter:title" content="Personal Website Built on a Swift Static Site Generator" />
+    <meta property="og:description" content="A Swift package that generates my personal site using Ignite, where pages are types and a broken page is usually a compile error rather than a deploy error." />
+    <meta name="twitter:description" content="A Swift package that generates my personal site using Ignite, where pages are types and a broken page is usually a compile error rather than a deploy error." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/personalsitelib" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/personalsitelib",
-          "name" : "A Personal Site That Fails at Compile Time, Not at Midnight",
+          "name" : "Personal Website Built on a Swift Static Site Generator",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/personalsitelib#breadcrumb"
       },
-      "description" : "Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command.",
+      "description" : "A Swift package that generates my personal site using Ignite, where pages are types and a broken page is usually a compile error rather than a deploy error.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "A Personal Site That Fails at Compile Time, Not at Midnight",
+      "name" : "Personal Website Built on a Swift Static Site Generator",
       "url" : "https://www.justinpurnell.com/showcase/personalsitelib"
     }
   ]
@@ -181,34 +181,273 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">A Personal Site That Fails at Compile Time, Not at Midnight</h1>
+      <h1 class="mainTitle">Personal Website Built on a Swift Static Site Generator</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Website</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>Justin Purnell rebuilt his personal website as a Swift package — turning broken pages into compiler errors and publishing into a single terminal command.</p>
+          <p>A Swift package that generates my personal site using Ignite, where pages are types and a broken page is usually a compile error rather than a deploy error.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Personal websites occupy a peculiar position in a developer’s toolkit: they’re simultaneously portfolio and workshop, public face and private experiment. The conventional stack — a static site generator driven by Markdown templates and YAML front matter — works until it doesn’t, usually when a misconfigured layout or a missing variable surfaces only after a push to production.</p>
-        <p>Purnell’s site, <code>justinpurnell.com</code>, hosts his writing, a project showcase, and an ongoing quality-gate series. It needed to be reliable enough that its failure modes weren’t embarrassing, and lightweight enough that publishing a new post didn’t become an operation. The deeper motivation was more principled: he was building Ignite, his own Swift static site generator, and needed a real site that exercised that framework under the pressure of actual use before anyone else encountered its rough edges.</p>
+        <h2>Motivation</h2>
+        <p>I wanted a personal site that would host writing, a project showcase, and a quality-gate series, and I wanted publishing to be a single <code>swift run</code> rather than a multi-step operation involving external services. The other constraint was that I was already building and maintaining a fork of <a href="../../Ignite/project/master_plan.md">Ignite</a>, and I needed a real consumer of that fork — something that would surface divergence before anyone else encountered it. This site is that consumer. It is also published from a <code>docs/</code> directory directly to GitHub Pages, which removes any external build service from the pipeline.</p>
         <h2>Approach</h2>
-        <p>The central architectural decision was treating the site itself as a Swift package. Pages are types. Layouts are composed in code. The dependency graph — Ignite, <code>swift-docc-plugin</code>, and his own <code>DesignTokens</code> package — is declared in a manifest and resolved by the compiler. When something is structurally wrong, the build fails; nothing reaches GitHub Pages in a broken state.</p>
-        <p>Deployment is deliberately minimal: static output lands in <code>docs/</code> and GitHub Pages serves it directly. No external CI pipeline, no build service, no deployment credentials to rotate. The publishing primitive is <code>swift run</code>.</p>
-        <p>The <code>CLAUDE.md</code> file and the architecture notes embedded in it reveal a working discipline that matches the project’s values. Two rules govern the git workflow: never stash, and don’t mark a change as live until it verifiably is. These aren’t arbitrary preferences — they’re the kind of habits that keep a solo-maintained codebase honest over a long timeline.</p>
-        <p>The site targets both macOS and iOS in its package declaration, a consequence of Ignite’s own platform support rather than any native UI ambition, but it reflects the degree to which the site and its generator are genuinely coupled.</p>
+        <p>The site is a Swift package. Pages are types; layouts are composed in code. The consequence of that decision is that a malformed page tends to produce a compile error rather than a broken deploy. The package targets are <code>PersonalSiteLib</code>, which holds the site’s types and content logic, <code>IgniteStarter</code>, which drives the build, and <code>PersonalSiteTests</code>, which covers behavior I want to verify automatically. It depends on Ignite directly, on <code>swift-docc-plugin</code> for documentation, and on a <code>DesignTokens</code> package that centralizes the visual constants the site uses. The package is declared against Swift tools version 6.2 and targets macOS and iOS.</p>
+        <p>There are no design proposals and no design-first workflow. Visual decisions are encoded in <code>DesignTokens</code> and applied in code. The <code>CLAUDE.md</code> file records working conventions — notably, never stash and do not call a change live until it is verified — but no Claude Code sessions contributed commits to this repository.</p>
         <h2>Results</h2>
-        <p>Over two years — from November 2024 through November 2026 — the project accumulated 267 commits across 4 branches, with 2 contributors. The site ships continuously from <code>docs/</code> with no external build infrastructure. Because it is the primary consumer of the Ignite fork, every divergence in that generator gets exercised here first, in a context with real content and real stakes, before it surfaces for anyone else.</p>
-        <p>The publishing workflow reduced to a single command. The deploy pipeline reduced to a directory and a GitHub setting.</p>
-        <h2>Judgment Calls</h2>
-        <p>The most consequential decision was the one that looks like scope creep but isn’t: building the generator before shipping the site, then using the site to validate the generator. This creates a tighter feedback loop than any test suite could — real content, real structure, real failure modes. The site doesn’t just consume Ignite; it <em>is</em> Ignite’s integration test.</p>
-        <p>The choice to publish from <code>docs/</code> rather than a separate branch or an external service reflects a preference for auditable simplicity. The output lives in the repository. You can read the history of what shipped alongside the history of what changed in the source. There’s no artifact store to query, no pipeline log to decode.</p>
-        <p>The <code>DesignTokens</code> dependency is a quieter signal: rather than hardcoding values or reaching for a CSS preprocessor, Purnell extracted his design primitives into a named package. The token vocabulary becomes part of the Swift type system, which means color and spacing decisions are as refactorable as any other abstraction.</p>
-        <p>Taken together, these decisions describe a developer who reached for correctness-by-construction rather than process-by-convention — and built a publishing workflow he’d actually use.</p>
+        <p>The repository has 276 commits from 2 contributors across 4 branches, with work running from November 2024 through November 2026. The site generates and deploys from <code>docs/</code> via GitHub Pages with no external CI service involved. The <code>PersonalSiteTests</code> target exists and runs as part of the package, though the input does not record a specific passing-test count.</p>
+        <h2>Decisions</h2>
+        <p><strong>Pages as types.</strong> Encoding pages in Swift rather than a template language means the compiler catches structural errors before deployment. The tradeoff is that contributors need to be comfortable with Swift.</p>
+        <p><strong>Primary consumer of the Ignite fork.</strong> Running the site against my own Ignite fork means changes to the generator get exercised here first. That creates an intentional feedback loop: anything that breaks the site surface breaks before it reaches other users.</p>
+        <p><strong><code>docs/</code>-based GitHub Pages deployment.</strong> Committing the generated output to <code>docs/</code> and pointing Pages at that directory eliminates the need for a build service. The tradeoff is that generated files live in the repository.</p>
+        <p><strong><code>DesignTokens</code> as a dependency.</strong> Visual constants are extracted into a separate package rather than scattered across page types. This keeps the site’s layout code focused on structure, but it adds a dependency that must stay in sync with any visual changes.</p>
+        <p><strong>What is unfinished or uncertain.</strong> The test target exists but the extent of its coverage is not recorded here. The relationship between this site and the Ignite fork means changes to the generator can affect the site in ways that only become visible at build time — the compile-error guarantee applies to the site’s own types, not to generator behavior changes upstream.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/personalsitelib-stats.svg" alt="Website statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/personalsitelib-commits.svg" alt="Website commit history chart" class="img-fluid" />
-        <img src="/images/showcase/personalsitelib-releases.svg" alt="Website release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="PersonalSiteLib statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              PersonalSiteLib
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              279
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              0
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              2 contributors
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="PersonalSiteLib commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              PersonalSiteLib — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~11/month · peak 46 (279 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="121" width="20" height="27" /> 
+            <rect class="ig-bar" x="47" y="143" width="20" height="5" /> 
+            <rect class="ig-bar" x="91" y="143" width="20" height="5" /> 
+            <rect class="ig-bar" x="113" y="143" width="20" height="5" /> 
+            <rect class="ig-bar" x="179" y="141" width="20" height="7" /> 
+            <rect class="ig-bar" x="201" y="141" width="20" height="7" /> 
+            <rect class="ig-bar" x="223" y="145" width="20" height="3" /> 
+            <rect class="ig-bar" x="245" y="138" width="20" height="10" /> 
+            <rect class="ig-bar" x="267" y="132" width="20" height="16" /> 
+            <rect class="ig-bar" x="289" y="116" width="20" height="32" /> 
+            <rect class="ig-bar" x="312" y="145" width="20" height="3" /> 
+            <rect class="ig-bar" x="334" y="132" width="20" height="16" /> 
+            <rect class="ig-bar" x="356" y="64" width="20" height="84" /> 
+            <rect class="ig-bar" x="378" y="64" width="20" height="84" /> 
+            <rect class="ig-bar" x="400" y="97" width="20" height="51" /> 
+            <rect class="ig-bar" x="422" y="130" width="20" height="18" /> 
+            <rect class="ig-bar" x="444" y="143" width="20" height="5" /> 
+            <rect class="ig-bar" x="466" y="123" width="20" height="25" /> 
+            <rect class="ig-bar" x="488" y="110" width="20" height="38" /> 
+            <rect class="ig-bar" x="510" y="141" width="20" height="7" /> 
+            <rect class="ig-bar" x="532" y="134" width="20" height="14" /> 
+            <rect class="ig-bar" x="554" y="110" width="20" height="38" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="79" y="166" font-size="10" text-anchor="middle">
+              2025
+            </text> 
+            <text class="ig-muted" x="344" y="166" font-size="10" text-anchor="middle">
+              2026
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="PersonalSiteLib release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              PersonalSiteLib — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              none yet
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <text class="ig-muted" x="300" y="94" font-size="13" text-anchor="middle">
+              No releases yet
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: website, selfReflection</p>
