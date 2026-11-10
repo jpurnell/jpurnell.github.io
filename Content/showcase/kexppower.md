@@ -17,7 +17,7 @@ settled: true
 
 ## Motivation
 
-I am a long-time and dedicated listener to Seattle's KEXP 90.3 FM. The DJs have broad an excellent taste, and it's where I find a great deal of my music. I wanted a way to listen that fits how I do it: see what is playing right now, hear it, keep the songs I want, and have all of that come with me, from the phone in my pocket to my wrist, my Mac, the living-room TV, the car, and, if I had one, the headset.
+I am a long-time and dedicated listener to Seattle's KEXP 90.3 FM. The DJs have broad and excellent taste, and it's where I find a great deal of my music. I wanted a way to listen that fits how I do it: see what is playing right now, hear it, keep the songs I want, and have all of that come with me, from the phone in my pocket to my wrist, my Mac, the living-room TV, the car, and, if I had one, the headset.
 
 Spinner is that app. It starts from the live playlist and the song on now, then adds what I reach for: one-tap saving to a dedicated Apple Music playlist, a jump to the song in Apple Music, and playback from any point in KEXP's archive. It also answers when I ask. Through App Intents and Shortcuts I can ask what is playing, play live, pause, go back to live, rewind, add this song to my playlist (from the lock screen too, though not on the Mac), or play an archived show by name or date.
 
