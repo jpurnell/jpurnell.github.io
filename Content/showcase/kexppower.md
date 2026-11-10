@@ -1,5 +1,5 @@
 ---
-title: KEXPPower: KEXP 90.3 FM, Wherever I Am
+title: Spinner: I Power KEXP 90.3 FM, Everywhere
 description: A personal Apple-platform listener for KEXP 90.3 FM, built around how I find music: the live playlist first, then everywhere I go, from iPhone and Apple Watch to the car, with Siri and Shortcuts.
 date: 2026-11-10 15:37
 lastModified: 2026-11-10
@@ -11,23 +11,23 @@ published: true
 settled: true
 ---
 
-# KEXPPower: KEXP 90.3 FM, Wherever I Am
+# Spinner: I Power KEXP 90.3 FM, Everywhere
 
 > A personal Apple-platform listener for KEXP 90.3 FM, built around how I find music: the live playlist first, then everywhere I go, from iPhone and Apple Watch to the car, with Siri and Shortcuts.
 
 ## Motivation
 
-KEXP 90.3 FM, out of Seattle, is where I find a great deal of my music. I wanted a way to listen that fits how I do it: see what is playing right now, hear it, keep the songs I want, and have all of that come with me, from the phone in my pocket to my wrist, my Mac, the living-room TV, a headset and the car.
+I am a long-time and dedicated listener to Seattle's KEXP 90.3 FM. The DJs have broad an excellent taste, and it's where I find a great deal of my music. I wanted a way to listen that fits how I do it: see what is playing right now, hear it, keep the songs I want, and have all of that come with me, from the phone in my pocket to my wrist, my Mac, the living-room TV, the car, and, if I had one, the headset.
 
-KEXPPower is that app. It starts from the live playlist and the song on now, then adds what I reach for: one-tap saving to a dedicated Apple Music playlist, a jump to the song in Apple Music, and playback from any point in KEXP's archive. It also answers when I ask. Through App Intents and Shortcuts I can ask what is playing, play live, pause, go back to live, rewind, add this song to my playlist (from the lock screen too, though not on the Mac), or play an archived show by name or date.
+Spinner is that app. It starts from the live playlist and the song on now, then adds what I reach for: one-tap saving to a dedicated Apple Music playlist, a jump to the song in Apple Music, and playback from any point in KEXP's archive. It also answers when I ask. Through App Intents and Shortcuts I can ask what is playing, play live, pause, go back to live, rewind, add this song to my playlist (from the lock screen too, though not on the Mac), or play an archived show by name or date.
 
-It is a personal project and open source, and it stands on other people's work. I built and review it to public-release standard, with privacy and KEXP branding treated as approved.
+It is a personal project and open source, and it stands on other people's work. I built and review it to public-release standard, with privacy-first (anonymous) diagnostics data and a rigorous platform-by-platform testing approach.
 
 ## Approach
 
 The app is native Swift, with one playback layer shared by every platform: iPhone, iPad, Mac, Apple Watch, Apple TV, Apple Vision Pro and CarPlay, including a CarPlay Archive tab. Siri, Shortcuts, widgets and Control Center all reach that same layer, so live, rewind and archive playback behave the same whichever way I start them.
 
-The library underneath is the open-source KEXPPower package that also powers KEXP's own app. The repository's history begins in June 2019 with Dustin Bergman's commits; the tags `0.1.0` through `2.0.0` are his and `3.0.0` is Jay Kardong's. My commits begin in March 2022, and the recent 3.x releases are mine. I work from an in-repo fork of that library, port the upstream changes worth having by hand, and send nothing back to the package behind KEXP's app.
+The library underneath is the open-source KEXPPower package that also powers KEXP's own tvOS app. The repository's history begins in June 2019 with Dustin Bergman's commits; the tags `0.1.0` through `2.0.0` are his and `3.0.0` is Jay Kardong's. My commits begin in March 2022, and the recent 3.x releases are mine. I work from an in-repo fork of that library, port the upstream changes worth having by hand, and send nothing back to the package behind KEXP's app.
 
 ## Results
 
