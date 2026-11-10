@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="J. Purnell distilled a complex turn-based strategy game into a pure-Swift, platform-agnostic rules engine — versioned deliberately, architected for reuse, and designed so that any future client can consume it without touching the core logic." />
+    <meta name="description" content="A headless, platform-agnostic Swift package that encodes the rules of iConquer and serves as the shared logic layer for any client that needs to play the game." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>IconquerCore: A Headless Rules Engine Built to Last | Justin Purnell</title>
+    <title>IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="IconquerCore: A Headless Rules Engine Built to Last" />
-    <meta name="twitter:title" content="IconquerCore: A Headless Rules Engine Built to Last" />
-    <meta property="og:description" content="J. Purnell distilled a complex turn-based strategy game into a pure-Swift, platform-agnostic rules engine — versioned deliberately, architected for reuse, and designed so that any future client can consume it without touching the core logic." />
-    <meta name="twitter:description" content="J. Purnell distilled a complex turn-based strategy game into a pure-Swift, platform-agnostic rules engine — versioned deliberately, architected for reuse, and designed so that any future client can consume it without touching the core logic." />
+    <meta property="og:title" content="IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game" />
+    <meta name="twitter:title" content="IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game" />
+    <meta property="og:description" content="A headless, platform-agnostic Swift package that encodes the rules of iConquer and serves as the shared logic layer for any client that needs to play the game." />
+    <meta name="twitter:description" content="A headless, platform-agnostic Swift package that encodes the rules of iConquer and serves as the shared logic layer for any client that needs to play the game." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquercore" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquercore",
-          "name" : "IconquerCore: A Headless Rules Engine Built to Last",
+          "name" : "IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquercore#breadcrumb"
       },
-      "description" : "J. Purnell distilled a complex turn-based strategy game into a pure-Swift, platform-agnostic rules engine — versioned deliberately, architected for reuse, and designed so that any future client can consume it without touching the core logic.",
+      "description" : "A headless, platform-agnostic Swift package that encodes the rules of iConquer and serves as the shared logic layer for any client that needs to play the game.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "IconquerCore: A Headless Rules Engine Built to Last",
+      "name" : "IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game",
       "url" : "https://www.justinpurnell.com/showcase/iconquercore"
     }
   ]
@@ -181,33 +181,307 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">IconquerCore: A Headless Rules Engine Built to Last</h1>
+      <h1 class="mainTitle">IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>J. Purnell distilled a complex turn-based strategy game into a pure-Swift, platform-agnostic rules engine — versioned deliberately, architected for reuse, and designed so that any future client can consume it without touching the core logic.</p>
+          <p>A headless, platform-agnostic Swift package that encodes the rules of iConquer and serves as the shared logic layer for any client that needs to play the game.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Risk-style strategy games are deceptively complex. Beneath the familiar territory maps and dice rolls lies a dense web of rules governing troop placement, combat resolution, card trading, and victory conditions — rules that must behave <em>identically</em> across every surface the game runs on. When Purnell set out to build iConquer, he faced a choice familiar to anyone who has shipped a multi-platform game: embed the rules in the UI layer and pay for it forever, or do the harder thing up front and separate them cleanly.</p>
-        <p>He did the harder thing. IconquerCore is a headless rules engine — no UI, no platform-specific dependencies, no SwiftUI imports. It exists solely to model the state and rules of iConquer faithfully, as documented in the project’s own <code>RULES.md</code>. The engine is consumed by the sibling <code>iconquer</code> SwiftUI app, but by design it could just as easily power a CLI, a server-side simulation, or an AI bake-off harness. The problem IconquerCore solves isn’t just “run a strategy game” — it’s “run a strategy game in a way that never ties the logic to any one client.”</p>
+        <h2>Motivation</h2>
+        <p>iConquer is a Risk-style turn-based strategy game. I had an existing TypeScript implementation — the reference — and wanted to bring it to Apple platforms as a SwiftUI app. Rather than embed game logic directly in that app, I pulled it out into a separate package so the rules would be testable in isolation and reusable by any future client: a CLI, a server-side simulation, or an AI bake-off harness.</p>
+        <p>The core constraint I set for myself was behavioral parity with the TypeScript original. That meant the Swift engine had to produce identical outcomes given identical inputs. To make that verifiable, I pinned the package to a deterministic seeded RNG, so a TypeScript oracle can drive the same sequence of random decisions and compare results.</p>
         <h2>Approach</h2>
-        <p>The architectural centerpiece of IconquerCore is a commitment to pure value semantics. The top-level <code>Game</code> type is a <code>struct</code>, and <code>Sendable</code> conformance is enforced throughout. There is no shared mutable state, no singletons, no observation framework entanglement. Every state transition produces a new value, making the engine trivially testable and safe to use from any concurrency context Swift 6.2 might encounter.</p>
-        <p>The second major architectural decision was the deterministic seeded RNG. Dice rolls in a Risk-style game are the heartbeat of combat resolution, and randomness is the enemy of reproducibility. Purnell pinned the engine’s random number generation to a seeded source, which makes it possible for a TypeScript oracle — a reference implementation living in the sibling repo — to drive parity tests against the Swift engine. This is not a convenience; it’s a correctness guarantee. Two implementations of the same rules, running the same seed, must produce the same sequence of outcomes. The seeded RNG is what makes that claim verifiable.</p>
-        <p>The project is structured as a Swift Package Manager library targeting macOS, iOS, tvOS, and visionOS from a single codebase, with <code>swift-docc-plugin</code> as its only dependency. Documentation generation is treated as a first-class concern, not an afterthought. The <code>CLAUDE.md</code> file captures session startup conventions, development workflow, key rules references, and a quality gate checklist — functioning as a living onboarding document for both human contributors and AI-assisted sessions.</p>
+        <p>The package is structured as a plain Swift Package Manager library — no UI, no platform-specific frameworks — targeting macOS, iOS, tvOS, and visionOS. The Swift toolchain version is 6.2.</p>
+        <p>The central design choice is pure value semantics throughout. <code>Game</code> and every type it contains are <code>struct</code>s, <code>Sendable</code> everywhere. There is no shared mutable state, which makes the engine straightforward to test: hand it a state, call a function, inspect the returned state.</p>
+        <p>I added <code>swift-docc-plugin</code> as the only dependency, keeping the package’s dependency graph minimal. The <code>IconquerCoreTests</code> target holds the test suite. Architecture notes, development workflow, and quality gate requirements live in <code>CLAUDE.md</code>, which I kept in the repo as a standing reference for how the project is meant to evolve.</p>
         <h2>Results</h2>
-        <p>IconquerCore shipped seven tagged releases across roughly six months of development, moving from <code>v0.1.0</code> through <code>v0.4.1</code>. That release cadence — seven versions, each incrementing deliberately — reflects a project where versioning is a communication tool, not a formality. The <code>IconquerCoreTests</code> target exists as a first-class peer to the library itself, grounding the engine in verifiable behavior rather than manual spot-checks. The engine runs on five Apple platforms from a single package with zero UI dependencies and a single non-tooling dependency.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here are worth examining as evidence of craft rather than just output.</p>
-        <p><strong>Separating the engine from the first consumer before shipping either.</strong> It would have been faster to build the SwiftUI app and extract a library later. Purnell reversed that order, establishing the boundary first. The MASTER_PLAN’s explicit enumeration of target consumers — the app, parity test harnesses, future CLI or server experiments — shows this wasn’t accidental modularity. The boundary was drawn with specific future uses in mind.</p>
-        <p><strong>Pinning randomness for cross-implementation parity.</strong> Most game engines treat the RNG as an internal detail. Purnell exposed it as an explicit seeding mechanism precisely because the engine has a TypeScript reference implementation it must agree with. This is a testing philosophy embedded in the architecture: correctness isn’t just “the tests pass,” it’s “the Swift and TypeScript implementations produce identical game histories given identical seeds.”</p>
-        <p><strong>Choosing <code>struct Game</code> over a class-based model.</strong> In a game engine with meaningful state, the temptation to reach for reference semantics is real. Value semantics require more disciplined thinking about state transitions, but they pay back in testability, thread safety, and the absence of subtle aliasing bugs. With Swift 6.2’s strict concurrency, a <code>Sendable</code> struct is the path of least resistance for safe concurrent use — but Purnell made that choice architecturally, not just reactively.</p>
-        <p><strong>Treating documentation as infrastructure.</strong> The <code>swift-docc-plugin</code> dependency signals that generated documentation is part of the deliverable, not a nice-to-have. For a library intended to be consumed by multiple future clients — some of which may not have context on iConquer’s rules — this is the right call. The <code>CLAUDE.md</code> workflow document extends this instinct: the project’s working conventions are written down, not held in a single contributor’s head.</p>
+        <p>The package has shipped seven releases over roughly six months, from v0.1.0 through v0.4.1, across 52 commits on a single branch. It targets all four Apple platforms. The primary consumer — the <code>iconquer</code> SwiftUI app in a sibling repository — pulls it in as a local package dependency. The seeded RNG is in place, which is the prerequisite for running parity scripts against the TypeScript reference.</p>
+        <h2>Decisions</h2>
+        <p><strong>Separate package, not embedded code.</strong> Keeping rules in their own repo means the SwiftUI app, any future CLI, and any server-side harness all consume exactly the same logic. The tradeoff is coordination overhead between repos, which has been manageable at this scale.</p>
+        <p><strong>Pure value semantics and <code>Sendable</code>.</strong> This was a deliberate choice for testability and for Swift concurrency compatibility. The cost is that mutations produce new values rather than mutating in place, which requires callers to hold onto returned state rather than relying on a shared object. For a rules engine this is acceptable.</p>
+        <p><strong>Seeded deterministic RNG.</strong> Parity testing against the TypeScript oracle requires that randomness be reproducible. Any run with the same seed produces the same sequence of dice rolls and territory assignments. The tradeoff is that callers that want non-deterministic play have to supply entropy themselves rather than relying on system randomness by default.</p>
+        <p><strong><code>swift-docc-plugin</code> as sole dependency.</strong> I wanted documentation generation available without adding anything that could affect runtime behavior or complicate the dependency graph.</p>
+        <p><strong>What is unfinished.</strong> The parity test scripts — the harness that actually runs the TypeScript oracle alongside the Swift engine and compares outputs — are not complete as of v0.4.1. The seeded RNG infrastructure is in place, but the cross-language verification pass has not yet been executed in a systematic way. That is the most significant open item.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquercore-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquercore-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquercore-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerCore statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerCore
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              52
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              7
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerCore commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerCore — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~7/month · peak 30 (52 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="103" y="140" width="76" height="8" /> 
+            <rect class="ig-bar" x="182" y="143" width="76" height="5" /> 
+            <rect class="ig-bar" x="261" y="143" width="76" height="5" /> 
+            <rect class="ig-bar" x="340" y="112" width="76" height="36" /> 
+            <rect class="ig-bar" x="419" y="146" width="76" height="2" /> 
+            <rect class="ig-bar" x="498" y="146" width="76" height="2" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="IconquerCore release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              IconquerCore — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              7 releases · latest v0.4.1
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="402" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="389" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="199" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="41" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="41" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="41" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="41" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="403" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.4.1
+            </text> 
+            <text class="ig-label" x="47" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.3.1
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: iConquer, selfReflection</p>

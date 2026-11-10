@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A Swift CLI that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios — turning artifacts that already exist into prose a technical reader would care about." />
+    <meta name="description" content="A three-stage Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case studies with SVG infographics — without fabricating anything the data doesn’t support." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>ProjectShowcase: Building the Tool That Writes Its Own Portfolio | Justin Purnell</title>
+    <title>ProjectShowcase: A CLI That Turns Git History Into Portfolio Prose | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="ProjectShowcase: Building the Tool That Writes Its Own Portfolio" />
-    <meta name="twitter:title" content="ProjectShowcase: Building the Tool That Writes Its Own Portfolio" />
-    <meta property="og:description" content="A Swift CLI that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios — turning artifacts that already exist into prose a technical reader would care about." />
-    <meta name="twitter:description" content="A Swift CLI that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios — turning artifacts that already exist into prose a technical reader would care about." />
+    <meta property="og:title" content="ProjectShowcase: A CLI That Turns Git History Into Portfolio Prose" />
+    <meta name="twitter:title" content="ProjectShowcase: A CLI That Turns Git History Into Portfolio Prose" />
+    <meta property="og:description" content="A three-stage Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case studies with SVG infographics — without fabricating anything the data doesn’t support." />
+    <meta name="twitter:description" content="A three-stage Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case studies with SVG infographics — without fabricating anything the data doesn’t support." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/projectshowcase" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/projectshowcase",
-          "name" : "ProjectShowcase: Building the Tool That Writes Its Own Portfolio",
+          "name" : "ProjectShowcase: A CLI That Turns Git History Into Portfolio Prose",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/projectshowcase#breadcrumb"
       },
-      "description" : "A Swift CLI that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios — turning artifacts that already exist into prose a technical reader would care about.",
+      "description" : "A three-stage Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case studies with SVG infographics — without fabricating anything the data doesn’t support.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "ProjectShowcase: Building the Tool That Writes Its Own Portfolio",
+      "name" : "ProjectShowcase: A CLI That Turns Git History Into Portfolio Prose",
       "url" : "https://www.justinpurnell.com/showcase/projectshowcase"
     }
   ]
@@ -181,58 +181,356 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">ProjectShowcase: Building the Tool That Writes Its Own Portfolio</h1>
+      <h1 class="mainTitle">ProjectShowcase: A CLI That Turns Git History Into Portfolio Prose</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">ProjectShowcase</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">6 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">8 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A Swift CLI that extracts structured facts from developer projects and generates grounded, narrative case-study portfolios — turning artifacts that already exist into prose a technical reader would care about.</p>
+          <p>A three-stage Swift command-line tool that extracts structured facts from developer projects and generates grounded, narrative case studies with SVG infographics — without fabricating anything the data doesn’t support.</p>
         </blockquote>
         <h2>Overview</h2>
-        <p>Most developers accumulate projects faster than they document them. Git histories, package manifests, test results, design notes, and release tags pile up in repositories, but the story connecting those artifacts — the <em>why</em> behind architectural choices, the judgment calls made under constraint — rarely surfaces anywhere a hiring manager or collaborator would look. ProjectShowcase exists to close that gap.</p>
-        <p>Built and maintained by a single developer across 32 commits between May and October 2026, ProjectShowcase is a macOS CLI written in Swift 6.2 that scans a project directory, extracts structured facts from every available artifact, and hands those facts to an LLM with enough grounding that the model cannot invent capabilities the project doesn’t have. The output is a narrative case study — the kind a developer would write by hand if they had three hours per project instead of three minutes.</p>
-        <p>The target users are specific: solo developers maintaining multiple projects who want a portfolio without manual writing, job seekers preparing case studies for technical hiring loops, and open-source maintainers who want richer project pages than a README provides. Each persona shares the same underlying problem — the artifacts exist, but the story doesn’t.</p>
+        <p>ProjectShowcase exists because there’s a gap between having projects on GitHub and having a portfolio that explains them. The gap isn’t technical — all the information already lives in git history, package manifests, test results, and design documents. The gap is the work of turning that information into prose a hiring manager or fellow developer would actually read.</p>
+        <p>The tool closes that gap by running a three-stage pipeline: <strong>Gather</strong> collects structured facts from a repository entirely offline, <strong>Narrate</strong> sends those facts to an LLM with explicit grounding constraints so the generated prose can’t drift from what the data says, and <strong>Render</strong> produces a deterministic HTML and SVG output from the narrative JSON. The stages are independent — the gathered JSON is a plain file you can inspect and edit before narration, and the narrative JSON is a plain file you can edit before rendering.</p>
+        <p>Target users are solo developers maintaining multiple projects, job seekers who need case-study-style write-ups, and open-source maintainers who want richer project pages than a README provides. The tool is macOS-only and built with Swift 6.2.</p>
         <h2>Architecture</h2>
-        <p>ProjectShowcase is organized around a three-stage pipeline with a deliberate boundary between stages:</p>
-        <p><strong>Gather → Narrate → Render</strong></p>
-        <p>The boundary is not incidental. Gather is entirely local: it reads git history, parses package manifests, extracts test results, and scans design documents — no network calls, no API keys required. Narrate is the only LLM-dependent step, and it receives the structured output of Gather as its sole input. Render is fully deterministic, transforming the narrative JSON into HTML and SVG without touching the model again. A developer can run Gather, inspect the extracted JSON, edit it, and then run Narrate manually. They can edit the narrative before rendering. The pipeline is inspectable and interruptible at every boundary.</p>
-        <p>This separation reflects a clear architectural principle: the LLM is a prose-generation engine, not a fact-finding engine. By the time the model sees a project, every claim it might make — commit counts, release history, test coverage, dependency lists — is already present as structured data in the prompt. The <code>MASTER_PLAN.md</code> grounding mechanism makes this concrete: when a project carries its own mission statement (Mission, Target Users, Key Differentiators sections), the extractor surfaces that text as authoritative context. The model is explicitly instructed to treat it as ground truth rather than inferring purpose from code structure.</p>
-        <p>The extraction layer is language-agnostic. ProjectShowcase is built in Swift and runs on macOS, but the repositories it analyzes can be anything. Pluggable extractors cover Swift (Package.swift), Node (package.json), Python (pyproject.toml / setup.py), Rust (Cargo.toml), and Go (go.mod). The <code>DesignDocExtractor</code> operates on filenames and markdown structure rather than language semantics, scanning for CLAUDE.md, MASTER_PLAN.md, design proposals, and architecture notes regardless of what language the project is written in.</p>
-        <p>The target declarations in Package.swift reflect the separation of concerns directly:</p>
-        <pre><code class="language-swift">// Package.swift (Swift Tools Version 6.2)
-.target(name: "ProjectShowcase"),   // Core library: extraction, modeling, SVG generation
-.target(name: "ShowcaseCLI",        // Thin argument-parser shell over library targets
-        dependencies: [
-            "ProjectShowcase",
-            .product(name: "ArgumentParser", from: "swift-argument-parser")
-        ]),
-.testTarget(name: "ProjectShowcaseTests",
-            dependencies: ["ProjectShowcase"])
+        <p>The package has three targets. <code>ProjectShowcase</code> is the library that contains all extraction, narration, and rendering logic. <code>ShowcaseCLI</code> is the thin executable that uses <code>swift-argument-parser</code> to expose <code>gather</code>, <code>narrate</code>, and <code>render</code> subcommands against that library. <code>ProjectShowcaseTests</code> tests the library independently of the CLI.</p>
+        <pre><code>ProjectShowcase (library)
+├── Extractors/
+│   ├── GitExtractor.swift          — commit counts, branches, contributors
+│   ├── PackageExtractor.swift      — Swift Package.swift parsing
+│   ├── TestResultExtractor.swift   — xcresult / JUnit XML parsing
+│   ├── DesignDocExtractor.swift    — MASTER_PLAN.md, CLAUDE.md, proposals
+│   └── PluggableExtractors/
+│       ├── NodeExtractor.swift
+│       ├── PythonExtractor.swift
+│       ├── RustExtractor.swift
+│       └── GoExtractor.swift
+├── Narration/
+│   └── NarratorClient.swift        — grounded prompt assembly + LLM call
+├── Rendering/
+│   ├── SVGGenerator.swift          — stats cards, commit timelines
+│   └── HTMLRenderer.swift          — final page assembly
+└── Models/                         — Codable structs shared across stages
 </code></pre>
-        <p>The CLI target (<code>ShowcaseCLI</code>) depends on <code>swift-argument-parser</code> and is kept deliberately thin. Business logic lives in <code>ProjectShowcase</code>, making it independently testable and reusable from other contexts.</p>
-        <p>SVG infographics — stats cards, commit timelines, release timelines — are generated inside the library layer as self-contained, dependency-free strings. No JavaScript, no external assets. The output embeds directly into any static HTML page.</p>
+        <p>The clearest architectural constraint is that Gather makes zero network calls. Everything it produces comes from the local filesystem and <code>git</code> process invocations. This was a deliberate choice so the tool can run in CI environments without credentials, and so users can version-control the gathered JSON as an artifact alongside their project.</p>
+        <p>The language-agnostic extraction is handled through a protocol:</p>
+        <pre><code class="language-swift">protocol ProjectExtractor {
+    func extract(at path: URL) throws -&gt; ProjectFacts
+}
+</code></pre>
+        <p>Each language extractor conforms to this protocol. The <code>GatherCommand</code> detects which extractors apply to a given repository by looking for sentinel files (<code>Package.swift</code>, <code>package.json</code>, <code>Cargo.toml</code>, <code>go.mod</code>, <code>pyproject.toml</code>) and runs all matching ones, merging results.</p>
+        <p>The <code>DesignDocExtractor</code> has its own role: it reads <code>MASTER_PLAN.md</code>, <code>CLAUDE.md</code>, architecture notes, and any files matching <code>*proposal*</code> or <code>*design*</code> in the repository root. When a <code>MASTER_PLAN.md</code> contains recognized sections — Mission, Target Users, Key Differentiators — those sections are promoted into a <code>DesignContext</code> struct that the narrator receives alongside the numeric facts. The narrator’s prompt treats <code>DesignContext</code> content as authoritative: it cannot be contradicted by inference from other signals.</p>
+        <pre><code class="language-swift">struct DesignContext: Codable {
+    var mission: String?
+    var targetUsers: [String]
+    var keyDifferentiators: [String]
+    var architectureSections: [String: String]
+    var rawDesignProposals: [DesignProposal]
+}
+</code></pre>
+        <p>This is what prevents the common failure mode of an LLM deciding a tool “demonstrates strong engineering discipline” when the prompt was supposed to be factual.</p>
+        <p>The SVG generation in <code>SVGGenerator</code> deliberately has no dependencies beyond Foundation. The stats cards and timelines are assembled from string interpolation into SVG markup and written to disk. Embedding a charting library would make the output fragile across environments; self-contained SVG with explicit coordinates does not.</p>
+        <p><code>DesignTokens</code> is the one external dependency on the rendering side. It provides the color palette and typography constants used in both the HTML and SVG output, so the visual output stays consistent without hardcoding hex values throughout the renderer.</p>
         <h2>Implementation</h2>
-        <p>Several implementation decisions reveal how the developer thought about failure modes and user trust.</p>
-        <p><strong>Fact-grounding as a prompt design constraint.</strong> The prompt construction code assembles a structured block from extracted data before composing the LLM request. The model receives commit counts, dates, dependency names, test target counts, and release tags as typed fields — not as prose the model should interpret, but as data the model should reference. This is the mechanism behind the “cannot fabricate capabilities” claim in the project’s own MASTER_PLAN.md. The design choice is not just about quality; it’s about what a developer can stake their reputation on when they publish the output.</p>
-        <p><strong><code>DesignDocExtractor</code> as intent recovery.</strong> Many extractors read what a project <em>is</em> — its manifest, its history. The <code>DesignDocExtractor</code> reads what the developer <em>intended</em>: the reasoning in CLAUDE.md, the constraints in development guidelines, the tradeoffs in design proposals. This distinction matters because two projects with identical metrics can have completely different stories. A project with 32 commits and one release might be a weekend experiment or a carefully iterated tool with a specific mission. The extractor surfaces the difference.</p>
-        <p><strong>MASTER_PLAN.md as self-referential ground truth.</strong> ProjectShowcase applies its own extraction logic to itself. The MASTER_PLAN.md present in this very project is the same format the tool generates narratives from. This is not a coincidence — it was a deliberate design decision that validates the extraction format against a real document written by the developer without the tool’s assistance.</p>
-        <p><strong>Swift 6 concurrency.</strong> The 6.2 tools version implies the codebase is written with strict concurrency checking enabled. Extraction tasks across multiple repositories are natural candidates for structured concurrency, and the library boundary between <code>ProjectShowcase</code> and <code>ShowcaseCLI</code> makes it straightforward to run extraction work on a task group without the CLI layer managing any of that complexity.</p>
+        <p><strong>Grounded prompt assembly</strong> is the most consequential part of <code>NarratorClient</code>. The prompt is built in two parts. The first part is the structured facts — commit count, contributor count, release history, test counts, dependency list, platform targets — formatted as a numbered inventory. The second part, when present, is the <code>DesignContext</code>. The instruction to the LLM is explicit: facts in the inventory may be cited; claims not in the inventory must not appear. The <code>MASTER_PLAN.md</code> sections, if present, are labeled as authoritative and the model is told to treat them as the project’s own self-description.</p>
+        <p>This is the part of the tool that justifies the project’s existence. Without it, an LLM given a git repository will produce prose that sounds plausible but isn’t verifiable. With it, every sentence in the output has a source the user can trace.</p>
+        <p><strong>The three-stage file format</strong> uses a versioned JSON envelope:</p>
+        <pre><code class="language-swift">struct ShowcaseDocument
+            <t: codable>
+              : Codable { let version: String let stage: Stage // .gathered, .narrated, .rendered let projectPath: String let generatedAt: Date let payload: T } 
+            </t:></code></pre>
+        <p>The same envelope wraps the <code>GatheredFacts</code>, the <code>NarratedCaseStudy</code>, and the <code>RenderManifest</code>. This made it straightforward to add <code>--resume</code> flags to the CLI: each stage reads its expected input type, checks the <code>stage</code> field, and errors early if the file is from the wrong stage rather than silently misinterpreting it.</p>
+        <p><strong>Process invocation for git</strong> was more involved than expected. <code>git log</code>, <code>git shortlog</code>, and <code>git tag</code> are called via <code>Foundation.Process</code>, and the output parsing handles both the common case (clean UTF-8) and repositories with non-ASCII author names or commit messages. Rather than writing a full git library, I kept the extraction surface small — the extractor asks only for the data points the narrative actually uses — and used <code>--format</code> flags to get machine-parseable output.</p>
+        <pre><code class="language-swift">func commitCount(at path: URL) throws -&gt; Int {
+    let output = try shell("git", "-C", path.path, "rev-list", "--count", "HEAD")
+    guard let count = Int(output.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+        throw ExtractionError.unexpectedOutput(output)
+    }
+    return count
+}
+</code></pre>
+        <p><strong>The pluggable extractors</strong> for Node, Python, Rust, and Go each read only their relevant manifest format. The Node extractor reads <code>package.json</code> for dependencies and scripts. The Rust extractor reads <code>Cargo.toml</code> for workspace members and feature flags. None of them run package manager commands — the tool doesn’t require the target project to have its dependencies installed.</p>
         <h2>Testing Strategy</h2>
-        <p>The <code>ProjectShowcaseTests</code> target sits against the <code>ProjectShowcase</code> library, not the CLI. This means tests exercise extraction logic, SVG generation, and narrative assembly directly, without subprocess overhead or argument parsing in the loop.</p>
-        <p>The most critical testing surface is the extraction layer: given known input files (a git log fixture, a Package.swift fixture, a MASTER_PLAN.md fixture), does the extractor produce the expected structured output? These are deterministic unit tests with no LLM involvement. Render-layer tests follow the same pattern — given a known narrative JSON, does the SVG output match expected structure?</p>
-        <p>Narrate-layer testing is necessarily different. Because the LLM call is the only non-deterministic stage, the library design isolates it behind a protocol boundary. Tests can inject a mock narrator that returns canned output, allowing the pipeline integration to be verified without API calls or spend.</p>
-        <p>The CLAUDE.md present in the project suggests the developer documented working conventions for the codebase — a quality gate that enforces standards across sessions rather than relying on memory.</p>
+        <p><code>ProjectShowcaseTests</code> covers the library target across 35 commits and covers three main areas.</p>
+        <p>The extractor tests run against fixture repositories committed under <code>Tests/Fixtures/</code>. Each fixture is a minimal directory tree containing a fake git repository (initialized with <code>git init</code> and a small commit history), a package manifest, and optionally a <code>MASTER_PLAN.md</code>. Tests assert that the extractor produces exact expected values for commit count, dependency list, and design context fields.</p>
+        <p>The grounding tests assert that the prompt assembler produces output containing specific strings when given known <code>GatheredFacts</code> and <code>DesignContext</code> values, and that it does not produce certain strings when the corresponding data is absent. These are string-level assertions on the prompt, not on the LLM’s response — the goal is to verify the contract the prompt establishes, not to test the LLM.</p>
+        <p>The SVG tests verify that <code>SVGGenerator</code> produces well-formed SVG for a range of input shapes: projects with no releases, projects with one contributor versus many, timelines spanning less than a week versus several years. Each test runs the generator and parses the output with an <code>XMLParser</code> to confirm it is valid XML with the expected element counts.</p>
+        <p>There are no integration tests that call the LLM. The <code>NarratorClient</code> accepts an injectable transport, and the tests provide a stub that returns a canned response. This keeps the test suite fast and deterministic.</p>
         <h2>Lessons</h2>
-        <p>Several patterns from ProjectShowcase transferred directly to how the developer thinks about LLM-integrated tools generally.</p>
-        <p><strong>Separate what you know from what you infer.</strong> The Gather/Narrate boundary is a general principle: do all fact-finding before touching the model. Any information the model could plausibly confabulate should be extracted deterministically first and injected as structured data. This principle applies to any tool that uses an LLM to generate text about a concrete subject.</p>
-        <p><strong>Inspectability is a feature, not a debugging aid.</strong> Making the pipeline interruptible at each stage wasn’t originally motivated by user experience — it was motivated by wanting to debug extraction quality. But it turned out to be the feature that makes the output trustworthy: a developer who can read the extracted JSON before the model sees it can catch misattributions before they appear in published prose.</p>
-        <p><strong>Design documents are artifacts too.</strong> The decision to scan CLAUDE.md, design proposals, and architecture notes as first-class inputs — rather than treating only code and git history as “real” data — reflects a broader understanding that the most valuable information about a project often lives in the files developers write <em>before</em> or <em>alongside</em> the code. Any tool that ignores those files is leaving the most intentional signal on the table.</p>
-        <p><strong>Dogfooding validates the schema.</strong> Writing MASTER_PLAN.md for ProjectShowcase in the same format the tool consumes forced the developer to discover ambiguities in the extraction schema before they showed up as bugs in production. Running the tool on its own repository became the most reliable integration test.</p>
+        <p><strong>Separating data collection from inference generalizes broadly.</strong> The three-stage separation — gather locally, narrate with an LLM, render deterministically — is a pattern I’ve now applied to other tools that need to combine local analysis with an AI step. The key property is that each stage produces an inspectable artifact. Users don’t have to trust a black box; they can read the gathered JSON and decide whether the input is correct before spending an API call.</p>
+        <p><strong>Small, explicit extraction surfaces are easier to maintain than comprehensive ones.</strong> Each extractor asks for only the fields the narrative actually uses. Early iterations tried to extract everything that might be interesting from a <code>Package.swift</code> or <code>Cargo.toml</code>. The result was a large <code>GatheredFacts</code> struct with many optional fields that narration code had to conditionally handle. Trimming to what narration actually consumed made both the extraction and the prompt assembly simpler.</p>
+        <p><strong>Fixture-based testing for filesystem tools pays off quickly.</strong> The extractor tests against committed fixture repositories caught several edge cases — repositories with no tags, repositories with detached HEAD state, <code>Package.swift</code> files with conditional dependencies — that wouldn’t have surfaced until a user ran the tool against their own project. Setting up the fixtures takes time upfront, but the alternative is testing against real repositories, which changes over time and makes tests non-repeatable.</p>
+        <p><strong>Versioning the intermediate file format from the start avoids later migration pain.</strong> The <code>ShowcaseDocument</code> envelope includes a <code>version</code> field that I didn’t strictly need at 0.1.0. Putting it in early means that when the <code>GatheredFacts</code> schema changes, the CLI can read the version and either migrate the old format or give an informative error rather than silently misreading fields.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/projectshowcase-stats.svg" alt="ProjectShowcase statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/projectshowcase-commits.svg" alt="ProjectShowcase commit history chart" class="img-fluid" />
-        <img src="/images/showcase/projectshowcase-releases.svg" alt="ProjectShowcase release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ProjectShowcase statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ProjectShowcase
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              35
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ProjectShowcase commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ProjectShowcase — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~5/month · peak 17 (35 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="124" width="76" height="24" /> 
+            <rect class="ig-bar" x="103" y="139" width="76" height="9" /> 
+            <rect class="ig-bar" x="182" y="139" width="76" height="9" /> 
+            <rect class="ig-bar" x="261" y="124" width="76" height="24" /> 
+            <rect class="ig-bar" x="340" y="144" width="76" height="4" /> 
+            <rect class="ig-bar" x="419" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="498" y="134" width="76" height="14" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ProjectShowcase release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ProjectShowcase — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              1 release · latest 0.1.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="188" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="189" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              0.1.0
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: projectshowcase, selfReflection</p>

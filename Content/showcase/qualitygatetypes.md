@@ -1,8 +1,8 @@
 ---
-title: The Shared Vocabulary That Keeps a Quality Gate Ecosystem Honest
-description: When `quality-gate-swift` and its constellation of sibling packages needed to stop maintaining competing definitions of a diagnostic, QualityGateTypes became the single source of truth—a carefully disciplined leaf dependency that now underpins at least seven packages without carrying a single runtime dependency of its own.
+title: QualityGateTypes: Shared Data Models for a Swift Quality-Gate Toolchain
+description: A leaf Swift package that defines the types — diagnostics, results, compliance records, and plugin contracts — shared across every package in the quality-gate ecosystem.
 date: 2026-05-12 15:57
-lastModified: 2026-11-02
+lastModified: 2026-11-10
 tags: showcase, project, Quality Gate, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,40 @@ project: Internal Infrastructure
 published: false
 ---
 
-# The Shared Vocabulary That Keeps a Quality Gate Ecosystem Honest
+# QualityGateTypes: Shared Data Models for a Swift Quality-Gate Toolchain
 
-> When `quality-gate-swift` and its constellation of sibling packages needed to stop maintaining competing definitions of a diagnostic, QualityGateTypes became the single source of truth—a carefully disciplined leaf dependency that now underpins at least seven packages without carrying a single runtime dependency of its own.
+> A leaf Swift package that defines the types — diagnostics, results, compliance records, and plugin contracts — shared across every package in the quality-gate ecosystem.
 
-## Problem
+## Motivation
 
-Tooling ecosystems have a well-known failure mode: each package that needs to represent a diagnostic eventually grows its own `Diagnostic` type, each slightly incompatible with the others. When `quality-gate-swift` (which produces `CheckResult` values from checkers) and the Institutional Judgment System (which persists and analyzes results) each maintain their own model, field names drift, severity semantics diverge, and any pipeline that spans both packages becomes a translation layer built on guesswork.
+The quality-gate toolchain I've been building spans several packages: `quality-gate-swift` runs checkers, `quality-gate-corpus-kit` and `quality-gate-dashboard` read persisted results, and `swift-vigil`, `org-judgement-system`, and a family of `ijs-*` packages all touch the same domain objects. Without a single authoritative definition, each package risks drifting to its own version of what a `Diagnostic` looks like, what fields it carries, and what it means for a diagnostic to constitute a violation.
 
-QualityGateTypes exists to eliminate that failure mode. Its mission is narrow and intentional: own the data models (`CheckResult`, `Diagnostic`, `DiagnosticOverride`, `ComplianceRecord`), define the Tier-2 plugin contract (`PluginDescriptor`, `PluginCheckRequest`), provide a `StringProtocol.lines` helper with correct line-ending semantics, and ship a logging shim that compiles cleanly on every Apple platform. By being a leaf with no third-party runtime dependencies, it can sit at the root of any package graph without introducing conflict.
+`quality-gate-types` exists to prevent that. It is a leaf dependency — no third-party runtime dependencies — that every other package can take without pulling in a dependency chain.
 
 ## Approach
 
-The package is structured as two distinct library products. `QualityGateTypes` holds the data models and plugin contract vocabulary; `QualityGateLogging` provides a `QGLogger` surface that aliases to Apple's `os.Logger` names where they exist and supplies its own implementations elsewhere. The separation means a package that only needs to read persisted diagnostics does not pull in logging infrastructure it will never use.
+The package exposes two library products. `QualityGateTypes` contains the data models: `CheckResult`, `Diagnostic`, `DiagnosticOverride`, `ComplianceRecord`, and the Tier-2 plugin contract types (`PluginDescriptor`, `PluginCheckRequest`). `QualityGateLogging` is a logging shim that compiles on every platform under its own names (`QGLogger` and related types) and aliases to Apple's `os.Logger` surface only where that framework is absent; it stays silent unless the `QG_LOG` environment variable is set.
 
-All public types are `Sendable` and `Codable`, making them safe to cross actor boundaries and serialize over the JSON-on-stdio channel the Tier-2 plugin contract relies on. The package is built against Swift Tools version 6.2, with `swift-docc-plugin` as the sole dependency—documentation generation is a build-time concern, not a runtime one.
+All types are `Sendable` and `Codable`. `Diagnostic` decodes both current and legacy `file`/`line`/`column` keys so that older persisted results remain readable without a migration step. The `endLine` field, together with a derived `lineSpan`, treats `nil` as "no region reported" rather than "single line," and malformed ranges produce `nil` rather than trapping. The `StringLines` utility in the package splits text so that CRLF counts as one line terminator, keeping reported line numbers consistent with what editors expect.
 
-The two targets under test (`QualityGateTypesTests`, `QualityGateLoggingTests`) validate correctness independently for each product. The project reached ten releases across roughly six months of active development, with the version history—1.0.0 through 1.8.0—reflecting a disciplined minor-version cadence as each semantic addition was considered stable enough to publish.
+The package targets macOS and iOS and uses Swift Tools version 6.2. The only declared dependency is `swift-docc-plugin` for documentation generation.
 
 ## Results
 
-Over 26 commits and ten releases, the package shipped the full shared vocabulary for a quality-gate ecosystem that spans at least seven downstream packages: `quality-gate-swift`, `quality-gate-corpus-kit`, `quality-gate-dashboard`, `swift-vigil`, `org-judgement-system`, and multiple `ijs-*` packages. Each of those packages can now `import QualityGateTypes` and read the same `Diagnostic` definition without a translation layer. The Tier-2 plugin contract is expressible in JSON over stdio using types defined in one place. The `StringLines` helper ensures reported line numbers match what editors and CI surfaces display, regardless of whether the input uses LF or CRLF line endings.
+The package has shipped ten releases — 1.0.0 through 1.8.0 — across 26 commits from a single contributor, with work spanning from April to October 2026. There are two branches. Tests live in `QualityGateTypesTests` and `QualityGateLoggingTests`.
 
-## Judgment Calls
+The types are in active use across at least six downstream packages: `quality-gate-swift`, `quality-gate-corpus-kit`, `quality-gate-dashboard`, `swift-vigil`, `org-judgement-system`, and multiple `ijs-*` packages.
 
-Several of the most consequential decisions in this package are ones that required restraint rather than addition.
+## Decisions
 
-**Defining `isViolation` on the shared type.** Before 1.4.0, the question of whether a diagnostic counted against a rule could be answered differently depending on where in the pipeline you asked it. Adding `Diagnostic.isViolation` (severity >= warning) to the shared type meant that notes—informational diagnostics—could never be misclassified as violations by a downstream consumer that happened to implement its own threshold check. The decision also signals something about design philosophy: the place to encode domain semantics is the type itself, not the call site.
+**Single leaf package with no runtime dependencies.** Every downstream can depend on `QualityGateTypes` without inheriting a dependency graph. The only package-level dependency is `swift-docc-plugin`, which is a build-time tool, not a runtime library.
 
-**`endLine` semantics: `nil` means no region, not one line.** This is the kind of distinction that matters when diagnostic data crosses package boundaries and is later displayed or aggregated. A region with `endLine == nil` means the source didn't report a range; it is not a shorthand for a single-line span. Malformed ranges yield `nil` rather than trapping, which means a badly formed persisted result doesn't crash a pipeline reading it—it simply carries an absent range.
+**`Diagnostic.isViolation` on the shared type.** Added in 1.4.0, this computed property encodes the rule that severity at or above `warning` constitutes a defect. Putting it on the shared type means checkers, dashboards, and reporting tools all apply the same threshold, and `note`-level diagnostics are not counted against a rule. Before this addition, each consumer made its own judgment call.
 
-**Backward compatibility in `Diagnostic`'s decoder.** The type still decodes the legacy `file`/`line`/`column` keys alongside whatever the current encoding uses. This is a quiet but meaningful commitment: older persisted results—data already written to disk before the schema evolved—remain readable without a migration step. In a package that exists specifically so that the Institutional Judgment System and the checker toolchain share one model, breaking the persistence layer would defeat the purpose.
+**Legacy key decoding in `Diagnostic`.** Rather than breaking older persisted results, `Diagnostic`'s `Codable` implementation accepts both the current key names and the legacy `file`/`line`/`column` keys. This was a deliberate compatibility choice that adds some implementation complexity but means corpora of historical results stay readable.
 
-**`QGLogger` is silent unless `QG_LOG` is set.** Logging shims have a way of becoming noise. The decision to gate output behind an environment variable means the shim can ship in every package that imports `QualityGateLogging` without polluting anyone's build output by default—it is there when a developer needs it and invisible otherwise.
+**`nil` for absent regions, never for single-line.** The `endLine`/`lineSpan` design avoids the ambiguity of using `nil` to mean "spans one line." A missing region is `nil`; a malformed range is also `nil` rather than a trap. The tradeoff is that callers must interpret `nil` only as "not reported," not as a shorthand for a one-line span.
 
-Each of these calls reflects the same underlying discipline: a shared foundation package earns its position in a dependency graph by being trustworthy, stable, and narrow. QualityGateTypes does not try to be more than its mission requires.
+**`QualityGateLogging` as a separate product.** Rather than gating the logging surface on platform conditionals scattered through calling code, the shim compiles everywhere under its own names. Callers import one product and get consistent behavior; the platform branching is contained inside the library.
+
+What remains open is whether the Tier-2 plugin contract types — `PluginDescriptor` and `PluginCheckRequest` — belong here long-term or should eventually move to their own product as the plugin surface stabilizes and more third-party plugin authors appear.

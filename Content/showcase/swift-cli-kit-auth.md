@@ -1,8 +1,8 @@
 ---
-title: SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools
-description: A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven.
+title: SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps
+description: A Swift package that gathers credentials, runs prompts, and manages sign-in sessions for command-line tools and SSH apps built on SwiftCLIKit, without owning any identity decisions.
 date: 2026-11-02 11:40
-lastModified: 2026-11-02
+lastModified: 2026-11-10
 tags: showcase, swift-cli-kit-auth, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,48 @@ project: SwiftCLIKitAuth
 published: true
 ---
 
-# SwiftCLIKitAuth: Zero-Friction Account Sign-In for Swift Command-Line Tools
+# SwiftCLIKitAuth: Account Sign-In for SwiftCLIKit Apps
 
-> A modular authentication layer for SwiftCLIKit that establishes identity, asserts assurance, and admits users — from local terminals and over SSH — without knowing anything about how identity is proven.
+> A Swift package that gathers credentials, runs prompts, and manages sign-in sessions for command-line tools and SSH apps built on SwiftCLIKit, without owning any identity decisions.
 
-## Problem
+## Motivation
 
-Command-line tools that call account-bound services need a way to handle sign-in, but the space between "no accounts at all" and "roll your own auth flow" has historically been a gap rather than a solution. Developers building tools on SwiftCLIKit faced a choice: drag in a heavyweight dependency for features they might not need, or stitch together credential prompts, session management, and SSH handling by hand.
+SwiftCLIKit provides a foundation for building command-line tools in Swift. Some of those tools need accounts — a `mytool login` flow, or an SSH app that authenticates users before granting access. Without a shared package for this, every tool author would have to wire up credential prompts, session state, and sign-in flows from scratch, and would have to make their own choices about how to handle refusals and what to depend on.
 
-SwiftCLIKitAuth was built to close that gap cleanly. Its mission, as stated in its own `MASTER_PLAN.md`, is to establish *who* someone is (represented as a SwiftIdentity `Subject`), *how strongly* that was proven, and *whether the app admits them* — from a local terminal or over SSH. The package serves two audiences: authors of CLI tools that need a `login` command against an account-bound service, and authors of SSH apps that require accounts, built on SwiftCLIKitSSH.
+SwiftCLIKitAuth is the answer to that problem. Its mission, as stated in the project's MASTER_PLAN.md, is to establish who someone is (as a SwiftIdentity `Subject`), how strongly that was proven, and whether the app admits them — from a local terminal or over SSH. Identity verification itself stays in SwiftIdentity's `Authenticator`. This package gathers credentials, shows prompts, admits or refuses, and holds the session. Tools that don't need accounts pay nothing; tools that do add only the packages for the sign-in methods they use.
 
-Critically, the problem was scoped as tightly as the solution. Apps that don't need accounts pay nothing. Apps that do add only the packages for the methods they use.
+The design was driven by a proposal written before coding started — `2026-10-20_SwiftCLIKitAuth.md`, approved on 2026-10-24 at revision 7, with revisions 8 and 9 decided afterward. That proposal is the authority for what the package does and how it is shaped.
 
 ## Approach
 
-The design was authored prior to implementation and approved through a formal revision process — `2026-10-20_SwiftCLIKitAuth.md` reached revision 7 before receiving approval on 2026-10-24, with revisions 8 and 9 decided afterward. That proposal is explicitly designated the authority; the `MASTER_PLAN.md` tracks delivery against it. This discipline — keeping the design document sovereign over the implementation — reflects a working style that treats architecture as a first-class artifact rather than an afterthought reconstructed from code.
+The package is structured around a clean separation of concerns enforced by its dependency rules:
 
-The package is structured into two targets with clean separation: `SwiftCLIKitAuth` for local terminal authentication flows and `SwiftCLIKitAuthSSH` for SSH-based authentication, each with its own test target. The dependency graph was constructed with deliberate restraint — `swift-cli-kit`, `swift-identity`, `swift-crypto`, `swift-nio`, and `swift-nio-ssh` are present because the package genuinely needs them. Third-party auth dependencies such as `swift-oauth` are explicitly kept *out*, pushed to the consuming application. This is not an oversight; it's revision 9 of the design, which specifies that device sign-in takes the app's closure so that OAuth libraries remain the app's dependency, not the package's.
+**Identity decisions stay out.** SwiftCLIKitAuth calls `Authenticator.authentication(for:)`, the statically dispatched form from SwiftIdentity. Because it uses that form, no layer in this package can print a reason for a refusal. Every failed sign-in surfaces as "Sign-in failed" — the package cannot leak why.
 
-Identity verification is delegated entirely to SwiftIdentity's `Authenticator`. SwiftCLIKitAuth calls `Authenticator.authentication(for:)` — the statically dispatched form — gathers credentials, presents prompts, and manages session state. It does not inspect the reason for a refusal. Every failed sign-in surfaces the same message: "Sign-in failed." This is a privacy guarantee enforced by architectural boundary, not by convention.
+**Method packages are not pulled in.** For device sign-in flows (such as OAuth), the app provides a closure. That means swift-oauth becomes the app's dependency, not SwiftCLIKitAuth's. This was a deliberate decision from revision 9 of the design proposal, keeping the package's dependency footprint minimal and giving app authors control over what they pull in.
+
+**Two targets for two contexts.** The package splits into `SwiftCLIKitAuth` for local terminal sign-in and `SwiftCLIKitAuthSSH` for SSH app scenarios. Each has its own test target. SSH support builds on swift-nio and swift-nio-ssh; cryptographic operations use swift-crypto. The swift-docc-plugin is included for documentation generation.
+
+Platforms supported are macOS, iOS, and visionOS, using Swift Package Manager with tools version 6.2.
 
 ## Results
 
-Thirty commits across a single contributor produced four versioned releases — `v0.1.0` through `v0.4.0` — in just over 25 hours between first commit and latest commit. The pace reflects a design that was already settled before implementation began: when the architecture is resolved up front, implementation can move quickly without thrashing. The package ships with test coverage across both the core auth target and the SSH target (`SwiftCLIKitAuthTests` and `SwiftCLIKitAuthSSHTests`), targeting macOS, iOS, and visionOS. Documentation infrastructure is included via `swift-docc-plugin`, signaling intent for the package to be a publishable, maintainable component rather than internal scaffolding.
+The project reached v0.4.0 across 30 commits from a single contributor, with four releases shipped: v0.1.0, v0.2.0, v0.3.0, and v0.4.0. All commits landed within a two-day window between October 26 and 27, 2026.
 
-## Judgment Calls
+The package delivers:
+- Local terminal sign-in flow (`SwiftCLIKitAuth` target)
+- SSH app sign-in flow (`SwiftCLIKitAuthSSH` target)
+- Test coverage via `SwiftCLIKitAuthTests` and `SwiftCLIKitAuthSSHTests`
+- Documentation via swift-docc-plugin
 
-Several decisions here are worth examining as expressions of craft rather than convenience.
+## Decisions
 
-**The refusal is opaque by design.** Consuming `Authenticator.authentication(for:)` in its statically dispatched form is not the path of least resistance — it's the path that prevents any layer of this package from printing a rejection reason. The "Sign-in failed" message isn't a lazy default; it's a deliberate privacy posture baked into the call site.
+**Design-first, then code.** The approved design proposal preceded all implementation. Revisions 8 and 9 were decided during delivery and shaped the closure-based device sign-in approach and the statically dispatched authenticator call. I followed the proposal as the authority rather than letting implementation decisions drift from it.
 
-**Inversion of the OAuth dependency.** It would have been straightforward to take a direct dependency on an OAuth library and offer device sign-in as a first-class capability. Revision 9 of the design rejected this in favor of a closure-based interface that hands responsibility back to the calling application. The package stays thin; the application owns its own auth method dependency. This decision keeps SwiftCLIKitAuth honest about what it actually is — a session and admission layer, not an identity provider.
+**Static dispatch for authentication.** Using `Authenticator.authentication(for:)` instead of a dynamically dispatched form means no code path in this package can inspect or surface a refusal reason. This was a deliberate privacy constraint: the package cannot accidentally expose why someone was refused.
 
-**Two targets, not one.** Splitting SSH authentication into `SwiftCLIKitAuthSSH` means that tools without SSH exposure don't link against NIO or the SSH stack. The pay-only-for-what-you-use principle stated in the mission is enforced at the package manifest level, not just in documentation.
+**Closure injection for OAuth-style flows.** Rather than depending on swift-oauth directly, device sign-in takes a closure from the app. This keeps swift-oauth out of the package's dependency graph and lets app authors manage that dependency themselves. The tradeoff is that app authors have a little more wiring to do, but they retain full control over their dependency surface.
 
-**Design sovereignty.** Designating the design proposal — not the code, not the plan — as the authoritative source of truth, and tracking delivery against it rather than updating it to match what shipped, is a discipline that keeps architectural intent legible. Four releases in two days is a fast cadence; the fact that the design was at revision 7 before a line was committed explains how that cadence was possible without drift.
+**Split targets by context.** Separating the terminal and SSH targets means an app that only needs local sign-in does not pull in swift-nio or swift-nio-ssh. This follows the stated goal that apps pay only for what they use.
+
+**What is unfinished or uncertain.** The MASTER_PLAN.md tracks delivery against the proposal, and the project reached v0.4.0 within two days. What remains open — additional sign-in methods, further platform coverage, or additional session management features — is not documented in the available inputs, so I cannot state it here.

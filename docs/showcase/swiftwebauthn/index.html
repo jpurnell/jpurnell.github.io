@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A Swift package that implements WebAuthn’s registration and authentication ceremonies on the server, built from the W3C specification so that passkeys can be the default way a person proves identity — not a fallback." />
+    <meta name="description" content="A Swift package that verifies WebAuthn’s registration and authentication ceremonies on the server, written from the W3C specification, so passkeys can replace passwords rather than supplement them." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftWebAuthn: Server-Side Passkey Verification, Written From the Specification | Justin Purnell</title>
+    <title>SwiftWebAuthn: Server-Side WebAuthn Verification in Swift | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftWebAuthn: Server-Side Passkey Verification, Written From the Specification" />
-    <meta name="twitter:title" content="SwiftWebAuthn: Server-Side Passkey Verification, Written From the Specification" />
-    <meta property="og:description" content="A Swift package that implements WebAuthn’s registration and authentication ceremonies on the server, built from the W3C specification so that passkeys can be the default way a person proves identity — not a fallback." />
-    <meta name="twitter:description" content="A Swift package that implements WebAuthn’s registration and authentication ceremonies on the server, built from the W3C specification so that passkeys can be the default way a person proves identity — not a fallback." />
+    <meta property="og:title" content="SwiftWebAuthn: Server-Side WebAuthn Verification in Swift" />
+    <meta name="twitter:title" content="SwiftWebAuthn: Server-Side WebAuthn Verification in Swift" />
+    <meta property="og:description" content="A Swift package that verifies WebAuthn’s registration and authentication ceremonies on the server, written from the W3C specification, so passkeys can replace passwords rather than supplement them." />
+    <meta name="twitter:description" content="A Swift package that verifies WebAuthn’s registration and authentication ceremonies on the server, written from the W3C specification, so passkeys can replace passwords rather than supplement them." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftwebauthn" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swiftwebauthn",
-          "name" : "SwiftWebAuthn: Server-Side Passkey Verification, Written From the Specification",
+          "name" : "SwiftWebAuthn: Server-Side WebAuthn Verification in Swift",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftwebauthn#breadcrumb"
       },
-      "description" : "A Swift package that implements WebAuthn’s registration and authentication ceremonies on the server, built from the W3C specification so that passkeys can be the default way a person proves identity — not a fallback.",
+      "description" : "A Swift package that verifies WebAuthn’s registration and authentication ceremonies on the server, written from the W3C specification, so passkeys can replace passwords rather than supplement them.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftWebAuthn: Server-Side Passkey Verification, Written From the Specification",
+      "name" : "SwiftWebAuthn: Server-Side WebAuthn Verification in Swift",
       "url" : "https://www.justinpurnell.com/showcase/swiftwebauthn"
     }
   ]
@@ -181,39 +181,270 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftWebAuthn: Server-Side Passkey Verification, Written From the Specification</h1>
+      <h1 class="mainTitle">SwiftWebAuthn: Server-Side WebAuthn Verification in Swift</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftWebAuthn</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A Swift package that implements WebAuthn’s registration and authentication ceremonies on the server, built from the W3C specification so that passkeys can be the default way a person proves identity — not a fallback.</p>
+          <p>A Swift package that verifies WebAuthn’s registration and authentication ceremonies on the server, written from the W3C specification, so passkeys can replace passwords rather than supplement them.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Passwords have a fundamental weakness that no implementation can fix: a person can be tricked into revealing one, and a person can guess one. Passkeys solve this at the protocol level, but only if the server can verify the ceremonies WebAuthn defines. SwiftWebAuthn exists to provide that verification for Swift services running on Apple platforms, where platform authenticators and iCloud Keychain already make passkeys the path of least resistance for the user.</p>
-        <p>The package is designed first for <code>SwiftIdentity</code> — a sibling library — as the credential kind that retires the passphrase entirely. Beyond that integration, it targets any Swift service authenticating people on Apple devices, where the authenticator hardware is already in the user’s pocket and the ecosystem friction is low. The problem, in other words, is not convincing users to adopt passkeys; it is giving servers a trustworthy, specification-grounded implementation to verify them.</p>
-        <p>A secondary problem was provenance. Existing Swift WebAuthn implementations exist, and SwiftWebAuthn’s own MASTER_PLAN.md acknowledges this explicitly. The project carries a written bar for its own abandonment — a stated condition under which it should be replaced by the maintained alternative. That honesty about scope and purpose is itself a design artifact.</p>
+        <h2>Motivation</h2>
+        <p>SwiftWebAuthn implements the two WebAuthn ceremonies — registration and authentication — on the server side. The driving use case is <code>SwiftIdentity</code>, a separate package where passkeys are the only credential kind, not an optional alternative to a passphrase. The goal is to make passkeys the default path for authenticating on Apple devices, where platform authenticators and iCloud Keychain already make them practical.</p>
+        <p>The project has a written condition for its own retirement: if the maintained community implementation reaches a state that meets the bar defined in the project plan, this package should be replaced by it. That condition is documented so the decision is explicit rather than drifted into.</p>
         <h2>Approach</h2>
-        <p>SwiftWebAuthn was built between September and October 2026, reaching three releases across 31 commits from a single contributor. The package targets macOS and uses Swift 6.2 tooling.</p>
-        <p>The architectural philosophy is one of deliberate constraint. No cryptographic primitive is implemented in the package. <code>swift-crypto</code> handles the mathematics; SwiftWebAuthn’s responsibility is parsing the specification’s steps and checking them in order. This is not laziness — it is a considered trust boundary. Cryptographic implementations are among the most dangerous code to write incorrectly, and deferring to a maintained, audited library keeps the surface area of potential error inside this package to the parsing and logic layer.</p>
-        <p>The same principle governs CBOR handling. Rather than adopting a general-purpose CBOR decoder, SwiftWebAuthn ships a decoder for the specific subset an attestation object uses, and refuses everything else. Failing closed on attacker-supplied bytes is the explicit goal. An overly permissive decoder that accepts unexpected structure is an attack surface; a narrow decoder that rejects it is not.</p>
-        <p>The target structure reflects the package’s integration story. Alongside the core <code>SwiftWebAuthn</code> and <code>SwiftWebAuthnIdentity</code> targets, a <code>CaptureHTTP</code> target and a <code>webauthn-capture</code> executable exist — tooling for capturing real ceremony traffic during development, which provides a practical feedback loop against the specification without requiring a running production service.</p>
-        <p>Dependencies are lean and purposeful: <code>swift-crypto</code> for cryptography, <code>SwiftDeterminism</code> for controlled behavior in tests, <code>swift-identity</code> for the credential integration layer, and <code>swift-docc-plugin</code> for documentation generation.</p>
-        <p>A <code>CLAUDE.md</code> file is present, encoding development workflow, quality gates, and key rules in a form that makes the working environment reproducible. Architecture sections cover session start, post-clone setup, and the references that ground implementation decisions in the specification.</p>
+        <p>The package is written from the W3C WebAuthn specification directly. No code and no tests were copied from other implementations; the spec steps are followed in order and checked in order. The rationale is to avoid any licence ambiguity and to keep the relationship to the specification explicit.</p>
+        <p>No cryptographic primitives are implemented here. All mathematics are delegated to <code>swift-crypto</code>. SwiftWebAuthn parses the wire format, walks the specification’s verification steps, and delegates the actual cryptographic operations.</p>
+        <p>The package includes a CBOR decoder scoped to the subset of CBOR that an attestation object uses. It rejects everything outside that subset. The intent is to fail closed on attacker-supplied bytes rather than to be a general-purpose CBOR library.</p>
+        <p>The dependency list reflects this division of responsibility: <code>swift-crypto</code> for the mathematics, <code>SwiftDeterminism</code> and <code>swift-identity</code> for integration with the broader identity infrastructure, and <code>swift-docc-plugin</code> for documentation generation.</p>
+        <p>The target list includes a <code>CaptureHTTP</code> target and a <code>webauthn-capture</code> executable alongside the main library and its identity integration layer. These support development-time ceremony capture for testing real authenticator responses against the verifier.</p>
         <h2>Results</h2>
-        <p>Three releases shipped across the project’s seven-week active window: <code>0.1.0</code>, <code>0.2.0</code>, and <code>0.2.1</code>. The version history suggests a complete initial implementation followed by a meaningful second iteration — the step from <code>0.1</code> to <code>0.2</code> typically signals a substantive revision rather than a patch.</p>
-        <p>The package ships two complete test targets — <code>SwiftWebAuthnTests</code> and <code>SwiftWebAuthnIdentityTests</code> — alongside the <code>CaptureHTTPTests</code> target, providing coverage across the core verification logic and the identity integration layer separately. The separation of test targets mirrors the separation of concerns in the package itself.</p>
-        <p>The integration with <code>swift-identity</code> is live enough to appear as both a dependency and a named target, suggesting the credential integration story is not theoretical but implemented.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions in SwiftWebAuthn reveal the kind of thinking that distinguishes careful library design from feature delivery.</p>
-        <p><strong>Writing from the specification, not from an existing implementation.</strong> The MASTER_PLAN is explicit: no code copied, no tests copied, no licence question. This is more than a legal precaution. Implementing from the specification means the implementation is grounded in what the standard actually requires, not in what a prior author understood it to require. The cost is higher upfront effort. The benefit is a clean reading of the spec and no inherited misunderstandings.</p>
-        <p><strong>The narrow CBOR decoder.</strong> A general CBOR library would have been faster to adopt and easier to justify. Choosing instead to decode only what attestation objects actually use, and to refuse everything else, reflects an understanding that the input to these functions is attacker-controlled. Permissiveness in that context is not flexibility — it is exposure.</p>
-        <p><strong>The written abandonment condition.</strong> Shipping a library with a documented condition under which it should be replaced by another is an unusual act of honesty. It signals that the goal is passkey adoption in Swift, not the survival of this particular package. It also makes the project’s scope legible: this exists because a specification-grounded, independently implemented alternative has value, not because the maintained implementation is inadequate.</p>
-        <p><strong>Separation of the capture tooling.</strong> Including <code>CaptureHTTP</code> and <code>webauthn-capture</code> as first-class targets rather than throwaway scripts means the development loop against real ceremony traffic is reproducible and versioned. That kind of working infrastructure reflects a developer who treats development ergonomics as a product concern.</p>
+        <p>Three releases shipped across roughly seven weeks: 0.1.0, 0.2.0, and 0.2.1. The repository has 31 commits from one contributor. The package targets macOS and is built with Swift tools version 6.2. Test targets exist for the core library (<code>SwiftWebAuthnTests</code>), the identity integration (<code>SwiftWebAuthnIdentityTests</code>), and the HTTP capture harness (<code>CaptureHTTPTests</code>).</p>
+        <h2>Decisions</h2>
+        <p><strong>Written from the specification, not from an existing implementation.</strong> The project plan names this explicitly and gives the reason: no copied code means no licence question, and the specification is the authoritative source regardless. A maintained external implementation is kept as a comparison bar, not a starting point.</p>
+        <p><strong>Narrow CBOR decoder rather than a general one.</strong> The attestation object uses a small, predictable subset of CBOR. Accepting only that subset means attacker-supplied bytes that fall outside it are rejected at the parser rather than passed further into verification logic.</p>
+        <p><strong>No cryptographic primitives.</strong> The choice to delegate all mathematics to <code>swift-crypto</code> keeps the attack surface of this package limited to parsing and step sequencing. The correctness of the elliptic curve operations and hashing is <code>swift-crypto</code>’s responsibility.</p>
+        <p><strong>A capture harness as a development tool.</strong> The <code>webauthn-capture</code> executable and <code>CaptureHTTP</code> target exist so real authenticator responses can be captured during development and replayed against the verifier. This makes it possible to test with actual platform authenticator output rather than synthetic test vectors alone.</p>
+        <p><strong>The abandonment condition is written down.</strong> The project plan states the condition under which this package should be replaced by the maintained community implementation. This is unresolved in the sense that the condition has not been evaluated yet — the package is under active development and the community implementation’s state relative to that bar has not been formally assessed.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swiftwebauthn-stats.svg" alt="SwiftWebAuthn statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swiftwebauthn-commits.svg" alt="SwiftWebAuthn commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swiftwebauthn-releases.svg" alt="SwiftWebAuthn release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftWebAuthn statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftWebAuthn
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              31
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              3
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftWebAuthn commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftWebAuthn — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~15/month · peak 30 (31 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="274" height="84" /> 
+            <rect class="ig-bar" x="301" y="146" width="274" height="2" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftWebAuthn release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftWebAuthn — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              3 releases · latest 0.2.1
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="477" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="124" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="106" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="478" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              0.2.1
+            </text> 
+            <text class="ig-label" x="107" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              0.1.0
+            </text> 
+            <text class="ig-muted" x="162" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="438" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftwebauthn, selfReflection</p>

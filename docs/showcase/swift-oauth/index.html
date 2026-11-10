@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A solo Swift library project that tackles OAuth’s two distinct roles — server and client — in a single, storage-agnostic package, built to eliminate the authentication gap in an ecosystem of Swift services and MCP clients." />
+    <meta name="description" content="A Swift library that lets a service issue OAuth tokens and an application consume them, with storage left entirely to the caller." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package | Justin Purnell</title>
+    <title>SwiftOAuthCore: Both Sides of OAuth 2.0 in One Swift Package | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package" />
-    <meta name="twitter:title" content="SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package" />
-    <meta property="og:description" content="A solo Swift library project that tackles OAuth’s two distinct roles — server and client — in a single, storage-agnostic package, built to eliminate the authentication gap in an ecosystem of Swift services and MCP clients." />
-    <meta name="twitter:description" content="A solo Swift library project that tackles OAuth’s two distinct roles — server and client — in a single, storage-agnostic package, built to eliminate the authentication gap in an ecosystem of Swift services and MCP clients." />
+    <meta property="og:title" content="SwiftOAuthCore: Both Sides of OAuth 2.0 in One Swift Package" />
+    <meta name="twitter:title" content="SwiftOAuthCore: Both Sides of OAuth 2.0 in One Swift Package" />
+    <meta property="og:description" content="A Swift library that lets a service issue OAuth tokens and an application consume them, with storage left entirely to the caller." />
+    <meta name="twitter:description" content="A Swift library that lets a service issue OAuth tokens and an application consume them, with storage left entirely to the caller." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swift-oauth" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swift-oauth",
-          "name" : "SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package",
+          "name" : "SwiftOAuthCore: Both Sides of OAuth 2.0 in One Swift Package",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swift-oauth#breadcrumb"
       },
-      "description" : "A solo Swift library project that tackles OAuth’s two distinct roles — server and client — in a single, storage-agnostic package, built to eliminate the authentication gap in an ecosystem of Swift services and MCP clients.",
+      "description" : "A Swift library that lets a service issue OAuth tokens and an application consume them, with storage left entirely to the caller.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package",
+      "name" : "SwiftOAuthCore: Both Sides of OAuth 2.0 in One Swift Package",
       "url" : "https://www.justinpurnell.com/showcase/swift-oauth"
     }
   ]
@@ -181,34 +181,312 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftOAuthCore: Both Halves of OAuth 2.0, One Swift Package</h1>
+      <h1 class="mainTitle">SwiftOAuthCore: Both Sides of OAuth 2.0 in One Swift Package</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftOAuthCore</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A solo Swift library project that tackles OAuth’s two distinct roles — server and client — in a single, storage-agnostic package, built to eliminate the authentication gap in an ecosystem of Swift services and MCP clients.</p>
+          <p>A Swift library that lets a service issue OAuth tokens and an application consume them, with storage left entirely to the caller.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>OAuth 2.0 has two roles that share a name and almost no behavior. An authorization server issues tokens and validates its own; a client application obtains someone else’s and keeps them fresh. Most libraries pick a side. The ecosystem of Swift services and clients that jpurnell maintains — <code>SwiftMCPServer</code>, <code>SwiftMCPClient</code>, <code>LedgeOS</code>, and others — needed both, and they needed them to speak the same vocabulary.</p>
-        <p>The immediate forcing function was concrete: <code>SwiftMCPClient</code> had no authentication beyond a pasted bearer token. It could not connect to an OAuth-protected MCP server, which MCP’s own specification requires. That wasn’t a missing feature to plan for later — it was a gap the spec had already closed around.</p>
-        <p>But the problem jpurnell chose to solve was larger than wiring up a token request. Refresh-token rotation is where OAuth implementations quietly fail users. Presenting a refresh token expires it. If the rotation response is lost, if the new token isn’t persisted before it’s used, if a concurrent request races ahead — any of these produces a locked-out user and a readable error nowhere. These failure modes are the reason SwiftOAuthCore is a library rather than a snippet copied between projects.</p>
+        <h2>Motivation</h2>
+        <p>Most OAuth libraries pick a side. A server library handles token issuance and validation; a client library handles token acquisition and refresh. The two roles share a name, a set of grant types, a <code>TokenResponse</code> structure, error codes, and PKCE — where the client generates the verifier the server validates — and that shared vocabulary is where drift happens when they live in separate packages.</p>
+        <p>I built SwiftOAuthCore to carry both halves in one package for two concrete reasons.</p>
+        <p>The first is <code>SwiftMCPClient</code>. It currently authenticates with a pasted bearer token and cannot connect to an OAuth-protected MCP server. The MCP specification requires OAuth, so there is a gap, not a preference. The client half of this library fills it.</p>
+        <p>The second is refresh-token rotation. Presenting a refresh token expires it. If the rotation response is lost in transit, if two requests race, or if the new token is stored after a crash, the user is locked out. These are not edge cases worth documenting in a README and leaving to the caller — they are the reason this is a library rather than a snippet. The rotation logic lives here once, so <code>SwiftMCPClient</code>, <code>LedgeOS</code>, <code>geo-audit</code>, and <code>Pare</code> do not each write it again.</p>
+        <p>Storage was always a protocol, not an implementation. A service already running Postgres should not need SQLite for its token store, and a test should not touch disk.</p>
         <h2>Approach</h2>
-        <p>The package is organized into deliberately scoped targets that mirror the conceptual split in OAuth itself. <code>SwiftOAuthCore</code> carries the shared vocabulary — grant types, <code>TokenResponse</code>, PKCE, error codes — while <code>SwiftOAuthProvider</code> and <code>SwiftOAuthClient</code> implement the server and client halves respectively. <code>SwiftOAuthMTLS</code> and <code>SwiftOAuthIdentity</code> extend the stack for mTLS and identity concerns without bloating the core. A <code>RedirectWireStub</code> target supports testing redirect flows without live infrastructure.</p>
-        <p>The most consequential architectural decision was making storage a protocol rather than a bundled dependency. The package specifies what must be persisted — tokens, rotation state, client records — not where. A production service behind Postgres brings its own adapter; a test never touches disk. This was a deliberate refusal to make the library’s convenience the consumer’s constraint.</p>
-        <p>The dependency graph reflects careful curation: <code>swift-crypto</code>, <code>async-http-client</code>, <code>swift-nio</code>, <code>swift-nio-ssl</code>, <code>swift-certificates</code>, <code>swift-asn1</code>, and <code>swift-identity</code> are all Apple or Apple-adjacent packages. The package targets Swift 6.2 and runs on both macOS and iOS, keeping the door open for client applications on either platform.</p>
+        <p>The package is organized into separate targets by responsibility: <code>SwiftOAuthCore</code> for shared types, <code>SwiftOAuthProvider</code> for the authorization server side, <code>SwiftOAuthClient</code> for the consumer side, <code>SwiftOAuthMTLS</code> for mutual TLS, and <code>SwiftOAuthIdentity</code> for identity integration. <code>RedirectWireStub</code> exists as a test harness for the redirect flow. Conformance tests live in their own target so they can run against any storage implementation a consumer provides.</p>
+        <p>The dependency list reflects the platform Apple provides: <code>swift-crypto</code> for cryptographic primitives, <code>async-http-client</code>, <code>swift-nio</code>, and <code>swift-nio-ssl</code> for networking, <code>swift-certificates</code> and <code>swift-asn1</code> for the MTLS target, and <code>swift-docc-plugin</code> for documentation generation. <code>swift-identity</code> connects the identity target. The package targets macOS and iOS, built with Swift tooling version 6.2.</p>
+        <p>There were no design proposals and no design-first workflow. The shape of the API emerged from the requirements of the first two planned adopters — <code>SwiftMCPServer</code> on the provider side, <code>SwiftMCPClient</code> and <code>LedgeOS</code> on the client side — and was revised across 29 releases.</p>
         <h2>Results</h2>
-        <p>SwiftOAuthCore moved from v0.0.1 to v1.0.0-beta.10 across 145 commits and 29 releases in roughly three months — a sustained cadence that reflects both the scope of the problem and the discipline of iterating publicly rather than shipping late. The release history shows continuous forward motion: minor versions advancing the core feature set, point releases handling corrections and adjustments, and a beta series beginning at v1.0.0-beta.1 to signal API stabilization without prematurely locking the surface.</p>
-        <p>Six distinct test targets — <code>SwiftOAuthCoreTests</code>, <code>SwiftOAuthMTLSTests</code>, <code>SwiftOAuthProviderTests</code>, <code>SwiftOAuthConformanceTests</code>, <code>SwiftOAuthIdentityTests</code>, and <code>SwiftOAuthClientTests</code> — cover both individual modules and cross-cutting conformance, reflecting a testing strategy that tracks the architectural layering rather than bolting verification on at the end.</p>
-        <h2>Judgment Calls</h2>
-        <p><strong>Carrying both halves.</strong> Splitting server and client into separate packages would have felt cleaner on paper. jpurnell chose not to, and the reasoning is precise: the two roles share grant types, <code>TokenResponse</code>, error codes, and PKCE — specifically because the client generates the verifier the server validates. Splitting the package would duplicate that shared vocabulary and create the conditions for it to drift. The unified package is the judgment.</p>
-        <p><strong>Storage as protocol, not prescription.</strong> It would have been faster to ship a SQLite adapter and call it done. The protocol-first approach requires more up-front design — the protocol surface has to be right, because consumers will implement against it — but it means a service already running Postgres doesn’t acquire a second database to satisfy the library. The design respects the production environments the library will actually enter.</p>
-        <p><strong>Taking rotation seriously as a quality standard.</strong> Jpurnell’s own MASTER_PLAN.md names three specific rotation failure modes and frames them as the reason this is a library at all. That framing is unusual and telling — it means the scope of the project was defined not by what was easy to ship but by what was necessary to get right. The <code>SwiftOAuthConformanceTests</code> target exists, in part, because correct rotation behavior needs to be verified against a standard, not just against the library’s own assumptions.</p>
-        <p><strong>A sustained beta series.</strong> Beginning the v1.0.0 beta track while downstream consumers (<code>SwiftMCPClient</code>, <code>LedgeOS</code>) haven’t yet adopted the library reflects a mature instinct about API stability. The betas give jpurnell room to adjust the surface under real integration pressure before committing to a stable contract — rather than discovering breaking changes after the first dependent ships.</p>
+        <p>The project reached v1.0.0-beta.10 across 145 commits between August and November 2026, with one contributor. The release history runs from v0.0.1 through fourteen pre-1.0 minor versions to ten beta releases of v1.0.0, covering provider, client, MTLS, and identity targets. Test targets exist for each library target — <code>SwiftOAuthCoreTests</code>, <code>SwiftOAuthMTLSTests</code>, <code>SwiftOAuthProviderTests</code>, <code>SwiftOAuthConformanceTests</code>, <code>SwiftOAuthIdentityTests</code>, and <code>SwiftOAuthClientTests</code>.</p>
+        <p>The package has not shipped a stable v1.0.0 release. It is in active beta.</p>
+        <h2>Decisions</h2>
+        <p><strong>Both halves in one package.</strong> The alternative was two packages. I chose one because the shared types — grant types, <code>TokenResponse</code>, error codes, PKCE — would have to be duplicated or extracted into a third package either way. One package keeps that vocabulary in one place.</p>
+        <p><strong>Storage as a protocol.</strong> The package defines what must be persisted; it does not provide a storage implementation. This was a constraint from the start, driven by the target adopters: a production service should not be forced into a storage engine it did not choose, and a test should run without side effects.</p>
+        <p><strong>Rotation correctness as a first-class concern.</strong> The three failure modes of refresh-token rotation — lost response, concurrent request, post-crash storage failure — are handled inside the library rather than documented as the caller’s problem. This is the strongest argument for the library existing at all rather than circulating as a snippet.</p>
+        <p><strong>Beta versioning.</strong> The jump from v0.14.1 to v1.0.0-beta.1 reflects a deliberate API stabilization effort before committing to a stable interface. What remains uncertain is whether the conformance test target covers enough of the rotation failure modes to serve as a contract for third-party storage implementations. That is unresolved before v1.0.0.</p>
+        <p><strong>No CLAUDE.md, no AI-assisted sessions.</strong> All 145 commits are from direct authorship. The development record shows no Claude Code sessions.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swift-oauth-stats.svg" alt="SwiftOAuthCore statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swift-oauth-commits.svg" alt="SwiftOAuthCore commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swift-oauth-releases.svg" alt="SwiftOAuthCore release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftOAuthCore statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftOAuthCore
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              145
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              29
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftOAuthCore commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftOAuthCore — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~36/month · peak 82 (145 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="124" width="136" height="24" /> 
+            <rect class="ig-bar" x="163" y="64" width="136" height="84" /> 
+            <rect class="ig-bar" x="301" y="111" width="136" height="37" /> 
+            <rect class="ig-bar" x="439" y="146" width="136" height="2" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="93" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="231" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="369" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="507" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftOAuthCore release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftOAuthCore — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              29 releases · latest v1.0.0-beta.10
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="437" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="406" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="406" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="370" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="312" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="193" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="179" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="175" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="175" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="175" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="175" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="175" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="175" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="170" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="166" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="161" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="143" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="45" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="45" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="45" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="45" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="45" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="166" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="438" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v1.0.0-beta.10
+            </text> 
+            <text class="ig-label" x="47" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.4.0
+            </text> 
+            <text class="ig-muted" x="93" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="231" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="369" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="507" y="112" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swift-oauth, selfReflection</p>

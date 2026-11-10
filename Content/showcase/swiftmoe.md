@@ -1,8 +1,8 @@
 ---
-title: Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon
-description: In seven months and 187 commits, jpurnell built a production-grade inference engine capable of streaming 200GB+ language models through a custom Metal compute pipeline while holding just ~6GB in resident memory — no Python, no C, no compromises.
+title: Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon
+description: A macOS inference engine that streams 200GB+ MoE language models from NVMe through a Metal compute pipeline while holding roughly 6GB in resident memory, with an OpenAI-compatible HTTP front end.
 date: 2026-10-30 12:24
-lastModified: 2026-11-02
+lastModified: 2026-11-10
 tags: showcase, swiftmoe, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,50 +10,44 @@ project: CTokenizer
 published: true
 ---
 
-# Streaming Giants: Building a Pure-Swift MoE Inference Engine for Apple Silicon
+# Swift Inference Engine for Mixture-of-Experts Models on Apple Silicon
 
-> In seven months and 187 commits, jpurnell built a production-grade inference engine capable of streaming 200GB+ language models through a custom Metal compute pipeline while holding just ~6GB in resident memory — no Python, no C, no compromises.
+> A macOS inference engine that streams 200GB+ MoE language models from NVMe through a Metal compute pipeline while holding roughly 6GB in resident memory, with an OpenAI-compatible HTTP front end.
 
-## Problem
+## Motivation
 
-Mixture-of-Experts language models represent the current frontier of open-weight AI, but running them locally is a hardware problem masquerading as a software problem. A 200GB model simply does not fit in any consumer GPU's VRAM. The standard response is to offload layers to CPU, accept brutal throughput penalties, or skip the problem entirely and call a cloud API.
+I wanted to run large Mixture-of-Experts language models locally on Apple Silicon without loading the full weights into RAM. The models I had in mind exceed 200GB — far beyond what fits in unified memory — so the only viable path was streaming weights directly from NVMe storage at inference time and processing them through the GPU. No existing open-source Swift tooling addressed that specific combination: MoE architectures, Metal compute, weight streaming, and a production-style HTTP interface. I built SwiftMoE to cover all of it in one package.
 
-CTokenizer — the working name for the repository, which houses the broader **SwiftMoE** project — takes a third path. The project is a Swift inference engine purpose-built for Apple Silicon that treats the NVMe SSD as a first-class memory tier. Rather than loading a model into RAM and hoping for the best, it streams weights on demand through a custom Metal compute pipeline, keeping resident memory bounded at roughly 6GB regardless of model size. The result is that a Mac with a fast SSD can run models that would otherwise require a server rack.
-
-The project also ships a complete, OpenAI-compatible HTTP service layer, meaning any client that speaks the `/v1/chat/completions` API — from curl to production applications — can point at a local SwiftMoE server and get streaming responses with no modification.
+A secondary goal was testability. Running tests against a 210GB model is impractical, so I needed a fixture strategy that would let the full test suite run on any development machine without a model download.
 
 ## Approach
 
-The architecture is organized around a clean separation of concerns that the project's own `MASTER_PLAN.md` treats as load-bearing, not aspirational.
+The project is organized as a multi-target Swift package under Swift Tools 6.2, targeting macOS. The main library (`CTokenizer`, `SwiftMoE`) contains no networking code and no C dependencies. The HTTP layer lives in `SwiftMoEHTTP`, built on `SwiftHTTPService` and `SwiftTLSKit`, and the server entry point is in `SwiftMoEServer`. A REPL target (`SwiftMoEChat`) uses `CLineNoise` for interactive use.
 
-The core inference library (`SwiftMoE` target) is pure Swift with no C dependencies and no networking code. GPU work happens across seven distinct Metal optimization paths, with automatic CPU fallback when a path isn't viable. The design acknowledges that Apple Silicon spans a wide performance range — a path that's optimal on an M3 Ultra may not be the right choice on an M1 — and handles this at runtime rather than compile time.
+The compute side implements seven GPU optimization paths in Metal, each selected automatically at runtime, with a CPU fallback when no suitable GPU path matches. Architecture behavior — layer counts, expert counts, routing strategy — is driven by a runtime `ModelConfig` with named presets rather than compiled-in constants. This is what makes the engine model-agnostic: swapping in a different MoE architecture means providing a different config, not recompiling.
 
-Model agnosticism is achieved through a runtime-configurable `ModelConfig` with architecture presets. There are no hardcoded architecture constants anywhere in the main library. A new MoE architecture can be expressed as a config rather than a code change, which keeps the core engine from accreting model-specific branches over time.
+The HTTP service exposes `/v1/chat/completions` with SSE streaming, bearer-key authentication, and TLS. Each request is bounded: there is a sequence budget, a queue deadline, cancellation on client disconnect, and a hard two-hour ceiling on any single response. These bounds exist to prevent runaway inference from tying up the server indefinitely.
 
-The HTTP layer (`SwiftMoEHTTP`, `SwiftMoEServer`) sits as a separate target and brings in SwiftHTTPService, SwiftTLSKit, and swift-nio. The service implements SSE streaming, bearer-key authentication, TLS termination, and a notably disciplined set of request bounds: sequence budgets, queue deadlines, disconnect-triggered cancellation, and a hard two-hour ceiling on any single response. These aren't afterthoughts — they reflect real thinking about what happens when a long-running local inference server meets adversarial or simply careless clients.
+The `CLAUDE.md` and `MASTER_PLAN.md` files in the repository document the architecture, hardware assumptions, what was tried and what worked, and safety considerations. The project followed a design-first workflow; those documents shaped the structure before and during implementation.
 
-The interactive `SwiftMoEChat` target wraps CLineNoise (the repository's only non-pure-Swift component, and appropriately isolated) to provide a local REPL interface.
+The test suite uses tiny synthetic model fixtures — small enough to construct in memory — so all 255 tests run without any external model files.
 
-The project carries a `CLAUDE.md` and operates under a design-first workflow, with architecture documented across sections covering results, hardware considerations, project structure, and a candid "What We Tried (and What Worked)" retrospective — evidence that architectural decisions were recorded and reasoned through, not just accumulated.
+Dependencies are `swift-nio` (async networking), `SwiftHTTPService`, `SwiftTLSKit`, and `swift-docc-plugin` for documentation generation.
 
 ## Results
 
-SwiftMoE has shipped three releases across a seven-month development window: v0.1.0, v0.2.0, and v0.2.1. The project is built against Swift Tools version 6.2 and targets macOS on Apple Silicon.
+The project shipped three releases — v0.1.0, v0.2.0, and v0.2.1 — across 187 commits from two contributors between March and October 2026. The test suite stands at 255 tests, all running against synthetic fixtures. The engine streams models larger than 200GB from NVMe while maintaining approximately 6GB resident memory. The HTTP layer is OpenAI-compatible and handles streaming responses with the safety bounds described above.
 
-The test suite stands at **255 tests**, written against tiny synthetic model fixtures. This is a meaningful design choice: the test suite validates the full inference pipeline without requiring anyone to download a 210GB model. GPU paths, config parsing, token handling, and HTTP behavior can all be exercised in CI on commodity hardware. 255 tests across a system this complex — spanning Metal compute, streaming I/O, HTTP, and TLS — represents real coverage discipline.
+## Decisions
 
-The 187-commit history across five branches and two contributors reflects sustained, iterative development rather than a single burst of activity. The codebase has been actively shaped and reshaped over time.
+**Weight streaming over full load.** Keeping ~6GB resident while serving 200GB+ models means NVMe throughput becomes the bottleneck rather than memory capacity. The Metal pipeline is designed around this: data moves from disk to GPU without staging a full model in unified memory.
 
-## Judgment Calls
+**Runtime `ModelConfig` with presets.** Hardcoding architecture constants would have made the engine specific to one model family. A configurable runtime description costs some simplicity but means the same binary can serve different MoE architectures without recompilation.
 
-Several decisions here are easy to make wrong and harder to make right.
+**Seven GPU paths plus CPU fallback.** Different hardware configurations and tensor shapes benefit from different Metal kernels. Rather than pick one general path, I enumerated seven and let the engine select at runtime. The CPU fallback is there for correctness testing and edge cases, not performance.
 
-**Bounding the unbounded.** The two-hour response ceiling, sequence budgets, and cancellation-on-disconnect in the HTTP service are the kind of safety rails that get skipped in early versions and retrofitted painfully later. Including them before v1.0 suggests jpurnell was thinking about the operational reality of running a local inference server, not just the happy path.
+**Synthetic fixtures for testing.** A test suite that requires a 210GB download would not run in CI or on most development machines. Tiny synthetic fixtures make all 255 tests self-contained. The tradeoff is that end-to-end accuracy against real model weights is not covered by automated tests.
 
-**Synthetic fixtures over real models.** Testing a 200GB-model inference engine without 200GB of test data requires building the right abstractions. The decision to invest in synthetic model fixtures means the test suite is actually runnable, which means it actually runs — a distinction that matters more than it sounds.
+**Networking isolated to its own targets.** `SwiftMoEHTTP` and `SwiftMoEServer` carry all networking code. The core library has no network dependency. This keeps the inference logic independently testable and deployable.
 
-**Seven GPU paths with CPU fallback.** Committing to seven Metal optimization paths is a significant surface area to maintain. But the alternative — a single path tuned for one chip — would make the engine brittle across Apple Silicon generations. The automatic fallback to CPU means the engine degrades gracefully rather than failing hard on unexpected hardware.
-
-**Architecture as configuration.** Hardcoding model architecture constants is the fastest path to a working demo and the slowest path to a general tool. The runtime `ModelConfig` with presets inverts this tradeoff deliberately, accepting more upfront design complexity to avoid a future where every new MoE architecture requires a fork.
-
-**Strict layering.** Keeping networking out of the core library and C code out of the main targets isn't accidental cleanliness — it's a structural choice that keeps the inference engine testable, portable, and auditable in isolation. The boundaries are enforced by the package manifest, not just by convention.
+**Safety bounds on requests.** The sequence budget, queue deadline, disconnect cancellation, and two-hour response cap are not optional features — they are built into the request lifecycle. Without them, a slow or stalled inference could block the server indefinitely. What remains uncertain is how these bounds interact with very long context requests on slower NVMe configurations; that has not been benchmarked across hardware.

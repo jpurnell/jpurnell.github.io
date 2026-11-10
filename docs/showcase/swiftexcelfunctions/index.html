@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A single-registry function evaluator that speaks Excel’s exact semantics — no file format required, no math reimplemented, no room for silent divergence." />
+    <meta name="description" content="A single registry that maps Excel function names to Swift implementations, delegating all mathematics to BusinessMath, so any caller can evaluate spreadsheet formulas without touching a file format." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift | Justin Purnell</title>
+    <title>SwiftExcelFunctions: An Excel Function Registry in Swift | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift" />
-    <meta name="twitter:title" content="SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift" />
-    <meta property="og:description" content="A single-registry function evaluator that speaks Excel’s exact semantics — no file format required, no math reimplemented, no room for silent divergence." />
-    <meta name="twitter:description" content="A single-registry function evaluator that speaks Excel’s exact semantics — no file format required, no math reimplemented, no room for silent divergence." />
+    <meta property="og:title" content="SwiftExcelFunctions: An Excel Function Registry in Swift" />
+    <meta name="twitter:title" content="SwiftExcelFunctions: An Excel Function Registry in Swift" />
+    <meta property="og:description" content="A single registry that maps Excel function names to Swift implementations, delegating all mathematics to BusinessMath, so any caller can evaluate spreadsheet formulas without touching a file format." />
+    <meta name="twitter:description" content="A single registry that maps Excel function names to Swift implementations, delegating all mathematics to BusinessMath, so any caller can evaluate spreadsheet formulas without touching a file format." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftexcelfunctions" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swiftexcelfunctions",
-          "name" : "SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift",
+          "name" : "SwiftExcelFunctions: An Excel Function Registry in Swift",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftexcelfunctions#breadcrumb"
       },
-      "description" : "A single-registry function evaluator that speaks Excel’s exact semantics — no file format required, no math reimplemented, no room for silent divergence.",
+      "description" : "A single registry that maps Excel function names to Swift implementations, delegating all mathematics to BusinessMath, so any caller can evaluate spreadsheet formulas without touching a file format.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift",
+      "name" : "SwiftExcelFunctions: An Excel Function Registry in Swift",
       "url" : "https://www.justinpurnell.com/showcase/swiftexcelfunctions"
     }
   ]
@@ -181,36 +181,288 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftExcelFunctions: Excel's Formula Library, Rebuilt for Swift</h1>
+      <h1 class="mainTitle">SwiftExcelFunctions: An Excel Function Registry in Swift</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftExcelFunctions</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">5 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A single-registry function evaluator that speaks Excel’s exact semantics — no file format required, no math reimplemented, no room for silent divergence.</p>
+          <p>A single registry that maps Excel function names to Swift implementations, delegating all mathematics to BusinessMath, so any caller can evaluate spreadsheet formulas without touching a file format.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Spreadsheet models are ubiquitous in finance, engineering, and analysis, yet evaluating them programmatically in Swift has always required dragging in file-format machinery along for the ride. If you want to know what <code>NPV(0.08, A1:A10)</code> computes, existing approaches force you to open a workbook, parse XML, and navigate a cell graph — even when all you actually care about is the formula.</p>
-        <p>SwiftExcelFunctions was built to cut that dependency entirely. Its motivating application is a workbook-correctness CLI: read a model, recompute every formula from scratch, and report precisely where the workbook disagrees with itself. That tool needs a formula engine that can stand alone — one that accepts a <code>FormulaAST</code> and any <code>CellValueProvider</code> and returns an answer, with no I/O, no ZIP, no spreadsheet file in sight.</p>
-        <p>The harder problem, though, is fidelity. Excel’s function library is large and its semantics are precise in ways that are easy to approximate and difficult to get exactly right. <code>PsiTriangular</code> takes its arguments in a specific order; <code>PsiLogNormal</code> has a particular parameterization. A wrong implementation produces plausible numbers, which is categorically worse than an error, because it fails silently in production models. The project’s mission is therefore exact Excel semantics — argument order, coercion rules, error propagation, and legacy/dotted name pairs — delivered through a single registry a caller can query by the name Excel uses.</p>
+        <h2>Motivation</h2>
+        <p>The motivating application is a workbook-correctness CLI: read an Excel model, recompute every formula from scratch, and report where the spreadsheet’s stored values disagree with what the formulas actually produce. To do that reliably, the formula evaluator has to match Excel’s semantics exactly — not approximately. Argument order, type coercion, error propagation, and the legacy/dotted name pairs (like <code>NORM.DIST</code> alongside <code>NORMDIST</code>) all have to be right, because a plausible wrong number is harder to catch than an obvious error.</p>
+        <p>The secondary consumer is BusinessMath’s Excel translation layer, which turns workbook models into computational models in Swift. That package needs the same guarantees.</p>
+        <p>What I wanted from SwiftExcelFunctions specifically was a clean separation: no file format handling, no I/O, no ZIP parsing. Hand it a <code>FormulaAST</code> and any <code>CellValueProvider</code> and it evaluates. That boundary is what makes the library independently useful and independently testable.</p>
         <h2>Approach</h2>
-        <p>The package is built on Swift 6.2 and targets the full Apple platform family — macOS, iOS, tvOS, watchOS, and visionOS — signaling that the evaluator is designed as an embeddable component, not a command-line-only tool.</p>
-        <p>The central architectural commitment is delegation over reimplementation. Mathematical logic lives in <code>BusinessMath</code>; <code>SwiftExcelFunctions</code> wraps it, names it, and enforces Excel’s calling conventions. The explicit goal is to prevent a second <code>NPV</code> from ever existing that could disagree with the first. <code>swift-numerics</code> and <code>swift-crypto</code> extend the numeric and hashing capabilities where needed, while <code>SwiftExcelCore</code> provides the formula AST and value types that the evaluator operates on. <code>SwiftXLSX</code> appears as a dependency for the corpus and audit tools, keeping file-format concerns quarantined to tooling rather than the core evaluator.</p>
-        <p>The package target list reveals a thoughtful separation of concerns. Alongside the main <code>SwiftExcelFunctions</code> library, there are dedicated targets for <code>WorkbookCensus</code>, <code>WorkbookContainer</code>, <code>ConformanceWorkbook</code>, <code>WorkbookOracleTool</code>, <code>ModelSimulation</code>, <code>XlsxAudit</code>, <code>NameRoundTrip</code>, <code>CorpusWalk</code>, and <code>WorkbookAudit</code> — each isolating a different verification or analysis concern. Test targets mirror the key executables: <code>SwiftExcelFunctionsTests</code>, <code>WorkbookContainerTests</code>, <code>WorkbookAuditTests</code>, <code>WorkbookCensusTests</code>, and <code>CorpusWalkTests</code>. This structure indicates that testing is not monolithic; different properties of the system are verified through different lenses.</p>
-        <p>A <code>CLAUDE.md</code> file is present and structures sessions with explicit phases: Session Start, After Cloning, Development Workflow, Key Rules, a Quality Gate, and References. This reflects a disciplined approach to AI-assisted development — sessions begin from a known state, follow a defined workflow, and exit through a quality gate rather than ending ad hoc.</p>
+        <p>The library targets macOS, iOS, tvOS, watchOS, and visionOS and is built with Swift Package Manager against Swift tools version 6.2. Its dependencies are SwiftExcelCore (for shared types including <code>FormulaAST</code> and <code>CellValueProvider</code>), BusinessMath (which owns all the mathematical implementations), SwiftXLSX (for reading <code>.xlsx</code> files in the tooling targets), swift-numerics, swift-crypto, and the swift-docc-plugin for documentation generation.</p>
+        <p>The central design decision is that SwiftExcelFunctions never reimplements mathematics. BusinessMath owns <code>NPV</code>, the statistical distributions, the financial functions — all of it. SwiftExcelFunctions is a registry and a wiring layer. Each function entry maps one or more Excel names to a Swift closure that validates arguments, coerces types, and delegates to BusinessMath. A second <code>NPV</code> that could drift from the first is exactly the failure this arrangement exists to prevent.</p>
+        <p>The package has several executable targets beyond the library itself: <code>WorkbookOracleTool</code> and <code>WorkbookAudit</code> for running audit passes against real workbooks, <code>ConformanceWorkbook</code> for generating a reference workbook, <code>CorpusWalk</code> for walking a corpus of files, <code>WorkbookCensus</code> for cataloguing function usage across a corpus, <code>NameRoundTrip</code> for verifying that name parsing and serialization are inverses, and <code>ModelSimulation</code> for simulation-based testing. The test targets are <code>SwiftExcelFunctionsTests</code>, <code>WorkbookContainerTests</code>, <code>WorkbookAuditTests</code>, <code>CorpusWalkTests</code>, and <code>WorkbookCensusTests</code>.</p>
+        <p>Three Claude Code sessions contributed 116 of the 270 total commits across 211 messages. The CLAUDE.md file encodes session-start instructions, development workflow rules, and the quality gate so that assisted sessions follow the same constraints as solo work. Friction in those sessions included five instances of buggy generated code, two environment issues, and one context limit hit; two sessions were rated mostly achieved and one fully achieved.</p>
         <h2>Results</h2>
-        <p>The project accumulated 270 commits from a single contributor across roughly two months, progressing through 21 releases: from <code>v0.1.0</code> through <code>v0.11.0</code> and into the <code>v1.0.0-alpha</code> series, which reached <code>alpha.5</code> by the end of October 2026. That release cadence — a new version roughly every three to four days on average — reflects continuous, deliberate iteration rather than large batched drops.</p>
-        <p>Three Claude Code sessions contributed 116 commits and 211 messages. Two sessions were classified as multi-task and one as single-task; two achieved mostly their goals, one achieved them fully. The friction profile — five instances of buggy code, two environment issues, one context limit, one misunderstood request, one wrong approach — is consistent with complex technical work where the AI is being pushed into domain-specific territory with exacting correctness requirements. The outcomes nonetheless confirm that the collaboration was net productive across all three sessions.</p>
-        <p>The package ships across five Apple platforms with a multi-target structure that separates the library, multiple CLI tools, and distinct test suites, giving downstream consumers a stable, independently testable core.</p>
-        <h2>Judgment Calls</h2>
-        <p><strong>Delegating math instead of owning it.</strong> The most consequential design decision in the entire project is the one that looks like an omission: SwiftExcelFunctions does not implement its own statistical or financial mathematics. It calls <code>BusinessMath</code>. This is not laziness — it is the explicit prevention of a class of failure. Two independent implementations of the same formula, living in the same codebase, will eventually diverge. In a correctness tool that exists to surface disagreement, silent divergence in the tool itself would be catastrophic. Choosing delegation as an architectural invariant reflects a clear-eyed understanding of where the real risk lies.</p>
-        <p><strong>Separating evaluation from file I/O.</strong> The decision to accept a <code>FormulaAST</code> and a <code>CellValueProvider</code> — rather than a workbook — means the evaluator has no surface area for format-related bugs and no dependency on parsing infrastructure. It also makes the library genuinely reusable: any caller that can construct a formula AST and supply cell values can use it, regardless of where those values came from.</p>
-        <p><strong>Building a conformance and corpus infrastructure.</strong> The presence of <code>ConformanceWorkbook</code>, <code>WorkbookOracleTool</code>, <code>CorpusWalk</code>, and <code>XlsxAudit</code> as first-class targets — each with corresponding test suites — shows that the developer understood from the start that correctness at this level cannot be established through unit tests alone. Verifying Excel semantics requires running against real workbooks and comparing outputs. Building that infrastructure into the package itself, rather than treating it as an afterthought, is a mark of engineering maturity.</p>
-        <p><strong>Encoding a quality gate into the development workflow.</strong> The <code>CLAUDE.md</code> structure, with its explicit Quality Gate phase, means that no session ends without the work passing a defined bar. In a project where the entire value proposition is exactness, making “did this meet the standard?” a mandatory exit condition rather than an optional check is the right call.</p>
+        <p>The project has 270 commits across a single branch, one contributor, and spans from September 4 to October 30, 2026 — roughly eight weeks of active development. The release history runs from v0.1.0 through v0.11.0 and then into the current alpha series: v1.0.0-alpha.1 through v1.0.0-alpha.5. The library is in active pre-release; nothing has shipped as v1.0.0.</p>
+        <p>The tooling targets are functional enough to run against real workbook corpora — <code>CorpusWalk</code>, <code>WorkbookCensus</code>, and the audit tools exist as working executables, not stubs. The conformance workbook target provides a reference artifact for checking that the registry’s output matches known-good values.</p>
+        <h2>Decisions</h2>
+        <p><strong>No file format handling in the core library.</strong> The library accepts a <code>FormulaAST</code> and a <code>CellValueProvider</code>. Parsing <code>.xlsx</code> files is the job of SwiftXLSX, which appears only in the tooling targets. This keeps the formula evaluation path free of I/O concerns and means the library can be used anywhere a formula AST can be constructed, with or without a physical spreadsheet.</p>
+        <p><strong>Mathematics lives in BusinessMath, not here.</strong> Every function that involves a non-trivial computation delegates to BusinessMath. The risk this addresses is two diverging implementations of the same function — one in BusinessMath used by other packages, one in SwiftExcelFunctions used here — producing different results for the same inputs. By delegating unconditionally, there is only one implementation to be wrong.</p>
+        <p><strong>Excel’s exact semantics, including legacy name pairs.</strong> The registry handles both <code>NORMDIST</code> and <code>NORM.DIST</code>, both old and new names, with the same underlying implementation. Getting the parameterization of functions like <code>PsiLogNormal</code> or <code>PsiTriangular</code> wrong produces plausible numbers that pass casual inspection, which is a worse failure mode than a crash or a <code>#VALUE!</code> error.</p>
+        <p><strong>What is unfinished.</strong> The project is at v1.0.0-alpha.5, which means the API is not yet stable. It is not clear from the history how complete the function registry is — which Excel functions are implemented and which are missing. The conformance workbook approach gives a mechanism to track coverage, but no coverage numbers are present in the available data. The 1.0.0 release is the open question.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swiftexcelfunctions-stats.svg" alt="SwiftExcelFunctions statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swiftexcelfunctions-commits.svg" alt="SwiftExcelFunctions commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swiftexcelfunctions-releases.svg" alt="SwiftExcelFunctions release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftExcelFunctions statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftExcelFunctions
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              270
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              21
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              5
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftExcelFunctions commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftExcelFunctions — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~135/month · peak 263 (270 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="274" height="84" /> 
+            <rect class="ig-bar" x="301" y="146" width="274" height="2" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftExcelFunctions release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftExcelFunctions — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              21 releases · latest v1.0.0-alpha.5
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="290" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="271" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="271" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="262" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="207" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="179" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="143" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="124" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="124" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="124" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="115" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="115" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="115" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="97" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="97" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="87" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="60" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="291" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v1.0.0-alpha.5
+            </text> 
+            <text class="ig-label" x="52" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.1.0
+            </text> 
+            <text class="ig-muted" x="162" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="438" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftexcelfunctions, selfReflection</p>

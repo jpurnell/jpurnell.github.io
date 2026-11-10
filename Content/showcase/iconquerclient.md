@@ -1,8 +1,8 @@
 ---
-title: Bridging the Transport Gap: IconquerClient's Transparent Remote Play Architecture
-description: A SwiftNIO-backed WebSocket client library that makes a remote iConquer game session indistinguishable from a local one — and refuses to be less secure than its URL implies.
+title: IconquerClient: WebSocket Client Library for iConquer Multiplayer
+description: A Swift library that connects to the iConquer game server over WebSocket and presents the remote session through the same interface as a local game, so the UI layer doesn't branch on transport.
 date: 2026-05-12 15:56
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,38 @@ project: iConquer
 published: true
 ---
 
-# Bridging the Transport Gap: IconquerClient's Transparent Remote Play Architecture
+# IconquerClient: WebSocket Client Library for iConquer Multiplayer
 
-> A SwiftNIO-backed WebSocket client library that makes a remote iConquer game session indistinguishable from a local one — and refuses to be less secure than its URL implies.
+> A Swift library that connects to the iConquer game server over WebSocket and presents the remote session through the same interface as a local game, so the UI layer doesn't branch on transport.
 
-## Problem
+## Motivation
 
-Multiplayer games built with a shared local-and-remote codebase face a persistent UI problem: the presentation layer has to know which transport it's talking to. Branch on `isRemote`, thread connection state through view models, handle opaque errors from the network stack — it compounds fast. IconquerClient was built to eliminate that branching entirely for the iConquer ecosystem.
+iConquer is a multiplayer strategy game I'm building. The server hosts games, and clients need a way to join and participate over the network. I wanted the presentation layer — `IconquerApp` and `IconquerUI` — to treat a remote game session identically to a local one. That meant the client library had to conform to whatever session shape the rest of the system already expected, hiding the transport entirely.
 
-The library serves a specific triangle of consumers: `IconquerApp` and `IconquerUI` on the remote-play path, any Swift client that needs to join a hosted iConquer game, and test harnesses that need to exercise the server's protocol directly. All three of those use cases demand the same thing: a session that behaves like a local game, regardless of what's underneath.
-
-The secondary problem is infrastructure reach. URLSession WebSockets are a Apple-platform-only story. IconquerClient was built from the start to treat server-side Swift and Linux as first-class targets, which ruled out URLSession as a foundation.
+I also wanted this library usable by test harnesses that exercise the server protocol, not just by the UI. That argued for keeping it a standalone Swift package rather than embedding it in the app target.
 
 ## Approach
 
-The architectural centerpiece is the transport abstraction: a remote game session presented behind the same interface shape as a local one. The UI layer has no branch for "am I talking to a WebSocket or to an in-process engine?" — IconquerClient's conformance to whatever session protocol `IconquerCore` defines handles that. This keeps the presentation layer honest and keeps the library's contract narrow.
+The library is written in Swift and targets macOS, iOS, tvOS, and visionOS. It depends on SwiftNIO rather than URLSession's built-in WebSocket support. The motivation for that choice is that the iConquer server itself is server-side Swift, and SwiftNIO keeps the networking layer consistent on both sides. It also means the client can run on Linux if a test harness ever needs it.
 
-SwiftNIO is the networking substrate, pulled in alongside `SwiftTLSKit` for TLS handling. That stack compiles and runs on Linux, meaning the same library can be used in server-side test harnesses and in an iOS app without conditional compilation gymnastics. The Swift 6.2 toolchain and strict concurrency settings were chosen to make the async transport story sound from the start, not retrofitted later.
+Transport selection is scheme-driven: a `wss://` URL gets TLS via SwiftTLSKit; anything else that isn't `ws://` is an error. There's no fallback to plaintext when TLS is requested. Connection state and server rejections surface as typed Swift errors rather than opaque string messages or untyped callbacks.
 
-The error model is typed rather than opaque. Connection failures and server rejections surface as concrete error cases, not `Error`-erased blobs that callers have to inspect with `as?` casts. That decision keeps integration sites clean and makes test harnesses straightforward to write.
+The package declares two targets — `IconquerClient` and `IconquerClientTests` — and pulls in `IconquerCore` for the shared protocol types that both the server and client understand.
 
-The scheme-enforcement rule is the sharpest single policy in the library: `wss://` means TLS or it means an error. There is no silent fallback to plaintext. The URL's scheme is a contract, and violating it is a hard failure rather than a quiet degradation.
+There were no design proposals or formal design-first documents. No Claude Code sessions were involved in this work.
 
 ## Results
 
-IconquerClient shipped two tagged releases — `v0.1.0` and `v0.2.0` — across 26 commits on a timeline running from April to October 2026. The library targets all four Apple platforms (macOS, iOS, tvOS, visionOS) plus the Linux-capable SwiftNIO stack, a breadth that reflects the library's explicit cross-platform mandate. A dedicated `IconquerClientTests` target exists alongside the main library target, providing the test harness surface the MASTER_PLAN.md identified as a first-class consumer. The library's dependency surface is intentional and contained: `IconquerCore` for the shared protocol types, `SwiftTLSKit` and `swift-nio` for the transport, and `swift-docc-plugin` signaling that documentation is treated as a deliverable rather than an afterthought.
+The project reached two tagged releases — v0.1.0 and v0.2.0 — across 26 commits from a single contributor, with development running from April 2026 through October 2026. Two branches exist in the repository. The library covers macOS, iOS, tvOS, and visionOS as declared platform targets.
 
-## Judgment Calls
+## Decisions
 
-**The session shape decision is the most consequential design call in the library.** Presenting a remote session behind the same interface as a local one is not a natural default — it requires discipline about what leaks through the abstraction and what doesn't. The payoff is that `IconquerApp` and `IconquerUI` can be written without transport awareness, which is a significant reduction in view-layer complexity. The cost is that IconquerClient has to own more of the session lifecycle. That tradeoff was made deliberately and held.
+**SwiftNIO over URLSession WebSockets.** URLSession's WebSocket API is Apple-platform-only and doesn't align with the server's own networking layer. SwiftNIO works across platforms and matches what the server uses, which simplifies reasoning about protocol behavior end to end.
 
-**Choosing SwiftNIO over URLSession WebSockets was a platform philosophy decision, not a features decision.** URLSession would have been faster to integrate. SwiftNIO was chosen because Linux and server-side Swift are first-class targets — not aspirational ones. That choice shapes the dependency graph, the concurrency model, and the long-term portability of the library.
+**Scheme-based transport selection.** Rather than accepting a flag or configuration option to toggle TLS, the URL scheme determines the transport. `wss://` means TLS or failure; `ws://` means plaintext. This removes a class of misconfiguration where TLS is intended but not enforced.
 
-**The `wss://` enforcement rule is an opinion expressed in code.** Many networking libraries treat scheme validation as a warning or a configuration option. IconquerClient treats it as a hard invariant: the scheme is a security contract, and a library that silently falls back to plaintext when TLS fails isn't actually providing a security guarantee. Surfacing that as a typed error rather than a silent behavior makes the library's stance legible to every integration site.
+**Typed errors over opaque failures.** Connection state transitions and server rejections are represented as specific Swift error types rather than generic errors or string descriptions. This makes it possible for callers to handle specific failure modes rather than inspecting messages.
 
-**Typed errors over opaque failures reflects a considered stance on API design.** It's more work to define and maintain a concrete error type than to throw a generic `Error`. But it makes test harnesses dramatically easier to write — which matters here because the MASTER_PLAN.md explicitly names test harnesses as a first-class consumer — and it makes integration-site error handling expressive rather than defensive.
+**Conforming to the local session interface.** The remote session presents the same shape as a local game session so the UI doesn't need a branch for remote vs. local play. This is the central architectural constraint the library is built around, and it's what ties the dependency on `IconquerCore` together — both sides of the connection share the same protocol types.
+
+What remains unfinished or uncertain: the two-branch structure suggests active development, and v0.2.0 is the latest public release as of October 2026. I haven't published specific test coverage numbers. The test target exists, but how thoroughly the protocol edge cases are exercised isn't captured here.

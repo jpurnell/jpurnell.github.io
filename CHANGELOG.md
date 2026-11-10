@@ -5,7 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **`basics.pronouns` in `cv.json` (2026-11-10).** An optional `Pronouns` value on `Basics`
+  (`subject`, `object`, `possessive`, and an optional `display` such as "he/him, any is fine"),
+  set to he/him/his. It is stored, not published: nothing on the page or in the JSON-LD states it,
+  because schema.org's `Person` has no such property, and a test pins that the structured data
+  carries neither the key nor the value. A CV without the field still decodes. project-showcase
+  reads it so generated pages use the right pronouns instead of a guess.
+- **Showcase graphics are inlined (`InlineSVG`).** The charts were `<img>` tags, which cannot see
+  the page's theme and so ignored the site's light/dark toggle. They are now inlined, resolving the
+  page's own token variables; their CSS is scoped to the chart so it cannot restyle the page, and a
+  missing or non-SVG file falls back to an `<img>`.
+
 ### Changed
+- **Showcase pages regenerated in first person (2026-11-10).** All 39 project pages and the portfolio
+  overview were rewritten in my voice, with no praise of the work, and the KEXPPower page was added
+  (`settled: true`, so syncing never rewrites it). Graphics use one title size, a heavy rule under it,
+  no card border, and a shared month axis for the commit and release charts. Syncing now rewrites a
+  page's prose only after a minor release bump; otherwise it refreshes the graphics alone.
 - **DesignTokens 0.6.0 to 0.9.0 (2026-11-10).** `Package.swift` now requires `from: "0.9.0"`
   (resolved at tag 0.9.0). `scripts/sync-tokens.sh` produces a byte-identical `tokens.css`, so no
   token value the site uses changed. The showcase SVGs were regenerated against it; eight differ,

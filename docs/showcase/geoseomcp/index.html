@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A Swift MCP server exposing 29 tools that answer the question traditional SEO never asked: not can a search engine rank this page, but can an AI system understand, retrieve, and correctly cite it?" />
+    <meta name="description" content="A 29-tool MCP server that analyzes how well a page will be understood, cited, and retrieved by AI systems rather than by traditional search engines." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>GeoSEOMCP: Building the Audit Layer for the Post-Search Web | Justin Purnell</title>
+    <title>GeoSEOMCP: An MCP Server for Generative Engine Optimization | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="GeoSEOMCP: Building the Audit Layer for the Post-Search Web" />
-    <meta name="twitter:title" content="GeoSEOMCP: Building the Audit Layer for the Post-Search Web" />
-    <meta property="og:description" content="A Swift MCP server exposing 29 tools that answer the question traditional SEO never asked: not can a search engine rank this page, but can an AI system understand, retrieve, and correctly cite it?" />
-    <meta name="twitter:description" content="A Swift MCP server exposing 29 tools that answer the question traditional SEO never asked: not can a search engine rank this page, but can an AI system understand, retrieve, and correctly cite it?" />
+    <meta property="og:title" content="GeoSEOMCP: An MCP Server for Generative Engine Optimization" />
+    <meta name="twitter:title" content="GeoSEOMCP: An MCP Server for Generative Engine Optimization" />
+    <meta property="og:description" content="A 29-tool MCP server that analyzes how well a page will be understood, cited, and retrieved by AI systems rather than by traditional search engines." />
+    <meta name="twitter:description" content="A 29-tool MCP server that analyzes how well a page will be understood, cited, and retrieved by AI systems rather than by traditional search engines." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/geoseomcp" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/geoseomcp",
-          "name" : "GeoSEOMCP: Building the Audit Layer for the Post-Search Web",
+          "name" : "GeoSEOMCP: An MCP Server for Generative Engine Optimization",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/geoseomcp#breadcrumb"
       },
-      "description" : "A Swift MCP server exposing 29 tools that answer the question traditional SEO never asked: not can a search engine rank this page, but can an AI system understand, retrieve, and correctly cite it?",
+      "description" : "A 29-tool MCP server that analyzes how well a page will be understood, cited, and retrieved by AI systems rather than by traditional search engines.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "GeoSEOMCP: Building the Audit Layer for the Post-Search Web",
+      "name" : "GeoSEOMCP: An MCP Server for Generative Engine Optimization",
       "url" : "https://www.justinpurnell.com/showcase/geoseomcp"
     }
   ]
@@ -181,36 +181,319 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">GeoSEOMCP: Building the Audit Layer for the Post-Search Web</h1>
+      <h1 class="mainTitle">GeoSEOMCP: An MCP Server for Generative Engine Optimization</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">GeoSEOMCP</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A Swift MCP server exposing 29 tools that answer the question traditional SEO never asked: not <em>can a search engine rank this page</em>, but <em>can an AI system understand, retrieve, and correctly cite it</em>?</p>
+          <p>A 29-tool MCP server that analyzes how well a page will be understood, cited, and retrieved by AI systems rather than by traditional search engines.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>The web’s visibility layer is bifurcating. For decades, “being findable” meant satisfying a crawler that produced a ranked list of blue links. That model assumed a human would click through, skim, and decide. Generative AI breaks every one of those assumptions. A language model reads a page once during training or retrieval, extracts passages, and quotes them — often without attribution, often in contexts the author never anticipated. If the content isn’t structured for that consumption pattern, it doesn’t get cited. It simply doesn’t exist in the answer.</p>
-        <p>GeoSEOMCP is jpurnell’s response to that gap. Built as a macOS-native Swift package, it implements the Model Context Protocol (MCP) to expose a suite of 29 tools purpose-built for <strong>Generative Engine Optimization</strong> — a discipline focused on how well a page is understood, cited, and retrieved by AI systems rather than how it ranks on a results page.</p>
-        <p>The project targets three overlapping audiences: content authors who need to know whether their writing will survive passage-level extraction by an LLM, agents running automated site audits, and developers building AI-native publishing workflows. The unifying question is always the same: <em>in the form a model actually consumes this, is it citable?</em></p>
+        <h2>Motivation</h2>
+        <p>Classic SEO tools answer one question: will this page rank? That question is becoming less useful as AI assistants increasingly read a page once and decide whether to quote from it. The unit that matters is no longer a position in a results list — it is a passage that a model extracts and cites verbatim.</p>
+        <p>I built GeoSEOMCP to address the gap between what traditional SEO tooling measures and what actually determines whether content gets cited by an LLM. The specific problems I wanted to handle were: whether a page is structured in a way a model can parse, whether the right AI crawlers are permitted in <code>robots.txt</code>, and whether individual passages are citable in the form a model actually consumes them. The result is an MCP server — using the Model Context Protocol — so the tools can be called directly by agents performing site audits or by AI assistants answering questions about a page’s machine-readability.</p>
         <h2>Approach</h2>
-        <p>The architectural choice to target MCP from day one is the central decision of this project. Rather than building a standalone CLI or web service, jpurnell chose to make the tooling native to the agent layer — meaning any MCP-aware assistant can call these tools directly, turning a site audit from a report you read into an analysis an AI can perform on your behalf.</p>
-        <p>The package is structured across three targets: <code>GeoSEOMCP</code> for the core domain logic, <code>GeoSEOMCPServer</code> for the protocol implementation, and <code>GeoSEOMCPTests</code> for the test suite. Dependencies are deliberately lean — <code>SwiftMCPServer</code>, the <code>swift-mcp-sdk</code>, and <code>swift-docc-plugin</code> — keeping the surface area tight and the platform constraint (macOS only) honest rather than aspirationally cross-platform.</p>
-        <p>One of the more considered pieces of domain modeling is the AI crawler registry. jpurnell built explicit first-class types — <code>AICrawlerRegistry</code>, <code>AICrawler</code>, <code>AIPlatform</code> — to represent the population of AI-specific crawlers that <code>robots.txt</code> files now need to reason about. This matters because the tooling surfaces something most audits miss: a <code>robots.txt</code> that admits Googlebot while blocking GPTBot is not an oversight, it is a policy decision with real consequences for AI visibility — and it deserves to be named as such.</p>
-        <p>The passage-level citability framing is similarly intentional. Classic SEO scores pages. GeoSEOMCP scores passages, because that is the unit a model actually quotes. This is a narrower, harder problem, and it required building analysis primitives that operate at a granularity most web tooling has never needed.</p>
-        <p>Swift Tools version 6.2 means the project is running on the leading edge of Swift’s concurrency model, appropriate for a tool designed to handle async document fetching and analysis across many concurrent agent calls.</p>
+        <p>The project is a Swift package targeting macOS, built against Swift Tools version 6.2. It has three targets: <code>GeoSEOMCP</code> (the core library), <code>GeoSEOMCPServer</code> (the server executable), and <code>GeoSEOMCPTests</code> (the test suite). The two external dependencies that do the protocol-level work are <code>SwiftMCPServer</code> and <code>swift-mcp-sdk</code>; <code>swift-docc-plugin</code> handles documentation generation.</p>
+        <p>The 29 tools are organized around four concerns that differ from traditional SEO:</p>
+        <ul>
+          <li><strong>AI crawler access</strong> — using <code>AICrawlerRegistry</code>, <code>AICrawler</code>, and <code>AIPlatform</code> types to map which AI crawlers a site’s <code>robots.txt</code> admits or excludes. A configuration that allows Googlebot but blocks GPTBot is a meaningful decision that most tooling ignores entirely.</li>
+          <li><strong>Passage-level citability</strong> — scoring individual passages rather than whole pages, because a model quotes a passage, not a PageRank score.</li>
+          <li><strong>Structural machine-readability</strong> — analyzing whether a page’s structure and metadata are parseable in the form an LLM would read it.</li>
+          <li><strong>Citation and retrieval signals</strong> — examining factors that affect whether a model retrieves and quotes a page correctly.</li>
+        </ul>
+        <p>The MCP server architecture means every tool is callable by an agent or assistant directly, without a human in the loop, which fits the target use case of automated site audits.</p>
         <h2>Results</h2>
-        <p>GeoSEOMCP shipped its <code>0.1.0</code> release across 60 commits, sole-authored, over approximately eight months — from the first commit in March 2026 through the latest in November 2026. Six branches show iterative development with dedicated workstreams rather than a single monolithic trunk. The 29 tools represent a coherent, complete API surface for the GEO audit domain: a number large enough to cover the problem thoroughly, constrained enough that each tool has a reason to exist.</p>
-        <p>The <code>GeoSEOMCPTests</code> target is present and structured as a first-class concern alongside production code. <code>swift-docc-plugin</code> as a dependency signals that the documentation is generated from source — the project is built to be understood, not just used.</p>
-        <h2>Judgment Calls</h2>
-        <p><strong>MCP as the interface, not a wrapper around one.</strong> jpurnell could have built a command-line tool or a REST API and later considered an MCP adapter. Instead, the protocol is the foundation. This means the tooling lives at the same layer as the agents that need it, reducing integration friction to zero for any MCP-aware system. It also means the design had to be right the first time — MCP tool schemas are part of your public contract in a way a CLI flag never is.</p>
-        <p><strong>Naming the AI crawler problem explicitly.</strong> Building <code>AICrawlerRegistry</code> as a typed registry rather than parsing <code>robots.txt</code> naively and leaving interpretation to the caller is a craft decision. It encodes domain knowledge — that GPTBot, Anthropic’s crawler, and their peers are a distinct population with distinct policy implications — into the type system, so that distinction can’t be accidentally elided in analysis.</p>
-        <p><strong>Passage-level, not page-level.</strong> This is the judgment call that defines the project’s identity. It would have been faster and simpler to produce page-level scores. jpurnell chose not to, because a page-level score doesn’t answer the actual question. A page can have a strong overall signal and contain passages that are ambiguous, unattributable, or machine-unreadable. GEO lives at the passage level, and so does GeoSEOMCP.</p>
-        <p><strong>Swift on the leading edge.</strong> Targeting Swift Tools 6.2 and macOS on a tools project is a bet on longevity and correctness. Strict concurrency means bugs that might surface as race conditions in production are caught at compile time. For a server handling concurrent agent tool calls, that is not a philosophical preference — it is operational discipline.</p>
+        <p>The project shipped one release, <code>0.1.0</code>, built across 60 commits from one contributor over roughly seven and a half months (March to November 2026). The 29 tools are implemented and exposed through the MCP server interface. The package compiles and runs on macOS against Swift 6.2 tooling.</p>
+        <p>There are no usage or adoption numbers to report at this stage, as this is a first release.</p>
+        <h2>Decisions</h2>
+        <p><strong>MCP as the delivery format.</strong> Shipping as an MCP server rather than a CLI or library means the tools are callable by agents directly. That matches the target users — agents auditing sites and AI assistants answering citability questions — better than a human-facing interface would.</p>
+        <p><strong>Swift on macOS only.</strong> The choice narrows the platform surface to what I could build and test. It also fits the likely deployment context: a developer’s own machine running an MCP host alongside an AI assistant.</p>
+        <p><strong>AI-crawler-specific types.</strong> <code>AICrawlerRegistry</code>, <code>AICrawler</code>, and <code>AIPlatform</code> are first-class types rather than string lookups. This makes the distinction between, say, GPTBot and Bingbot explicit in the data model, which is the distinction that actually matters for generative engine access decisions.</p>
+        <p><strong>Passage-level scoring.</strong> Scoring passages rather than pages reflects how models consume content. This was a core architectural choice and shapes what the tools return.</p>
+        <p><strong>What is unfinished.</strong> There is no cross-platform support — Linux is out of scope for now. The project has no published adoption data and no integrations with specific AI platforms to validate that its citability signals correlate with actual citation rates. The relationship between passage scores and real-world model behavior remains a hypothesis rather than a measured outcome.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/geoseomcp-stats.svg" alt="GeoSEOMCP statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/geoseomcp-commits.svg" alt="GeoSEOMCP commit history chart" class="img-fluid" />
-        <img src="/images/showcase/geoseomcp-releases.svg" alt="GeoSEOMCP release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="GeoSEOMCP statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              GeoSEOMCP
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              60
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="GeoSEOMCP commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              GeoSEOMCP — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~6/month · peak 17 (60 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="59" height="84" /> 
+            <rect class="ig-bar" x="86" y="144" width="59" height="4" /> 
+            <rect class="ig-bar" x="147" y="134" width="59" height="14" /> 
+            <rect class="ig-bar" x="209" y="144" width="59" height="4" /> 
+            <rect class="ig-bar" x="270" y="144" width="59" height="4" /> 
+            <rect class="ig-bar" x="331" y="119" width="59" height="29" /> 
+            <rect class="ig-bar" x="393" y="84" width="59" height="64" /> 
+            <rect class="ig-bar" x="454" y="84" width="59" height="64" /> 
+            <rect class="ig-bar" x="515" y="124" width="59" height="24" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="55" y="166" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="116" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="177" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="239" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="361" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="423" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="484" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="545" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="GeoSEOMCP release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              GeoSEOMCP — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              1 release · latest 0.1.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="278" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="279" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              0.1.0
+            </text> 
+            <text class="ig-muted" x="55" y="112" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="116" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="177" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="239" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="361" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="423" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="484" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="545" y="112" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: geoseomcp, selfReflection</p>

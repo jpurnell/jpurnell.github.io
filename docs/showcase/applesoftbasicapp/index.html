@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A native Swift package powering a faithful Applesoft BASIC runtime across iPad, Mac, and Vision Pro — complete with graphics, sound, and period-accurate presentation." />
+    <meta name="description" content="A Swift package that provides the core layer — editor state, terminal model, graphics, and sound — sitting between the ApplesoftBASICLib interpreter and the native SwiftUI apps targeting iPad, Mac, and Vision Pro." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware | Justin Purnell</title>
+    <title>ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware" />
-    <meta name="twitter:title" content="ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware" />
-    <meta property="og:description" content="A native Swift package powering a faithful Applesoft BASIC runtime across iPad, Mac, and Vision Pro — complete with graphics, sound, and period-accurate presentation." />
-    <meta name="twitter:description" content="A native Swift package powering a faithful Applesoft BASIC runtime across iPad, Mac, and Vision Pro — complete with graphics, sound, and period-accurate presentation." />
+    <meta property="og:title" content="ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App" />
+    <meta name="twitter:title" content="ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App" />
+    <meta property="og:description" content="A Swift package that provides the core layer — editor state, terminal model, graphics, and sound — sitting between the ApplesoftBASICLib interpreter and the native SwiftUI apps targeting iPad, Mac, and Vision Pro." />
+    <meta name="twitter:description" content="A Swift package that provides the core layer — editor state, terminal model, graphics, and sound — sitting between the ApplesoftBASICLib interpreter and the native SwiftUI apps targeting iPad, Mac, and Vision Pro." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/applesoftbasicapp" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/applesoftbasicapp",
-          "name" : "ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware",
+          "name" : "ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/applesoftbasicapp#breadcrumb"
       },
-      "description" : "A native Swift package powering a faithful Applesoft BASIC runtime across iPad, Mac, and Vision Pro — complete with graphics, sound, and period-accurate presentation.",
+      "description" : "A Swift package that provides the core layer — editor state, terminal model, graphics, and sound — sitting between the ApplesoftBASICLib interpreter and the native SwiftUI apps targeting iPad, Mac, and Vision Pro.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware",
+      "name" : "ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App",
       "url" : "https://www.justinpurnell.com/showcase/applesoftbasicapp"
     }
   ]
@@ -181,35 +181,301 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">ApplesoftBASICAppCore: Bringing the Apple II Back to Life on Modern Hardware</h1>
+      <h1 class="mainTitle">ApplesoftBASICAppCore: Shared Business Logic for an Applesoft BASIC App</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">ApplesoftBASIC</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A native Swift package powering a faithful Applesoft BASIC runtime across iPad, Mac, and Vision Pro — complete with graphics, sound, and period-accurate presentation.</p>
+          <p>A Swift package that provides the core layer — editor state, terminal model, graphics, and sound — sitting between the ApplesoftBASICLib interpreter and the native SwiftUI apps targeting iPad, Mac, and Vision Pro.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Applesoft BASIC shaped a generation of programmers. For millions of people who grew up typing listings from <em>Compute!</em> magazine or <em>Creative Computing</em>, the Apple II was their first encounter with software as something you could make yourself. But that experience has effectively been stranded in time — emulators exist, but they carry the weight of full system emulation and rarely feel at home on modern hardware.</p>
-        <p>ApplesoftBASICAppCore is the library layer beneath an app designed to solve that problem directly. The project’s stated mission is an iPad, Mac, and Vision Pro application that runs Applesoft BASIC programs with a retro terminal experience — editor, terminal, lo-res and hi-res graphics, and speaker sound — on top of a dedicated interpreter. It targets three distinct audiences: people revisiting the Apple II BASIC they grew up with, learners encountering a small and immediately legible language for the first time, and owners of vintage listings from books and magazines who have nowhere to run them anymore. That last group in particular has been poorly served — a dog-eared copy of a 1982 type-in program is useless without something that speaks the full language.</p>
-        <p>The key differentiator the project stakes its claim on is running the real language, not a subset. Graphics and sound are included, not deferred.</p>
+        <h2>Motivation</h2>
+        <p>The goal is an app that lets people run Applesoft BASIC programs on modern Apple hardware the way they remember them: green characters on a black screen, lo-res and hi-res graphics, and the speaker sounds that accompanied them. The target audience is people who grew up with the Apple II, learners who want a small and complete language they can read all at once, and anyone who owns a stack of vintage magazine listings with no machine to run them on.</p>
+        <p>The constraint I set was running the real language — not a simplified subset — which meant building on top of ApplesoftBASICLib, a separate interpreter package I had already written. What ApplesoftBASICAppCore does is provide the layer above that interpreter: the editor state, the terminal model, the graphics surface, and sound, packaged so that SwiftUI views on each platform can consume them without duplicating logic across targets.</p>
         <h2>Approach</h2>
-        <p>The project is structured as a Swift package targeting macOS and iOS simultaneously, using Swift tools version 6.2. The separation of concerns is deliberate: ApplesoftBASICAppCore and its companion test target, ApplesoftBASICAppCoreTests, form a library layer decoupled from any specific UI host. This architecture means the same interpreter core can underpin a Mac app, an iPad app, and a Vision Pro experience without forking logic — the platform-specific presentation layer sits above it.</p>
-        <p>The sole declared dependency is swift-docc-plugin, which signals that documentation is treated as a first-class concern rather than an afterthought. For a project whose audience includes nostalgic users and first-time learners, that emphasis on legible, browsable documentation is an appropriate investment.</p>
-        <p>The decision to build natively — one Swift codebase across three platforms — rather than wrapping a web runtime or porting a C emulator directly reflects a conviction that the experience on each device should feel native. Period-accurate presentation, specifically the PrintChar21 and PRNumber3 fonts rendered green-on-black, is not cosmetic flair; for the target audience, that fidelity is the point.</p>
+        <p>I structured this as a Swift package rather than embedding the logic directly in each app target. The package declares two targets: <code>ApplesoftBASICAppCore</code> for the library itself and <code>ApplesoftBASICAppCoreTests</code> for its test suite. It supports macOS and iOS, which covers iPad and Mac; Vision Pro support extends from the iOS target. The only external dependency besides ApplesoftBASICLib is the swift-docc-plugin, which I added to generate reference documentation from source comments.</p>
+        <p>The Swift 6 tools version means the package participates in Swift’s strict concurrency model. Because the terminal model and graphics state are written to from the interpreter and read from SwiftUI views, I needed to be explicit about actor isolation and sendability from the start rather than retrofitting it later.</p>
+        <p>Period-accurate presentation — PrintChar21 and PRNumber3 fonts, green-on-black color — is a constraint carried in from the project design. Font rendering and the color scheme are part of the terminal model’s responsibilities inside this package, so the platform layers don’t each implement them independently.</p>
         <h2>Results</h2>
-        <p>Over roughly six months of development, from April to October 2026, the project reached three formal releases: v1.0.0, v1.1.0, and v1.2.0. That cadence — three versioned milestones in six months from a solo contributor — reflects sustained, deliberate progress rather than a sprint-and-abandon pattern. The 31 commits across a single branch suggest a developer working methodically, with releases used as genuine checkpoints rather than marketing events.</p>
-        <p>The package ships with a dedicated test target, establishing a baseline for interpreter correctness that matters considerably when the language runtime is the product. A BASIC interpreter that silently mishandles edge cases in the real language isn’t serving its audience — it’s just another incomplete implementation.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here reveal considered craft rather than default choices.</p>
-        <p><strong>Full language fidelity over a useful subset.</strong> The easiest version of this project omits hi-res graphics and PEEK/POKE sound — they’re hard, they vary by hardware behavior, and most users might not immediately notice. Committing to the full language instead is a harder promise but the right one for users who want to run their actual vintage listings without hunting for which features were cut.</p>
-        <p><strong>Library-first architecture.</strong> Structuring ApplesoftBASICAppCore as a standalone Swift package rather than embedding the interpreter logic directly in the app is a meaningful architectural choice. It enforces a discipline boundary between the runtime and the UI, makes the core independently testable, and leaves the door open to other consumers — a command-line tool, a SwiftUI preview harness, a Playgrounds integration — without restructuring the codebase.</p>
-        <p><strong>Native across three platforms from one codebase.</strong> Vision Pro support isn’t obviously necessary for a retro BASIC environment, but its inclusion speaks to a developer thinking about where the audience for this kind of experience will be, not just where it is today. A learner encountering Applesoft BASIC for the first time in a spatial computing environment in 2026 is a coherent use case, and the architecture accommodates it without compromise.</p>
-        <p><strong>DoCC as a documentation strategy.</strong> Choosing swift-docc-plugin over no documentation infrastructure — particularly for a project serving nostalgic users and learners — reflects an understanding that the interpreter’s public interface needs to be discoverable. A library this opinionated about its mission should be equally opinionated about how it explains itself.</p>
+        <p>The package has shipped across three releases: v1.0.0, v1.1.0, and v1.2.0, all within a development window running from April to October 2026. There are 31 commits from one contributor across that period. The package compiles for macOS and iOS under Swift 6 strict concurrency. The test target exists and runs as part of the package; the input data doesn’t include a specific test count.</p>
+        <h2>Decisions</h2>
+        <p><strong>Separate package, not an embedded framework.</strong> Keeping ApplesoftBASICAppCore as a standalone Swift package means the iOS, macOS, and visionOS app targets can all consume it without code duplication, and it can be tested in isolation from any UI.</p>
+        <p><strong>Swift 6 concurrency from the start.</strong> The package was initialized at Swift tools version 6.2 rather than an earlier version. The terminal and graphics models are mutated by the interpreter and observed by views on potentially different actors, so opting into Swift 6’s concurrency rules at the outset meant catching isolation problems at compile time rather than as runtime data races.</p>
+        <p><strong>DocC documentation via swift-docc-plugin.</strong> The plugin is the only non-interpreter dependency. Because the package is meant to be the boundary that platform developers (currently just me, but potentially others) program against, keeping the public API documented in source was something I wanted from the beginning.</p>
+        <p><strong>What is unfinished or uncertain.</strong> The three releases indicate the package is in active development rather than finished. Vision Pro is listed as a target platform in the mission but the visionOS-specific interaction model — how a user edits and runs programs in that environment — isn’t something the input data describes as resolved. Sound, lo-res graphics, and hi-res graphics are all called out as requirements; how completely each is implemented in v1.2.0 isn’t recorded in the available data.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/applesoftbasicapp-stats.svg" alt="ApplesoftBASIC statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/applesoftbasicapp-commits.svg" alt="ApplesoftBASIC commit history chart" class="img-fluid" />
-        <img src="/images/showcase/applesoftbasicapp-releases.svg" alt="ApplesoftBASIC release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ApplesoftBASICAppCore statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ApplesoftBASICAppCore
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              31
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              3
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ApplesoftBASICAppCore commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ApplesoftBASICAppCore — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~4/month · peak 15 (31 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="120" width="76" height="28" /> 
+            <rect class="ig-bar" x="182" y="126" width="76" height="22" /> 
+            <rect class="ig-bar" x="261" y="120" width="76" height="28" /> 
+            <rect class="ig-bar" x="340" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="419" y="143" width="76" height="5" /> 
+            <rect class="ig-bar" x="498" y="143" width="76" height="5" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ApplesoftBASICAppCore release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ApplesoftBASICAppCore — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              3 releases · latest v1.2.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="389" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="366" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="272" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="390" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v1.2.0
+            </text> 
+            <text class="ig-label" x="273" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v1.0.0
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: applesoftbasic, selfReflection</p>

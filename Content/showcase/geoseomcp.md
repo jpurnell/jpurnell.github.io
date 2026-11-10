@@ -1,8 +1,8 @@
 ---
-title: GeoSEOMCP: Building the Audit Layer for the Post-Search Web
-description: A Swift MCP server exposing 29 tools that answer the question traditional SEO never asked: not *can a search engine rank this page*, but *can an AI system understand, retrieve, and correctly cite it*?
+title: GeoSEOMCP: An MCP Server for Generative Engine Optimization
+description: A 29-tool MCP server that analyzes how well a page will be understood, cited, and retrieved by AI systems rather than by traditional search engines.
 date: 2026-11-02 11:38
-lastModified: 2026-11-09
+lastModified: 2026-11-10
 tags: showcase, geoseomcp, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,42 +10,43 @@ project: GeoSEOMCP
 published: true
 ---
 
-# GeoSEOMCP: Building the Audit Layer for the Post-Search Web
+# GeoSEOMCP: An MCP Server for Generative Engine Optimization
 
-> A Swift MCP server exposing 29 tools that answer the question traditional SEO never asked: not *can a search engine rank this page*, but *can an AI system understand, retrieve, and correctly cite it*?
+> A 29-tool MCP server that analyzes how well a page will be understood, cited, and retrieved by AI systems rather than by traditional search engines.
 
-## Problem
+## Motivation
 
-The web's visibility layer is bifurcating. For decades, "being findable" meant satisfying a crawler that produced a ranked list of blue links. That model assumed a human would click through, skim, and decide. Generative AI breaks every one of those assumptions. A language model reads a page once during training or retrieval, extracts passages, and quotes them — often without attribution, often in contexts the author never anticipated. If the content isn't structured for that consumption pattern, it doesn't get cited. It simply doesn't exist in the answer.
+Classic SEO tools answer one question: will this page rank? That question is becoming less useful as AI assistants increasingly read a page once and decide whether to quote from it. The unit that matters is no longer a position in a results list — it is a passage that a model extracts and cites verbatim.
 
-GeoSEOMCP is jpurnell's response to that gap. Built as a macOS-native Swift package, it implements the Model Context Protocol (MCP) to expose a suite of 29 tools purpose-built for **Generative Engine Optimization** — a discipline focused on how well a page is understood, cited, and retrieved by AI systems rather than how it ranks on a results page.
-
-The project targets three overlapping audiences: content authors who need to know whether their writing will survive passage-level extraction by an LLM, agents running automated site audits, and developers building AI-native publishing workflows. The unifying question is always the same: *in the form a model actually consumes this, is it citable?*
+I built GeoSEOMCP to address the gap between what traditional SEO tooling measures and what actually determines whether content gets cited by an LLM. The specific problems I wanted to handle were: whether a page is structured in a way a model can parse, whether the right AI crawlers are permitted in `robots.txt`, and whether individual passages are citable in the form a model actually consumes them. The result is an MCP server — using the Model Context Protocol — so the tools can be called directly by agents performing site audits or by AI assistants answering questions about a page's machine-readability.
 
 ## Approach
 
-The architectural choice to target MCP from day one is the central decision of this project. Rather than building a standalone CLI or web service, jpurnell chose to make the tooling native to the agent layer — meaning any MCP-aware assistant can call these tools directly, turning a site audit from a report you read into an analysis an AI can perform on your behalf.
+The project is a Swift package targeting macOS, built against Swift Tools version 6.2. It has three targets: `GeoSEOMCP` (the core library), `GeoSEOMCPServer` (the server executable), and `GeoSEOMCPTests` (the test suite). The two external dependencies that do the protocol-level work are `SwiftMCPServer` and `swift-mcp-sdk`; `swift-docc-plugin` handles documentation generation.
 
-The package is structured across three targets: `GeoSEOMCP` for the core domain logic, `GeoSEOMCPServer` for the protocol implementation, and `GeoSEOMCPTests` for the test suite. Dependencies are deliberately lean — `SwiftMCPServer`, the `swift-mcp-sdk`, and `swift-docc-plugin` — keeping the surface area tight and the platform constraint (macOS only) honest rather than aspirationally cross-platform.
+The 29 tools are organized around four concerns that differ from traditional SEO:
 
-One of the more considered pieces of domain modeling is the AI crawler registry. jpurnell built explicit first-class types — `AICrawlerRegistry`, `AICrawler`, `AIPlatform` — to represent the population of AI-specific crawlers that `robots.txt` files now need to reason about. This matters because the tooling surfaces something most audits miss: a `robots.txt` that admits Googlebot while blocking GPTBot is not an oversight, it is a policy decision with real consequences for AI visibility — and it deserves to be named as such.
+- **AI crawler access** — using `AICrawlerRegistry`, `AICrawler`, and `AIPlatform` types to map which AI crawlers a site's `robots.txt` admits or excludes. A configuration that allows Googlebot but blocks GPTBot is a meaningful decision that most tooling ignores entirely.
+- **Passage-level citability** — scoring individual passages rather than whole pages, because a model quotes a passage, not a PageRank score.
+- **Structural machine-readability** — analyzing whether a page's structure and metadata are parseable in the form an LLM would read it.
+- **Citation and retrieval signals** — examining factors that affect whether a model retrieves and quotes a page correctly.
 
-The passage-level citability framing is similarly intentional. Classic SEO scores pages. GeoSEOMCP scores passages, because that is the unit a model actually quotes. This is a narrower, harder problem, and it required building analysis primitives that operate at a granularity most web tooling has never needed.
-
-Swift Tools version 6.2 means the project is running on the leading edge of Swift's concurrency model, appropriate for a tool designed to handle async document fetching and analysis across many concurrent agent calls.
+The MCP server architecture means every tool is callable by an agent or assistant directly, without a human in the loop, which fits the target use case of automated site audits.
 
 ## Results
 
-GeoSEOMCP shipped its `0.1.0` release across 60 commits, sole-authored, over approximately eight months — from the first commit in March 2026 through the latest in November 2026. Six branches show iterative development with dedicated workstreams rather than a single monolithic trunk. The 29 tools represent a coherent, complete API surface for the GEO audit domain: a number large enough to cover the problem thoroughly, constrained enough that each tool has a reason to exist.
+The project shipped one release, `0.1.0`, built across 60 commits from one contributor over roughly seven and a half months (March to November 2026). The 29 tools are implemented and exposed through the MCP server interface. The package compiles and runs on macOS against Swift 6.2 tooling.
 
-The `GeoSEOMCPTests` target is present and structured as a first-class concern alongside production code. `swift-docc-plugin` as a dependency signals that the documentation is generated from source — the project is built to be understood, not just used.
+There are no usage or adoption numbers to report at this stage, as this is a first release.
 
-## Judgment Calls
+## Decisions
 
-**MCP as the interface, not a wrapper around one.** jpurnell could have built a command-line tool or a REST API and later considered an MCP adapter. Instead, the protocol is the foundation. This means the tooling lives at the same layer as the agents that need it, reducing integration friction to zero for any MCP-aware system. It also means the design had to be right the first time — MCP tool schemas are part of your public contract in a way a CLI flag never is.
+**MCP as the delivery format.** Shipping as an MCP server rather than a CLI or library means the tools are callable by agents directly. That matches the target users — agents auditing sites and AI assistants answering citability questions — better than a human-facing interface would.
 
-**Naming the AI crawler problem explicitly.** Building `AICrawlerRegistry` as a typed registry rather than parsing `robots.txt` naively and leaving interpretation to the caller is a craft decision. It encodes domain knowledge — that GPTBot, Anthropic's crawler, and their peers are a distinct population with distinct policy implications — into the type system, so that distinction can't be accidentally elided in analysis.
+**Swift on macOS only.** The choice narrows the platform surface to what I could build and test. It also fits the likely deployment context: a developer's own machine running an MCP host alongside an AI assistant.
 
-**Passage-level, not page-level.** This is the judgment call that defines the project's identity. It would have been faster and simpler to produce page-level scores. jpurnell chose not to, because a page-level score doesn't answer the actual question. A page can have a strong overall signal and contain passages that are ambiguous, unattributable, or machine-unreadable. GEO lives at the passage level, and so does GeoSEOMCP.
+**AI-crawler-specific types.** `AICrawlerRegistry`, `AICrawler`, and `AIPlatform` are first-class types rather than string lookups. This makes the distinction between, say, GPTBot and Bingbot explicit in the data model, which is the distinction that actually matters for generative engine access decisions.
 
-**Swift on the leading edge.** Targeting Swift Tools 6.2 and macOS on a tools project is a bet on longevity and correctness. Strict concurrency means bugs that might surface as race conditions in production are caught at compile time. For a server handling concurrent agent tool calls, that is not a philosophical preference — it is operational discipline.
+**Passage-level scoring.** Scoring passages rather than pages reflects how models consume content. This was a core architectural choice and shapes what the tools return.
+
+**What is unfinished.** There is no cross-platform support — Linux is out of scope for now. The project has no published adoption data and no integrations with specific AI platforms to validate that its citability signals correlate with actual citation rates. The relationship between passage scores and real-world model behavior remains a hypothesis rather than a measured outcome.

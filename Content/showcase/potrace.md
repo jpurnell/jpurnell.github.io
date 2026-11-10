@@ -1,8 +1,8 @@
 ---
-title: Potrace in Pure Swift: Building the Algorithm from the Paper Up
-description: A faithful, MIT-licensed Swift port of Peter Selinger's Potrace bitmap-tracing algorithm — derived from the original research paper rather than the GPL C source, making it the first permissively licensed, native Swift path from raster to Bézier.
+title: Swift Potrace: Bitmap-to-Vector Tracing in Native Swift
+description: A from-scratch Swift implementation of Peter Selinger's Potrace algorithm, independently derived from the paper rather than the C source, to allow MIT licensing and idiomatic Apple-platform distribution.
 date: 2026-05-12 15:57
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, project, potrace, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,34 +10,44 @@ project: Potrace
 published: true
 ---
 
-# Potrace in Pure Swift: Building the Algorithm from the Paper Up
+# Swift Potrace: Bitmap-to-Vector Tracing in Native Swift
 
-> A faithful, MIT-licensed Swift port of Peter Selinger's Potrace bitmap-tracing algorithm — derived from the original research paper rather than the GPL C source, making it the first permissively licensed, native Swift path from raster to Bézier.
+> A from-scratch Swift implementation of Peter Selinger's Potrace algorithm, independently derived from the paper rather than the C source, to allow MIT licensing and idiomatic Apple-platform distribution.
 
-## Problem
+## Motivation
 
-Bitmap-to-vector conversion is a fundamental need across a surprising range of Apple-platform workflows: icon pipelines, font tooling, sticker editors, sign-cutter UIs, 3D-printing rigs that start from scanned input, and CAD or GIS tooling that needs clean outlines from raster data. The established answer, Peter Selinger's Potrace algorithm, produces exceptionally smooth Bézier curves from binary bitmaps and has a well-regarded C reference implementation — but that implementation is GPL-licensed. Any Swift developer who wanted Potrace in a shipping product was stuck shelling out to the binary, wrapping it via FFI with all the memory-management ceremony that entails, or accepting the license terms.
+The Potrace algorithm converts a binary bitmap into smooth Bézier outlines. It is well-understood — Selinger published the full description in his 2003 paper — but every existing option available to Swift developers either shells out to the GPL-licensed C binary or wraps it through FFI. Neither option is usable in a package that needs to ship under a permissive license or run natively on Apple platforms without a C dependency chain.
 
-`swift-potrace` exists to close that gap. Its mission, stated plainly in the project's own `MASTER_PLAN.md`, is "a faithful, MIT-licensed Swift implementation" of the algorithm. The immediate consumer is `houseMaker`, a sibling project, which drove the v0.1 requirements — but the package is designed to stand on its own as a distributable library for anyone in the Swift ecosystem who needs bitmap → vector without the licensing or FFI overhead.
+I needed this for `houseMaker`, a sibling project that takes raster input and produces geometry suitable for 3D workflows. Rather than building a one-off integration, I separated the tracing layer into its own package — `swift-potrace` — so it can be distributed independently and consumed by other projects (icons, fonts, sign-cutter tools, CAD pipelines on Apple platforms or Linux servers).
+
+The immediate driver was `houseMaker`'s v0.1 requirements, but the target audience is wider: any Swift developer who needs bitmap-to-vector conversion without reaching for a C library or a GPL dependency.
 
 ## Approach
 
-The licensing strategy is the architectural foundation of everything else: the implementation is derived from Selinger's 2003 paper, *"Potrace: a polygon-based tracing algorithm,"* not from the C source. Working from the paper means the resulting code is independent — there is no derived-work entanglement with the GPL — and it also means every structural decision reflects the algorithm as described, not as the reference implementation happened to express it.
+The implementation is derived from Selinger's 2003 paper directly, not from the C reference source. That distinction matters for licensing: the C implementation is GPL, so reading it and translating it would create a derivative work. Working from the paper produces independent code that can ship under MIT.
 
-The package is built on Swift 6.2 tooling and targets the full Apple platform matrix — macOS, iOS, tvOS, watchOS, and visionOS — as well as Linux servers. It leans on `swift-numerics` for the geometric heavy lifting, `swift-argument-parser` for the CLI surface, and `swift-docc-plugin` for documentation generation. The target breakdown tells the story of a thoughtfully layered package: `BoundedIO` handles I/O concerns, `Potrace` contains the core algorithm, `PotraceSVG` handles SVG emission, and `PotraceCLI` / `swift-potrace` provide the command-line entry points, with benchmark and test targets alongside each layer.
+The package is structured into several targets. `Potrace` holds the core algorithm. `PotraceSVG` handles SVG serialization. `PotraceCLI` and `swift-potrace` provide command-line entry points. `BoundedIO` is a supporting module. `PotraceBenchmark` and its test counterpart exist alongside the standard test targets `BoundedIOTests`, `PotraceTests`, `PotraceSVGTests`, and `swift-potraceTests`.
 
-The API is designed for modern Swift idioms: `async`-friendly, `Sendable`-conforming types, structured concurrency for batch processing — no callbacks, no opaque pointers. Apple-platform acceleration via vDSP and Accelerate is available as an opt-in hot path, but the pure-Swift implementation is the fast path, keeping Linux and cross-platform use fully supported without any conditional compilation tax on callers.
+The API is built around modern Swift concurrency — `async`-friendly, `Sendable` types, structured concurrency for batch processing — with no callbacks and no opaque pointers. The core path is pure Swift so the package builds on Linux as well as all Apple platforms. Apple-platform-specific acceleration via vDSP/Accelerate is available as an opt-in path rather than a requirement.
 
-A `CLAUDE.md` file codifies session startup, development workflow, key rules, and quality gates alongside references to the paper — an artifact that reflects deliberate thinking about how the project should be built and maintained, not just what it should do.
+Dependencies are `swift-numerics` for numeric foundations, `swift-argument-parser` for the CLI, and `swift-docc-plugin` for documentation generation. The package targets macOS, iOS, tvOS, watchOS, and visionOS and uses Swift Tools version 6.2.
+
+Correctness is validated against golden outputs from the C reference's curves on a fixture set, even though the algorithm itself is independently written.
 
 ## Results
 
-Over roughly five months of active development (April through September 2026), the project shipped three versioned releases: v0.1.0, v0.2.0, and v0.2.1, across 34 commits from a single contributor. The release cadence reflects intentional scope management — v0.1 was explicitly scoped to satisfy `houseMaker`'s immediate needs, with subsequent releases extending the surface. The target count (eleven targets across the package) and the presence of dedicated benchmark infrastructure (`PotraceBenchmark`, `PotraceBenchmarkTests`) indicate that performance is treated as a first-class, measurable property of the system rather than an afterthought. Correctness is validated against golden outputs from the C reference's curves on a fixture set — property-tested, not just spot-checked.
+The project reached three releases — v0.1.0, v0.2.0, and v0.2.1 — across 34 commits from a single contributor between April and September 2026. The package covers the full pipeline from binary bitmap input through Bézier curve fitting to SVG output, with a working CLI. Test targets exist for each functional module, and a benchmark target is in place for performance measurement.
 
-## Judgment Calls
+The package is usable today as a dependency for `houseMaker` and is structured for standalone distribution to the broader Swift ecosystem.
 
-The most consequential judgment call in the project is one that was made before a single line of code was written: work from the paper, not the source. This is a decision with legal, architectural, and engineering dimensions simultaneously. Legally, it preserves the MIT license. Architecturally, it forces the implementation to model the algorithm at the level of its stated abstractions rather than inheriting the C implementation's particular data structures and optimization choices. Engineeringly, it means every step had to be understood deeply enough to be re-expressed in idiomatic Swift — there was no C to fall back on when something was unclear.
+## Decisions
 
-The decision to expose Apple-platform acceleration as opt-in rather than mandatory is a second judgment call worth noting. It would have been easier to write Apple-only hot paths and call it done; instead, the design maintains a pure-Swift fast path as the default, preserving Linux server applicability and keeping the package genuinely cross-platform. The Accelerate integration is an enhancement, not a dependency.
+**Derive from the paper, not the C source.** This was the foundational choice. It made the work harder — there is no reference code to check line by line — but it is what makes an MIT license defensible. The C binary is GPL; independent derivation from the published algorithm is not.
 
-Finally, the package decomposition — separating I/O concerns (`BoundedIO`) from the algorithm core (`Potrace`) from SVG emission from the CLI — reflects an understanding that this library will be embedded in other pipelines. `houseMaker` is the first consumer, but the architecture assumes it won't be the last. That assumption is the kind of judgment that separates a tool built for a moment from one built to last.
+**Separate `swift-potrace` from `houseMaker`.** The tracing logic could have lived inside `houseMaker` as a private module. Separating it into its own package adds some overhead but makes it distributable and testable in isolation. `houseMaker` drove the initial requirements but should not constrain the API.
+
+**Pure-Swift fast path with opt-in Accelerate.** A design that required Accelerate would exclude Linux and constrain the API surface. Making the pure-Swift path the default and Accelerate opt-in keeps the package cross-platform while leaving performance headroom for Apple-platform consumers.
+
+**Golden-output testing against the C reference.** The algorithm is independently derived, but the outputs should match Selinger's reference on a known fixture set. Testing against those golden curves gives a correctness anchor without importing any GPL code.
+
+**What is unfinished or uncertain.** Three releases in five months with 34 commits suggests active but early development. The benchmark target exists but its results are not yet part of the public record. The relationship between `BoundedIO` and the rest of the package — it appears as both a top-level target and in the project name — is not fully explained in the available material. How completely the paper's algorithm is implemented relative to all features of the C reference (color decomposition, turnpolicies, despeckle) is not documented in the inputs here.

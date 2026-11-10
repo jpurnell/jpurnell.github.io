@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A Swift CLI tool and MCP server that abstracts the complexity of Google’s advanced search operators into a structured, programmable interface — built for power users, researchers, and the AI agents working on their behalf." />
+    <meta name="description" content="A Swift package that turns Google’s advanced search operators into structured, composable queries for use from the command line and by AI agents via MCP." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SearchOperatorCore: Making Google's Advanced Search Syntax Accessible to Humans and AI Agents | Justin Purnell</title>
+    <title>SearchOperatorCore: A CLI and MCP Server for Google Advanced Search Query Construction | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SearchOperatorCore: Making Google's Advanced Search Syntax Accessible to Humans and AI Agents" />
-    <meta name="twitter:title" content="SearchOperatorCore: Making Google's Advanced Search Syntax Accessible to Humans and AI Agents" />
-    <meta property="og:description" content="A Swift CLI tool and MCP server that abstracts the complexity of Google’s advanced search operators into a structured, programmable interface — built for power users, researchers, and the AI agents working on their behalf." />
-    <meta name="twitter:description" content="A Swift CLI tool and MCP server that abstracts the complexity of Google’s advanced search operators into a structured, programmable interface — built for power users, researchers, and the AI agents working on their behalf." />
+    <meta property="og:title" content="SearchOperatorCore: A CLI and MCP Server for Google Advanced Search Query Construction" />
+    <meta name="twitter:title" content="SearchOperatorCore: A CLI and MCP Server for Google Advanced Search Query Construction" />
+    <meta property="og:description" content="A Swift package that turns Google’s advanced search operators into structured, composable queries for use from the command line and by AI agents via MCP." />
+    <meta name="twitter:description" content="A Swift package that turns Google’s advanced search operators into structured, composable queries for use from the command line and by AI agents via MCP." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/searchoperatorcore" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/searchoperatorcore",
-          "name" : "SearchOperatorCore: Making Google's Advanced Search Syntax Accessible to Humans and AI Agents",
+          "name" : "SearchOperatorCore: A CLI and MCP Server for Google Advanced Search Query Construction",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/searchoperatorcore#breadcrumb"
       },
-      "description" : "A Swift CLI tool and MCP server that abstracts the complexity of Google’s advanced search operators into a structured, programmable interface — built for power users, researchers, and the AI agents working on their behalf.",
+      "description" : "A Swift package that turns Google’s advanced search operators into structured, composable queries for use from the command line and by AI agents via MCP.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SearchOperatorCore: Making Google's Advanced Search Syntax Accessible to Humans and AI Agents",
+      "name" : "SearchOperatorCore: A CLI and MCP Server for Google Advanced Search Query Construction",
       "url" : "https://www.justinpurnell.com/showcase/searchoperatorcore"
     }
   ]
@@ -181,34 +181,304 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SearchOperatorCore: Making Google's Advanced Search Syntax Accessible to Humans and AI Agents</h1>
+      <h1 class="mainTitle">SearchOperatorCore: A CLI and MCP Server for Google Advanced Search Query Construction</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Search Operator</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A Swift CLI tool and MCP server that abstracts the complexity of Google’s advanced search operators into a structured, programmable interface — built for power users, researchers, and the AI agents working on their behalf.</p>
+          <p>A Swift package that turns Google’s advanced search operators into structured, composable queries for use from the command line and by AI agents via MCP.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Google’s advanced search operators are genuinely powerful. Combining <code>site:</code>, <code>filetype:</code>, <code>intitle:</code>, <code>before:</code>, and a dozen other modifiers can turn a vague search into a precise, repeatable query. The problem is that this syntax lives almost entirely in the heads of people who’ve spent years memorizing it. For everyone else — and critically, for AI agents trying to construct useful searches programmatically — the operators are effectively invisible.</p>
-        <p>SearchOperatorCore was built to fix that gap. The project’s MASTER_PLAN.md frames the mission directly: “transform the hidden power of Google’s advanced search operators into an accessible CLI tool and MCP server, enabling users and AI agents to construct precision search queries without memorizing arcane syntax.” That’s not a vague aspiration — it’s a design constraint that shaped every architectural decision in the project.</p>
-        <p>The tool serves three distinct audiences: AI agents that need to construct precise Google searches on behalf of users via the Model Context Protocol, power users who want a CLI-based workflow for query construction, and researchers and librarians who need structured, repeatable search strategies. These are meaningfully different use cases, and the project had to serve all three without collapsing them into one.</p>
+        <h2>Motivation</h2>
+        <p>Google’s advanced search operators — <code>site:</code>, <code>filetype:</code>, <code>intitle:</code>, <code>AROUND()</code>, date ranges, and the rest — are genuinely useful but scattered across documentation that changes without notice, with no tooling to help you combine them correctly. I built SearchOperatorCore to solve that for two audiences: AI agents that need to construct precise Google searches on behalf of users without hallucinating syntax, and people who run search queries from a terminal or build repeatable research workflows.</p>
+        <p>The package exposes the same logic through three surfaces: a core library, a CLI, and an MCP server, so an AI agent and a command-line user can both reach the same query-construction behavior without duplicating the underlying rules.</p>
         <h2>Approach</h2>
-        <p>The project is organized around a clean separation of concerns across six targets in the Swift package: <code>SearchOperatorCore</code> as the domain logic layer, <code>SearchOperatorMCP</code> and <code>SearchOperatorMCPServer</code> for the protocol integration, and <code>SearchOperatorCLI</code> for the command-line interface. Test targets mirror the two primary layers. This structure makes the core logic independently testable and reusable — the CLI and MCP server are both consumers of the same underlying library.</p>
-        <p>The dependency set is deliberately focused. <code>SwiftMCPServer</code> and <code>swift-mcp-sdk</code> handle the Model Context Protocol plumbing, <code>swift-argument-parser</code> powers the CLI, and <code>swift-docc-plugin</code> signals that documentation was treated as a first-class deliverable rather than an afterthought. Building on Swift Package Manager with a Tools version of 6.2 and targeting macOS reflects a pragmatic platform choice — this is a developer and power-user tool, not a consumer app.</p>
-        <p>The architecture sections documented in CLAUDE.md — covering build and test workflows, architecture, development guidelines, deployment, and coding rules — suggest that Purnell invested in making the project legible and maintainable from the outset, not just functional.</p>
+        <p>The package is organized as five targets under a Swift 6.2 package: <code>SearchOperatorCore</code> holds the query model and operator logic; <code>SearchOperatorMCP</code> and <code>SearchOperatorMCPServer</code> expose that logic over the Model Context Protocol using <code>SwiftMCPServer</code> and <code>swift-mcp-sdk</code>; <code>SearchOperatorCLI</code> wraps everything for terminal use via <code>swift-argument-parser</code>; and <code>SearchOperatorCoreTests</code> and <code>SearchOperatorMCPTests</code> cover the respective layers. Everything targets macOS.</p>
+        <p>The dependency choices follow the surfaces the package needs to cover. <code>swift-argument-parser</code> is Apple’s standard library for Swift CLI tools, so there was no reason to do otherwise. The MCP dependencies connect the tool to the protocol that AI agents like Claude use to call external tools at runtime. <code>swift-docc-plugin</code> is included for documentation generation, which matters for a library target that other packages or agents might depend on.</p>
+        <p>The project has a <code>CLAUDE.md</code> present, which documents the architecture, build and test commands, coding rules, and deployment notes. That file served as the working specification for the codebase structure.</p>
         <h2>Results</h2>
-        <p>SearchOperatorCore shipped a 1.0.0 release across 38 commits over roughly seven months, from April to November 2026. Six branches reflect active parallel development, and the dual-target structure — both a CLI and an MCP server — means the project delivered two distinct integration surfaces in a single release. The inclusion of <code>swift-docc-plugin</code> in the dependency graph indicates documentation was generated and shipped alongside the code.</p>
-        <p>The test suite covers both the core logic layer (<code>SearchOperatorCoreTests</code>) and the MCP integration layer (<code>SearchOperatorMCPTests</code>), which is the right decomposition: it tests the domain independently and verifies that the protocol boundary behaves correctly.</p>
-        <h2>Judgment Calls</h2>
-        <p>The most interesting architectural decision in SearchOperatorCore is the choice to build a <em>library core</em> rather than a monolithic tool. By separating <code>SearchOperatorCore</code> from both <code>SearchOperatorCLI</code> and <code>SearchOperatorMCP</code>, Purnell made a bet that the domain logic — parsing and constructing search operators — was valuable enough to stand alone, independent of how it gets invoked. That bet pays off immediately: the same operator logic serves a human at a terminal and an AI agent calling a tool endpoint, with no duplication.</p>
-        <p>The decision to target the MCP protocol as a first-class interface, not a bolt-on, is worth noting. AI agents need structured, predictable tool interfaces — they can’t tolerate ambiguous output or inconsistent behavior. Building <code>SearchOperatorMCP</code> as a dedicated target, with its own test coverage, reflects an understanding of that constraint.</p>
-        <p>Including <code>swift-docc-plugin</code> is a small signal with real meaning. Documentation plugins don’t add themselves; someone decided that this tool, which serves researchers and power users who need to understand operator behavior precisely, should have generated reference documentation. That’s the kind of judgment call that separates tools people can actually use from tools only their authors understand.</p>
-        <p>Finally, the MASTER_PLAN.md artifact itself is worth calling out. Naming a file that explicitly and writing a mission statement that specific — before writing the first commit — suggests Purnell was thinking about the project’s purpose and users before thinking about implementation. That sequence matters.</p>
+        <p>The project reached a 1.0.0 release. Development ran from April 2026 through November 2026 across 38 commits on 6 branches, with one contributor. The test suite covers both the core library and the MCP layer as separate targets. The package ships as a macOS Swift package with all five targets buildable from the same manifest.</p>
+        <h2>Decisions</h2>
+        <p><strong>Single package, multiple targets.</strong> Keeping the core logic, CLI, and MCP server in one package means the operator rules live in one place and both surfaces stay in sync. The tradeoff is that the package pulls in MCP dependencies even for someone who only wants the CLI, but the alternative — separate packages — would mean coordinating versions across repositories for a project maintained by one person.</p>
+        <p><strong>MCP as a first-class surface.</strong> The original mission statement treats AI agents as a primary user, not an afterthought. That shaped the decision to build <code>SearchOperatorMCPServer</code> as a named target rather than a thin wrapper bolted on later.</p>
+        <p><strong>Swift 6.2 and strict concurrency.</strong> Swift 6.2’s concurrency model is relevant here because an MCP server handles concurrent tool calls. Using the current toolchain rather than pinning to an older compatibility mode meant dealing with actor isolation requirements up front.</p>
+        <p><strong>Documentation plugin included.</strong> <code>swift-docc-plugin</code> is in the manifest because the core library is intended to be usable as a dependency by other Swift packages, and DocC output makes that easier to reason about.</p>
+        <p><strong>What is unfinished.</strong> The MASTER_PLAN.md implies a broader operator coverage goal — the full set of Google operators is large, and not all may be implemented at 1.0.0. The design-first workflow flag is false and there are no recorded design proposals, so operator coverage decisions were made in code rather than through a prior specification process. How complete the operator set is at any given commit is not tracked in the available metadata.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/searchoperatorcore-stats.svg" alt="Search Operator statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/searchoperatorcore-commits.svg" alt="Search Operator commit history chart" class="img-fluid" />
-        <img src="/images/showcase/searchoperatorcore-releases.svg" alt="Search Operator release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SearchOperatorCore statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SearchOperatorCore
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              38
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SearchOperatorCore commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SearchOperatorCore — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~4/month · peak 11 (38 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="118" width="67" height="30" /> 
+            <rect class="ig-bar" x="163" y="133" width="67" height="15" /> 
+            <rect class="ig-bar" x="232" y="133" width="67" height="15" /> 
+            <rect class="ig-bar" x="301" y="118" width="67" height="30" /> 
+            <rect class="ig-bar" x="370" y="64" width="67" height="84" /> 
+            <rect class="ig-bar" x="439" y="72" width="67" height="76" /> 
+            <rect class="ig-bar" x="508" y="110" width="67" height="38" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="59" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="128" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="197" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="266" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="335" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="404" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="473" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="542" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SearchOperatorCore release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SearchOperatorCore — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              1 release · latest 1.0.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="237" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="238" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              1.0.0
+            </text> 
+            <text class="ig-muted" x="59" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="128" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="197" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="266" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="335" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="404" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="473" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="542" y="112" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: GEO-SEO, infrastructure, selfReflection</p>

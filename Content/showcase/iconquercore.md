@@ -1,8 +1,8 @@
 ---
-title: IconquerCore: A Headless Rules Engine Built to Last
-description: J. Purnell distilled a complex turn-based strategy game into a pure-Swift, platform-agnostic rules engine — versioned deliberately, architected for reuse, and designed so that any future client can consume it without touching the core logic.
+title: IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game
+description: A headless, platform-agnostic Swift package that encodes the rules of iConquer and serves as the shared logic layer for any client that needs to play the game.
 date: 2026-05-13 16:37
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,36 +10,36 @@ project: iConquer
 published: true
 ---
 
-# IconquerCore: A Headless Rules Engine Built to Last
+# IconquerCore: Pure-Swift Rules Engine for a Risk-Style Strategy Game
 
-> J. Purnell distilled a complex turn-based strategy game into a pure-Swift, platform-agnostic rules engine — versioned deliberately, architected for reuse, and designed so that any future client can consume it without touching the core logic.
+> A headless, platform-agnostic Swift package that encodes the rules of iConquer and serves as the shared logic layer for any client that needs to play the game.
 
-## Problem
+## Motivation
 
-Risk-style strategy games are deceptively complex. Beneath the familiar territory maps and dice rolls lies a dense web of rules governing troop placement, combat resolution, card trading, and victory conditions — rules that must behave *identically* across every surface the game runs on. When Purnell set out to build iConquer, he faced a choice familiar to anyone who has shipped a multi-platform game: embed the rules in the UI layer and pay for it forever, or do the harder thing up front and separate them cleanly.
+iConquer is a Risk-style turn-based strategy game. I had an existing TypeScript implementation — the reference — and wanted to bring it to Apple platforms as a SwiftUI app. Rather than embed game logic directly in that app, I pulled it out into a separate package so the rules would be testable in isolation and reusable by any future client: a CLI, a server-side simulation, or an AI bake-off harness.
 
-He did the harder thing. IconquerCore is a headless rules engine — no UI, no platform-specific dependencies, no SwiftUI imports. It exists solely to model the state and rules of iConquer faithfully, as documented in the project's own `RULES.md`. The engine is consumed by the sibling `iconquer` SwiftUI app, but by design it could just as easily power a CLI, a server-side simulation, or an AI bake-off harness. The problem IconquerCore solves isn't just "run a strategy game" — it's "run a strategy game in a way that never ties the logic to any one client."
+The core constraint I set for myself was behavioral parity with the TypeScript original. That meant the Swift engine had to produce identical outcomes given identical inputs. To make that verifiable, I pinned the package to a deterministic seeded RNG, so a TypeScript oracle can drive the same sequence of random decisions and compare results.
 
 ## Approach
 
-The architectural centerpiece of IconquerCore is a commitment to pure value semantics. The top-level `Game` type is a `struct`, and `Sendable` conformance is enforced throughout. There is no shared mutable state, no singletons, no observation framework entanglement. Every state transition produces a new value, making the engine trivially testable and safe to use from any concurrency context Swift 6.2 might encounter.
+The package is structured as a plain Swift Package Manager library — no UI, no platform-specific frameworks — targeting macOS, iOS, tvOS, and visionOS. The Swift toolchain version is 6.2.
 
-The second major architectural decision was the deterministic seeded RNG. Dice rolls in a Risk-style game are the heartbeat of combat resolution, and randomness is the enemy of reproducibility. Purnell pinned the engine's random number generation to a seeded source, which makes it possible for a TypeScript oracle — a reference implementation living in the sibling repo — to drive parity tests against the Swift engine. This is not a convenience; it's a correctness guarantee. Two implementations of the same rules, running the same seed, must produce the same sequence of outcomes. The seeded RNG is what makes that claim verifiable.
+The central design choice is pure value semantics throughout. `Game` and every type it contains are `struct`s, `Sendable` everywhere. There is no shared mutable state, which makes the engine straightforward to test: hand it a state, call a function, inspect the returned state.
 
-The project is structured as a Swift Package Manager library targeting macOS, iOS, tvOS, and visionOS from a single codebase, with `swift-docc-plugin` as its only dependency. Documentation generation is treated as a first-class concern, not an afterthought. The `CLAUDE.md` file captures session startup conventions, development workflow, key rules references, and a quality gate checklist — functioning as a living onboarding document for both human contributors and AI-assisted sessions.
+I added `swift-docc-plugin` as the only dependency, keeping the package's dependency graph minimal. The `IconquerCoreTests` target holds the test suite. Architecture notes, development workflow, and quality gate requirements live in `CLAUDE.md`, which I kept in the repo as a standing reference for how the project is meant to evolve.
 
 ## Results
 
-IconquerCore shipped seven tagged releases across roughly six months of development, moving from `v0.1.0` through `v0.4.1`. That release cadence — seven versions, each incrementing deliberately — reflects a project where versioning is a communication tool, not a formality. The `IconquerCoreTests` target exists as a first-class peer to the library itself, grounding the engine in verifiable behavior rather than manual spot-checks. The engine runs on five Apple platforms from a single package with zero UI dependencies and a single non-tooling dependency.
+The package has shipped seven releases over roughly six months, from v0.1.0 through v0.4.1, across 52 commits on a single branch. It targets all four Apple platforms. The primary consumer — the `iconquer` SwiftUI app in a sibling repository — pulls it in as a local package dependency. The seeded RNG is in place, which is the prerequisite for running parity scripts against the TypeScript reference.
 
-## Judgment Calls
+## Decisions
 
-Several decisions here are worth examining as evidence of craft rather than just output.
+**Separate package, not embedded code.** Keeping rules in their own repo means the SwiftUI app, any future CLI, and any server-side harness all consume exactly the same logic. The tradeoff is coordination overhead between repos, which has been manageable at this scale.
 
-**Separating the engine from the first consumer before shipping either.** It would have been faster to build the SwiftUI app and extract a library later. Purnell reversed that order, establishing the boundary first. The MASTER_PLAN's explicit enumeration of target consumers — the app, parity test harnesses, future CLI or server experiments — shows this wasn't accidental modularity. The boundary was drawn with specific future uses in mind.
+**Pure value semantics and `Sendable`.** This was a deliberate choice for testability and for Swift concurrency compatibility. The cost is that mutations produce new values rather than mutating in place, which requires callers to hold onto returned state rather than relying on a shared object. For a rules engine this is acceptable.
 
-**Pinning randomness for cross-implementation parity.** Most game engines treat the RNG as an internal detail. Purnell exposed it as an explicit seeding mechanism precisely because the engine has a TypeScript reference implementation it must agree with. This is a testing philosophy embedded in the architecture: correctness isn't just "the tests pass," it's "the Swift and TypeScript implementations produce identical game histories given identical seeds."
+**Seeded deterministic RNG.** Parity testing against the TypeScript oracle requires that randomness be reproducible. Any run with the same seed produces the same sequence of dice rolls and territory assignments. The tradeoff is that callers that want non-deterministic play have to supply entropy themselves rather than relying on system randomness by default.
 
-**Choosing `struct Game` over a class-based model.** In a game engine with meaningful state, the temptation to reach for reference semantics is real. Value semantics require more disciplined thinking about state transitions, but they pay back in testability, thread safety, and the absence of subtle aliasing bugs. With Swift 6.2's strict concurrency, a `Sendable` struct is the path of least resistance for safe concurrent use — but Purnell made that choice architecturally, not just reactively.
+**`swift-docc-plugin` as sole dependency.** I wanted documentation generation available without adding anything that could affect runtime behavior or complicate the dependency graph.
 
-**Treating documentation as infrastructure.** The `swift-docc-plugin` dependency signals that generated documentation is part of the deliverable, not a nice-to-have. For a library intended to be consumed by multiple future clients — some of which may not have context on iConquer's rules — this is the right call. The `CLAUDE.md` workflow document extends this instinct: the project's working conventions are written down, not held in a single contributor's head.
+**What is unfinished.** The parity test scripts — the harness that actually runs the TypeScript oracle alongside the Swift engine and compares outputs — are not complete as of v0.4.1. The seeded RNG infrastructure is in place, but the cross-language verification pass has not yet been executed in a systematic way. That is the most significant open item.

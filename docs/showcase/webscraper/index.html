@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A solo developer designed and shipped a three-layer Vapor application that scrapes websites, delegates scoring to a remote MCP server, and sells per-audit and subscription monitoring plans — all in under eight months." />
+    <meta name="description" content="A Vapor web application that scrapes a target site, delegates scoring to a remote MCP server, and returns an audit report with recommendations — sold as single audits or recurring monitoring subscriptions." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift | Justin Purnell</title>
+    <title>GEO Audit: AI and SEO Visibility Scoring via MCP | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift" />
-    <meta name="twitter:title" content="GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift" />
-    <meta property="og:description" content="A solo developer designed and shipped a three-layer Vapor application that scrapes websites, delegates scoring to a remote MCP server, and sells per-audit and subscription monitoring plans — all in under eight months." />
-    <meta name="twitter:description" content="A solo developer designed and shipped a three-layer Vapor application that scrapes websites, delegates scoring to a remote MCP server, and sells per-audit and subscription monitoring plans — all in under eight months." />
+    <meta property="og:title" content="GEO Audit: AI and SEO Visibility Scoring via MCP" />
+    <meta name="twitter:title" content="GEO Audit: AI and SEO Visibility Scoring via MCP" />
+    <meta property="og:description" content="A Vapor web application that scrapes a target site, delegates scoring to a remote MCP server, and returns an audit report with recommendations — sold as single audits or recurring monitoring subscriptions." />
+    <meta name="twitter:description" content="A Vapor web application that scrapes a target site, delegates scoring to a remote MCP server, and returns an audit report with recommendations — sold as single audits or recurring monitoring subscriptions." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/webscraper" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/webscraper",
-          "name" : "GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift",
+          "name" : "GEO Audit: AI and SEO Visibility Scoring via MCP",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/webscraper#breadcrumb"
       },
-      "description" : "A solo developer designed and shipped a three-layer Vapor application that scrapes websites, delegates scoring to a remote MCP server, and sells per-audit and subscription monitoring plans — all in under eight months.",
+      "description" : "A Vapor web application that scrapes a target site, delegates scoring to a remote MCP server, and returns an audit report with recommendations — sold as single audits or recurring monitoring subscriptions.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift",
+      "name" : "GEO Audit: AI and SEO Visibility Scoring via MCP",
       "url" : "https://www.justinpurnell.com/showcase/webscraper"
     }
   ]
@@ -181,39 +181,288 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">GEO Audit: Building a Paid AI-Visibility Scoring Service in Swift</h1>
+      <h1 class="mainTitle">GEO Audit: AI and SEO Visibility Scoring via MCP</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">GEO Auditor</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A solo developer designed and shipped a three-layer Vapor application that scrapes websites, delegates scoring to a remote MCP server, and sells per-audit and subscription monitoring plans — all in under eight months.</p>
+          <p>A Vapor web application that scrapes a target site, delegates scoring to a remote MCP server, and returns an audit report with recommendations — sold as single audits or recurring monitoring subscriptions.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Search is bifurcating. Traditional crawlers still matter, but AI-powered search engines read pages differently — they weight structured data, <code>llms.txt</code> declarations, E-E-A-T signals, and machine-readable metadata in ways that standard SEO tools don’t measure. Website owners have no easy way to know how visible they are to this new class of searcher.</p>
-        <p>GEO Audit was built to close that gap. It accepts a URL, fetches the target site’s HTML, headers, <code>robots.txt</code>, <code>sitemap.xml</code>, and <code>llms.txt</code>, routes the extracted data through a remote GeoSEO MCP server for authoritative scoring, and returns an audit report with actionable recommendations. Users can pay for a one-time audit or subscribe to weekly or monthly re-audits that run automatically.</p>
-        <p>The project is a commercial product, not an internal tool — meaning it had to handle payments, recurring jobs, and a multi-tenant web UI from day one.</p>
+        <h2>Motivation</h2>
+        <p>Website owners increasingly need to know how their sites appear not just to Google but to AI-powered search and retrieval systems. Existing SEO tools don’t cover that gap. I wanted to build a paid web service that checks both: traditional SEO signals alongside the newer signals that AI crawlers and retrieval systems rely on, things like <code>llms.txt</code>, JSON-LD structured data, and E-E-A-T indicators.</p>
+        <p>The business model is per-audit purchases and weekly or monthly monitoring subscriptions, billed through Stripe. The scoring itself is handled by a remote GeoSEO MCP server I operate at roseclub.org, which means the application’s job is scaping, orchestrating, and presenting results — not implementing scoring logic itself.</p>
         <h2>Approach</h2>
-        <p>The architecture is deliberately split into three SwiftPM library targets, each with a narrow responsibility.</p>
-        <p><strong>WebScraper</strong> is the data-gathering layer. It wraps the separately extracted <code>SwiftWebScraper</code> package, assembles a <code>ScrapedSiteData</code> model from raw HTTP responses, and enforces SSRF URL validation before any network call is made. Keeping the audit model (<code>ScrapedSiteData</code>) in this target rather than in the scraping package was a conscious boundary decision: the scraping logic is reusable, but the shape of the data the audit cares about belongs to the audit.</p>
-        <p><strong>GEOAuditCore</strong> is the orchestration layer. It maps scraped data onto 18 named MCP tools — covering meta tags, heading structure, JSON-LD, AI crawler access, E-E-A-T signals, and a composite GEO score, applied per-page and site-wide — and assembles the final report. Scoring is intentionally delegated to the remote GeoSEO MCP server hosted on roseclub.org; the core library stays thin and testable.</p>
-        <p><strong>App</strong> is the Vapor web layer. It owns routing, Leaf templates, Stripe payment integration, Fluent persistence (Postgres in production, SQLite in tests), and the Redis-backed queue that drives <code>MonitoringJob</code> — an hourly scheduled worker that checks which subscriptions are due and dispatches re-audits.</p>
-        <p>The test strategy reflects the layered design. <code>WebScraperTests</code>, <code>GEOAuditCoreTests</code>, and <code>AppTests</code> each run against in-memory SQLite and mock HTTP/MCP clients, so the full suite runs locally with no external dependencies.</p>
-        <p>Documentation was treated as a first-class output: <code>swift-docc-plugin</code> is a declared dependency, signaling that both library targets (<code>WebScraper</code> and <code>GEOAuditCore</code>) are meant to be consumed by others.</p>
+        <p>The codebase is split into three SwiftPM targets inside a single package:</p>
+        <ul>
+          <li><strong>WebScraper</strong> — builds a <code>ScrapedSiteData</code> value from the <a href="https://github.com/jpurnell/SwiftWebScraper">SwiftWebScraper</a> package I extracted on 2026-11-07. It fetches HTML, HTTP headers, <code>robots.txt</code>, <code>sitemap.xml</code>, and <code>llms.txt</code>, and validates all URLs against SSRF rules before any network request leaves the process. Four source files. The audit data model <code>ScrapedSiteData</code> lives here rather than in the external package, keeping the scraping library generic.</li>
+          <li><strong>GEOAuditCore</strong> — the orchestration layer. It maps scraped data onto 18 named MCP tools (covering meta tags, heading structure, JSON-LD, AI crawler access, E-E-A-T, and a composite GEO score, among others) and assembles the report. Exposed as a library product alongside WebScraper so both can be reused or tested independently.</li>
+          <li><strong>App</strong> — the Vapor 4 web layer. Fluent with PostgreSQL in production and SQLite for tests. Redis-backed queues via <code>queues-redis-driver</code>. Leaf for server-side HTML rendering. Stripe via <code>stripe-kit</code> for payments.</li>
+        </ul>
+        <p>A <code>MonitoringJob</code> runs on an hourly schedule and dispatches re-audits for any subscriptions that are due.</p>
+        <p>The CLAUDE.md file documents the architecture, module boundaries, development guidelines, and the MCP server address — it served as the working reference throughout the project.</p>
         <h2>Results</h2>
-        <p>Over roughly seven and a half months — first commit March 21, 2026, latest November 8, 2026 — the project reached 35 commits across 3 branches on a solo contributor’s timeline. That pacing reflects sustained, deliberate iteration rather than a sprint.</p>
-        <p>What shipped is a complete commercial service: a paid web application with Stripe-backed per-audit purchases and subscription tiers, automated monitoring via a scheduled Redis job, a Vapor/Leaf front end, and two reusable Swift library products. The <code>SwiftWebScraper</code> dependency was extracted into its own package as recently as November 7, 2026 — one day before the latest commit — demonstrating active architectural refinement even as the product matures.</p>
-        <p>The three-target structure means both <code>WebScraper</code> and <code>GEOAuditCore</code> are available as libraries, opening a path for other clients to consume the scraping or orchestration layers independently.</p>
-        <h2>Judgment Calls</h2>
-        <p><strong>Extracting SwiftWebScraper without moving ScrapedSiteData.</strong> When the scraping logic was pulled into its own open-source package, the temptation would be to move the data model with it. The developer kept <code>ScrapedSiteData</code> inside the audit project. This is the right call: the extracted package stays generic and reusable, while the specific shape of data the audit pipeline depends on remains a versioned, explicit contract owned by this product.</p>
-        <p><strong>Delegating scoring to a remote MCP server.</strong> Rather than implementing GEO scoring heuristics in Swift and maintaining them as AI search evolves, the app treats scoring as an external, upgradeable service. The 18 named MCP tool calls are the interface; the intelligence lives elsewhere. This keeps <code>GEOAuditCore</code> stable and testable while allowing the scoring model to improve without a client release.</p>
-        <p><strong>SSRF validation before any fetch.</strong> Putting URL validation in <code>WebScraper</code> before any HTTP call is made is a security-first boundary. In a service that accepts arbitrary user-supplied URLs and fetches them server-side, this is not optional — and placing it at the lowest layer means no path through the orchestration can bypass it.</p>
-        <p><strong>Swift Tools version 6.2 and strict concurrency.</strong> Targeting the latest Swift toolchain on a commercial product means embracing Swift 6’s strict concurrency model from the start, rather than accumulating technical debt that would have to be paid down later. For an async-heavy pipeline — concurrent MCP tool calls, background monitoring jobs, HTTP fetching — getting concurrency semantics right at the foundation is leverage that compounds.</p>
-        <p><strong>In-memory SQLite for the full test suite.</strong> Swapping the production Postgres driver for SQLite in tests, combined with mock HTTP and MCP clients, means every test is fast, deterministic, and runnable without infrastructure. For a solo developer shipping a paid service, that’s not a convenience — it’s what makes confident iteration possible.</p>
+        <p>The project has 47 commits from one contributor across three branches, running from March 2026 through November 2026. The package builds against Swift 6.2 on macOS.</p>
+        <p>Tests in both <code>WebScraperTests</code>, <code>GEOAuditCoreTests</code>, and <code>AppTests</code> run entirely against in-memory SQLite and mock HTTP and MCP clients, so no external services are required to run the test suite. The SwiftWebScraper dependency was extracted into its own package on 2026-11-07, leaving the scraping library independent while keeping <code>ScrapedSiteData</code> in this package. One Claude Code session contributed one commit.</p>
+        <h2>Decisions</h2>
+        <p><strong>Delegate scoring to an MCP server.</strong> The 18 scoring tools live on the remote GeoSEO MCP server rather than in the app. This keeps the application thin and means scoring logic can be updated on the server without a redeployment of the web app. The tradeoff is that the app is unavailable for scoring if the MCP server is unreachable.</p>
+        <p><strong>Extract SwiftWebScraper as a separate package.</strong> Fetching and HTML extraction are generic enough to be useful outside this project, so I pulled them out. The extraction happened late in the project (commit history shows November 2026), which means the split was driven by the code stabilizing rather than being planned up front. <code>ScrapedSiteData</code> stayed in the audit package because it carries audit-specific fields.</p>
+        <p><strong>Three-target structure.</strong> Separating WebScraper and GEOAuditCore from App lets both library targets be tested without standing up the Vapor server, and makes the orchestration logic available as a library if I want to build other surfaces later.</p>
+        <p><strong>Swift 6.2 and SwiftMCPClient.</strong> Using Swift’s structured concurrency and the MCP client library at language version 6.2 required strict concurrency conformance throughout. That shaped a number of type-level decisions in GEOAuditCore.</p>
+        <p><strong>What’s unfinished or uncertain.</strong> The project has zero design proposals and no design-first workflow on record, so the UI is not documented through any formal design artifact. The monitoring subscription flow depends on Stripe webhooks behaving correctly in production, and I haven’t documented how webhook failures are handled. The SSRF validation covers the cases I know about but hasn’t been externally reviewed.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/webscraper-stats.svg" alt="GEO Auditor statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/webscraper-commits.svg" alt="GEO Auditor commit history chart" class="img-fluid" />
-        <img src="/images/showcase/webscraper-releases.svg" alt="GEO Auditor release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="WebScraper statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              WebScraper
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              47
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              0
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="WebScraper commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              WebScraper — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~5/month · peak 15 (47 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="132" width="59" height="16" /> 
+            <rect class="ig-bar" x="86" y="126" width="59" height="22" /> 
+            <rect class="ig-bar" x="209" y="137" width="59" height="11" /> 
+            <rect class="ig-bar" x="270" y="143" width="59" height="5" /> 
+            <rect class="ig-bar" x="331" y="104" width="59" height="44" /> 
+            <rect class="ig-bar" x="393" y="104" width="59" height="44" /> 
+            <rect class="ig-bar" x="454" y="115" width="59" height="33" /> 
+            <rect class="ig-bar" x="515" y="64" width="59" height="84" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="55" y="166" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="116" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="177" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="239" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="361" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="423" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="484" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="545" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="WebScraper release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              WebScraper — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              none yet
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <text class="ig-muted" x="300" y="94" font-size="13" text-anchor="middle">
+              No releases yet
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: GEO-SEO, selfReflection</p>

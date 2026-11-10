@@ -1,8 +1,8 @@
 ---
-title: IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest
-description: A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required.
+title: IconquerGameKit: Shared Game Logic Layer for iConquer
+description: A Swift package that wraps the iConquer engine, match, and AI libraries into a single observable interface so every platform app binds to one `GameViewModel` instead of wiring three dependencies themselves.
 date: 2026-05-12 15:56
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, iConquer, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,34 +10,34 @@ project: iConquer
 published: true
 ---
 
-# IconquerGameKit: The Single Integration Point That Keeps Every iConquer App Honest
+# IconquerGameKit: Shared Game Logic Layer for iConquer
 
-> A shared game brain that wraps three independent packages into one observable interface, ensuring every iConquer platform shell runs an identical turn loop with no reimplementation required.
+> A Swift package that wraps the iConquer engine, match, and AI libraries into a single observable interface so every platform app binds to one `GameViewModel` instead of wiring three dependencies themselves.
 
-## Problem
+## Motivation
 
-The iConquer universe spans five Apple platforms — iOS, macOS, tvOS, watchOS, and visionOS — each requiring its own app shell. Without a shared coordination layer, every shell would need to independently wire together the game engine (`IconquerCore`), the match state (`IconquerMatch`), and the AI opponent (`IconquerAI`). That's three packages, one turn loop, and five different teams of opportunity to get it subtly wrong. Drift between platforms is not a bug you catch easily; it's the kind of inconsistency that erodes player trust over time.
+The iConquer project targets five Apple platforms — iOS, macOS, tvOS, visionOS, and watchOS. Without a shared layer, each platform shell would need to wire up `IconquerCore`, `IconquerMatch`, and `IconquerAI` independently, manage its own turn loop, and risk diverging from the others over time. I built `IconquerGameKit` to prevent that: one package holds the game brain, and every shell just binds to it.
 
-`IconquerGameKit` exists to close that gap. Its mission, as stated in the project's own `MASTER_PLAN.md`, is to serve as the "shared game brain for all iConquer platform apps" — a single `GameViewModel` that SwiftUI views bind to, with the full complexity of the engine-match-AI handshake hidden behind one observable interface.
+The package also ships built-in maps, which means a host app can start a game without supplying any assets of its own.
 
 ## Approach
 
-The architectural decision at the center of this package is deliberate constraint: callers get one thing. Rather than exposing `IconquerCore`, `IconquerMatch`, and `IconquerAI` as composable primitives and trusting each host app to assemble them correctly, `IconquerGameKit` makes composition the library's job. `GameViewModel` is the public surface area; the three dependencies are implementation details.
+The package exposes a single `GameViewModel` marked as `@Observable`, which SwiftUI views can bind to directly. Internally it wraps `IconquerCore` for game rules, `IconquerMatch` for session management, and `IconquerAI` for the opponent. The turn loop lives here rather than in any shell, so the sequencing of human input, AI response, and state updates is defined once.
 
-Built against Swift Tools version 6.2, the package targets the full Apple platform matrix from a single codebase — macOS, iOS, tvOS, watchOS, and visionOS all declared as supported platforms. Documentation is treated as a first-class deliverable, with `swift-docc-plugin` included as a dependency, signaling that this package is meant to be consumed by others who need to understand it, not just by the original author.
-
-The package structure is minimal by design: one library target and one test target. Keeping the surface area small is itself a judgment — a package that does too many things becomes the new coordination problem it was meant to solve.
+The package is written in Swift and targets Swift Tools version 6.2. It includes `swift-docc-plugin` as a dependency, so documentation can be generated from source. The targets are `IconquerGameKit` for the library and `IconquerGameKitTests` for tests. Supported platforms are macOS, iOS, tvOS, watchOS, and visionOS.
 
 ## Results
 
-`IconquerGameKit` shipped its `v0.1.0` release after 16 commits across roughly five months of development, from April to September 2026. The package delivers on its core promise: a single `GameViewModel` that platform shells can bind to, built-in maps so a host app can start a game with zero assets of its own, and a turn loop centralized in one place. Every iConquer platform app that adopts this package gets identical game logic without writing a line of engine integration code.
+The repository has 16 commits from one contributor across one branch, spanning April to September 2026. The package compiles and targets all five Apple platforms. `IconquerUI` and the platform app shells can bind to `GameViewModel` without reimplementing match or AI wiring.
 
-## Judgment Calls
+## Decisions
 
-**Making the turn loop non-negotiable.** The most important decision here is what the package does *not* let callers do. By keeping the turn loop inside `GameViewModel` rather than exposing lifecycle hooks for host apps to manage, the package makes correctness structural rather than conventional. A platform shell that tries to bypass the turn loop would have to stop using `GameViewModel` entirely — which is the right kind of friction.
+**Single observable view model as the public surface.** Rather than exposing the three underlying packages separately, `GameViewModel` is the only type callers need. This keeps platform shells thin and makes the integration point predictable.
 
-**Bundling maps as a default.** Including built-in maps is a small decision with large downstream consequences. It means the integration story for a new platform shell is genuinely zero-configuration: bind views to `GameViewModel`, pick a map from the bundle, and ship. This lowers the activation energy for adopting the package and reduces the chance that a quick prototype skips the shared library because "setting it up takes time."
+**Built-in maps shipped with the package.** A host app that has no map assets of its own can still start a game. The tradeoff is that the package carries those assets regardless of whether a host app wants to supply its own.
 
-**Five platforms, one codebase, from the start.** Declaring support for all five Apple platforms at the outset rather than starting with iOS and expanding later reflects a clear understanding of the project's purpose. `IconquerGameKit` exists precisely because platform proliferation creates coordination risk. Scoping it narrowly at the start would have undermined the reason it was built.
+**Swift 6.2 and strict concurrency.** Swift 6 concurrency rules apply, which affects how the turn loop is structured and how the AI calls are dispatched. This was a constraint I accepted early given the multi-platform targets.
 
-**Documentation as infrastructure.** Including `swift-docc-plugin` in a library with 16 commits and a single contributor suggests that the developer is thinking about this package as something other people will use — treating documentation tooling as part of the build pipeline rather than something to add later. That's a mark of a developer who has been on the receiving end of a poorly documented dependency and decided not to pass that cost along.
+**No design-first workflow.** There are no design proposals and the project was not developed against mockups. The shape of the API came from the needs of `IconquerUI` and the platform shells.
+
+What remains unfinished or uncertain: the test target exists but the commit history does not indicate how much coverage it currently has. watchOS is listed as a supported platform, but human-vs-AI gameplay on watchOS raises interaction questions that the package itself does not resolve — that falls to whatever shell runs there.

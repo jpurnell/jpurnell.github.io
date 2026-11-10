@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A ground-up reimplementation of Applesoft BASIC in Swift 6.2 that treats historical fidelity as a hard requirement, not an aspiration — built to celebrate Apple’s 50th birthday." />
+    <meta name="description" content="A library-first Applesoft BASIC interpreter written in Swift 6.2, targeting faithful reproduction of 1979 behavior on modern Apple platforms." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift | Justin Purnell</title>
+    <title>Applesoft BASIC Interpreter in Swift | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift" />
-    <meta name="twitter:title" content="Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift" />
-    <meta property="og:description" content="A ground-up reimplementation of Applesoft BASIC in Swift 6.2 that treats historical fidelity as a hard requirement, not an aspiration — built to celebrate Apple’s 50th birthday." />
-    <meta name="twitter:description" content="A ground-up reimplementation of Applesoft BASIC in Swift 6.2 that treats historical fidelity as a hard requirement, not an aspiration — built to celebrate Apple’s 50th birthday." />
+    <meta property="og:title" content="Applesoft BASIC Interpreter in Swift" />
+    <meta name="twitter:title" content="Applesoft BASIC Interpreter in Swift" />
+    <meta property="og:description" content="A library-first Applesoft BASIC interpreter written in Swift 6.2, targeting faithful reproduction of 1979 behavior on modern Apple platforms." />
+    <meta name="twitter:description" content="A library-first Applesoft BASIC interpreter written in Swift 6.2, targeting faithful reproduction of 1979 behavior on modern Apple platforms." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/applesoftbasiclib" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/applesoftbasiclib",
-          "name" : "Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift",
+          "name" : "Applesoft BASIC Interpreter in Swift",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/applesoftbasiclib#breadcrumb"
       },
-      "description" : "A ground-up reimplementation of Applesoft BASIC in Swift 6.2 that treats historical fidelity as a hard requirement, not an aspiration — built to celebrate Apple’s 50th birthday.",
+      "description" : "A library-first Applesoft BASIC interpreter written in Swift 6.2, targeting faithful reproduction of 1979 behavior on modern Apple platforms.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift",
+      "name" : "Applesoft BASIC Interpreter in Swift",
       "url" : "https://www.justinpurnell.com/showcase/applesoftbasiclib"
     }
   ]
@@ -181,38 +181,312 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Applesoft BASIC Lives Again: A Faithful Interpreter for Modern Swift</h1>
+      <h1 class="mainTitle">Applesoft BASIC Interpreter in Swift</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">ApplesoftBASIC</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A ground-up reimplementation of Applesoft BASIC in Swift 6.2 that treats historical fidelity as a hard requirement, not an aspiration — built to celebrate Apple’s 50th birthday.</p>
+          <p>A library-first Applesoft BASIC interpreter written in Swift 6.2, targeting faithful reproduction of 1979 behavior on modern Apple platforms.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>When Apple turned fifty, Jordan Purnell wanted to mark the occasion with something substantial: a working Applesoft BASIC interpreter capable of running real programs from 1979 exactly as they ran then. Not an approximation, not a nostalgia-themed toy, but a faithful execution environment for vintage listings.</p>
-        <p>The project serves three distinct audiences. Retrocomputing enthusiasts and educators who want to run original Applesoft code without spinning up a full Apple II emulator get a lightweight, embeddable option. <code>ApplesoftBASICApp</code> — an iPad front end — gets a clean library it can wrap without modification. And developers curious how an interpreter is structured get a codebase written in a language small enough that the whole thing can be read and understood.</p>
-        <p>The mandate, stated plainly in the project’s own <code>MASTER_PLAN.md</code>, is unambiguous: <em>faithful is the requirement, not merely the description.</em> A program written in 1979 should behave the way it did — including the parts that were surprising then.</p>
+        <h2>Motivation</h2>
+        <p>Applesoft BASIC shipped on the Apple II in 1977 and defined how a generation of people first wrote programs. I built this interpreter to mark Apple’s 50th birthday, with a specific constraint: a listing from 1979 should behave the way it did then, including the edge cases and error messages that surprised people at the time. “Close enough” was not the target.</p>
+        <p>The project serves a few distinct audiences. Someone with a vintage BASIC listing should be able to run it without loading an emulator. The iPad app <code>ApplesoftBASICApp</code> needs an embeddable interpreter it can call into. And anyone curious how an interpreter is structured can read this one end to end, because Applesoft is small enough to hold in your head.</p>
+        <p>I also wanted to implement the graphics subsystem — lo-res and hi-res Apple II color graphics — not just text output. That meant the interpreter had to carry <code>AppleIIColors</code>, <code>GraphicsRenderer</code>, and <code>HPlotPoint</code> as real concerns, not afterthoughts.</p>
         <h2>Approach</h2>
-        <p>Purnell structured the project as a library first. <code>ApplesoftBASICLib</code> is the interpreter core; <code>ApplesoftBASIC</code> is a thin command-line host; <code>ApplesoftBASICApp</code> is the iPad front end. That layering means the interpreter isn’t coupled to any particular interface — it can be embedded, tested, and exercised independently.</p>
-        <p>The decision to target both macOS and iOS from the start, under Swift 6.2, imposed strict concurrency discipline from day one rather than as a retrofit. Swift 6’s complete concurrency checking is unforgiving, and meeting it on an interpreter — where state mutations happen at the speed of an eval loop — required deliberate design around value types and isolation boundaries.</p>
-        <p>Graphics support went beyond text output. <code>AppleIIColors</code>, <code>GraphicsRenderer</code>, and <code>HPlotPoint</code> bring lo-res and hi-res Apple II graphics into the library, because the visual output of those programs is part of what fidelity means. A BASIC listing that draws something should draw it.</p>
-        <p>Perhaps the most characterful decision was <code>CLineEditor</code> — a separate target implementing the original Apple II line-editing experience. The editing behavior is part of the historical artifact. Purnell chose to build it rather than substitute a modern text field.</p>
-        <p><code>SwiftDeterminism</code> appears as a dependency, signaling an investment in reproducible, predictable behavior — exactly what you want when the correctness baseline is a 45-year-old ROM.</p>
-        <p>The <code>CLAUDE.md</code> file documents the development workflow, quality gates, and key rules, serving as an explicit architectural record of the standards the codebase is held to.</p>
+        <p>The package is organized around a library target, <code>ApplesoftBASICLib</code>, with a command-line host (<code>ApplesoftBASIC</code>), a C-based line editor (<code>CLineEditor</code>), and a test suite (<code>ApplesoftBASICTests</code>). Keeping the interpreter in a library target from the start meant the iPad front end and the terminal host could share the same core without duplication.</p>
+        <p>The line editor is a separate C target rather than a Swift reimplementation. The original Apple II editing experience — the way the cursor moved, the way lines were entered — is part of what fidelity means here, so it got its own component.</p>
+        <p>The project targets macOS and iOS under Swift 6.2 and declares two dependencies: <code>swift-docc-plugin</code> for documentation generation and <code>SwiftDeterminism</code> to enforce deterministic behavior in the interpreter. Determinism matters because a faithful interpreter should produce the same output from the same input unconditionally, and <code>SwiftDeterminism</code> makes that a compile-time and runtime constraint rather than a convention.</p>
+        <p>There are no design proposals on file; the architecture is documented in <code>MASTER_PLAN.md</code> and a <code>CLAUDE.md</code> that covers session start procedures, development workflow, key rules, the quality gate, and references. Those documents shaped the structural decisions before code was written.</p>
         <h2>Results</h2>
-        <p>Over roughly six months — first commit April 2026, latest October 2026 — Purnell shipped two public releases: <code>v0.1.0</code> and <code>v0.1.1</code>, across 45 commits on a focused single-contributor repository. The project spans four distinct targets, covers both Apple platforms, and integrates documentation tooling via <code>swift-docc-plugin</code>, meaning the interpreter’s public API is documented rather than merely functional.</p>
-        <p>The <code>ApplesoftBASICTests</code> target exists as a named testing surface — meaningful for an interpreter, where correctness is defined by matching historical behavior across edge cases, error conditions, and the specific quirks of the original implementation.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here reveal how Purnell thinks about software.</p>
-        <p><strong>Fidelity as a constraint, not a goal.</strong> Most compatibility projects drift — they get “close enough” and then optimize for modern ergonomics. Purnell wrote the opposite rule into the mission statement: where 1979 behavior and modern taste disagree, 1979 wins, including the error messages. That’s a discipline commitment that has to be enforced in code review, in test design, and in the face of every temptation to paper over a weird edge case.</p>
-        <p><strong>Library-first architecture.</strong> Shipping <code>ApplesoftBASICLib</code> as the primary artifact — with both the CLI and the iPad app as consumers — means the interpreter is testable, reusable, and not accidentally coupled to its host. It’s the kind of structural decision that doesn’t show up in any single commit but shapes the entire project.</p>
-        <p><strong>Building the line editor.</strong> <code>CLineEditor</code> could have been skipped. Modern text input is readily available on both platforms. Purnell built it anyway, because the editing experience is part of what running Applesoft BASIC <em>felt like</em>. That’s the judgment of someone thinking about the whole experience, not just the execution semantics.</p>
-        <p><strong>Graphics as a first-class concern.</strong> Including lo-res and hi-res graphics rendering isn’t a convenience feature — it’s a statement about what fidelity actually means. Text-only would have been easier. The choice not to stop there reflects a clear-eyed definition of the problem being solved.</p>
+        <p>The project reached two releases — v0.1.0 and v0.1.1 — across 45 commits from one contributor between April and October 2026. The package builds for macOS and iOS. The targets that shipped are:</p>
+        <ul>
+          <li><code>ApplesoftBASICLib</code> — the embeddable interpreter core</li>
+          <li><code>ApplesoftBASIC</code> — a terminal host</li>
+          <li><code>CLineEditor</code> — the line-editing component</li>
+          <li><code>ApplesoftBASICTests</code> — the test suite</li>
+        </ul>
+        <p>Documentation is available via the <code>swift-docc-plugin</code> integration.</p>
+        <h2>Decisions</h2>
+        <p><strong>Fidelity over convenience.</strong> Where the 1979 behavior and modern expectations disagree, the 1979 behavior wins. This applies to error messages, numeric handling, and any quirk that was present in the original ROM. That constraint is explicit in <code>MASTER_PLAN.md</code> and shapes every implementation choice that touches language semantics.</p>
+        <p><strong>Library first.</strong> Structuring the interpreter as <code>ApplesoftBASICLib</code> rather than a monolithic executable meant the iPad front end could embed it directly. This required deciding early what the interpreter’s public surface looked like and keeping host-specific concerns — terminal I/O, graphics rendering — out of the core.</p>
+        <p><strong>C line editor.</strong> <code>CLineEditor</code> is a C target because rewriting the editing behavior in Swift risked drifting from the original feel. Using C lets the implementation stay close to how line editing worked on the original hardware.</p>
+        <p><strong>SwiftDeterminism as a dependency.</strong> Adding <code>SwiftDeterminism</code> makes the determinism requirement enforceable rather than aspirational. The tradeoff is a dependency; the reason is that a BASIC interpreter that produces different output on repeated runs is not faithful.</p>
+        <p><strong>Graphics included.</strong> <code>AppleIIColors</code>, <code>GraphicsRenderer</code>, and <code>HPlotPoint</code> are part of the library, not optional extras. This increases scope but is necessary if the goal is running actual Apple II listings, many of which used lo-res or hi-res graphics.</p>
+        <p><strong>What is unfinished.</strong> The project is at v0.1.1. The full breadth of Applesoft BASIC — every statement, every edge case in the number formatter, the full graphics command set — takes time to cover and verify. The test suite exists, but the number of cases it covers relative to the full Applesoft surface area is not documented in the available data. The iPad front end <code>ApplesoftBASICApp</code> is referenced as a consumer but is a separate project.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/applesoftbasiclib-stats.svg" alt="ApplesoftBASIC statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/applesoftbasiclib-commits.svg" alt="ApplesoftBASIC commit history chart" class="img-fluid" />
-        <img src="/images/showcase/applesoftbasiclib-releases.svg" alt="ApplesoftBASIC release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ApplesoftBASICLib statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ApplesoftBASICLib
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              45
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ApplesoftBASICLib commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ApplesoftBASICLib — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~6/month · peak 16 (45 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="103" y="138" width="76" height="10" /> 
+            <rect class="ig-bar" x="182" y="127" width="76" height="21" /> 
+            <rect class="ig-bar" x="261" y="122" width="76" height="26" /> 
+            <rect class="ig-bar" x="340" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="419" y="143" width="76" height="5" /> 
+            <rect class="ig-bar" x="498" y="143" width="76" height="5" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="ApplesoftBASICLib release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              ApplesoftBASICLib — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              2 releases · latest v0.1.1
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="366" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="272" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="367" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.1.1
+            </text> 
+            <text class="ig-label" x="273" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.1.0
+            </text> 
+            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: applesoftbasic, selfReflection</p>

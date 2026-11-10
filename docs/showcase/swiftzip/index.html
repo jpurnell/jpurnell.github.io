@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A from-scratch ZIP reader and writer built entirely on Foundation and Apple’s Compression framework, shipping five releases in four months to serve as the archive backbone for SwiftXLSX and any Swift project that refuses to carry C baggage." />
+    <meta name="description" content="A zero-dependency Swift package for reading and writing ZIP archives, including .xlsx, .docx, .jar, and other ZIP-based formats, targeting Swift 6 strict concurrency." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies | Justin Purnell</title>
+    <title>SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies" />
-    <meta name="twitter:title" content="SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies" />
-    <meta property="og:description" content="A from-scratch ZIP reader and writer built entirely on Foundation and Apple’s Compression framework, shipping five releases in four months to serve as the archive backbone for SwiftXLSX and any Swift project that refuses to carry C baggage." />
-    <meta name="twitter:description" content="A from-scratch ZIP reader and writer built entirely on Foundation and Apple’s Compression framework, shipping five releases in four months to serve as the archive backbone for SwiftXLSX and any Swift project that refuses to carry C baggage." />
+    <meta property="og:title" content="SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer" />
+    <meta name="twitter:title" content="SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer" />
+    <meta property="og:description" content="A zero-dependency Swift package for reading and writing ZIP archives, including .xlsx, .docx, .jar, and other ZIP-based formats, targeting Swift 6 strict concurrency." />
+    <meta name="twitter:description" content="A zero-dependency Swift package for reading and writing ZIP archives, including .xlsx, .docx, .jar, and other ZIP-based formats, targeting Swift 6 strict concurrency." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftzip" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/swiftzip",
-          "name" : "SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies",
+          "name" : "SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftzip#breadcrumb"
       },
-      "description" : "A from-scratch ZIP reader and writer built entirely on Foundation and Apple’s Compression framework, shipping five releases in four months to serve as the archive backbone for SwiftXLSX and any Swift project that refuses to carry C baggage.",
+      "description" : "A zero-dependency Swift package for reading and writing ZIP archives, including .xlsx, .docx, .jar, and other ZIP-based formats, targeting Swift 6 strict concurrency.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies",
+      "name" : "SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer",
       "url" : "https://www.justinpurnell.com/showcase/swiftzip"
     }
   ]
@@ -181,34 +181,294 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">SwiftZIP: A Pure-Swift ZIP Engine With Zero Compromise on Dependencies</h1>
+      <h1 class="mainTitle">SwiftZIP: A Pure-Swift ZIP Archive Reader and Writer</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftZIP</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A from-scratch ZIP reader and writer built entirely on Foundation and Apple’s Compression framework, shipping five releases in four months to serve as the archive backbone for SwiftXLSX and any Swift project that refuses to carry C baggage.</p>
+          <p>A zero-dependency Swift package for reading and writing ZIP archives, including .xlsx, .docx, .jar, and other ZIP-based formats, targeting Swift 6 strict concurrency.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>ZIP is everywhere — inside <code>.xlsx</code> spreadsheets, <code>.docx</code> documents, <code>.jar</code> archives, and a hundred other formats that wear a different extension on top of the same container format. Yet Swift’s ecosystem has historically offered two unsatisfying choices: wrap a C library like libz or minizip (pulling in build complexity and concurrency headaches), or depend on a heavy general-purpose package that brings far more than needed.</p>
-        <p>Jpurnell built SwiftZIP to eliminate that tradeoff entirely. The mission, as stated in <code>MASTER_PLAN.md</code>, is blunt: “a pure-Swift ZIP archive reader and writer with zero external dependencies, suitable for embedding in any Swift project.” The primary consumer is SwiftXLSX, a sibling library that needs to read and write <code>.xlsx</code> archives reliably, but the design targets any Swift library author who wants ZIP support without the dependency weight.</p>
+        <h2>Motivation</h2>
+        <p>I built SwiftZIP to serve as the archive layer for SwiftXLSX, a separate library for reading and writing Excel files. The .xlsx format is a ZIP container holding XML files, so any .xlsx implementation needs a way to pack and unpack those archives. Rather than wrapping libz or minizip — both C libraries that complicate embedding and add build-system surface area — I wanted a pure-Swift solution that apps and libraries could add without pulling in anything outside Foundation and Apple’s Compression framework.</p>
+        <p>The secondary goal was making it generally useful to any Swift library author who needs ZIP support. The package targets macOS, iOS, watchOS, and visionOS, so it had to work across Apple’s platforms without conditional compilation workarounds for a C dependency.</p>
         <h2>Approach</h2>
-        <p>SwiftZIP is written in Swift 6 with a Tools version of 6.2, which means strict concurrency compliance was a design constraint from day one — not a retrofit. Every public type is <code>Sendable</code>, a discipline that matters especially when ZIP parsing is done on background threads or in async document-processing pipelines. This was a deliberate architectural choice: lock in the concurrency story early rather than scramble to add <code>@unchecked Sendable</code> annotations later.</p>
-        <p>Compression is handled exclusively through Apple’s Compression framework using <code>COMPRESSION_ZLIB</code> for Deflate, which keeps the dependency surface to Foundation plus one Apple-provided system library. There is no libz, no minizip, no C wrapper layer. The entry-based API is the public face: callers work with archive entries rather than raw byte streams, keeping the interface approachable for the spreadsheet and document use cases that motivated the project.</p>
-        <p>The project ships with a <code>CLAUDE.md</code> file that encodes session startup behavior, development workflow, key rules, and a quality gate — a signal that Jpurnell treated the working environment itself as something worth structuring, ensuring consistency across any development session whether assisted or not.</p>
+        <p>The package is a single Swift target, <code>SwiftZIP</code>, with a companion test target <code>SwiftZIPTests</code>. The only declared dependency is <code>swift-docc-plugin</code>, kept solely for documentation generation — it has no effect on the runtime library itself, which keeps the zero-external-dependencies claim accurate for library consumers.</p>
+        <p>Compression uses Apple’s <code>Compression</code> framework with <code>COMPRESSION_ZLIB</code> for Deflate, so there is no libz linkage. CRC-32 verification runs on read to catch corrupt or truncated entries. The API is entry-based: callers work with archive entries rather than raw byte offsets, which keeps the interface stable across internal layout changes.</p>
+        <p>The package is written against Swift 6 with strict concurrency enabled. All public types conform to <code>Sendable</code>, which was a deliberate requirement from the start rather than something retrofitted.</p>
+        <p>A <code>CLAUDE.md</code> file is present in the repository and defines session startup steps, development workflow, key rules, and a quality gate. I used Claude Code for one multi-task session that produced 3 of the 32 total commits. That session encountered five friction events — two incorrect claims, two instances of buggy code, and one wrong approach — and was ultimately marked fully achieved. The CLAUDE.md quality gate exists partly to constrain that kind of session: it specifies what must pass before a commit lands.</p>
         <h2>Results</h2>
-        <p>SwiftZIP reached five releases — 0.3.0, 0.6.0, 0.7.0, 0.8.0, and 0.8.1 — across roughly four months of active development, from the first commit in early June 2026 through early October 2026. The project accumulated 32 commits across 4 branches. It supports macOS, iOS, watchOS, and visionOS, covering the full Apple platform family. The sole external dependency listed in the package manifest is <code>swift-docc-plugin</code>, used only for documentation generation — confirming that zero runtime external dependencies is a hard invariant, not a marketing claim.</p>
-        <p>The library delivers both read and write paths (unusual for minimal ZIP libraries, which often cover only one direction), Deflate compression via <code>COMPRESSION_ZLIB</code>, and CRC-32 integrity verification on read.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here reveal craft over convenience.</p>
-        <p><strong>Deflate via Compression framework, not libz.</strong> This is the load-bearing tradeoff. Using Apple’s <code>Compression</code> framework means no additional package dependency and no C bridging layer, but it also means trusting the platform implementation rather than a widely-audited open-source one. Jpurnell made that bet deliberately — the target platforms are all Apple, so the framework is always present, and the zero-dependency promise is worth more than the hypothetical portability to Linux that a libz approach might offer.</p>
-        <p><strong>Swift 6 strict concurrency from the start.</strong> Retrofitting <code>Sendable</code> conformance onto an existing codebase is painful. By targeting Swift 6 tools at project inception and designing <code>Sendable</code> in throughout, Jpurnell avoided that pain entirely. For a library intended to be embedded in other people’s async pipelines — spreadsheet readers, document processors, file transfer tools — this is exactly the right call.</p>
-        <p><strong>A documented quality gate in CLAUDE.md.</strong> The presence of a structured <code>CLAUDE.md</code> with an explicit quality gate section suggests Jpurnell uses that file not just as an AI-assistant convenience but as a lightweight specification of what “done” means. That kind of environment codification keeps standards consistent regardless of how any given session starts.</p>
-        <p><strong>One AI-assisted session, five friction events, one fully achieved outcome.</strong> A single recorded Claude Code session produced 3 commits across 16 messages and logged 5 friction events (2 incorrect claims, 2 instances of buggy code, 1 wrong approach) — all resolved to a fully achieved outcome. That pattern reflects a developer who engaged AI assistance with skepticism, caught errors, and course-corrected rather than accepting generated code uncritically. The friction log is not a failure record; it’s evidence of editorial judgment applied to generated output.</p>
+        <p>The project has shipped five releases — 0.3.0, 0.6.0, 0.7.0, 0.8.0, and 0.8.1 — across roughly four months of development (June to October 2026), with 32 commits from a single contributor across 4 branches. The library supports both reading and writing ZIP archives with Deflate compression, stored (uncompressed) entries, and CRC-32 integrity verification on read. It is Swift 6 compliant and builds on macOS, iOS, watchOS, and visionOS.</p>
+        <p>No test count is available from the project data, though a <code>SwiftZIPTests</code> target exists. Documentation is generated via swift-docc-plugin.</p>
+        <h2>Decisions</h2>
+        <p><strong>Zero external dependencies.</strong> The defining constraint. Using Foundation and the Compression framework means the package integrates into any Swift Package Manager project without a C toolchain requirement or vendored C source. The tradeoff is that Deflate support is limited to what Apple’s Compression framework exposes — there is no access to lower-level zlib options.</p>
+        <p><strong>Entry-based API.</strong> Callers interact with named entries rather than byte ranges or file offsets. This hides the ZIP local-file-header layout from consumers and gives room to change internal parsing without breaking call sites.</p>
+        <p><strong>Swift 6 strict concurrency from the start.</strong> Making all public types <code>Sendable</code> up front avoided a later retrofitting pass. This was a requirement driven by SwiftXLSX’s own concurrency model.</p>
+        <p><strong>CLAUDE.md with a quality gate.</strong> I added a machine-readable session guide after finding that unguided AI-assisted sessions introduced more friction. The quality gate section specifies what must pass before committing. The one Claude Code session logged five friction events against 16 messages, which is the data point that makes this constraint feel worth keeping.</p>
+        <p><strong>Version numbers below 1.0.</strong> The release history runs from 0.3.0 to 0.8.1. The gap between 0.3.0 and 0.6.0 suggests some internal versioning was not tagged publicly. There is no 1.0 yet, which leaves the API subject to change — intentional while SwiftXLSX’s requirements are still being worked out.</p>
+        <p><strong>What is unfinished.</strong> There is no public test count in the project data, so test coverage is unknown from the outside. The package does not document support for ZIP64 (large-file extensions), encryption, or comment fields — whether those are deferred, out of scope, or simply not mentioned in available metadata is not clear from what I have.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/swiftzip-stats.svg" alt="SwiftZIP statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/swiftzip-commits.svg" alt="SwiftZIP commit history chart" class="img-fluid" />
-        <img src="/images/showcase/swiftzip-releases.svg" alt="SwiftZIP release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftZIP statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftZIP
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              32
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              5
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftZIP commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftZIP — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~6/month · peak 10 (32 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="108" height="84" /> 
+            <rect class="ig-bar" x="135" y="132" width="108" height="16" /> 
+            <rect class="ig-bar" x="245" y="81" width="108" height="67" /> 
+            <rect class="ig-bar" x="356" y="115" width="108" height="33" /> 
+            <rect class="ig-bar" x="466" y="81" width="108" height="67" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="79" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="190" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="410" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="521" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftZIP release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftZIP — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              5 releases · latest 0.8.1
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="472" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="468" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="420" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="333" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="151" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="473" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              0.8.1
+            </text> 
+            <text class="ig-label" x="152" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              0.3.0
+            </text> 
+            <text class="ig-muted" x="79" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="190" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="410" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="521" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swiftzip, selfReflection</p>

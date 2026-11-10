@@ -1,8 +1,8 @@
 ---
-title: Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game
-description: Justin Purnell is rebuilding a beloved 2002 Mac strategy game from scratch in modern Swift — using a TypeScript reference implementation as a behavioral specification and targeting iOS 26's Liquid Glass aesthetic as the finish line.
+title: Porting a 2002 Mac Strategy Game to Modern Swift
+description: A Swift rebuild of iConquer, a Risk-style turn-based strategy game originally written in Objective-C by Kavasoft, using a TypeScript reference implementation as the behavioral specification.
 date: 2026-05-12 15:56
-lastModified: 2026-10-30
+lastModified: 2026-11-10
 tags: showcase, project, selfReflection, iConquer
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,42 +10,42 @@ project: iConquer
 published: true
 ---
 
-# Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game
+# Porting a 2002 Mac Strategy Game to Modern Swift
 
-> Justin Purnell is rebuilding a beloved 2002 Mac strategy game from scratch in modern Swift — using a TypeScript reference implementation as a behavioral specification and targeting iOS 26's Liquid Glass aesthetic as the finish line.
+> A Swift rebuild of iConquer, a Risk-style turn-based strategy game originally written in Objective-C by Kavasoft, using a TypeScript reference implementation as the behavioral specification.
 
-## Problem
+## Motivation
 
-iConquer was a Risk-style turn-based strategy game released around 2002 by Kavasoft, written in Objective-C for classic Mac OS X. The original source code is gone. The binary is a relic. But the game itself — the map, the mechanics, the feel of it — left an impression worth preserving.
+iConquer was a Risk-style turn-based strategy game released around 2002 for Mac OS X by Kavasoft, written in Objective-C. The original source is no longer available. I wanted to bring it forward onto modern Apple platforms — SwiftUI on iOS and macOS — while keeping the original art assets and the core gameplay intact.
 
-The project, internally named MLXTest and tracked under the `iconquer` path, exists to solve a specific problem: how do you faithfully recreate a piece of software when you have no source, a working reference, and a modern platform with entirely different idioms? Justin's answer was to treat the existing TypeScript port, living in the same repository under `src/`, not as a curiosity but as an authoritative behavioral specification. The TypeScript implementation defines what iConquer *does*. The Swift rebuild defines what iConquer *becomes*.
+The project has two personal goals running in parallel. First, I wanted a faithful recreation of a game I had reason to care about, targeting players who remember the original and want a native experience on current hardware. Second, I wanted a portfolio-quality SwiftUI project that demonstrates a Design-First TDD workflow on a nontrivial problem. A Risk-style game has enough moving parts — territory graphs, army placement, combat resolution, AI opponents, turn sequencing — that it exercises architecture decisions in ways that a small utility app doesn't.
 
-The stakes are deliberately layered. This is a portfolio project meant to demonstrate Design-First TDD in SwiftUI — not a toy, but a full native application with a plug-in architecture for maps and AI players, original art assets, and a target platform that didn't exist when the original shipped.
+The original Objective-C source being gone meant I needed something to test against. A working TypeScript port exists in the repository under `src/`, and that becomes the behavioral specification: the Swift implementation should produce equivalent behavior, and the TypeScript port makes that testable.
 
 ## Approach
 
-The project is built on Swift 6.2 targeting macOS, with `swift-docc-plugin` as its sole external dependency — a deliberate choice that keeps the dependency graph clean and signals that documentation is treated as a first-class output, not an afterthought. The test target, `MLXTestTests`, exists from the start, not retrofitted in later.
+The repository is named MLXTest internally but the project is iConquer. It targets macOS initially, with iOS as the next platform, using Swift 6.2 and SwiftUI with iOS 26-era Liquid Glass styling planned for the visual layer.
 
-The CLAUDE.md file structures the working environment around explicit rules: a defined session start ritual, a quality gate that must be cleared before any commit, and architecture references that keep the big picture visible during granular work. This kind of scaffolding is characteristic of a developer who has learned that the bottleneck in long-running solo projects isn't capability — it's continuity. The CLAUDE.md is a contract with future-Justin as much as anything else.
+The TypeScript reference implementation drives the specification. Rather than reconstructing rules from memory or documentation, I can run the TypeScript port for a given scenario and use that output as the expected result for the Swift tests. This gives behavior-equivalence testing a concrete mechanism: the TypeScript port is the oracle.
 
-The MASTER_PLAN.md establishes the architectural ambitions clearly: a plug-in system for maps and AI (preserved from the original design philosophy), behavior-equivalence testing enabled by the TypeScript reference, and a progressive modernization path that doesn't require solving every problem at once. iOS 26's Liquid Glass styling is explicitly on the roadmap, which means the visual layer is being designed with future constraints in mind from day one.
+The architecture carries forward a plug-in design from the original — maps and AI players are meant to be swappable modules rather than hardcoded. This was a design decision in the 2002 original that I'm preserving because it keeps the game extensible and because it makes the AI layer independently testable.
+
+The package is structured with two targets: `MLXTest` for the application code and `MLXTestTests` for the test suite. The `swift-docc-plugin` dependency indicates documentation generation is part of the workflow. A `CLAUDE.md` file is present, encoding session-start procedures, development workflow, key rules, a quality gate, and references — this serves as the working contract for how development sessions proceed.
 
 ## Results
 
-Over roughly six months — from March to late August 2026 — the project accumulated 77 commits across a single focused branch with two contributors. That pace reflects deliberate, sustained work rather than bursts of activity followed by abandonment. The repository structure, the tooling choices, and the documentation artifacts are all present and coherent at the latest commit.
+The repository has 77 commits across roughly six months of work, from March 2026 through August 2026, with two contributors. There is one active branch. The project is in active development rather than released; the MASTER_PLAN.md describes the Swift rebuild as a progressive modernization, meaning the initial milestone is functional parity with the TypeScript reference before visual and gameplay modernization begins.
 
-The test target is established and in-scope. The TypeScript reference implementation lives alongside the Swift codebase, making behavioral comparison a tooling problem rather than a memory problem. The original game assets are integrated. The plug-in architecture, one of the most technically interesting aspects of the original iConquer design, is carried forward as a named deliverable rather than something to figure out later.
+No release has shipped to the App Store at this point. The work so far covers the Swift package structure, the core game architecture, and the testing infrastructure against the TypeScript reference.
 
-## Judgment Calls
+## Decisions
 
-Several decisions here are worth examining as evidence of craft rather than just execution.
+**Using the TypeScript port as the specification rather than rewriting from memory.** The Objective-C source is gone. Without the TypeScript port, the only specification would be playing the original game and writing down what it does. The TypeScript port gives me a runnable oracle for behavior-equivalence tests, which is a more reliable foundation than observation alone.
 
-**Choosing a TypeScript reference over documentation.** When you have no source code, you have two options: reconstruct behavior from memory and user expectations, or find something executable to interrogate. Justin chose the latter. The TypeScript port becomes a spec that can be run, diffed, and tested against — a living document that catches drift in a way that written notes never could.
+**Preserving the plug-in architecture for maps and AI.** The original design supported this, and I kept it. It complicates the initial implementation — a hardcoded map and a single AI would have been faster to build — but it means the game can grow without rewriting the core, and it makes AI behavior unit-testable in isolation.
 
-**Keeping dependencies minimal.** A Risk-style strategy game with a plug-in architecture and multiple AI systems could justify a lot of dependencies. The package file lists exactly one: `swift-docc-plugin`. This is a bet that the complexity of the domain should be managed in the codebase, not outsourced to libraries — and that documentation infrastructure is worth paying for explicitly.
+**SwiftUI with iOS 26 Liquid Glass styling.** This targets a specific, recent platform and styling idiom. It means the app won't run on older OS versions and ties the visual design to a direction that was chosen before the game logic is complete. The tradeoff is that the styling work and the game logic can proceed in parallel without blocking each other, and iOS 26 represents the deployment target where the audience most likely is.
 
-**Writing CLAUDE.md before writing much game code.** The CLAUDE.md artifact, with its session start protocol and quality gate, suggests Justin has internalized a lesson about solo long-running projects: the hardest part isn't building, it's maintaining context across sessions separated by days or weeks. Externalizing that context into a structured document is a form of systems thinking applied to personal workflow.
+**Reusing the original art assets.** The original assets define the visual identity of the game. Building new art would change what the game is for returning players. The plan is to reuse them and modernize the surrounding UI rather than replace them.
 
-**Targeting iOS 26 from the start.** Liquid Glass is a new visual idiom. Building toward it deliberately rather than treating it as an upgrade path means the UI architecture won't need to be rethought at the end — it's a constraint that shapes decisions being made now, including layout, material usage, and interaction design.
-
-The name in the package is MLXTest; the game is iConquer; the path says iconquer; the mission statement is unambiguous. This is a project that knows exactly what it is, even if the world hasn't seen the finished version yet.
+**What is unfinished.** The project has not yet reached feature parity with the TypeScript reference. The iOS target, the Liquid Glass visual layer, and the plug-in map and AI architecture are all described in the plan but not yet complete. The design-first workflow noted as a goal in MASTER_PLAN.md has zero design proposals recorded so far, meaning that process hasn't been exercised yet.

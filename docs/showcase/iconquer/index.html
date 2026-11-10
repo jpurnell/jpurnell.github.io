@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Justin Purnell is rebuilding a beloved 2002 Mac strategy game from scratch in modern Swift — using a TypeScript reference implementation as a behavioral specification and targeting iOS 26’s Liquid Glass aesthetic as the finish line." />
+    <meta name="description" content="A Swift rebuild of iConquer, a Risk-style turn-based strategy game originally written in Objective-C by Kavasoft, using a TypeScript reference implementation as the behavioral specification." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game | Justin Purnell</title>
+    <title>Porting a 2002 Mac Strategy Game to Modern Swift | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game" />
-    <meta name="twitter:title" content="Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game" />
-    <meta property="og:description" content="Justin Purnell is rebuilding a beloved 2002 Mac strategy game from scratch in modern Swift — using a TypeScript reference implementation as a behavioral specification and targeting iOS 26’s Liquid Glass aesthetic as the finish line." />
-    <meta name="twitter:description" content="Justin Purnell is rebuilding a beloved 2002 Mac strategy game from scratch in modern Swift — using a TypeScript reference implementation as a behavioral specification and targeting iOS 26’s Liquid Glass aesthetic as the finish line." />
+    <meta property="og:title" content="Porting a 2002 Mac Strategy Game to Modern Swift" />
+    <meta name="twitter:title" content="Porting a 2002 Mac Strategy Game to Modern Swift" />
+    <meta property="og:description" content="A Swift rebuild of iConquer, a Risk-style turn-based strategy game originally written in Objective-C by Kavasoft, using a TypeScript reference implementation as the behavioral specification." />
+    <meta name="twitter:description" content="A Swift rebuild of iConquer, a Risk-style turn-based strategy game originally written in Objective-C by Kavasoft, using a TypeScript reference implementation as the behavioral specification." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquer" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/iconquer",
-          "name" : "Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game",
+          "name" : "Porting a 2002 Mac Strategy Game to Modern Swift",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquer#breadcrumb"
       },
-      "description" : "Justin Purnell is rebuilding a beloved 2002 Mac strategy game from scratch in modern Swift — using a TypeScript reference implementation as a behavioral specification and targeting iOS 26’s Liquid Glass aesthetic as the finish line.",
+      "description" : "A Swift rebuild of iConquer, a Risk-style turn-based strategy game originally written in Objective-C by Kavasoft, using a TypeScript reference implementation as the behavioral specification.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game",
+      "name" : "Porting a 2002 Mac Strategy Game to Modern Swift",
       "url" : "https://www.justinpurnell.com/showcase/iconquer"
     }
   ]
@@ -181,36 +181,274 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Resurrecting iConquer: A Design-First Swift Port of a Classic Mac Strategy Game</h1>
+      <h1 class="mainTitle">Porting a 2002 Mac Strategy Game to Modern Swift</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">iConquer</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>Justin Purnell is rebuilding a beloved 2002 Mac strategy game from scratch in modern Swift — using a TypeScript reference implementation as a behavioral specification and targeting iOS 26’s Liquid Glass aesthetic as the finish line.</p>
+          <p>A Swift rebuild of iConquer, a Risk-style turn-based strategy game originally written in Objective-C by Kavasoft, using a TypeScript reference implementation as the behavioral specification.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>iConquer was a Risk-style turn-based strategy game released around 2002 by Kavasoft, written in Objective-C for classic Mac OS X. The original source code is gone. The binary is a relic. But the game itself — the map, the mechanics, the feel of it — left an impression worth preserving.</p>
-        <p>The project, internally named MLXTest and tracked under the <code>iconquer</code> path, exists to solve a specific problem: how do you faithfully recreate a piece of software when you have no source, a working reference, and a modern platform with entirely different idioms? Justin’s answer was to treat the existing TypeScript port, living in the same repository under <code>src/</code>, not as a curiosity but as an authoritative behavioral specification. The TypeScript implementation defines what iConquer <em>does</em>. The Swift rebuild defines what iConquer <em>becomes</em>.</p>
-        <p>The stakes are deliberately layered. This is a portfolio project meant to demonstrate Design-First TDD in SwiftUI — not a toy, but a full native application with a plug-in architecture for maps and AI players, original art assets, and a target platform that didn’t exist when the original shipped.</p>
+        <h2>Motivation</h2>
+        <p>iConquer was a Risk-style turn-based strategy game released around 2002 for Mac OS X by Kavasoft, written in Objective-C. The original source is no longer available. I wanted to bring it forward onto modern Apple platforms — SwiftUI on iOS and macOS — while keeping the original art assets and the core gameplay intact.</p>
+        <p>The project has two personal goals running in parallel. First, I wanted a faithful recreation of a game I had reason to care about, targeting players who remember the original and want a native experience on current hardware. Second, I wanted a portfolio-quality SwiftUI project that demonstrates a Design-First TDD workflow on a nontrivial problem. A Risk-style game has enough moving parts — territory graphs, army placement, combat resolution, AI opponents, turn sequencing — that it exercises architecture decisions in ways that a small utility app doesn’t.</p>
+        <p>The original Objective-C source being gone meant I needed something to test against. A working TypeScript port exists in the repository under <code>src/</code>, and that becomes the behavioral specification: the Swift implementation should produce equivalent behavior, and the TypeScript port makes that testable.</p>
         <h2>Approach</h2>
-        <p>The project is built on Swift 6.2 targeting macOS, with <code>swift-docc-plugin</code> as its sole external dependency — a deliberate choice that keeps the dependency graph clean and signals that documentation is treated as a first-class output, not an afterthought. The test target, <code>MLXTestTests</code>, exists from the start, not retrofitted in later.</p>
-        <p>The CLAUDE.md file structures the working environment around explicit rules: a defined session start ritual, a quality gate that must be cleared before any commit, and architecture references that keep the big picture visible during granular work. This kind of scaffolding is characteristic of a developer who has learned that the bottleneck in long-running solo projects isn’t capability — it’s continuity. The CLAUDE.md is a contract with future-Justin as much as anything else.</p>
-        <p>The MASTER_PLAN.md establishes the architectural ambitions clearly: a plug-in system for maps and AI (preserved from the original design philosophy), behavior-equivalence testing enabled by the TypeScript reference, and a progressive modernization path that doesn’t require solving every problem at once. iOS 26’s Liquid Glass styling is explicitly on the roadmap, which means the visual layer is being designed with future constraints in mind from day one.</p>
+        <p>The repository is named MLXTest internally but the project is iConquer. It targets macOS initially, with iOS as the next platform, using Swift 6.2 and SwiftUI with iOS 26-era Liquid Glass styling planned for the visual layer.</p>
+        <p>The TypeScript reference implementation drives the specification. Rather than reconstructing rules from memory or documentation, I can run the TypeScript port for a given scenario and use that output as the expected result for the Swift tests. This gives behavior-equivalence testing a concrete mechanism: the TypeScript port is the oracle.</p>
+        <p>The architecture carries forward a plug-in design from the original — maps and AI players are meant to be swappable modules rather than hardcoded. This was a design decision in the 2002 original that I’m preserving because it keeps the game extensible and because it makes the AI layer independently testable.</p>
+        <p>The package is structured with two targets: <code>MLXTest</code> for the application code and <code>MLXTestTests</code> for the test suite. The <code>swift-docc-plugin</code> dependency indicates documentation generation is part of the workflow. A <code>CLAUDE.md</code> file is present, encoding session-start procedures, development workflow, key rules, a quality gate, and references — this serves as the working contract for how development sessions proceed.</p>
         <h2>Results</h2>
-        <p>Over roughly six months — from March to late August 2026 — the project accumulated 77 commits across a single focused branch with two contributors. That pace reflects deliberate, sustained work rather than bursts of activity followed by abandonment. The repository structure, the tooling choices, and the documentation artifacts are all present and coherent at the latest commit.</p>
-        <p>The test target is established and in-scope. The TypeScript reference implementation lives alongside the Swift codebase, making behavioral comparison a tooling problem rather than a memory problem. The original game assets are integrated. The plug-in architecture, one of the most technically interesting aspects of the original iConquer design, is carried forward as a named deliverable rather than something to figure out later.</p>
-        <h2>Judgment Calls</h2>
-        <p>Several decisions here are worth examining as evidence of craft rather than just execution.</p>
-        <p><strong>Choosing a TypeScript reference over documentation.</strong> When you have no source code, you have two options: reconstruct behavior from memory and user expectations, or find something executable to interrogate. Justin chose the latter. The TypeScript port becomes a spec that can be run, diffed, and tested against — a living document that catches drift in a way that written notes never could.</p>
-        <p><strong>Keeping dependencies minimal.</strong> A Risk-style strategy game with a plug-in architecture and multiple AI systems could justify a lot of dependencies. The package file lists exactly one: <code>swift-docc-plugin</code>. This is a bet that the complexity of the domain should be managed in the codebase, not outsourced to libraries — and that documentation infrastructure is worth paying for explicitly.</p>
-        <p><strong>Writing CLAUDE.md before writing much game code.</strong> The CLAUDE.md artifact, with its session start protocol and quality gate, suggests Justin has internalized a lesson about solo long-running projects: the hardest part isn’t building, it’s maintaining context across sessions separated by days or weeks. Externalizing that context into a structured document is a form of systems thinking applied to personal workflow.</p>
-        <p><strong>Targeting iOS 26 from the start.</strong> Liquid Glass is a new visual idiom. Building toward it deliberately rather than treating it as an upgrade path means the UI architecture won’t need to be rethought at the end — it’s a constraint that shapes decisions being made now, including layout, material usage, and interaction design.</p>
-        <p>The name in the package is MLXTest; the game is iConquer; the path says iconquer; the mission statement is unambiguous. This is a project that knows exactly what it is, even if the world hasn’t seen the finished version yet.</p>
+        <p>The repository has 77 commits across roughly six months of work, from March 2026 through August 2026, with two contributors. There is one active branch. The project is in active development rather than released; the MASTER_PLAN.md describes the Swift rebuild as a progressive modernization, meaning the initial milestone is functional parity with the TypeScript reference before visual and gameplay modernization begins.</p>
+        <p>No release has shipped to the App Store at this point. The work so far covers the Swift package structure, the core game architecture, and the testing infrastructure against the TypeScript reference.</p>
+        <h2>Decisions</h2>
+        <p><strong>Using the TypeScript port as the specification rather than rewriting from memory.</strong> The Objective-C source is gone. Without the TypeScript port, the only specification would be playing the original game and writing down what it does. The TypeScript port gives me a runnable oracle for behavior-equivalence tests, which is a more reliable foundation than observation alone.</p>
+        <p><strong>Preserving the plug-in architecture for maps and AI.</strong> The original design supported this, and I kept it. It complicates the initial implementation — a hardcoded map and a single AI would have been faster to build — but it means the game can grow without rewriting the core, and it makes AI behavior unit-testable in isolation.</p>
+        <p><strong>SwiftUI with iOS 26 Liquid Glass styling.</strong> This targets a specific, recent platform and styling idiom. It means the app won’t run on older OS versions and ties the visual design to a direction that was chosen before the game logic is complete. The tradeoff is that the styling work and the game logic can proceed in parallel without blocking each other, and iOS 26 represents the deployment target where the audience most likely is.</p>
+        <p><strong>Reusing the original art assets.</strong> The original assets define the visual identity of the game. Building new art would change what the game is for returning players. The plan is to reuse them and modernize the surrounding UI rather than replace them.</p>
+        <p><strong>What is unfinished.</strong> The project has not yet reached feature parity with the TypeScript reference. The iOS target, the Liquid Glass visual layer, and the plug-in map and AI architecture are all described in the plan but not yet complete. The design-first workflow noted as a goal in MASTER_PLAN.md has zero design proposals recorded so far, meaning that process hasn’t been exercised yet.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/iconquer-stats.svg" alt="iConquer statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/iconquer-commits.svg" alt="iConquer commit history chart" class="img-fluid" />
-        <img src="/images/showcase/iconquer-releases.svg" alt="iConquer release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="MLXTest statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              MLXTest
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              77
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              0
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              1
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              2 contributors
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="MLXTest commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              MLXTest — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~12/month · peak 51 (77 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="134" width="90" height="14" /> 
+            <rect class="ig-bar" x="117" y="64" width="90" height="84" /> 
+            <rect class="ig-bar" x="209" y="145" width="90" height="3" /> 
+            <rect class="ig-bar" x="301" y="144" width="90" height="4" /> 
+            <rect class="ig-bar" x="393" y="144" width="90" height="4" /> 
+            <rect class="ig-bar" x="485" y="134" width="90" height="14" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="70" y="166" font-size="10" text-anchor="middle">
+              Mar
+            </text> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="254" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="346" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="530" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="MLXTest release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              MLXTest — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              none yet
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <text class="ig-muted" x="300" y="94" font-size="13" text-anchor="middle">
+              No releases yet
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: selfReflection, iConquer</p>

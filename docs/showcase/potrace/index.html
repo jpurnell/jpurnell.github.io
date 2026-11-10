@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A faithful, MIT-licensed Swift port of Peter Selinger’s Potrace bitmap-tracing algorithm — derived from the original research paper rather than the GPL C source, making it the first permissively licensed, native Swift path from raster to Bézier." />
+    <meta name="description" content="A from-scratch Swift implementation of Peter Selinger’s Potrace algorithm, independently derived from the paper rather than the C source, to allow MIT licensing and idiomatic Apple-platform distribution." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>Potrace in Pure Swift: Building the Algorithm from the Paper Up | Justin Purnell</title>
+    <title>Swift Potrace: Bitmap-to-Vector Tracing in Native Swift | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="Potrace in Pure Swift: Building the Algorithm from the Paper Up" />
-    <meta name="twitter:title" content="Potrace in Pure Swift: Building the Algorithm from the Paper Up" />
-    <meta property="og:description" content="A faithful, MIT-licensed Swift port of Peter Selinger’s Potrace bitmap-tracing algorithm — derived from the original research paper rather than the GPL C source, making it the first permissively licensed, native Swift path from raster to Bézier." />
-    <meta name="twitter:description" content="A faithful, MIT-licensed Swift port of Peter Selinger’s Potrace bitmap-tracing algorithm — derived from the original research paper rather than the GPL C source, making it the first permissively licensed, native Swift path from raster to Bézier." />
+    <meta property="og:title" content="Swift Potrace: Bitmap-to-Vector Tracing in Native Swift" />
+    <meta name="twitter:title" content="Swift Potrace: Bitmap-to-Vector Tracing in Native Swift" />
+    <meta property="og:description" content="A from-scratch Swift implementation of Peter Selinger’s Potrace algorithm, independently derived from the paper rather than the C source, to allow MIT licensing and idiomatic Apple-platform distribution." />
+    <meta name="twitter:description" content="A from-scratch Swift implementation of Peter Selinger’s Potrace algorithm, independently derived from the paper rather than the C source, to allow MIT licensing and idiomatic Apple-platform distribution." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/potrace" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/potrace",
-          "name" : "Potrace in Pure Swift: Building the Algorithm from the Paper Up",
+          "name" : "Swift Potrace: Bitmap-to-Vector Tracing in Native Swift",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/potrace#breadcrumb"
       },
-      "description" : "A faithful, MIT-licensed Swift port of Peter Selinger’s Potrace bitmap-tracing algorithm — derived from the original research paper rather than the GPL C source, making it the first permissively licensed, native Swift path from raster to Bézier.",
+      "description" : "A from-scratch Swift implementation of Peter Selinger’s Potrace algorithm, independently derived from the paper rather than the C source, to allow MIT licensing and idiomatic Apple-platform distribution.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "Potrace in Pure Swift: Building the Algorithm from the Paper Up",
+      "name" : "Swift Potrace: Bitmap-to-Vector Tracing in Native Swift",
       "url" : "https://www.justinpurnell.com/showcase/potrace"
     }
   ]
@@ -181,32 +181,300 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">Potrace in Pure Swift: Building the Algorithm from the Paper Up</h1>
+      <h1 class="mainTitle">Swift Potrace: Bitmap-to-Vector Tracing in Native Swift</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">Potrace</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A faithful, MIT-licensed Swift port of Peter Selinger’s Potrace bitmap-tracing algorithm — derived from the original research paper rather than the GPL C source, making it the first permissively licensed, native Swift path from raster to Bézier.</p>
+          <p>A from-scratch Swift implementation of Peter Selinger’s Potrace algorithm, independently derived from the paper rather than the C source, to allow MIT licensing and idiomatic Apple-platform distribution.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Bitmap-to-vector conversion is a fundamental need across a surprising range of Apple-platform workflows: icon pipelines, font tooling, sticker editors, sign-cutter UIs, 3D-printing rigs that start from scanned input, and CAD or GIS tooling that needs clean outlines from raster data. The established answer, Peter Selinger’s Potrace algorithm, produces exceptionally smooth Bézier curves from binary bitmaps and has a well-regarded C reference implementation — but that implementation is GPL-licensed. Any Swift developer who wanted Potrace in a shipping product was stuck shelling out to the binary, wrapping it via FFI with all the memory-management ceremony that entails, or accepting the license terms.</p>
-        <p><code>swift-potrace</code> exists to close that gap. Its mission, stated plainly in the project’s own <code>MASTER_PLAN.md</code>, is “a faithful, MIT-licensed Swift implementation” of the algorithm. The immediate consumer is <code>houseMaker</code>, a sibling project, which drove the v0.1 requirements — but the package is designed to stand on its own as a distributable library for anyone in the Swift ecosystem who needs bitmap → vector without the licensing or FFI overhead.</p>
+        <h2>Motivation</h2>
+        <p>The Potrace algorithm converts a binary bitmap into smooth Bézier outlines. It is well-understood — Selinger published the full description in his 2003 paper — but every existing option available to Swift developers either shells out to the GPL-licensed C binary or wraps it through FFI. Neither option is usable in a package that needs to ship under a permissive license or run natively on Apple platforms without a C dependency chain.</p>
+        <p>I needed this for <code>houseMaker</code>, a sibling project that takes raster input and produces geometry suitable for 3D workflows. Rather than building a one-off integration, I separated the tracing layer into its own package — <code>swift-potrace</code> — so it can be distributed independently and consumed by other projects (icons, fonts, sign-cutter tools, CAD pipelines on Apple platforms or Linux servers).</p>
+        <p>The immediate driver was <code>houseMaker</code>’s v0.1 requirements, but the target audience is wider: any Swift developer who needs bitmap-to-vector conversion without reaching for a C library or a GPL dependency.</p>
         <h2>Approach</h2>
-        <p>The licensing strategy is the architectural foundation of everything else: the implementation is derived from Selinger’s 2003 paper, <em>“Potrace: a polygon-based tracing algorithm,”</em> not from the C source. Working from the paper means the resulting code is independent — there is no derived-work entanglement with the GPL — and it also means every structural decision reflects the algorithm as described, not as the reference implementation happened to express it.</p>
-        <p>The package is built on Swift 6.2 tooling and targets the full Apple platform matrix — macOS, iOS, tvOS, watchOS, and visionOS — as well as Linux servers. It leans on <code>swift-numerics</code> for the geometric heavy lifting, <code>swift-argument-parser</code> for the CLI surface, and <code>swift-docc-plugin</code> for documentation generation. The target breakdown tells the story of a thoughtfully layered package: <code>BoundedIO</code> handles I/O concerns, <code>Potrace</code> contains the core algorithm, <code>PotraceSVG</code> handles SVG emission, and <code>PotraceCLI</code> / <code>swift-potrace</code> provide the command-line entry points, with benchmark and test targets alongside each layer.</p>
-        <p>The API is designed for modern Swift idioms: <code>async</code>-friendly, <code>Sendable</code>-conforming types, structured concurrency for batch processing — no callbacks, no opaque pointers. Apple-platform acceleration via vDSP and Accelerate is available as an opt-in hot path, but the pure-Swift implementation is the fast path, keeping Linux and cross-platform use fully supported without any conditional compilation tax on callers.</p>
-        <p>A <code>CLAUDE.md</code> file codifies session startup, development workflow, key rules, and quality gates alongside references to the paper — an artifact that reflects deliberate thinking about how the project should be built and maintained, not just what it should do.</p>
+        <p>The implementation is derived from Selinger’s 2003 paper directly, not from the C reference source. That distinction matters for licensing: the C implementation is GPL, so reading it and translating it would create a derivative work. Working from the paper produces independent code that can ship under MIT.</p>
+        <p>The package is structured into several targets. <code>Potrace</code> holds the core algorithm. <code>PotraceSVG</code> handles SVG serialization. <code>PotraceCLI</code> and <code>swift-potrace</code> provide command-line entry points. <code>BoundedIO</code> is a supporting module. <code>PotraceBenchmark</code> and its test counterpart exist alongside the standard test targets <code>BoundedIOTests</code>, <code>PotraceTests</code>, <code>PotraceSVGTests</code>, and <code>swift-potraceTests</code>.</p>
+        <p>The API is built around modern Swift concurrency — <code>async</code>-friendly, <code>Sendable</code> types, structured concurrency for batch processing — with no callbacks and no opaque pointers. The core path is pure Swift so the package builds on Linux as well as all Apple platforms. Apple-platform-specific acceleration via vDSP/Accelerate is available as an opt-in path rather than a requirement.</p>
+        <p>Dependencies are <code>swift-numerics</code> for numeric foundations, <code>swift-argument-parser</code> for the CLI, and <code>swift-docc-plugin</code> for documentation generation. The package targets macOS, iOS, tvOS, watchOS, and visionOS and uses Swift Tools version 6.2.</p>
+        <p>Correctness is validated against golden outputs from the C reference’s curves on a fixture set, even though the algorithm itself is independently written.</p>
         <h2>Results</h2>
-        <p>Over roughly five months of active development (April through September 2026), the project shipped three versioned releases: v0.1.0, v0.2.0, and v0.2.1, across 34 commits from a single contributor. The release cadence reflects intentional scope management — v0.1 was explicitly scoped to satisfy <code>houseMaker</code>‘s immediate needs, with subsequent releases extending the surface. The target count (eleven targets across the package) and the presence of dedicated benchmark infrastructure (<code>PotraceBenchmark</code>, <code>PotraceBenchmarkTests</code>) indicate that performance is treated as a first-class, measurable property of the system rather than an afterthought. Correctness is validated against golden outputs from the C reference’s curves on a fixture set — property-tested, not just spot-checked.</p>
-        <h2>Judgment Calls</h2>
-        <p>The most consequential judgment call in the project is one that was made before a single line of code was written: work from the paper, not the source. This is a decision with legal, architectural, and engineering dimensions simultaneously. Legally, it preserves the MIT license. Architecturally, it forces the implementation to model the algorithm at the level of its stated abstractions rather than inheriting the C implementation’s particular data structures and optimization choices. Engineeringly, it means every step had to be understood deeply enough to be re-expressed in idiomatic Swift — there was no C to fall back on when something was unclear.</p>
-        <p>The decision to expose Apple-platform acceleration as opt-in rather than mandatory is a second judgment call worth noting. It would have been easier to write Apple-only hot paths and call it done; instead, the design maintains a pure-Swift fast path as the default, preserving Linux server applicability and keeping the package genuinely cross-platform. The Accelerate integration is an enhancement, not a dependency.</p>
-        <p>Finally, the package decomposition — separating I/O concerns (<code>BoundedIO</code>) from the algorithm core (<code>Potrace</code>) from SVG emission from the CLI — reflects an understanding that this library will be embedded in other pipelines. <code>houseMaker</code> is the first consumer, but the architecture assumes it won’t be the last. That assumption is the kind of judgment that separates a tool built for a moment from one built to last.</p>
+        <p>The project reached three releases — v0.1.0, v0.2.0, and v0.2.1 — across 34 commits from a single contributor between April and September 2026. The package covers the full pipeline from binary bitmap input through Bézier curve fitting to SVG output, with a working CLI. Test targets exist for each functional module, and a benchmark target is in place for performance measurement.</p>
+        <p>The package is usable today as a dependency for <code>houseMaker</code> and is structured for standalone distribution to the broader Swift ecosystem.</p>
+        <h2>Decisions</h2>
+        <p><strong>Derive from the paper, not the C source.</strong> This was the foundational choice. It made the work harder — there is no reference code to check line by line — but it is what makes an MIT license defensible. The C binary is GPL; independent derivation from the published algorithm is not.</p>
+        <p><strong>Separate <code>swift-potrace</code> from <code>houseMaker</code>.</strong> The tracing logic could have lived inside <code>houseMaker</code> as a private module. Separating it into its own package adds some overhead but makes it distributable and testable in isolation. <code>houseMaker</code> drove the initial requirements but should not constrain the API.</p>
+        <p><strong>Pure-Swift fast path with opt-in Accelerate.</strong> A design that required Accelerate would exclude Linux and constrain the API surface. Making the pure-Swift path the default and Accelerate opt-in keeps the package cross-platform while leaving performance headroom for Apple-platform consumers.</p>
+        <p><strong>Golden-output testing against the C reference.</strong> The algorithm is independently derived, but the outputs should match Selinger’s reference on a known fixture set. Testing against those golden curves gives a correctness anchor without importing any GPL code.</p>
+        <p><strong>What is unfinished or uncertain.</strong> Three releases in five months with 34 commits suggests active but early development. The benchmark target exists but its results are not yet part of the public record. The relationship between <code>BoundedIO</code> and the rest of the package — it appears as both a top-level target and in the project name — is not fully explained in the available material. How completely the paper’s algorithm is implemented relative to all features of the C reference (color decomposition, turnpolicies, despeckle) is not documented in the inputs here.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/potrace-stats.svg" alt="Potrace statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/potrace-commits.svg" alt="Potrace commit history chart" class="img-fluid" />
-        <img src="/images/showcase/potrace-releases.svg" alt="Potrace release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="BoundedIO statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              BoundedIO
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              34
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              3
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              5
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="BoundedIO commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              BoundedIO — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~5/month · peak 16 (34 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="64" width="90" height="84" /> 
+            <rect class="ig-bar" x="117" y="143" width="90" height="5" /> 
+            <rect class="ig-bar" x="209" y="138" width="90" height="10" /> 
+            <rect class="ig-bar" x="301" y="138" width="90" height="10" /> 
+            <rect class="ig-bar" x="393" y="91" width="90" height="57" /> 
+            <rect class="ig-bar" x="485" y="138" width="90" height="10" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="70" y="166" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="254" y="166" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="346" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="530" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="BoundedIO release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              BoundedIO — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              3 releases · latest v0.2.1
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="465" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="100" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="100" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="466" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.2.1
+            </text> 
+            <text class="ig-label" x="101" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.2.0
+            </text> 
+            <text class="ig-muted" x="70" y="112" font-size="10" text-anchor="middle">
+              Apr
+            </text> 
+            <text class="ig-muted" x="162" y="112" font-size="10" text-anchor="middle">
+              May
+            </text> 
+            <text class="ig-muted" x="254" y="112" font-size="10" text-anchor="middle">
+              Jun
+            </text> 
+            <text class="ig-muted" x="346" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="438" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="530" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: potrace, selfReflection</p>

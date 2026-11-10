@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A disciplined single-implementation library that owns every read and write operation on a shared telemetry corpus, preventing schema drift before it can begin." />
+    <meta name="description" content="A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>CorpusKit: The One True Writer for a Quality Gate Corpus | Justin Purnell</title>
+    <title>CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="CorpusKit: The One True Writer for a Quality Gate Corpus" />
-    <meta name="twitter:title" content="CorpusKit: The One True Writer for a Quality Gate Corpus" />
-    <meta property="og:description" content="A disciplined single-implementation library that owns every read and write operation on a shared telemetry corpus, preventing schema drift before it can begin." />
-    <meta name="twitter:description" content="A disciplined single-implementation library that owns every read and write operation on a shared telemetry corpus, preventing schema drift before it can begin." />
+    <meta property="og:title" content="CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry" />
+    <meta name="twitter:title" content="CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry" />
+    <meta property="og:description" content="A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain." />
+    <meta name="twitter:description" content="A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/quality-gate-corpus-kit" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/quality-gate-corpus-kit",
-          "name" : "CorpusKit: The One True Writer for a Quality Gate Corpus",
+          "name" : "CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/quality-gate-corpus-kit#breadcrumb"
       },
-      "description" : "A disciplined single-implementation library that owns every read and write operation on a shared telemetry corpus, preventing schema drift before it can begin.",
+      "description" : "A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "CorpusKit: The One True Writer for a Quality Gate Corpus",
+      "name" : "CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry",
       "url" : "https://www.justinpurnell.com/showcase/quality-gate-corpus-kit"
     }
   ]
@@ -181,34 +181,314 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">CorpusKit: The One True Writer for a Quality Gate Corpus</h1>
+      <h1 class="mainTitle">CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">CorpusKit</p>
-      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">4 min read</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A disciplined single-implementation library that owns every read and write operation on a shared telemetry corpus, preventing schema drift before it can begin.</p>
+          <p>A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.</p>
         </blockquote>
-        <h2>Problem</h2>
-        <p>Longitudinal telemetry data has one enemy: inconsistency. The moment two writers touch the same corpus with subtly different assumptions — about field names, timestamp formats, or snapshot layout — the series stops being comparable. And a series you can’t compare is no longer longitudinal data; it’s just noise accumulating in a directory.</p>
-        <p>CorpusKit exists to make that failure mode structurally impossible. Built as the shared reader and writer for telemetry, snapshots, and derived judgment artifacts across a quality-gate system, the library defines a single canonical implementation that every consumer must go through. The MASTER_PLAN.md states it plainly: “A corpus with two writers acquires two schemas, and the telemetry series stops being comparable — which destroys the only thing longitudinal data is for.” The project is built around that sentence.</p>
-        <p>The library serves a multi-target ecosystem — CorpusKit at the core, alongside specialized targets for aggregation (<code>IJSAggregator</code>), policy discovery (<code>IJSPolicyDiscovery</code>), a dashboard layer (<code>IJSDashboardCore</code>), and a judgment workbench (<code>JudgmentWorkbench</code>) — running on both macOS and iOS. Each target relies on the same foundational read/write contracts rather than reimplementing them.</p>
+        <h2>Motivation</h2>
+        <p>The quality-gate system I’m building depends on longitudinal telemetry — data that only has meaning if it’s comparable across time. That comparability breaks the moment two separate pieces of code write to the same corpus with slightly different assumptions about schema. You end up with two schemas in practice, even if they started identical, and the series becomes untrustworthy.</p>
+        <p>CorpusKit exists to prevent that. It’s the single implementation that all other tools in the quality-gate ecosystem depend on for reading and writing corpus data: telemetry, snapshots, and derived judgment artifacts. The MASTER_PLAN.md names this directly — “one implementation” is the entire point, not a secondary goal.</p>
         <h2>Approach</h2>
-        <p>CorpusKit is a Swift package targeting Swift 6.2, with its strictness requirements deliberately matched to the concurrency and type-safety guarantees that come with that toolchain. Dependencies are intentionally minimal: <code>quality-gate-types</code> supplies the shared domain model, Yams handles human-readable serialization, and <code>swift-docc-plugin</code> keeps the documentation build first-class.</p>
-        <p>The architecture is organized around the conviction that schema ownership is architectural, not incidental. Rather than spreading read/write logic across consumers, all access flows through CorpusKit — making the library itself the enforcement point for corpus integrity. The <code>CLAUDE.md</code> file signals that this project has been maintained with careful attention to conventions, workflow rules, and quality gates baked into the development process itself, documented in sections covering architecture, project conventions, session start procedures, and key rules.</p>
-        <p>Testing targets mirror every major target: <code>CorpusKitTests</code>, <code>IJSAggregatorTests</code>, <code>JudgmentWorkbenchTests</code>, <code>IJSPolicyDiscoveryTests</code>, and <code>IJSDashboardCoreTests</code>. The 1:1 correspondence between production targets and test targets indicates that coverage wasn’t an afterthought but structured into the project’s layout from the start.</p>
+        <p>The package is written in Swift targeting macOS and iOS, using Swift 6.2 tooling. It has three declared dependencies: <code>quality-gate-types</code> (the shared type definitions the rest of the ecosystem uses), <code>Yams</code> for YAML serialization, and <code>swift-docc-plugin</code> for documentation generation.</p>
+        <p>The package is organized into several targets beyond the core <code>CorpusKit</code> library: <code>IJSAggregator</code>, <code>IJSPolicyDiscovery</code>, <code>IJSDashboardCore</code>, and <code>JudgmentWorkbench</code>, each with corresponding test targets. This separation lets the aggregation, policy discovery, dashboard, and workbench concerns evolve independently while still sharing the single corpus I/O layer underneath.</p>
+        <p>A <code>CLAUDE.md</code> file is present and covers architecture, project conventions, development workflow, and quality gate requirements. I used one Claude Code session during development — four messages, one commit, fully achieved — for a contained, specific task rather than exploratory work.</p>
         <h2>Results</h2>
-        <p>CorpusKit shipped its 1.0.0 release and has sustained a steady cadence of 34 releases over roughly four months — from 1.0.0 through 1.26.0, including patch releases (1.3.1, 1.6.1, 1.6.2, 1.12.1, 1.19.1, 1.22.1) that reflect careful semantic versioning rather than just rolling major bumps through breaking changes. Seventy commits across 11 branches represent a project that has been actively evolved, not just launched and left.</p>
-        <p>The release history itself is evidence of real use: a library with consumers that don’t care about schema integrity doesn’t accumulate patch releases. The patch versions suggest that downstream consumers were catching edge cases, and CorpusKit was responding to them precisely rather than bundling unrelated changes into minor bumps.</p>
-        <h2>Judgment Calls</h2>
-        <p>The most revealing decision in CorpusKit is the one that defines its entire existence: refusing to allow schema logic to live anywhere but here. It would have been easier — in the short term — to let each consumer write its own serialization, its own snapshot format, its own field conventions. That path is faster until the first time you try to compare a telemetry series across two consumers and discover they disagree about what a timestamp means.</p>
-        <p>Choosing Yams over a binary serialization format is a second judgment call worth noting. Binary formats are faster; Yams produces human-readable YAML. For a corpus intended to support longitudinal analysis and debugging, readability in the raw files likely matters more than write throughput — the corpus is inspectable, diff-able, and auditable without tooling.</p>
-        <p>The decision to structure test targets in strict 1:1 correspondence with production targets reflects a similar philosophy: every surface that can have a schema contract should have an explicit test boundary that owns verifying that contract. The architecture of the test suite mirrors the architecture of the library, which is not an accident.</p>
-        <p>Finally, the <code>CLAUDE.md</code> artifact — with dedicated sections for session start procedures, development workflow, and key rules — suggests that Purnell has thought carefully about how to make CorpusKit legible not just as a library but as a project that a future collaborator (or a future version of himself) can re-enter without losing context. That’s craft applied to the development environment itself, not just the code.</p>
+        <p>The library shipped its 1.0.0 release on or shortly after July 9, 2026, the date of the first commit, and has reached 1.26.0 as of the latest commit on October 28, 2026 — 34 releases across roughly four months of active development, across 70 commits on 11 branches. The release cadence is dense: most versions are minor increments, with occasional patch releases (1.3.1, 1.6.1, 1.6.2, 1.12.1, 1.19.1, 1.22.1) indicating fixes made between feature releases.</p>
+        <p>Test targets exist for all four named subsystems — <code>CorpusKitTests</code>, <code>IJSAggregatorTests</code>, <code>JudgmentWorkbenchTests</code>, <code>IJSPolicyDiscoveryTests</code>, <code>IJSDashboardCoreTests</code> — covering the full surface of the package.</p>
+        <h2>Decisions</h2>
+        <p><strong>Single-writer constraint as the organizing principle.</strong> The architectural decision to enforce one implementation rather than a shared protocol with multiple implementors is stated explicitly in MASTER_PLAN.md. I chose to centralize corpus I/O here rather than distribute it, accepting tighter coupling between tools in exchange for guaranteed schema consistency.</p>
+        <p><strong>YAML as the serialization format.</strong> The Yams dependency means corpus artifacts are stored and read as YAML rather than JSON or a binary format. This keeps files human-readable and diff-friendly, which matters for a longitudinal data store where you may need to inspect or debug historical entries directly.</p>
+        <p><strong>Separate targets for subsystems.</strong> Breaking <code>IJSAggregator</code>, <code>IJSPolicyDiscovery</code>, <code>IJSDashboardCore</code>, and <code>JudgmentWorkbench</code> into distinct targets within the same package rather than separate packages keeps everything versioned together. A breaking change to the corpus schema shows up as a single version bump that all consumers must adopt simultaneously, rather than a cascade of coordinated updates across repositories.</p>
+        <p><strong>No design-first workflow.</strong> There are no design proposals on record for this project. Development proceeded from the architectural premise in MASTER_PLAN.md directly into implementation.</p>
+        <p>What remains uncertain is how the schema will need to evolve as the judgment and dashboard subsystems mature — the 1.26.0 release suggests ongoing change, and the minor-version-heavy history indicates the schema isn’t yet stable enough to freeze.</p>
       </div>
       <div class="showcase-infographics">
-        <img src="/images/showcase/quality-gate-corpus-kit-stats.svg" alt="CorpusKit statistics infographic" class="img-fluid" />
-        <img src="/images/showcase/quality-gate-corpus-kit-commits.svg" alt="CorpusKit commit history chart" class="img-fluid" />
-        <img src="/images/showcase/quality-gate-corpus-kit-releases.svg" alt="CorpusKit release history chart" class="img-fluid" />
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="CorpusKit statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              CorpusKit
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              70
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              34
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              2
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="CorpusKit commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              CorpusKit — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~17/month · peak 26 (70 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="74" width="136" height="74" /> 
+            <rect class="ig-bar" x="163" y="113" width="136" height="35" /> 
+            <rect class="ig-bar" x="301" y="116" width="136" height="32" /> 
+            <rect class="ig-bar" x="439" y="64" width="136" height="84" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="93" y="166" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="231" y="166" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="369" y="166" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="507" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="CorpusKit release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              CorpusKit — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              34 releases · latest 1.26.0
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="557" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="548" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="544" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="464" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="459" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="459" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="459" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="428" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="382" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="377" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="377" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="377" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="373" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="268" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="148" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="148" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="139" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="72" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="68" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="554" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              1.26.0
+            </text> 
+            <text class="ig-label" x="60" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              1.2.0
+            </text> 
+            <text class="ig-muted" x="93" y="112" font-size="10" text-anchor="middle">
+              Jul
+            </text> 
+            <text class="ig-muted" x="231" y="112" font-size="10" text-anchor="middle">
+              Aug
+            </text> 
+            <text class="ig-muted" x="369" y="112" font-size="10" text-anchor="middle">
+              Sep
+            </text> 
+            <text class="ig-muted" x="507" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+          </svg> </p>
       </div>
       <hr />
       <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: quality-gate-corpus-kit, selfReflection</p>
