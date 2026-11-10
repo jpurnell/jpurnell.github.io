@@ -6,6 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- **Showcase graphics regenerated from the design system (2026-11-10).** All 114 SVGs for the 38
+  manifest pages were rewritten by `showcase sync --infographics-only` from project-showcase's
+  DesignTokens-based generators (previously a hard-coded navy and cyan palette). Each file embeds
+  light, dark, increased-contrast and increased-contrast-dark values from DesignTokens 0.6.0.
+  The commit-activity chart now sizes each month's bar by its real commit count; before, every
+  bar was full height. `docs/` rebuilt.
+
+### Removed
+- Nine orphaned SVGs (`docclint`, `mlxtest`, `quality-gate-performance`, three each). None was in
+  `showcase-manifest.json` or referenced by a page, so sync never refreshed them and they kept the
+  old palette.
+
+### Changed
 - **DesignTokens 0.2.0 to 0.5.0 (2026-11-09).** `Package.swift` now requires `from: "0.5.0"`
   (resolved to tag 0.5.0, revision `275a75c`). `Assets/css/tokens.css` was regenerated with
   `scripts/sync-tokens.sh`; the diff is 55 added lines and no removals: three
