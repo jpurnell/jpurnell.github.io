@@ -23,8 +23,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (`settled: true`, so syncing never rewrites it). Graphics use one title size, a heavy rule under it,
   no card border, and a shared month axis for the commit and release charts. Syncing now rewrites a
   page's prose only after a minor release bump; otherwise it refreshes the graphics alone.
-- **DesignTokens 0.6.0 to 0.10.0 (2026-11-10).** `Package.swift` now requires `from: "0.10.0"`
-  (resolved at tag 0.10.0). `scripts/sync-tokens.sh` produces a byte-identical `tokens.css`, so no
+- **DesignTokens 0.6.0 to 0.11.0 (2026-11-10).** `Package.swift` now requires `from: "0.11.0"`
+  (resolved at tag 0.11.0). `scripts/sync-tokens.sh` produces a byte-identical `tokens.css`, so no
   token value the site uses changed. The showcase SVGs were regenerated against it; eight differ,
   all from commit counts that moved today, none from styling.
 
