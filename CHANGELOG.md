@@ -13,10 +13,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   The commit-activity chart now sizes each month's bar by its real commit count; before, every
   bar was full height. `docs/` rebuilt.
 
+### Fixed
+- **`quality-gate-performance` lost its three graphics when the orphans were removed.** The
+  layout builds a page's SVG URLs from its filename, so the article still requested
+  `quality-gate-performance-{stats,commits,releases}.svg`; the files were a stale snapshot of the
+  `quality-gate-swift` repository with no manifest entry of their own. The article now sets
+  `infographics: qualitygatecore`, so it shows the live card for the same repository and stays
+  current with each sync. `portfolio-overview` requested `portfolio-overview-*.svg`, which never
+  existed on `main`; it now sets `infographics: none`, the layout's opt-out for overview pages.
+  A sweep of every `docs/showcase` page finds no graphic link without a file.
+
 ### Removed
 - Nine orphaned SVGs (`docclint`, `mlxtest`, `quality-gate-performance`, three each). None was in
-  `showcase-manifest.json` or referenced by a page, so sync never refreshed them and they kept the
-  old palette.
+  `showcase-manifest.json`, so sync never refreshed them and they kept the old palette.
+  `mlxtest` was iConquer's internal name (its page is `iconquer`) and `docclint` was a one-commit
+  snapshot of `docc-lint`, neither with a page. `quality-gate-performance` did have a page; see
+  Fixed.
 
 ### Changed
 - **DesignTokens 0.2.0 to 0.5.0 (2026-11-09).** `Package.swift` now requires `from: "0.5.0"`

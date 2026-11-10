@@ -5,6 +5,7 @@ date: 2026-05-13 16:41
 lastModified: 2026-11-09
 tags: showcase, portfolio, overview
 layout: ShowcaseLayout
+infographics: none
 projects: ApplesoftBASICAppCore, ApplesoftBASICLib, development-guidelines, MLXTest, IconquerAI, IconquerClient, IconquerCLILib, IconquerCore, IconquerGameKit, IconquerMatch, IconquerMCP, IconquerServer, IconquerUI, IJSCore, MCPClient, narbis, org-judgement-corpus, PersonalSiteLib, BoundedIO, ProjectShowcase, QualityGateCore, QualityGateTypes, SearchOperatorCore, swift-security-rules, SwiftCLIKit, SwiftMCPServer, SwiftSVG, WebScraper, SwiftExcelFunctions, CTokenizer, SwiftOAuthCore, BusinessMathMCP, CorpusKit, GeoSEOMCP, SwiftXLSX, SwiftZIP, SwiftWebAuthn, SwiftCLIKitAuth
 published: true
 ---
