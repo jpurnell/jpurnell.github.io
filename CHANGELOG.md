@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **`projects` in `cv.json` (2026-11-14).** Seven Swift projects (quality-gate-swift, SwiftMCPServer, SwiftMCPClient,
+  swift-oauth, GeoSEOMCP, geo-audit, BusinessMath), each with a role, period, topic tags, and two highlights copied
+  verbatim from `portfolio.json`. The site does not render them; CoverLetterWriter's `--tailor` reads them and adds the
+  few that match a job. The tags are a judgment about relevance, not facts. Figures such as "3,213 tests" are as of
+  the day they were copied and will go stale.
+- **Seeso: the Amazon Channels data feed bullet (2026-11-14).** "Built the data feed pipeline for Amazon Channels
+  distribution; my first production programming work." It also appears on the rendered CV page.
 - **`basics.pronouns` in `cv.json` (2026-11-10).** An optional `Pronouns` value on `Basics`
   (`subject`, `object`, `possessive`, and an optional `display` such as "he/him, any is fine"),
   set to he/him/his. It is stored, not published: nothing on the page or in the JSON-LD states it,
@@ -18,6 +25,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   missing or non-SVG file falls back to an `<img>`.
 
 ### Changed
+- **Employer name corrected (2026-11-14).** "Thompson Financial Securities Data" is now "Thomson Financial Securities Data"
+  in `cv.json` and the CV page.
 - **Showcase pages regenerated in first person (2026-11-10).** All 39 project pages and the portfolio
   overview were rewritten in my voice, with no praise of the work, and the KEXPPower page was added
   (`settled: true`, so syncing never rewrites it). Graphics use one title size, a heavy rule under it,

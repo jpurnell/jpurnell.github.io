@@ -59,6 +59,11 @@ integration test, whether or not it is labelled that way.
       states a role, an outcome, and where to check it. Proposal:
       `project/plans/proposals/PortfolioPage.md`.
 
+- [x] `cv.json` is also the input to CoverLetterWriter's `--tailor`, which treats it as the only source of facts.
+      It gained a `projects` list (seven Swift projects, text taken from `portfolio.json`) and the Amazon Channels
+      data-feed bullet on 2026-11-14. The site ignores `projects`; the tailor reads it. Any change to a bullet there
+      changes what a tailored resume may claim, so wording in `cv.json` is now checked by a tool as well as read by people.
+
 ### Known Issues
 
 **`docs/` is generated but committed**, so a rebuild produces diffs unrelated to any edit.
@@ -81,4 +86,4 @@ link on a personal site is cheap to create and invisible until someone else find
 
 ---
 
-**Last Updated:** 2026-09-28 — reconciled Current Status with the portfolio page and the JSON-data convention.
+**Last Updated:** 2026-11-14 — recorded that `cv.json` now also feeds CoverLetterWriter and gained `projects`; the 2026-09-28 reconciliation of status with the portfolio page still holds.
