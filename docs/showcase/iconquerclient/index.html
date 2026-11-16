@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A Swift library that connects to the iConquer game server over WebSocket and presents the remote session through the same interface as a local game, so the UI layer doesn’t branch on transport." />
+    <meta name="description" content="A Swift library that connects to the iConquer game server over WebSockets and exposes the remote session behind the same interface as a local game." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
     <title>IconquerClient: WebSocket Client Library for iConquer Multiplayer | Justin Purnell</title>
@@ -59,8 +59,8 @@
     <meta property="og:site_name" content="Justin Purnell" />
     <meta property="og:title" content="IconquerClient: WebSocket Client Library for iConquer Multiplayer" />
     <meta name="twitter:title" content="IconquerClient: WebSocket Client Library for iConquer Multiplayer" />
-    <meta property="og:description" content="A Swift library that connects to the iConquer game server over WebSocket and presents the remote session through the same interface as a local game, so the UI layer doesn’t branch on transport." />
-    <meta name="twitter:description" content="A Swift library that connects to the iConquer game server over WebSocket and presents the remote session through the same interface as a local game, so the UI layer doesn’t branch on transport." />
+    <meta property="og:description" content="A Swift library that connects to the iConquer game server over WebSockets and exposes the remote session behind the same interface as a local game." />
+    <meta name="twitter:description" content="A Swift library that connects to the iConquer game server over WebSockets and exposes the remote session behind the same interface as a local game." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/iconquerclient" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -147,7 +147,7 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/iconquerclient#breadcrumb"
       },
-      "description" : "A Swift library that connects to the iConquer game server over WebSocket and presents the remote session through the same interface as a local game, so the UI layer doesn’t branch on transport.",
+      "description" : "A Swift library that connects to the iConquer game server over WebSockets and exposes the remote session behind the same interface as a local game.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
@@ -186,24 +186,23 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A Swift library that connects to the iConquer game server over WebSocket and presents the remote session through the same interface as a local game, so the UI layer doesn’t branch on transport.</p>
+          <p>A Swift library that connects to the iConquer game server over WebSockets and exposes the remote session behind the same interface as a local game.</p>
         </blockquote>
         <h2>Motivation</h2>
-        <p>iConquer is a multiplayer strategy game I’m building. The server hosts games, and clients need a way to join and participate over the network. I wanted the presentation layer — <code>IconquerApp</code> and <code>IconquerUI</code> — to treat a remote game session identically to a local one. That meant the client library had to conform to whatever session shape the rest of the system already expected, hiding the transport entirely.</p>
-        <p>I also wanted this library usable by test harnesses that exercise the server protocol, not just by the UI. That argued for keeping it a standalone Swift package rather than embedding it in the app target.</p>
+        <p>iConquer is a multiplayer game with a hosted server. The presentation layer — <code>IconquerApp</code> and <code>IconquerUI</code> — already knows how to drive a local game session. The goal with IconquerClient was to let it drive a remote session through exactly the same interface, so the UI code doesn’t need to branch on whether the game is local or networked.</p>
+        <p>Beyond that, I wanted a client that would work outside of Apple’s platforms. URLSession WebSockets ties you to Apple’s frameworks; building on SwiftNIO means the library can run in test harnesses on Linux and alongside server-side Swift code without any platform conditionals.</p>
         <h2>Approach</h2>
-        <p>The library is written in Swift and targets macOS, iOS, tvOS, and visionOS. It depends on SwiftNIO rather than URLSession’s built-in WebSocket support. The motivation for that choice is that the iConquer server itself is server-side Swift, and SwiftNIO keeps the networking layer consistent on both sides. It also means the client can run on Linux if a test harness ever needs it.</p>
-        <p>Transport selection is scheme-driven: a <code>wss://</code> URL gets TLS via SwiftTLSKit; anything else that isn’t <code>ws://</code> is an error. There’s no fallback to plaintext when TLS is requested. Connection state and server rejections surface as typed Swift errors rather than opaque string messages or untyped callbacks.</p>
-        <p>The package declares two targets — <code>IconquerClient</code> and <code>IconquerClientTests</code> — and pulls in <code>IconquerCore</code> for the shared protocol types that both the server and client understand.</p>
-        <p>There were no design proposals or formal design-first documents. No Claude Code sessions were involved in this work.</p>
+        <p>The library targets macOS, iOS, tvOS, and visionOS and is built with Swift Package Manager using Swift tools version 6.2. Its dependencies are IconquerCore (which defines the shared game protocol types), SwiftTLSKit, SwiftNIO, and swift-docc-plugin.</p>
+        <p>The transport is SwiftNIO rather than URLSession. This was a deliberate choice to keep Linux and server-side Swift as first-class targets, not afterthoughts.</p>
+        <p>TLS is handled by scheme inspection: if the URL uses <code>wss://</code>, the library negotiates TLS via SwiftTLSKit; if it doesn’t, the connection fails with a typed error rather than silently falling back to plaintext. There is no way to request a secure connection and get an insecure one.</p>
+        <p>Connection state and server rejections are represented as typed errors throughout. The library doesn’t return opaque failure values; every failure condition the server can produce maps to a specific error type the caller can match against.</p>
         <h2>Results</h2>
-        <p>The project reached two tagged releases — v0.1.0 and v0.2.0 — across 26 commits from a single contributor, with development running from April 2026 through October 2026. Two branches exist in the repository. The library covers macOS, iOS, tvOS, and visionOS as declared platform targets.</p>
+        <p>The library has shipped four releases: v0.1.0, v0.2.0, v0.3.0-beta.1, and v0.3.0, across 29 commits from a single contributor between April and November 2026. There are two branches in the repository. The test target, IconquerClientTests, is present in the package manifest.</p>
         <h2>Decisions</h2>
-        <p><strong>SwiftNIO over URLSession WebSockets.</strong> URLSession’s WebSocket API is Apple-platform-only and doesn’t align with the server’s own networking layer. SwiftNIO works across platforms and matches what the server uses, which simplifies reasoning about protocol behavior end to end.</p>
-        <p><strong>Scheme-based transport selection.</strong> Rather than accepting a flag or configuration option to toggle TLS, the URL scheme determines the transport. <code>wss://</code> means TLS or failure; <code>ws://</code> means plaintext. This removes a class of misconfiguration where TLS is intended but not enforced.</p>
-        <p><strong>Typed errors over opaque failures.</strong> Connection state transitions and server rejections are represented as specific Swift error types rather than generic errors or string descriptions. This makes it possible for callers to handle specific failure modes rather than inspecting messages.</p>
-        <p><strong>Conforming to the local session interface.</strong> The remote session presents the same shape as a local game session so the UI doesn’t need a branch for remote vs. local play. This is the central architectural constraint the library is built around, and it’s what ties the dependency on <code>IconquerCore</code> together — both sides of the connection share the same protocol types.</p>
-        <p>What remains unfinished or uncertain: the two-branch structure suggests active development, and v0.2.0 is the latest public release as of October 2026. I haven’t published specific test coverage numbers. The test target exists, but how thoroughly the protocol edge cases are exercised isn’t captured here.</p>
+        <p><strong>SwiftNIO over URLSession WebSockets.</strong> URLSession WebSockets is Apple-only. SwiftNIO runs on Linux, which matters for test harnesses that exercise the server protocol and for any future server-side Swift usage. The cost is a heavier dependency and more explicit connection management; the benefit is that the library works wherever Swift runs.</p>
+        <p><strong>Scheme-driven transport with hard TLS enforcement.</strong> The URL scheme is the only configuration point for transport security. <code>wss://</code> triggers TLS; anything else is an error. This removes the possibility of a misconfiguration that silently degrades to plaintext, but it means callers have to supply the right scheme and can’t opt into TLS through a separate flag.</p>
+        <p><strong>Matching the local session interface.</strong> Presenting the remote session behind the same shape as a local one means the UI doesn’t need to know about the transport. The tradeoff is that the abstraction has to be maintained as the local session interface evolves — changes to IconquerCore’s protocol types propagate to this library.</p>
+        <p><strong>No design proposals and no Claude Code usage.</strong> The project has no recorded design proposal documents and no Claude Code sessions; the architecture was worked out directly in code. What remains unfinished or uncertain isn’t recorded in the available metadata, but the presence of a beta release before v0.3.0 suggests at least one round of revision before that version stabilized.</p>
       </div>
       <div class="showcase-infographics">
         <p>
@@ -268,14 +267,14 @@
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
             <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
             <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
-              26
+              29
             </text> 
             <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
               COMMITS
             </text> 
             <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
             <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
-              2
+              4
             </text> 
             <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
               RELEASES
@@ -351,37 +350,41 @@
               IconquerClient — Commit Activity
             </text> 
             <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
-              ~3/month · peak 10 (26 total)
+              ~3/month · peak 10 (29 total)
             </text> 
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
-            <rect class="ig-bar" x="25" y="132" width="76" height="16" /> 
-            <rect class="ig-bar" x="103" y="132" width="76" height="16" /> 
-            <rect class="ig-bar" x="182" y="140" width="76" height="8" /> 
-            <rect class="ig-bar" x="261" y="123" width="76" height="25" /> 
-            <rect class="ig-bar" x="340" y="90" width="76" height="58" /> 
-            <rect class="ig-bar" x="419" y="140" width="76" height="8" /> 
-            <rect class="ig-bar" x="498" y="64" width="76" height="84" /> 
+            <rect class="ig-bar" x="25" y="132" width="67" height="16" /> 
+            <rect class="ig-bar" x="94" y="132" width="67" height="16" /> 
+            <rect class="ig-bar" x="163" y="140" width="67" height="8" /> 
+            <rect class="ig-bar" x="232" y="123" width="67" height="25" /> 
+            <rect class="ig-bar" x="301" y="90" width="67" height="58" /> 
+            <rect class="ig-bar" x="370" y="140" width="67" height="8" /> 
+            <rect class="ig-bar" x="439" y="64" width="67" height="84" /> 
+            <rect class="ig-bar" x="508" y="123" width="67" height="25" /> 
             <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
-            <text class="ig-muted" x="63" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="59" y="166" font-size="10" text-anchor="middle">
               Apr
             </text> 
-            <text class="ig-muted" x="142" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="128" y="166" font-size="10" text-anchor="middle">
               May
             </text> 
-            <text class="ig-muted" x="221" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="197" y="166" font-size="10" text-anchor="middle">
               Jun
             </text> 
-            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="266" y="166" font-size="10" text-anchor="middle">
               Jul
             </text> 
-            <text class="ig-muted" x="379" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="335" y="166" font-size="10" text-anchor="middle">
               Aug
             </text> 
-            <text class="ig-muted" x="458" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="404" y="166" font-size="10" text-anchor="middle">
               Sep
             </text> 
-            <text class="ig-muted" x="537" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="473" y="166" font-size="10" text-anchor="middle">
               Oct
+            </text> 
+            <text class="ig-muted" x="542" y="166" font-size="10" text-anchor="middle">
+              Nov
             </text> 
           </svg> </p>
         <p>
@@ -444,38 +447,43 @@
               IconquerClient — Releases
             </text> 
             <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
-              2 releases · latest v0.2.0
+              4 releases · latest v0.3.0
             </text> 
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
             <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
-            <rect class="ig-bar" x="509" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="267" y="78" width="2" height="16" /> 
-            <text class="ig-label" x="510" y="70" font-size="11" font-weight="700" text-anchor="middle">
-              v0.2.0
+            <rect class="ig-bar" x="536" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="536" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="448" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="237" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="537" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              v0.3.0
             </text> 
-            <text class="ig-label" x="268" y="70" font-size="11" font-weight="700" text-anchor="middle">
+            <text class="ig-label" x="238" y="70" font-size="11" font-weight="700" text-anchor="middle">
               v0.1.0
             </text> 
-            <text class="ig-muted" x="63" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="59" y="112" font-size="10" text-anchor="middle">
               Apr
             </text> 
-            <text class="ig-muted" x="142" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="128" y="112" font-size="10" text-anchor="middle">
               May
             </text> 
-            <text class="ig-muted" x="221" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="197" y="112" font-size="10" text-anchor="middle">
               Jun
             </text> 
-            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="266" y="112" font-size="10" text-anchor="middle">
               Jul
             </text> 
-            <text class="ig-muted" x="379" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="335" y="112" font-size="10" text-anchor="middle">
               Aug
             </text> 
-            <text class="ig-muted" x="458" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="404" y="112" font-size="10" text-anchor="middle">
               Sep
             </text> 
-            <text class="ig-muted" x="537" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="473" y="112" font-size="10" text-anchor="middle">
               Oct
+            </text> 
+            <text class="ig-muted" x="542" y="112" font-size="10" text-anchor="middle">
+              Nov
             </text> 
           </svg> </p>
       </div>

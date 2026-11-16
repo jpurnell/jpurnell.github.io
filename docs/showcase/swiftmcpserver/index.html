@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts." />
+    <meta name="description" content="A Swift package that handles Model Context Protocol framing, HTTP transport, and authentication so that servers built on it can focus on tools, resources, and prompts." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
     <title>SwiftMCPServer: A Swift MCP Server Library with HTTP Transport | Justin Purnell</title>
@@ -59,8 +59,8 @@
     <meta property="og:site_name" content="Justin Purnell" />
     <meta property="og:title" content="SwiftMCPServer: A Swift MCP Server Library with HTTP Transport" />
     <meta name="twitter:title" content="SwiftMCPServer: A Swift MCP Server Library with HTTP Transport" />
-    <meta property="og:description" content="A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts." />
-    <meta name="twitter:description" content="A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts." />
+    <meta property="og:description" content="A Swift package that handles Model Context Protocol framing, HTTP transport, and authentication so that servers built on it can focus on tools, resources, and prompts." />
+    <meta name="twitter:description" content="A Swift package that handles Model Context Protocol framing, HTTP transport, and authentication so that servers built on it can focus on tools, resources, and prompts." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/swiftmcpserver" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -147,7 +147,7 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/swiftmcpserver#breadcrumb"
       },
-      "description" : "A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts.",
+      "description" : "A Swift package that handles Model Context Protocol framing, HTTP transport, and authentication so that servers built on it can focus on tools, resources, and prompts.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
@@ -186,23 +186,26 @@
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts.</p>
+          <p>A Swift package that handles Model Context Protocol framing, HTTP transport, and authentication so that servers built on it can focus on tools, resources, and prompts.</p>
         </blockquote>
         <h2>Motivation</h2>
-        <p>The Model Context Protocol defines how AI models communicate with external servers — exchanging tools, resources, and prompts in a structured way. When I started building MCP-compatible servers in Swift, I kept reimplementing the same transport and framing layer: HTTP handling, session management, authentication, protocol encoding. That layer has nothing to do with what a specific server actually does, so I pulled it out into a standalone library.</p>
-        <p>The goal was a clean separation: this package owns protocol and transport; anything built on top of it owns the domain logic. A server author should be able to declare tools and respond to requests without touching MCP framing or HTTP at all.</p>
+        <p>The Model Context Protocol defines how AI models communicate with external context providers—tools, resources, and prompts. When I wanted to build servers that expose capabilities to MCP clients, I found I was writing the same transport and framing code repeatedly. SwiftMCPServer exists to own that layer once. A server built on the package declares what it provides; the package handles the rest: MCP message framing, HTTP transport, session management, and auth.</p>
+        <p>The project is scoped to macOS and built on top of existing infrastructure—<code>swift-mcp-sdk</code> for the protocol types, <code>SwiftNIO</code> and <code>SwiftNIO-SSL</code> for networking, <code>swift-oauth</code> for authentication, and <code>swift-crypto</code> for cryptographic operations.</p>
         <h2>Approach</h2>
-        <p>The package is written in Swift and targets macOS, using Swift Tools version 6.2. The core dependencies are <code>swift-mcp-sdk</code> for the MCP protocol layer, <code>swift-nio</code> and <code>swift-nio-ssl</code> for the HTTP transport, <code>swift-crypto</code> for cryptographic operations, and <code>swift-oauth</code> for authentication. <code>SwiftDiagnosticsKit</code> handles structured error reporting, and <code>swift-docc-plugin</code> supports documentation generation.</p>
-        <p>The package is organized into four targets: <code>SwiftMCPServer</code> as the main library, <code>ConformanceFixtures</code> and <code>ConformanceServer</code> as test infrastructure for verifying protocol conformance, and <code>SwiftMCPServerTests</code> for the test suite. The conformance targets exist specifically to validate that the library behaves correctly against the protocol spec, not just against its own internal expectations.</p>
-        <p>A <code>CLAUDE.md</code> file is present in the repository, which I used to document session startup context, development workflow conventions, key rules, quality gates, and references. This served as working documentation for maintaining consistency across the development process.</p>
+        <p>The package separates concerns between protocol handling and application code. The targets reflect this: <code>SwiftMCPServer</code> is the library itself; <code>ConformanceServer</code> and <code>ConformanceFixtures</code> exist to verify that the library behaves correctly against the protocol specification rather than just passing unit tests. <code>SwiftMCPServerTests</code> covers the unit layer.</p>
+        <p>The dependency on <code>swift-mcp-sdk</code> means I’m building on top of an existing Swift implementation of MCP types rather than re-implementing the protocol from scratch. SwiftNIO handles the async networking runtime. The <code>swift-docc-plugin</code> is included for documentation generation.</p>
+        <p>A <code>CLAUDE.md</code> file is present in the repository, covering session startup, development workflow, key rules, a quality gate, and references. This served as working context for two Claude Code sessions that together produced 8 commits across 29 messages. Those sessions were multi-task in nature; both achieved their goals, though there were 3 instances of buggy generated code and 1 misunderstood request that required correction.</p>
+        <p>There are no formal design proposals on file and no design-first workflow. Architecture decisions emerged through development rather than upfront specification.</p>
         <h2>Results</h2>
-        <p>The project has 177 commits across 19 branches, with 41 tagged releases spanning from 1.0.0 through 5.5.0. Development started in March 2026 and the latest commit is from November 2026. The release history shows a consistent cadence of both minor feature releases and patch fixes — the jump from major version 1 through major version 5 reflects significant protocol or API evolution as the MCP spec and my own understanding of the problem matured.</p>
-        <p>There are 2 contributors to the repository.</p>
+        <p>The project reached version 1.0.0 and has since gone through 42 tagged releases, with the current release at 5.6.0. That release history covers roughly eight months, from March to November 2026, across 179 commits on 19 branches with 2 contributors. The version progression—moving through major versions 1 through 5, with minor and patch releases throughout—reflects ongoing additions and breaking changes as the protocol or transport requirements evolved.</p>
+        <p>The conformance target (<code>ConformanceServer</code>) is a concrete artifact that an MCP client can connect to in order to verify protocol compliance, separate from unit tests.</p>
         <h2>Decisions</h2>
-        <p><strong>Using swift-nio for transport.</strong> NIO is the standard low-level networking library in the Swift ecosystem. Using it directly means more code than a higher-level HTTP framework, but it gives full control over connection lifecycle and streaming behavior, which matters for a protocol that involves long-lived sessions.</p>
-        <p><strong>Separating conformance fixtures into their own target.</strong> Protocol conformance is easier to verify when you have a dedicated server implementation whose only job is to be correct. <code>ConformanceServer</code> exists for this reason — it’s not a demo, it’s a test fixture that runs against the actual library.</p>
-        <p><strong>Frequent releases.</strong> The jump from 1.x to 5.x in roughly eight months means the public API changed substantially and repeatedly. Some of that reflects the MCP spec itself evolving; some reflects decisions I revised once I saw how server authors actually used the library. The major version increments signal breaking changes rather than rewrites.</p>
-        <p><strong>What’s unfinished or uncertain.</strong> The <code>CLAUDE.md</code> references a quality gate, but I haven’t yet formalized what exactly must pass before a release. The conformance testing infrastructure exists, but the boundary between “conformance” and “unit test” is still blurry in practice. Transport support is currently HTTP only; other MCP transports (stdio, for example) are not covered by this package.</p>
+        <p><strong>Build on <code>swift-mcp-sdk</code> rather than implement MCP types directly.</strong> The protocol type definitions are delegated to the SDK dependency. This keeps SwiftMCPServer focused on transport and framing and means changes to the protocol spec can be absorbed by updating a dependency.</p>
+        <p><strong>SwiftNIO as the networking layer.</strong> SwiftNIO is the standard async networking foundation on Apple platforms for server-side Swift. Using it means the library fits naturally into server-side Swift ecosystems and avoids a custom event loop.</p>
+        <p><strong>Conformance target alongside unit tests.</strong> The <code>ConformanceServer</code> target exists specifically to test protocol conformance end-to-end rather than relying only on unit tests. This separates “the code compiles and passes assertions” from “an MCP client can actually connect and get correct behavior.”</p>
+        <p><strong>macOS-only platform target.</strong> The package targets macOS and does not list Linux. This constrains deployment options and is worth revisiting if server-side Linux deployment becomes a requirement.</p>
+        <p><strong>No design proposals.</strong> Decisions accumulated in commits rather than in proposal documents. This means there is no structured record of why particular choices were made beyond commit messages and the <code>CLAUDE.md</code> working notes. That is a gap if the project grows or takes on more contributors.</p>
+        <p>What remains unresolved: whether the package should eventually support Linux, how much of the OAuth flow belongs in this package versus in consuming servers, and whether the conformance suite covers the full surface of the MCP specification or only the parts implemented so far.</p>
       </div>
       <div class="showcase-infographics">
         <p>
@@ -267,14 +270,14 @@
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
             <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
             <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
-              177
+              179
             </text> 
             <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
               COMMITS
             </text> 
             <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
             <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
-              41
+              42
             </text> 
             <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
               RELEASES
@@ -350,7 +353,7 @@
               SwiftMCPServer — Commit Activity
             </text> 
             <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
-              ~19/month · peak 86 (177 total)
+              ~19/month · peak 86 (179 total)
             </text> 
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
             <rect class="ig-bar" x="25" y="141" width="59" height="7" /> 
@@ -361,7 +364,7 @@
             <rect class="ig-bar" x="331" y="129" width="59" height="19" /> 
             <rect class="ig-bar" x="393" y="64" width="59" height="84" /> 
             <rect class="ig-bar" x="454" y="111" width="59" height="37" /> 
-            <rect class="ig-bar" x="515" y="142" width="59" height="6" /> 
+            <rect class="ig-bar" x="515" y="140" width="59" height="8" /> 
             <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
             <text class="ig-muted" x="55" y="166" font-size="10" text-anchor="middle">
               Mar
@@ -451,10 +454,11 @@
               SwiftMCPServer — Releases
             </text> 
             <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
-              41 releases · latest 5.5.0
+              42 releases · latest 5.6.0
             </text> 
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
             <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="538" y="78" width="2" height="16" /> 
             <rect class="ig-bar" x="516" y="78" width="2" height="16" /> 
             <rect class="ig-bar" x="516" y="78" width="2" height="16" /> 
             <rect class="ig-bar" x="514" y="78" width="2" height="16" /> 
@@ -496,8 +500,8 @@
             <rect class="ig-bar" x="177" y="78" width="2" height="16" /> 
             <rect class="ig-bar" x="177" y="78" width="2" height="16" /> 
             <rect class="ig-bar" x="177" y="78" width="2" height="16" /> 
-            <text class="ig-label" x="517" y="70" font-size="11" font-weight="700" text-anchor="middle">
-              5.5.0
+            <text class="ig-label" x="539" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              5.6.0
             </text> 
             <text class="ig-label" x="178" y="70" font-size="11" font-weight="700" text-anchor="middle">
               1.1.2

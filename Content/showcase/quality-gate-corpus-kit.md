@@ -1,8 +1,8 @@
 ---
-title: CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry
-description: A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.
+title: CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus
+description: A single Swift library that owns every read and write to the quality-gate corpus, so that telemetry, snapshots, and judgment artifacts share one schema across all tools that touch them.
 date: 2026-10-30 12:25
-lastModified: 2026-11-10
+lastModified: 2026-11-16
 tags: showcase, quality-gate-corpus-kit, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,38 +10,36 @@ project: CorpusKit
 published: true
 ---
 
-# CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry
+# CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus
 
-> A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.
+> A single Swift library that owns every read and write to the quality-gate corpus, so that telemetry, snapshots, and judgment artifacts share one schema across all tools that touch them.
 
 ## Motivation
 
-The quality-gate system I'm building depends on longitudinal telemetry — data that only has meaning if it's comparable across time. That comparability breaks the moment two separate pieces of code write to the same corpus with slightly different assumptions about schema. You end up with two schemas in practice, even if they started identical, and the series becomes untrustworthy.
+The quality-gate system I've been building produces several kinds of data: telemetry runs, snapshots of model outputs, and derived judgment artifacts that record human or automated verdicts on those outputs. Early on I had multiple tools touching this data independently, each with its own read and write logic. That arrangement is structurally unstable: once you have two writers, you have two schemas, and the moment the schemas drift the longitudinal series becomes incomparable — which is the only thing longitudinal data is for.
 
-CorpusKit exists to prevent that. It's the single implementation that all other tools in the quality-gate ecosystem depend on for reading and writing corpus data: telemetry, snapshots, and derived judgment artifacts. The MASTER_PLAN.md names this directly — "one implementation" is the entire point, not a secondary goal.
+CorpusKit is the answer to that. Its stated mission, from the project's own MASTER_PLAN.md, is to be "the one implementation" of the quality-gate corpus. Everything that reads or writes corpus data goes through this library. The goal was not convenience or abstraction for its own sake; it was enforcing a single schema boundary.
 
 ## Approach
 
-The package is written in Swift targeting macOS and iOS, using Swift 6.2 tooling. It has three declared dependencies: `quality-gate-types` (the shared type definitions the rest of the ecosystem uses), `Yams` for YAML serialization, and `swift-docc-plugin` for documentation generation.
+The library is written in Swift targeting macOS and iOS, using Swift Package Manager with tools version 6.2. It depends on three external packages: `quality-gate-types`, which provides the shared domain types; `Yams`, for YAML serialization of corpus artifacts; and `swift-docc-plugin` for documentation generation.
 
-The package is organized into several targets beyond the core `CorpusKit` library: `IJSAggregator`, `IJSPolicyDiscovery`, `IJSDashboardCore`, and `JudgmentWorkbench`, each with corresponding test targets. This separation lets the aggregation, policy discovery, dashboard, and workbench concerns evolve independently while still sharing the single corpus I/O layer underneath.
+The package is organized into several targets beyond the core `CorpusKit` library: `IJSAggregator`, `IJSPolicyDiscovery`, `IJSDashboardCore`, and `JudgmentWorkbench`. Each has a corresponding test target. This separation keeps different concerns — aggregation, policy discovery, dashboard data, and workbench tooling — from collapsing into a single monolith while still sharing the same underlying corpus I/O.
 
-A `CLAUDE.md` file is present and covers architecture, project conventions, development workflow, and quality gate requirements. I used one Claude Code session during development — four messages, one commit, fully achieved — for a contained, specific task rather than exploratory work.
+The project has a CLAUDE.md file that records architecture decisions, project conventions, session-start procedures, development workflow, and quality-gate rules. I used that document to keep the working context consistent across sessions rather than re-deriving conventions each time.
 
 ## Results
 
-The library shipped its 1.0.0 release on or shortly after July 9, 2026, the date of the first commit, and has reached 1.26.0 as of the latest commit on October 28, 2026 — 34 releases across roughly four months of active development, across 70 commits on 11 branches. The release cadence is dense: most versions are minor increments, with occasional patch releases (1.3.1, 1.6.1, 1.6.2, 1.12.1, 1.19.1, 1.22.1) indicating fixes made between feature releases.
-
-Test targets exist for all four named subsystems — `CorpusKitTests`, `IJSAggregatorTests`, `JudgmentWorkbenchTests`, `IJSPolicyDiscoveryTests`, `IJSDashboardCoreTests` — covering the full surface of the package.
+The library has shipped 35 releases across roughly four months, from 1.0.0 in July 2026 through 1.27.0 in November 2026. That release cadence — averaging roughly two releases per week — reflects the fact that the other quality-gate tools depend on it; changes to the corpus schema or I/O behavior go out as versioned releases so dependents can pin and update deliberately. The repository has 73 commits across 11 branches from a single contributor.
 
 ## Decisions
 
-**Single-writer constraint as the organizing principle.** The architectural decision to enforce one implementation rather than a shared protocol with multiple implementors is stated explicitly in MASTER_PLAN.md. I chose to centralize corpus I/O here rather than distribute it, accepting tighter coupling between tools in exchange for guaranteed schema consistency.
+**One library, not one per tool.** The core constraint I imposed from the start was that there would be no second implementation of corpus I/O. Any tool that needs to read or write corpus data takes a dependency on CorpusKit rather than writing its own path. This is the design decision the MASTER_PLAN.md names explicitly, and it determined the library's scope: it needs to cover every artifact type the system produces, because a gap in coverage is an invitation for a second implementation to appear.
 
-**YAML as the serialization format.** The Yams dependency means corpus artifacts are stored and read as YAML rather than JSON or a binary format. This keeps files human-readable and diff-friendly, which matters for a longitudinal data store where you may need to inspect or debug historical entries directly.
+**Multiple targets within one package.** Rather than split `IJSAggregator`, `IJSPolicyDiscovery`, `IJSDashboardCore`, and `JudgmentWorkbench` into separate repositories, I kept them as targets in the same package. This means they always build and test together and share the same version of the core `CorpusKit` target. The tradeoff is that the package is larger than a minimal library would be.
 
-**Separate targets for subsystems.** Breaking `IJSAggregator`, `IJSPolicyDiscovery`, `IJSDashboardCore`, and `JudgmentWorkbench` into distinct targets within the same package rather than separate packages keeps everything versioned together. A breaking change to the corpus schema shows up as a single version bump that all consumers must adopt simultaneously, rather than a cascade of coordinated updates across repositories.
+**Yams for serialization.** Corpus artifacts are serialized as YAML via Yams. That choice makes the files readable and diff-friendly in version control, which matters when the artifacts are judgment records that may need manual inspection or correction.
 
-**No design-first workflow.** There are no design proposals on record for this project. Development proceeded from the architectural premise in MASTER_PLAN.md directly into implementation.
+**No design-first workflow.** There are no design proposals in the repository. The architecture documentation lives in CLAUDE.md rather than in a separate proposal process. This was a pragmatic choice for a library with one contributor, though it means the reasoning behind individual schema decisions is not always separately documented.
 
-What remains uncertain is how the schema will need to evolve as the judgment and dashboard subsystems mature — the 1.26.0 release suggests ongoing change, and the minor-version-heavy history indicates the schema isn't yet stable enough to freeze.
+**What is unfinished.** The version history shows point releases through 1.27.0 with no 2.0 — the schema has not required a breaking change, but the system is still accumulating artifact types. It is not yet clear whether the current schema boundaries will hold as the judgment tooling grows, or whether a major version with a migration path will eventually be necessary.

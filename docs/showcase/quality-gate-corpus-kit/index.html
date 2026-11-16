@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain." />
+    <meta name="description" content="A single Swift library that owns every read and write to the quality-gate corpus, so that telemetry, snapshots, and judgment artifacts share one schema across all tools that touch them." />
     <meta name="author" content="Justin Purnell" />
     <meta name="generator" content="Ignite v0.6.0" />
-    <title>CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry | Justin Purnell</title>
+    <title>CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus | Justin Purnell</title>
     <link href="/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
     <link href="/css/ignite-core.min.css" rel="stylesheet" />
@@ -57,10 +57,10 @@
 })();
 </script>
     <meta property="og:site_name" content="Justin Purnell" />
-    <meta property="og:title" content="CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry" />
-    <meta name="twitter:title" content="CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry" />
-    <meta property="og:description" content="A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain." />
-    <meta name="twitter:description" content="A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain." />
+    <meta property="og:title" content="CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus" />
+    <meta name="twitter:title" content="CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus" />
+    <meta property="og:description" content="A single Swift library that owns every read and write to the quality-gate corpus, so that telemetry, snapshots, and judgment artifacts share one schema across all tools that touch them." />
+    <meta name="twitter:description" content="A single Swift library that owns every read and write to the quality-gate corpus, so that telemetry, snapshots, and judgment artifacts share one schema across all tools that touch them." />
     <meta property="og:url" content="https://www.justinpurnell.com/showcase/quality-gate-corpus-kit" />
     <meta name="twitter:domain" content="justinpurnell.com" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -136,7 +136,7 @@
         {
           "@type" : "ListItem",
           "item" : "https://www.justinpurnell.com/showcase/quality-gate-corpus-kit",
-          "name" : "CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry",
+          "name" : "CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus",
           "position" : 2
         }
       ]
@@ -147,12 +147,12 @@
       "breadcrumb" : {
         "@id" : "https://www.justinpurnell.com/showcase/quality-gate-corpus-kit#breadcrumb"
       },
-      "description" : "A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.",
+      "description" : "A single Swift library that owns every read and write to the quality-gate corpus, so that telemetry, snapshots, and judgment artifacts share one schema across all tools that touch them.",
       "inLanguage" : "en",
       "isPartOf" : {
         "@id" : "https://www.justinpurnell.com/#website"
       },
-      "name" : "CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry",
+      "name" : "CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus",
       "url" : "https://www.justinpurnell.com/showcase/quality-gate-corpus-kit"
     }
   ]
@@ -181,29 +181,28 @@
       </nav>
     </header>
     <div class="ig-main-content">
-      <h1 class="mainTitle">CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry</h1>
+      <h1 class="mainTitle">CorpusKit: Shared Reader and Writer for the Quality-Gate Corpus</h1>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">CorpusKit</p>
       <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
       <div class="blurb" style="width: 70.0%; max-width: 800px">
         <blockquote>
-          <p>A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.</p>
+          <p>A single Swift library that owns every read and write to the quality-gate corpus, so that telemetry, snapshots, and judgment artifacts share one schema across all tools that touch them.</p>
         </blockquote>
         <h2>Motivation</h2>
-        <p>The quality-gate system I’m building depends on longitudinal telemetry — data that only has meaning if it’s comparable across time. That comparability breaks the moment two separate pieces of code write to the same corpus with slightly different assumptions about schema. You end up with two schemas in practice, even if they started identical, and the series becomes untrustworthy.</p>
-        <p>CorpusKit exists to prevent that. It’s the single implementation that all other tools in the quality-gate ecosystem depend on for reading and writing corpus data: telemetry, snapshots, and derived judgment artifacts. The MASTER_PLAN.md names this directly — “one implementation” is the entire point, not a secondary goal.</p>
+        <p>The quality-gate system I’ve been building produces several kinds of data: telemetry runs, snapshots of model outputs, and derived judgment artifacts that record human or automated verdicts on those outputs. Early on I had multiple tools touching this data independently, each with its own read and write logic. That arrangement is structurally unstable: once you have two writers, you have two schemas, and the moment the schemas drift the longitudinal series becomes incomparable — which is the only thing longitudinal data is for.</p>
+        <p>CorpusKit is the answer to that. Its stated mission, from the project’s own MASTER_PLAN.md, is to be “the one implementation” of the quality-gate corpus. Everything that reads or writes corpus data goes through this library. The goal was not convenience or abstraction for its own sake; it was enforcing a single schema boundary.</p>
         <h2>Approach</h2>
-        <p>The package is written in Swift targeting macOS and iOS, using Swift 6.2 tooling. It has three declared dependencies: <code>quality-gate-types</code> (the shared type definitions the rest of the ecosystem uses), <code>Yams</code> for YAML serialization, and <code>swift-docc-plugin</code> for documentation generation.</p>
-        <p>The package is organized into several targets beyond the core <code>CorpusKit</code> library: <code>IJSAggregator</code>, <code>IJSPolicyDiscovery</code>, <code>IJSDashboardCore</code>, and <code>JudgmentWorkbench</code>, each with corresponding test targets. This separation lets the aggregation, policy discovery, dashboard, and workbench concerns evolve independently while still sharing the single corpus I/O layer underneath.</p>
-        <p>A <code>CLAUDE.md</code> file is present and covers architecture, project conventions, development workflow, and quality gate requirements. I used one Claude Code session during development — four messages, one commit, fully achieved — for a contained, specific task rather than exploratory work.</p>
+        <p>The library is written in Swift targeting macOS and iOS, using Swift Package Manager with tools version 6.2. It depends on three external packages: <code>quality-gate-types</code>, which provides the shared domain types; <code>Yams</code>, for YAML serialization of corpus artifacts; and <code>swift-docc-plugin</code> for documentation generation.</p>
+        <p>The package is organized into several targets beyond the core <code>CorpusKit</code> library: <code>IJSAggregator</code>, <code>IJSPolicyDiscovery</code>, <code>IJSDashboardCore</code>, and <code>JudgmentWorkbench</code>. Each has a corresponding test target. This separation keeps different concerns — aggregation, policy discovery, dashboard data, and workbench tooling — from collapsing into a single monolith while still sharing the same underlying corpus I/O.</p>
+        <p>The project has a CLAUDE.md file that records architecture decisions, project conventions, session-start procedures, development workflow, and quality-gate rules. I used that document to keep the working context consistent across sessions rather than re-deriving conventions each time.</p>
         <h2>Results</h2>
-        <p>The library shipped its 1.0.0 release on or shortly after July 9, 2026, the date of the first commit, and has reached 1.26.0 as of the latest commit on October 28, 2026 — 34 releases across roughly four months of active development, across 70 commits on 11 branches. The release cadence is dense: most versions are minor increments, with occasional patch releases (1.3.1, 1.6.1, 1.6.2, 1.12.1, 1.19.1, 1.22.1) indicating fixes made between feature releases.</p>
-        <p>Test targets exist for all four named subsystems — <code>CorpusKitTests</code>, <code>IJSAggregatorTests</code>, <code>JudgmentWorkbenchTests</code>, <code>IJSPolicyDiscoveryTests</code>, <code>IJSDashboardCoreTests</code> — covering the full surface of the package.</p>
+        <p>The library has shipped 35 releases across roughly four months, from 1.0.0 in July 2026 through 1.27.0 in November 2026. That release cadence — averaging roughly two releases per week — reflects the fact that the other quality-gate tools depend on it; changes to the corpus schema or I/O behavior go out as versioned releases so dependents can pin and update deliberately. The repository has 73 commits across 11 branches from a single contributor.</p>
         <h2>Decisions</h2>
-        <p><strong>Single-writer constraint as the organizing principle.</strong> The architectural decision to enforce one implementation rather than a shared protocol with multiple implementors is stated explicitly in MASTER_PLAN.md. I chose to centralize corpus I/O here rather than distribute it, accepting tighter coupling between tools in exchange for guaranteed schema consistency.</p>
-        <p><strong>YAML as the serialization format.</strong> The Yams dependency means corpus artifacts are stored and read as YAML rather than JSON or a binary format. This keeps files human-readable and diff-friendly, which matters for a longitudinal data store where you may need to inspect or debug historical entries directly.</p>
-        <p><strong>Separate targets for subsystems.</strong> Breaking <code>IJSAggregator</code>, <code>IJSPolicyDiscovery</code>, <code>IJSDashboardCore</code>, and <code>JudgmentWorkbench</code> into distinct targets within the same package rather than separate packages keeps everything versioned together. A breaking change to the corpus schema shows up as a single version bump that all consumers must adopt simultaneously, rather than a cascade of coordinated updates across repositories.</p>
-        <p><strong>No design-first workflow.</strong> There are no design proposals on record for this project. Development proceeded from the architectural premise in MASTER_PLAN.md directly into implementation.</p>
-        <p>What remains uncertain is how the schema will need to evolve as the judgment and dashboard subsystems mature — the 1.26.0 release suggests ongoing change, and the minor-version-heavy history indicates the schema isn’t yet stable enough to freeze.</p>
+        <p><strong>One library, not one per tool.</strong> The core constraint I imposed from the start was that there would be no second implementation of corpus I/O. Any tool that needs to read or write corpus data takes a dependency on CorpusKit rather than writing its own path. This is the design decision the MASTER_PLAN.md names explicitly, and it determined the library’s scope: it needs to cover every artifact type the system produces, because a gap in coverage is an invitation for a second implementation to appear.</p>
+        <p><strong>Multiple targets within one package.</strong> Rather than split <code>IJSAggregator</code>, <code>IJSPolicyDiscovery</code>, <code>IJSDashboardCore</code>, and <code>JudgmentWorkbench</code> into separate repositories, I kept them as targets in the same package. This means they always build and test together and share the same version of the core <code>CorpusKit</code> target. The tradeoff is that the package is larger than a minimal library would be.</p>
+        <p><strong>Yams for serialization.</strong> Corpus artifacts are serialized as YAML via Yams. That choice makes the files readable and diff-friendly in version control, which matters when the artifacts are judgment records that may need manual inspection or correction.</p>
+        <p><strong>No design-first workflow.</strong> There are no design proposals in the repository. The architecture documentation lives in CLAUDE.md rather than in a separate proposal process. This was a pragmatic choice for a library with one contributor, though it means the reasoning behind individual schema decisions is not always separately documented.</p>
+        <p><strong>What is unfinished.</strong> The version history shows point releases through 1.27.0 with no 2.0 — the schema has not required a breaking change, but the system is still accumulating artifact types. It is not yet clear whether the current schema boundaries will hold as the judgment tooling grows, or whether a major version with a migration path will eventually be necessary.</p>
       </div>
       <div class="showcase-infographics">
         <p>
@@ -268,14 +267,14 @@
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
             <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
             <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
-              70
+              73
             </text> 
             <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
               COMMITS
             </text> 
             <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
             <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
-              34
+              35
             </text> 
             <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
               RELEASES
@@ -351,25 +350,29 @@
               CorpusKit — Commit Activity
             </text> 
             <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
-              ~17/month · peak 26 (70 total)
+              ~14/month · peak 26 (73 total)
             </text> 
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
-            <rect class="ig-bar" x="25" y="74" width="136" height="74" /> 
-            <rect class="ig-bar" x="163" y="113" width="136" height="35" /> 
-            <rect class="ig-bar" x="301" y="116" width="136" height="32" /> 
-            <rect class="ig-bar" x="439" y="64" width="136" height="84" /> 
+            <rect class="ig-bar" x="25" y="74" width="108" height="74" /> 
+            <rect class="ig-bar" x="135" y="113" width="108" height="35" /> 
+            <rect class="ig-bar" x="245" y="116" width="108" height="32" /> 
+            <rect class="ig-bar" x="356" y="64" width="108" height="84" /> 
+            <rect class="ig-bar" x="466" y="139" width="108" height="9" /> 
             <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
-            <text class="ig-muted" x="93" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="79" y="166" font-size="10" text-anchor="middle">
               Jul
             </text> 
-            <text class="ig-muted" x="231" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="190" y="166" font-size="10" text-anchor="middle">
               Aug
             </text> 
-            <text class="ig-muted" x="369" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="300" y="166" font-size="10" text-anchor="middle">
               Sep
             </text> 
-            <text class="ig-muted" x="507" y="166" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="410" y="166" font-size="10" text-anchor="middle">
               Oct
+            </text> 
+            <text class="ig-muted" x="521" y="166" font-size="10" text-anchor="middle">
+              Nov
             </text> 
           </svg> </p>
         <p>
@@ -432,61 +435,65 @@
               CorpusKit — Releases
             </text> 
             <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
-              34 releases · latest 1.26.0
+              35 releases · latest 1.27.0
             </text> 
             <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
             <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
-            <rect class="ig-bar" x="557" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="548" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="544" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="464" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="459" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="459" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="459" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="428" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="382" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="377" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="377" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="377" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="373" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="268" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="148" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="148" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="139" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="72" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="68" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="63" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="505" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="450" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="443" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="440" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="376" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="372" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="372" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="372" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="347" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="310" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="306" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="306" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="306" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="303" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="219" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="123" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="123" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="116" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="62" y="78" width="2" height="16" /> 
             <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
-            <rect class="ig-bar" x="59" y="78" width="2" height="16" /> 
-            <text class="ig-label" x="554" y="70" font-size="11" font-weight="700" text-anchor="middle">
-              1.26.0
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="55" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="51" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="506" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              1.27.0
             </text> 
-            <text class="ig-label" x="60" y="70" font-size="11" font-weight="700" text-anchor="middle">
+            <text class="ig-label" x="52" y="70" font-size="11" font-weight="700" text-anchor="middle">
               1.2.0
             </text> 
-            <text class="ig-muted" x="93" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="79" y="112" font-size="10" text-anchor="middle">
               Jul
             </text> 
-            <text class="ig-muted" x="231" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="190" y="112" font-size="10" text-anchor="middle">
               Aug
             </text> 
-            <text class="ig-muted" x="369" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="300" y="112" font-size="10" text-anchor="middle">
               Sep
             </text> 
-            <text class="ig-muted" x="507" y="112" font-size="10" text-anchor="middle">
+            <text class="ig-muted" x="410" y="112" font-size="10" text-anchor="middle">
               Oct
+            </text> 
+            <text class="ig-muted" x="521" y="112" font-size="10" text-anchor="middle">
+              Nov
             </text> 
           </svg> </p>
       </div>
