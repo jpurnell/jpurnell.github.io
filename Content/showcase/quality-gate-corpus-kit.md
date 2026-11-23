@@ -1,8 +1,8 @@
 ---
 title: CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry
-description: A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.
+description: The one library that reads and writes quality-gate corpus artifacts — telemetry, snapshots, and derived judgments — so the schema stays singular and longitudinal data stays comparable.
 date: 2026-10-30 12:25
-lastModified: 2026-11-10
+lastModified: 2026-11-23
 tags: showcase, quality-gate-corpus-kit, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -12,36 +12,34 @@ published: true
 
 # CorpusKit: Single-Implementation Corpus Reader and Writer for Quality-Gate Telemetry
 
-> A Swift library that enforces one canonical schema for reading and writing telemetry, snapshots, and judgment artifacts across the quality-gate toolchain.
+> The one library that reads and writes quality-gate corpus artifacts — telemetry, snapshots, and derived judgments — so the schema stays singular and longitudinal data stays comparable.
 
 ## Motivation
 
-The quality-gate system I'm building depends on longitudinal telemetry — data that only has meaning if it's comparable across time. That comparability breaks the moment two separate pieces of code write to the same corpus with slightly different assumptions about schema. You end up with two schemas in practice, even if they started identical, and the series becomes untrustworthy.
+The quality-gate system I build around produces telemetry over time: snapshots, derived judgments, aggregated scores. That data is only useful if readings taken months apart are on the same schema. The moment two separate writers exist, the schemas diverge and the longitudinal series becomes unreliable.
 
-CorpusKit exists to prevent that. It's the single implementation that all other tools in the quality-gate ecosystem depend on for reading and writing corpus data: telemetry, snapshots, and derived judgment artifacts. The MASTER_PLAN.md names this directly — "one implementation" is the entire point, not a secondary goal.
+CorpusKit exists to prevent that. It is the single implementation of corpus I/O — one reader, one writer — so anything that touches the corpus goes through the same code path and the same schema. The package also hosts several of the downstream consumers of that data: an aggregator, a policy-discovery tool, a dashboard core, and a judgment workbench.
 
 ## Approach
 
-The package is written in Swift targeting macOS and iOS, using Swift 6.2 tooling. It has three declared dependencies: `quality-gate-types` (the shared type definitions the rest of the ecosystem uses), `Yams` for YAML serialization, and `swift-docc-plugin` for documentation generation.
+The package is written in Swift targeting macOS and iOS, using Swift Package Manager with tools version 6.2. It depends on `quality-gate-types` for the shared domain model, `Yams` for YAML serialization, and `swift-docc-plugin` for documentation generation.
 
-The package is organized into several targets beyond the core `CorpusKit` library: `IJSAggregator`, `IJSPolicyDiscovery`, `IJSDashboardCore`, and `JudgmentWorkbench`, each with corresponding test targets. This separation lets the aggregation, policy discovery, dashboard, and workbench concerns evolve independently while still sharing the single corpus I/O layer underneath.
+The targets break along functional lines: `CorpusKit` is the core reader/writer library; `IJSAggregator`, `IJSPolicyDiscovery`, `IJSDashboardCore`, and `JudgmentWorkbench` are the tools and applications that consume it. Each has a corresponding test target. The architecture, conventions, and development workflow are documented in a `CLAUDE.md` file that also defines a quality gate that must pass before changes land.
 
-A `CLAUDE.md` file is present and covers architecture, project conventions, development workflow, and quality gate requirements. I used one Claude Code session during development — four messages, one commit, fully achieved — for a contained, specific task rather than exploratory work.
+There were no design proposals driving this work and no design-first workflow. Decisions were made in code and documented in `CLAUDE.md` and `MASTER_PLAN.md`.
 
 ## Results
 
-The library shipped its 1.0.0 release on or shortly after July 9, 2026, the date of the first commit, and has reached 1.26.0 as of the latest commit on October 28, 2026 — 34 releases across roughly four months of active development, across 70 commits on 11 branches. The release cadence is dense: most versions are minor increments, with occasional patch releases (1.3.1, 1.6.1, 1.6.2, 1.12.1, 1.19.1, 1.22.1) indicating fixes made between feature releases.
-
-Test targets exist for all four named subsystems — `CorpusKitTests`, `IJSAggregatorTests`, `JudgmentWorkbenchTests`, `IJSPolicyDiscoveryTests`, `IJSDashboardCoreTests` — covering the full surface of the package.
+The project reached 1.27.0 across 35 releases in roughly four months (first commit July 2026, latest commit November 2026), with 73 commits across 11 branches and one contributor. The release cadence — minor versions most weeks, patch releases where needed — reflects a library that is actively consumed by other tools and must maintain a stable interface while still evolving.
 
 ## Decisions
 
-**Single-writer constraint as the organizing principle.** The architectural decision to enforce one implementation rather than a shared protocol with multiple implementors is stated explicitly in MASTER_PLAN.md. I chose to centralize corpus I/O here rather than distribute it, accepting tighter coupling between tools in exchange for guaranteed schema consistency.
+**One package, all consumers.** Keeping the aggregator, policy-discovery, dashboard, and workbench inside the same package as the core library means schema changes and consumer updates land in the same commit. The alternative — separate packages — would introduce version-skew lag between the writer and its readers.
 
-**YAML as the serialization format.** The Yams dependency means corpus artifacts are stored and read as YAML rather than JSON or a binary format. This keeps files human-readable and diff-friendly, which matters for a longitudinal data store where you may need to inspect or debug historical entries directly.
+**Explicit schema ownership in `quality-gate-types`.** The domain model lives in a separate shared dependency rather than inside CorpusKit itself. This keeps the type definitions available to anything in the quality-gate ecosystem without creating a circular dependency back through the corpus layer.
 
-**Separate targets for subsystems.** Breaking `IJSAggregator`, `IJSPolicyDiscovery`, `IJSDashboardCore`, and `JudgmentWorkbench` into distinct targets within the same package rather than separate packages keeps everything versioned together. A breaking change to the corpus schema shows up as a single version bump that all consumers must adopt simultaneously, rather than a cascade of coordinated updates across repositories.
+**YAML via Yams.** Corpus artifacts are YAML rather than a binary format. That trades compactness for human readability and diff-friendliness, which matters when investigating whether two readings are actually comparable.
 
-**No design-first workflow.** There are no design proposals on record for this project. Development proceeded from the architectural premise in MASTER_PLAN.md directly into implementation.
+**`CLAUDE.md` as the authoritative workflow document.** The file defines architecture, conventions, and the quality gate. Because there were no external design proposals, `CLAUDE.md` and `MASTER_PLAN.md` together serve as the written record of intent.
 
-What remains uncertain is how the schema will need to evolve as the judgment and dashboard subsystems mature — the 1.26.0 release suggests ongoing change, and the minor-version-heavy history indicates the schema isn't yet stable enough to freeze.
+What is unfinished or uncertain: the package has four consumer targets at different levels of maturity, and the degree to which `IJSDashboardCore` and `JudgmentWorkbench` are production-ready versus in-progress is not fully resolved. The iOS platform target is declared but the primary consumers run on macOS; how much of the library surface is exercised on iOS is not currently measured.

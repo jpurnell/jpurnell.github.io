@@ -1,8 +1,8 @@
 ---
-title: SwiftMCPServer: A Swift MCP Server Library with HTTP Transport
-description: A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts.
+title: SwiftMCPServer: An MCP Server Library in Swift
+description: A Swift package that handles Model Context Protocol framing and HTTP transport so that servers built on it only need to supply tools, resources, and prompts.
 date: 2026-05-12 15:58
-lastModified: 2026-11-10
+lastModified: 2026-11-23
 tags: showcase, project, swiftmcpserver, infrastructure, selfReflection
 layout: ShowcaseLayout
 style: caseStudy
@@ -10,36 +10,40 @@ project: Internal Infrastructure
 published: true
 ---
 
-# SwiftMCPServer: A Swift MCP Server Library with HTTP Transport
+# SwiftMCPServer: An MCP Server Library in Swift
 
-> A Swift package that handles MCP protocol framing, HTTP transport, and authentication so that servers built on top of it only need to implement tools, resources, and prompts.
+> A Swift package that handles Model Context Protocol framing and HTTP transport so that servers built on it only need to supply tools, resources, and prompts.
 
 ## Motivation
 
-The Model Context Protocol defines how AI models communicate with external servers — exchanging tools, resources, and prompts in a structured way. When I started building MCP-compatible servers in Swift, I kept reimplementing the same transport and framing layer: HTTP handling, session management, authentication, protocol encoding. That layer has nothing to do with what a specific server actually does, so I pulled it out into a standalone library.
+The Model Context Protocol defines how AI models talk to external servers — exchanging tools, resources, and prompts over a structured wire format. When I needed to build MCP-capable servers in Swift, I found no existing package that owned the protocol and transport layer cleanly. Every server would have had to reimplement framing, session handling, HTTP routing, and authentication independently.
 
-The goal was a clean separation: this package owns protocol and transport; anything built on top of it owns the domain logic. A server author should be able to declare tools and respond to requests without touching MCP framing or HTTP at all.
+SwiftMCPServer is my answer to that: a library whose job is to absorb all of that complexity. A server built on top of it declares what tools and resources it exposes, and the library takes care of everything else — MCP message framing, HTTP transport, TLS, and auth. The mission is stated plainly in the project's own `MASTER_PLAN.md`: *this package owns protocol and transport*.
 
 ## Approach
 
-The package is written in Swift and targets macOS, using Swift Tools version 6.2. The core dependencies are `swift-mcp-sdk` for the MCP protocol layer, `swift-nio` and `swift-nio-ssl` for the HTTP transport, `swift-crypto` for cryptographic operations, and `swift-oauth` for authentication. `SwiftDiagnosticsKit` handles structured error reporting, and `swift-docc-plugin` supports documentation generation.
+The package is written in Swift 6.2 and targets macOS. It depends on `swift-mcp-sdk` for the protocol model layer, `swift-nio` and `swift-nio-ssl` for non-blocking HTTP and TLS, `swift-crypto` for cryptographic operations, and `swift-oauth` for authentication. `SwiftDiagnosticsKit` handles structured diagnostics, and `swift-docc-plugin` supports documentation generation.
 
-The package is organized into four targets: `SwiftMCPServer` as the main library, `ConformanceFixtures` and `ConformanceServer` as test infrastructure for verifying protocol conformance, and `SwiftMCPServerTests` for the test suite. The conformance targets exist specifically to validate that the library behaves correctly against the protocol spec, not just against its own internal expectations.
+The package is organized into four targets: `SwiftMCPServer` (the library itself), `ConformanceFixtures` and `ConformanceServer` (used to test protocol conformance against real MCP behavior), and `SwiftMCPServerTests` (the unit test suite).
 
-A `CLAUDE.md` file is present in the repository, which I used to document session startup context, development workflow conventions, key rules, quality gates, and references. This served as working documentation for maintaining consistency across the development process.
+A `CLAUDE.md` file defines session-start procedures, development workflow, key rules, a quality gate, and references. This served as operating instructions for Claude Code sessions and kept two sessions — 29 messages, 8 commits — consistent with the project's conventions. The sessions both reached their goals fully; the recorded friction was three instances of buggy generated code and one misunderstood request, all within those two sessions.
+
+There were no formal design proposals and no design-first workflow. Decisions accumulated through 27 branches and 190 commits rather than through upfront documents.
 
 ## Results
 
-The project has 177 commits across 19 branches, with 41 tagged releases spanning from 1.0.0 through 5.5.0. Development started in March 2026 and the latest commit is from November 2026. The release history shows a consistent cadence of both minor feature releases and patch fixes — the jump from major version 1 through major version 5 reflects significant protocol or API evolution as the MCP spec and my own understanding of the problem matured.
+The project has shipped 45 releases across eight months, from 1.0.0 in March 2026 through 5.8.0 in November 2026. The version history shows a consistent release cadence with both feature releases and patch corrections at every major version. The library covers HTTP transport with TLS, session management, and OAuth-based authentication, with conformance tested through the dedicated `ConformanceServer` target rather than only unit tests.
 
-There are 2 contributors to the repository.
+The package has two contributors across 190 commits and 27 branches.
 
 ## Decisions
 
-**Using swift-nio for transport.** NIO is the standard low-level networking library in the Swift ecosystem. Using it directly means more code than a higher-level HTTP framework, but it gives full control over connection lifecycle and streaming behavior, which matters for a protocol that involves long-lived sessions.
+**Separating conformance testing into its own targets.** `ConformanceFixtures` and `ConformanceServer` exist as distinct targets rather than folding conformance verification into unit tests. This lets the conformance server run as a real HTTP process that can be tested against an actual MCP client, catching framing and transport issues that unit tests would miss.
 
-**Separating conformance fixtures into their own target.** Protocol conformance is easier to verify when you have a dedicated server implementation whose only job is to be correct. `ConformanceServer` exists for this reason — it's not a demo, it's a test fixture that runs against the actual library.
+**Using SwiftNIO for transport.** SwiftNIO's non-blocking I/O model fits a server library well: it supports many concurrent MCP sessions without blocking threads. The tradeoff is added complexity relative to URLSession-based approaches, but a library owning transport needs to handle concurrency at the transport layer.
 
-**Frequent releases.** The jump from 1.x to 5.x in roughly eight months means the public API changed substantially and repeatedly. Some of that reflects the MCP spec itself evolving; some reflects decisions I revised once I saw how server authors actually used the library. The major version increments signal breaking changes rather than rewrites.
+**Depending on `swift-mcp-sdk` rather than reimplementing the protocol model.** The SDK owns the MCP type definitions; this package owns transport and framing. That boundary is explicit in the mission statement. It means this package tracks the SDK's own evolution, which is a dependency risk, but it avoids duplicating protocol logic.
 
-**What's unfinished or uncertain.** The `CLAUDE.md` references a quality gate, but I haven't yet formalized what exactly must pass before a release. The conformance testing infrastructure exists, but the boundary between "conformance" and "unit test" is still blurry in practice. Transport support is currently HTTP only; other MCP transports (stdio, for example) are not covered by this package.
+**Versioning pace.** Going from 1.0.0 to 5.8.0 in roughly eight months reflects rapid iteration as the MCP specification and ecosystem evolved. Some of that version growth reflects breaking changes in the upstream protocol or SDK rather than purely internal decisions.
+
+**What is unfinished or uncertain.** The `MASTER_PLAN.md` names a mission but the project has no formal design proposals, so some architectural decisions exist only in commit history and branch names rather than in documented rationale. It is not clear from the current state of the project how complete the conformance test coverage is relative to the full MCP specification surface.

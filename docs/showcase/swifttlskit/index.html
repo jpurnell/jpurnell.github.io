@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en" data-light-theme="light" data-dark-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A Swift package that consolidates TLS identity, trust, and certificate-rotation logic duplicated across eleven dependent packages into one tested place." />
+    <meta name="author" content="Justin Purnell" />
+    <meta name="generator" content="Ignite v0.6.0" />
+    <title>SwiftTLSKit: Centralised TLS Configuration for SwiftNIO Servers and Clients | Justin Purnell</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="/css/ignite-core.min.css" rel="stylesheet" />
+    <link href="https://www.justinpurnell.com/showcase/swifttlskit" rel="canonical" />
+    <link type="application/rss+xml" title="RSS Feed" href="/feed.rss" rel="alternate" />
+    <script>(function() {
+    function getThemePreference() {
+        return localStorage.getItem('custom-theme') || 'auto';
+    }
+
+    function applyTheme(themeID) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const lightThemeID = document.documentElement.getAttribute('data-light-theme') || 'light';
+        const darkThemeID = document.documentElement.getAttribute('data-dark-theme') || 'dark';
+        const actualThemeID = themeID === 'auto' ? (prefersDark ? darkThemeID : lightThemeID) : themeID;
+
+        document.documentElement.setAttribute('data-bs-theme', actualThemeID);
+        document.documentElement.setAttribute('data-theme-state', themeID);
+    }
+
+    function applySyntaxTheme() {
+        const syntaxTheme = getComputedStyle(document.documentElement)
+            .getPropertyValue('--syntax-highlight-theme').trim().replace(/"/g, '');
+
+        if (!syntaxTheme) return;
+
+        document.querySelectorAll('link[data-highlight-theme]').forEach(link => {
+            link.setAttribute('disabled', 'disabled');
+        });
+
+        const themeLink = document.querySelector(`link[data-highlight-theme="${syntaxTheme}"]`);
+        if (themeLink) {
+            themeLink.removeAttribute('disabled');
+        }
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = getThemePreference();
+        if (currentTheme === 'auto') {
+            applyTheme('auto');
+            applySyntaxTheme();
+        }
+    });
+
+    const savedTheme = getThemePreference();
+    applyTheme(savedTheme);
+    applySyntaxTheme();
+})();
+</script>
+    <meta property="og:site_name" content="Justin Purnell" />
+    <meta property="og:title" content="SwiftTLSKit: Centralised TLS Configuration for SwiftNIO Servers and Clients" />
+    <meta name="twitter:title" content="SwiftTLSKit: Centralised TLS Configuration for SwiftNIO Servers and Clients" />
+    <meta property="og:description" content="A Swift package that consolidates TLS identity, trust, and certificate-rotation logic duplicated across eleven dependent packages into one tested place." />
+    <meta name="twitter:description" content="A Swift package that consolidates TLS identity, trust, and certificate-rotation logic duplicated across eleven dependent packages into one tested place." />
+    <meta property="og:url" content="https://www.justinpurnell.com/showcase/swifttlskit" />
+    <meta name="twitter:domain" content="justinpurnell.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:dnt" content="on" />
+    <link href="/css/tokens.css" rel="stylesheet" />
+    <link href="/css/main.css" rel="stylesheet" />
+    <meta name="fediverse:creator" content="@jpurnell@mastodon.social" />
+    <meta property="og:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta property="og:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <meta name="twitter:description" content="Justin Purnell — product leader who writes the spec and ships the verified build. Founder of Ledge Partners; author of SwiftMCPServer and quality-gate-swift." />
+    <meta name="twitter:image" content="https://www.justinpurnell.com/images/headshot.jpg" />
+    <script>    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K3TZS8J');</script>
+    <script type="application/ld+json">
+{
+  "@context" : "https://schema.org",
+  "@graph" : [
+    {
+      "@id" : "https://www.justinpurnell.com/#person",
+      "@type" : "Person",
+      "description" : "Founder of Ledge Partners. Former Goldman Sachs credit analyst, Head of Product at Hotels at Home, VP at NBCUniversal. Princeton '00, Tuck MBA.",
+      "image" : "https://www.justinpurnell.com/images/headshot.jpg",
+      "jobTitle" : "Founder",
+      "knowsAbout" : [
+        "Product Strategy",
+        "AI/ML",
+        "Digital Transformation",
+        "Corporate Finance",
+        "Swift Development",
+        "E-Commerce",
+        "Credit Analysis",
+        "Search Funds",
+        "Streaming Media",
+        "Team Leadership"
+      ],
+      "name" : "Justin Purnell",
+      "sameAs" : [
+        "https://www.linkedin.com/in/justinpurnell/",
+        "https://www.instagram.com/jpurnell/",
+        "https://mastodon.social/@jpurnell",
+        "https://bsky.app/profile/justinpurnell.com",
+        "https://www.threads.net/@jpurnell",
+        "https://www.facebook.com/jpurnell",
+        "https://orcid.org/0009-0006-7796-4088",
+        "https://twitter.com/jpurnell"
+      ],
+      "url" : "https://www.justinpurnell.com",
+      "worksFor" : {
+        "@type" : "Organization",
+        "name" : "Ledge Partners",
+        "url" : "https://www.ledgepartners.com"
+      }
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/#website",
+      "@type" : "WebSite",
+      "name" : "Justin Purnell",
+      "url" : "https://www.justinpurnell.com"
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swifttlskit#breadcrumb",
+      "@type" : "BreadcrumbList",
+      "itemListElement" : [
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com",
+          "name" : "Home",
+          "position" : 1
+        },
+        {
+          "@type" : "ListItem",
+          "item" : "https://www.justinpurnell.com/showcase/swifttlskit",
+          "name" : "SwiftTLSKit: Centralised TLS Configuration for SwiftNIO Servers and Clients",
+          "position" : 2
+        }
+      ]
+    },
+    {
+      "@id" : "https://www.justinpurnell.com/showcase/swifttlskit#webpage",
+      "@type" : "WebPage",
+      "breadcrumb" : {
+        "@id" : "https://www.justinpurnell.com/showcase/swifttlskit#breadcrumb"
+      },
+      "description" : "A Swift package that consolidates TLS identity, trust, and certificate-rotation logic duplicated across eleven dependent packages into one tested place.",
+      "inLanguage" : "en",
+      "isPartOf" : {
+        "@id" : "https://www.justinpurnell.com/#website"
+      },
+      "name" : "SwiftTLSKit: Centralised TLS Configuration for SwiftNIO Servers and Clients",
+      "url" : "https://www.justinpurnell.com/showcase/swifttlskit"
+    }
+  ]
+}
+</script>
+  </head>
+  <body class="container">
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K3TZS8J" height="0" width="0" style="display:none;visibility:hidden"></iframe> 
+    <header>
+      <nav class="noPrint site-header navbar navbar-expand-md">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="/" class="nav-link text-nowrap">Home</a></li>
+              <li class="nav-item"><a href="/about/" class="nav-link text-nowrap">About</a></li>
+              <li class="nav-item"><a href="/portfolio/" class="nav-link text-nowrap">Portfolio</a></li>
+              <li class="nav-item"><a href="/showcase/" class="nav-link text-nowrap">Showcase</a></li>
+              <li class="nav-item"><a href="/c-v/" class="nav-link text-nowrap">CV</a></li>
+              <li class="nav-item"><a href="/business-math/" class="nav-link text-nowrap">BusinessMath</a></li>
+              <li class="nav-item"><a href="/quality-gate/" class="nav-link text-nowrap">Quality Gate</a></li>
+              <li class="nav-item"><a href="/ne-x-t/" class="nav-link text-nowrap">NeXT</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="ig-main-content">
+      <h1 class="mainTitle">SwiftTLSKit: Centralised TLS Configuration for SwiftNIO Servers and Clients</h1>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">SwiftTLSKit</p>
+      <p class="blogDateTime" style="margin-left: 1em; margin-bottom: 2em">3 min read</p>
+      <div class="blurb" style="width: 70.0%; max-width: 800px">
+        <blockquote>
+          <p>A Swift package that consolidates TLS identity, trust, and certificate-rotation logic duplicated across eleven dependent packages into one tested place.</p>
+        </blockquote>
+        <h2>Motivation</h2>
+        <p>I had TLS configuration scattered across every SwiftNIO server and client I maintain. Each one repeated the same pattern: check whether a certificate path and key path were both present, then build a TLS context if so. The problem with that pattern is what happens when only one of the two is supplied — it silently falls back to plaintext. No error, no log line, just an unencrypted connection.</p>
+        <p>I built SwiftTLSKit to hold all of that logic once: what files constitute a valid server identity, what conditions make them unfit to serve, how a running server accepts a renewed certificate without restarting, and what a client is prepared to trust. The intent was that any package needing TLS configuration would pull it from here rather than re-implement it.</p>
+        <h2>Approach</h2>
+        <p>The package targets macOS, iOS, tvOS, and visionOS and is built against Swift Tools version 6.2. It depends on swift-nio, swift-nio-ssl, swift-crypto, swift-certificates, and swift-asn1 — the standard Apple-maintained stack for NIO-based TLS work — plus swift-docc-plugin for documentation generation.</p>
+        <p>The library has three targets: <code>SwiftTLSKit</code> (the library itself), <code>SwiftTLSKitTestSupport</code> (fixtures and helpers for dependents writing their own TLS tests), and <code>SwiftTLSKitTests</code> (the package’s own test suite).</p>
+        <p>The design constraints were stated in the project plan and shaped the API directly:</p>
+        <ul>
+          <li>A half-configured identity is an error at construction time, not a silent plaintext fallback.</li>
+          <li>Errors name the filesystem path involved, never the file contents.</li>
+          <li>The client trust API has no case that disables verification.</li>
+          <li>The package stops at configuration — no sockets, no event loops, no listener management.</li>
+        </ul>
+        <p>A CLAUDE.md file was present throughout development and carried session-start instructions, the quality gate, key rules, and notes specific to this package. One Claude Code session covered 34 of the 54 total commits across 55 messages, handling multiple tasks. That session was recorded as mostly achieved, with one external blocker and one wrong-approach friction point noted.</p>
+        <h2>Results</h2>
+        <p>The project ran from 6 October 2026 to 21 November 2026 across 54 commits on 2 branches, with six releases: 0.1.0, 0.2.0, 0.2.1, 1.0.0-beta.1, 1.0.0, and 1.0.1.</p>
+        <p>Eleven packages now depend on SwiftTLSKit: FleetWatch, ijs-dashboard-server, SwiftHTTPService, SwiftPushHub, SwiftDiagnosticsHub, SwiftPenTest, IconquerClient, IconquerServer, IconquerTournament, IconquerCLI, and swiftMoE. All eleven were confirmed by scanning every <code>Package.swift</code> on the machine for a SwiftTLSKit dependency. Six of them pin to <code>.upToNextMinor(from: "0.2.1")</code> and four Iconquer packages pin to <code>.upToNextMinor(from: "0.2.0")</code>.</p>
+        <p>Three packages that were named in the original plan as expected adopters — SwiftMCPServer, SwiftMCPClient, and VaultMCP — have not added the dependency. They are on the same machine; the initial search missed them because it looked only inside the <code>Tools/</code> directory rather than scanning all <code>Package.swift</code> files.</p>
+        <h2>Decisions</h2>
+        <p><strong>Errors at construction, not at connection time.</strong> The copies this replaces deferred the problem: if one of two required paths was missing, the server started on plaintext. SwiftTLSKit makes an incomplete identity a construction error so the failure is visible at startup.</p>
+        <p><strong>Typed errors that name the path.</strong> Diagnostic messages include the path that caused the problem, not the file contents. This was a deliberate constraint: TLS private key material should not appear in logs or error strings.</p>
+        <p><strong>No trust-anything escape hatch.</strong> The client API was written without a case that disables certificate verification. Adding one later would require a deliberate API change rather than setting a flag.</p>
+        <p><strong>Configuration scope only.</strong> The package does not manage sockets, event loops, or listeners. That boundary keeps it composable — dependents supply their own NIO infrastructure and hand SwiftTLSKit the configuration questions.</p>
+        <p><strong>What is unfinished.</strong> SwiftMCPServer, SwiftMCPClient, and VaultMCP were listed in the original plan as targets for adoption and have not moved. Whether they need TLS configuration that SwiftTLSKit can supply, or whether their use case falls outside what the package does, is not settled.</p>
+      </div>
+      <div class="showcase-infographics">
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftTLSKit statistics" width="600" height="164" viewbox="0 0 600 164"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="164" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftTLSKit
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-s1" x="24" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="24" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              54
+            </text> 
+            <text class="ig-muted" x="24" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              COMMITS
+            </text> 
+            <rect class="ig-s2" x="208" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="208" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              6
+            </text> 
+            <text class="ig-muted" x="208" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              RELEASES
+            </text> 
+            <rect class="ig-s3" x="392" y="68" width="24" height="3" /> 
+            <text class="ig-label" x="392" y="106" font-size="30" font-weight="700" letter-spacing="-0.6">
+              4
+            </text> 
+            <text class="ig-muted" x="392" y="126" font-size="11" font-weight="600" letter-spacing="0.9">
+              PLATFORMS
+            </text> 
+            <text class="ig-muted" x="24" y="150" font-size="11">
+              1 contributor
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftTLSKit commit activity by month" width="600" height="172" viewbox="0 0 600 172"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="172" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftTLSKit — Commit Activity
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              ~27/month · peak 34 (54 total)
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <rect class="ig-bar" x="25" y="99" width="274" height="49" /> 
+            <rect class="ig-bar" x="301" y="64" width="274" height="84" /> 
+            <line class="ig-hair" x1="24" y1="148" x2="576" y2="148" /> 
+            <text class="ig-muted" x="162" y="166" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="438" y="166" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+        <p>
+          <svg style="max-width:100%;height:auto;display:block;margin-bottom:1rem" xmlns="http://www.w3.org/2000/svg" class="ig" role="img" aria-label="SwiftTLSKit release history" width="600" height="132" viewbox="0 0 600 132"> 
+            <style>
+    svg.ig {
+      --ig-label: #111214;
+      --ig-secondary-label: #6A6D72;
+      --ig-background: #FAFAFA;
+      --ig-secondary-background: #FFFFFF;
+      --ig-separator: #D6D8DB;
+      --ig-series-1: #FF8D28;
+      --ig-series-2: #6155F5;
+      --ig-series-3: #34C759;
+      --ig-series-4: #CB30E0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    svg.ig .ig-bg { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-rule { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-hair { stroke: var(--separator, var(--ig-separator)); stroke-width: 1; }
+    svg.ig .ig-label { fill: var(--label, var(--ig-label)); }
+    svg.ig .ig-muted { fill: var(--secondary-label, var(--ig-secondary-label)); }
+    svg.ig .ig-bar, svg.ig .ig-dot, svg.ig .ig-s1 { fill: var(--series-1, var(--ig-series-1)); }
+    svg.ig .ig-hole { fill: var(--background, var(--ig-background)); }
+    svg.ig .ig-s2 { fill: var(--series-2, var(--ig-series-2)); }
+    svg.ig .ig-s3 { fill: var(--series-3, var(--ig-series-3)); }
+    svg.ig .ig-s4 { fill: var(--series-4, var(--ig-series-4)); }
+    @media (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-label: #F2F2EF;
+        --ig-secondary-label: #9A9DA2;
+        --ig-background: #101112;
+        --ig-secondary-background: #17181A;
+        --ig-separator: #2E3033;
+        --ig-series-1: #FF9230;
+        --ig-series-2: #6D7CFF;
+        --ig-series-3: #30D158;
+        --ig-series-4: #DB34F2;
+      }
+    }
+    @media (prefers-contrast: more) {
+      svg.ig {
+        --ig-series-1: #C55300;
+        --ig-series-2: #564ADE;
+        --ig-series-3: #008932;
+        --ig-series-4: #B02FC2;
+      }
+    }
+    @media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+      svg.ig {
+        --ig-series-1: #FFA056;
+        --ig-series-2: #A7AAFF;
+        --ig-series-3: #4AD968;
+        --ig-series-4: #EA8DFF;
+      }
+    }
+  </style> 
+            <rect class="ig-bg" x="0" y="0" width="600" height="132" /> 
+            <text class="ig-label" x="24" y="32" font-size="18" font-weight="700" letter-spacing="-0.4">
+              SwiftTLSKit — Releases
+            </text> 
+            <text class="ig-muted" x="576" y="32" font-size="11" text-anchor="end">
+              6 releases · latest 1.0.1
+            </text> 
+            <rect class="ig-rule" x="24" y="44" width="552" height="3" /> 
+            <line class="ig-hair" x1="24" y1="94" x2="576" y2="94" /> 
+            <rect class="ig-bar" x="483" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="409" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="419" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="94" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="68" y="78" width="2" height="16" /> 
+            <rect class="ig-bar" x="68" y="78" width="2" height="16" /> 
+            <text class="ig-label" x="484" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              1.0.1
+            </text> 
+            <text class="ig-label" x="69" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              0.2.0
+            </text> 
+            <text class="ig-label" x="420" y="70" font-size="11" font-weight="700" text-anchor="middle">
+              1.0.0
+            </text> 
+            <text class="ig-muted" x="162" y="112" font-size="10" text-anchor="middle">
+              Oct
+            </text> 
+            <text class="ig-muted" x="438" y="112" font-size="10" text-anchor="middle">
+              Nov
+            </text> 
+          </svg> </p>
+      </div>
+      <hr />
+      <p class="blurb" style="font-style: italic; margin-top: 2em">Tagged with: swifttlskit, selfReflection</p>
+    </div>
+    <header>
+      <nav id="site-footer" class="noPrint navbar navbar-expand-md">
+        <div class="container flex-wrap flex-lg-nowrap">
+          <button type="button" class="navbar-toggler btn" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+          <div id="navbarCollapse" class="collapse navbar-collapse">
+            <ul class="navbar-nav mb-2 mb-md-0 col ">
+              <li class="nav-item"><a href="mailto:morals.tech.0x@icloud.com" class="nav-link text-nowrap">email</a></li>
+              <li class="nav-item"><a href="https://cal.com/jpurnell/15min" class="nav-link text-nowrap">calendar</a></li>
+              <li class="nav-item"><a href="https://blog.justinpurnell.com" class="nav-link text-nowrap">blog</a></li>
+              <li class="nav-item"><a href="https://github.com/jpurnell" class="nav-link text-nowrap">github</a></li>
+              <li class="nav-item"><a href="https://bsky.app/profile/justinpurnell.com" class="nav-link text-nowrap">bsky</a></li>
+              <li class="nav-item"><a href="https://mastodon.social/@jpurnell" class="nav-link text-nowrap">mastodon</a></li>
+              <li class="nav-item"><a href="https://music.apple.com/us/station/justin-purnells-station/ra.u-a475786ae9cc432a1abb70ff757aa95f" class="nav-link text-nowrap">radio</a></li>
+              <li class="nav-item"><a href="https://www.justinpurnell.com/feed.rss" class="nav-link text-nowrap">rss</a></li>
+              <li class="nav-item"><a href="#" class="nav-link text-nowrap">theme</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ignite-core.js"></script>
+  </body>
+</html>
